@@ -3,15 +3,10 @@
     "composite": true,
     "skipLibCheck": true,
 
-    "target": "ES2023",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "Bundler",
 
     "types": ["node"],
-
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-
     "noEmit": true
   },
   "include": ["vite.config.ts"]
