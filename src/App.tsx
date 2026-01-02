@@ -1,8 +1,14 @@
-import Signup from "./pages/SignUp"
-
+import { BrowserRouter } from "react-router-dom"
+import { Suspense } from "react"
+import AppRoutes from "./routes/AppRoutes"
 
 function App() {
-  return <Signup />
+  return (
+
+      <Suspense fallback={<div>Loading...</div>}>
+        <AppRoutes />
+      </Suspense>
+  )
 }
 
 export default App

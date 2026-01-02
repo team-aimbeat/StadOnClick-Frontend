@@ -1,8 +1,10 @@
 
 
 // Dashboards
-
 // const Analytics = lazy(() => import("../pages/Analytics"));
+
+import AppLayout from "@/components/Layout/AppLayout";
+import Signup from "@/pages/SignUp";
 
 // // Apps
 // const Orders = lazy(() => import("../pages/Apps/Orders"));
@@ -24,7 +26,7 @@ const routes = [
   // Dashboard
   {
     path: "/",
-    element: <Dashboard />,
+    element: <Signup />,
   },
 //   {
 //     path: "/analytics",

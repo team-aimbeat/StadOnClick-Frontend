@@ -12,7 +12,7 @@ const defaultState = {
     animation: '',
     navbar: 'navbar-sticky',
     locale: 'en',
-    sidebar: false,
+    sidebar: true,
     pageTitle: '',
     languageList: [
         { code: 'zh', name: 'Chinese' },
