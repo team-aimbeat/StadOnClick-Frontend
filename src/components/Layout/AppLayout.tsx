@@ -10,12 +10,16 @@ export default function AppLayout() {
   const isSidebarCollapsed = !themeConfig.sidebar;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content Area - Adjust width based on sidebar state */}
       <div className={`flex flex-col flex-1 transition-all duration-300 ${
+
+
+
+
         isSidebarCollapsed ? 'w-full' : 'lg:w-[calc(100%-260px)] lg:ml-[260px]'
       }`}>
         {/* Header */}
