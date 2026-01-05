@@ -20,7 +20,7 @@ export function OnboardingFormCard({
   children,
 }: Props) {
   return (
-    <div className="w-full max-w-[552px] mx-auto lg:mx-0 lg:ml-[55px] lg:mt-[53px] rounded-xl bg-white p-5 sm:p-6 shadow-2xl space-y-[34px]">
+    <div className="w-full max-w-[552px] max-h-[calc(100vh-64px)] mx-auto lg:mx-0 lg:ml-[55px] lg:mt-[53px] rounded-xl bg-white p-5 sm:p-6 shadow-2xl space-y-[34px] overflow-y-auto">
       {showStepper ? (
         <Stepper step={step} total={total} onStepClick={onStepClick} />
       ) : null}
