@@ -1,4 +1,5 @@
-import Signup from "./pages/SignUp"
+import "./App.css"
+import Signup from "./pages/user-onboarding/SignUp"
 
 
 function App() {
