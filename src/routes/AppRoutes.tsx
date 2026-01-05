@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom"
 import AppLayout from "@/components/Layout/AppLayout"
-import Signup from "@/pages/SignUp"
+import Signup from "@/pages/user-onboarding/SignUp"
 import AdminDashboard from "@/pages/AdminDashboard"
 
 export default function AppRoutes() {
