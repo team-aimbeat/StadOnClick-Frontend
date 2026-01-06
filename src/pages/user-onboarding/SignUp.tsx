@@ -1,44 +1,41 @@
-import { useEffect, useState } from "react"
-import bgImage1 from "@/assets/user-onboarding/user-onboarding-1.png"
-import { OnboardingLayout } from "../components/user-onboarding/OnboardingLayout"
-import { OnboardingFormCard } from "../components/user-onboarding/OnboardingFormCard"
-import { StepPhone } from "../components/user-onboarding/StepPhone"
-import { StepProfile } from "../components/user-onboarding/StepProfile"
-import { StepOtp } from "../components/user-onboarding/StepOtp"
-import { StepPersonalize } from "../components/user-onboarding/StepPersonalize"
-import bgImage2 from "@/assets/user-onboarding/user-onboarding-2.png"
-import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png"
-import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png"
-import { useAppDispatch } from "@/app/hooks"
-import { setPageTitle } from "@/features/Layout/themeConfigSlice"
-import { useSendOtpMutation } from "@/features/auth/api/authApi"
-
-
-
+import { useEffect, useState } from "react";
+import bgImage1 from "@/assets/user-onboarding/user-onboarding-1.png";
+import { OnboardingLayout } from "../components/user-onboarding/OnboardingLayout";
+import { OnboardingFormCard } from "../components/user-onboarding/OnboardingFormCard";
+import { StepPhone } from "../components/user-onboarding/StepPhone";
+import { StepProfile } from "../components/user-onboarding/StepProfile";
+import { StepOtp } from "../components/user-onboarding/StepOtp";
+import { StepPersonalize } from "../components/user-onboarding/StepPersonalize";
+import bgImage2 from "@/assets/user-onboarding/user-onboarding-2.png";
+import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png";
+import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
+import { useSendOtpMutation } from "@/features/auth/api/authApi";
 
 export default function SignUp() {
-  const dispatch = useAppDispatch()
-  const [step, setStep] = useState(1)
-  const [phone, setPhone] = useState("")
-  const [otp, setOtp] = useState("")
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [userName, setUserName] = useState("")
-  const [gender, setGender] = useState("")
-  const [language, setLanguage] = useState("")
-  const [email, setEmail] = useState("")
-  const [location, setLocation] = useState("")
-  const [age, setAge] = useState("")
+  const dispatch = useAppDispatch();
+  const [step, setStep] = useState(1);
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [userName, setUserName] = useState("");
+  const [gender, setGender] = useState("");
+  const [language, setLanguage] = useState("");
+  const [email, setEmail] = useState("");
+  const [location, setLocation] = useState("");
+  const [age, setAge] = useState("");
 
- const [sendOtp, { isLoading: sendingOtp , error }] = useSendOtpMutation()
-const handleSendOtp = async () => {
-  try {
-    await sendOtp({ phone }).unwrap()
-    setStep(2)
-  } catch (err: any) {
-    alert(err?.data?.error ?? "Failed to send OTP")
-  }
-}
+  const [sendOtp, { isLoading: sendingOtp, error }] = useSendOtpMutation();
+  const handleSendOtp = async () => {
+    try {
+      await sendOtp({ phone }).unwrap();
+      setStep(2);
+    } catch (err: any) {
+      alert(err?.data?.error ?? "Failed to send OTP");
+    }
+  };
   const getTitles = () => {
     switch (step) {
       case 1:
@@ -46,52 +43,53 @@ const handleSendOtp = async () => {
           title: "Create your account in seconds",
           subtitle:
             "Join Sweden's smart service platform. Connect with trusted vendors and manage everything in one place.",
-        }
+        };
       case 2:
         return {
           title: "Verify your number",
-          subtitle: "Enter the 6-digit code we sent to your phone to keep your account secure.",
-        }
+          subtitle:
+            "Enter the 6-digit code we sent to your phone to keep your account secure.",
+        };
       case 3:
         return {
           title: "Complete Your Basic Profile",
-          subtitle: "Just a few quick details to help us personalise your experience.",
-        }
+          subtitle:
+            "Just a few quick details to help us personalise your experience.",
+        };
       case 4:
         return {
           title: "Let’s personalize your experience",
           subtitle: "Help us recommend activities that match your preferences.",
-        }
+        };
       default:
         return {
           title: "Welcome to StadonClick",
           subtitle:
             "Create an account to manage services, bookings, and vendors in one place.",
-        }
+        };
     }
-  }
+  };
 
   useEffect(() => {
-    dispatch(setPageTitle(getTitles().title))
-  }, [dispatch, step])
-
+    dispatch(setPageTitle(getTitles().title));
+  }, [dispatch, step]);
 
   const getBackgroundImage = () => {
     switch (step) {
       case 1:
-        return bgImage1
+        return bgImage1;
       case 2:
-        return bgImage2
+        return bgImage2;
       case 3:
-        return bgImage3
+        return bgImage3;
       case 4:
-        return bgImage4
+        return bgImage4;
       default:
-        return bgImage4
+        return bgImage4;
     }
-  }
+  };
   return (
-     <OnboardingLayout
+    <OnboardingLayout
       image={getBackgroundImage()}
       imageTitle={"Your Hub for Swedish Activity\nExperiences"}
       imageSubtitle=""
@@ -107,8 +105,8 @@ const handleSendOtp = async () => {
           <StepPhone
             phone={phone}
             setPhone={setPhone}
-           onNext={handleSendOtp}
-  loading={sendingOtp}
+            onNext={handleSendOtp}
+            loading={sendingOtp}
           />
         )}
 
@@ -152,5 +150,5 @@ const handleSendOtp = async () => {
         )}
       </OnboardingFormCard>
     </OnboardingLayout>
-  )
+  );
 }
