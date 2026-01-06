@@ -1,12 +1,14 @@
-import { BrowserRouter } from "react-router-dom"
+import { RouterProvider } from "react-router-dom"
 import { Suspense } from "react"
-import AppRoutes from "./routes/AppRoutes"
+import appRouter from "./routes/AppRoutes"
+import "./App.css"
+
 
 function App() {
   return (
 
       <Suspense fallback={<div>Loading...</div>}>
-        <AppRoutes />
+        <RouterProvider router={appRouter} />
       </Suspense>
   )
 }
