@@ -60,3 +60,27 @@
   font-family: "Miniver", cursive;
   letter-spacing: 0.3px;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* Notched image card */
+.notched-image {
+  --notch: 24px; /* adjust size here */
+
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--notch)) 0,
+    100% var(--notch),
+    100% 100%,
+    var(--notch) 100%,
+    0 calc(100% - var(--notch))
+  );
+}
