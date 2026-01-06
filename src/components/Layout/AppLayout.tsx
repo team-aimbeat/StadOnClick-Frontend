@@ -15,26 +15,27 @@ export default function AppLayout() {
       <Sidebar />
 
       {/* Main Content Area - Adjust width based on sidebar state */}
-      <div className={`flex flex-col flex-1 transition-all duration-300 ${
+    <div
+      className={`
+        flex flex-col flex-1
+        transition-[margin] duration-500 ease-in-out
+        lg:ml-[70px]
+        ${!isSidebarCollapsed ? 'lg:ml-[260px]' : ''}
+      `}
+    >
+      {/* Header */}
+      <Header />
 
+      {/* Page Content */}
+      <main className="flex-1 p-6">
+        <Outlet />
+      </main>
 
-
-
-        isSidebarCollapsed ? 'w-full' : 'lg:w-[calc(100%-260px)] lg:ml-[260px]'
-      }`}>
-        {/* Header */}
-        <Header />
-
-        {/* Page Content */}
-        <main className="flex-1 p-6">
-          <Outlet />
-        </main>
-
-        {/* Footer - Fixed positioning issue */}
-        <footer className="px-6 pb-6">
-          <Footer />
-        </footer>
-      </div>
+      {/* Footer */}
+      <footer className="px-6 pb-6">
+        <Footer />
+      </footer>
+    </div>
     </div>
   )
 }

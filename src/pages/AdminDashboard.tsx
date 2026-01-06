@@ -1,7 +1,7 @@
 import Breadcrumb from '@/components/ui/Breadcrumb';
-import ChartCard, { bookingsData } from '@/components/Charts/ChartCard';
-import GmvCard, { gmvChartData } from '@/components/Charts/GmvChartCard';
-import RecentActivities, { recentActivities } from '@/components/Charts/RecentActivities';
+import ChartCard, { bookingsData } from '@/components/AdminDashboard/ChartCard';
+import GmvCard, { gmvChartData } from '@/components/AdminDashboard/GmvChartCard';
+import RecentActivities, { recentActivities } from '@/components/AdminDashboard/RecentActivities';
 import StatCard from '@/components/ui/StatCard';
 import React from 'react';
 import {
@@ -13,23 +13,15 @@ import {
   HiOutlineUser,
   HiOutlineCalendar,
 } from 'react-icons/hi2';
-import Mapcity from '@/components/Charts/Mapcity';
+import Mapcity from '@/components/AdminDashboard/Mapcity';
+import CustomerAcquisitionCard from '@/components/AdminDashboard/CustomerAcquisitionCard';
+import VendorsOverview from '@/components/AdminDashboard/VendorsOverview';
+import AIAlertInsights from '@/components/AdminDashboard/AIAlertInsights';
+import NewSubscriptionsCard from '@/components/AdminDashboard/NewSubscriptionsCard.';
 
 
 
 const AdminDashboard: React.FC = () => {
-
-  const handlePeriodChange = (period: string) => {
-    console.log('Period changed to:', period);
-    // Fetch new data based on period
-  };
-
-  const handleViewReport = () => {
-    console.log('View report clicked');
-    // Navigate to reports page
-  };
-
-
   return (
     <div className="p-6 space-y-6">
       {/* breadcrumb*/}
@@ -125,7 +117,7 @@ const AdminDashboard: React.FC = () => {
 </div>
 
   
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
         <GmvCard
           title="GMV today"
           value={124560}
@@ -135,30 +127,16 @@ const AdminDashboard: React.FC = () => {
           showChart={true}
           chartData={gmvChartData}
         />
+
+        <CustomerAcquisitionCard/>
+        <VendorsOverview/>
         </div>
 
-      {/* Content Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-5">
-          <h2 className="font-semibold text-gray-800 dark:text-gray-100 mb-4">
-            Recent Activity
-          </h2>
-          <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-            <li>• New user registered</li>
-            <li>• Monthly report generated</li>
-            <li>• Payment received</li>
-            <li>• System update completed</li>
-          </ul>
-        </div>
 
-        {/* Placeholder Chart Area */}
-        <div className="rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-5 flex items-center justify-center">
-          <span className="text-gray-400 dark:text-gray-500">
-            Chart / Graph Area
-          </span>
-        </div>
-      </div>
+<div className='grid grid-cols-2 lg:grid-cols-3 gap-6'>
+  <AIAlertInsights/><NewSubscriptionsCard/>
+</div>
+  
     </div>
   );
 };
