@@ -3,7 +3,7 @@ import ChartCard, { bookingsData } from '@/components/AdminDashboard/ChartCard';
 import GmvCard, { gmvChartData } from '@/components/AdminDashboard/GmvChartCard';
 import RecentActivities, { recentActivities } from '@/components/AdminDashboard/RecentActivities';
 import StatCard from '@/components/ui/StatCard';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   HiOutlineUsers,
   HiOutlineChartBar,
@@ -18,10 +18,27 @@ import CustomerAcquisitionCard from '@/components/AdminDashboard/CustomerAcquisi
 import VendorsOverview from '@/components/AdminDashboard/VendorsOverview';
 import AIAlertInsights from '@/components/AdminDashboard/AIAlertInsights';
 import NewSubscriptionsCard from '@/components/AdminDashboard/NewSubscriptionsCard.';
+import AdminDashboardSkeleton from '@/components/Layout/skeletons/AdminDashboardSkeleton';
 
 
 
 const AdminDashboard: React.FC = () => {
+
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000); // 2 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  //  SHOW SKELETON FIRST
+  if (loading) {
+    return <AdminDashboardSkeleton />;
+  }
+
+
   return (
     <div className="p-6 space-y-6">
       {/* breadcrumb*/}

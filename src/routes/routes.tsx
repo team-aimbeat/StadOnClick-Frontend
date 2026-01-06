@@ -1,81 +1,26 @@
-
-
-// Dashboards
-// const Analytics = lazy(() => import("../pages/Analytics"));
-
+import { lazy } from "react";
 import AppLayout from "@/components/Layout/AppLayout";
 import Signup from "@/pages/SignUp";
 
-// // Apps
-// const Orders = lazy(() => import("../pages/Apps/Orders"));
-// const Users = lazy(() => import("../pages/Apps/Users"));
-// const Calendar = lazy(() => import("../pages/Apps/Calendar"));
-
-// // Components
-// const Cards = lazy(() => import("../pages/Components/Cards"));
-// const Tables = lazy(() => import("../pages/Tables"));
-
-// // Auth
-// const Login = lazy(() => import("../pages/Authentication/Login"));
-
-// // Others
-// const Settings = lazy(() => import("../pages/Settings"));
-// const Error404 = lazy(() => import("../pages/Error404"));
+const Try = lazy(() => import("@/pages/try"));
 
 const routes = [
-  // Dashboard
+  // Public route (NO layout, NO skeleton)
   {
     path: "/",
     element: <Signup />,
   },
-//   {
-//     path: "/analytics",
-//     element: <Analytics />,
-//   },
 
-//   // Apps
-//   {
-//     path: "/orders",
-//     element: <Orders />,
-//   },
-//   {
-//     path: "/users",
-//     element: <Users />,
-//   },
-//   {
-//     path: "/calendar",
-//     element: <Calendar />,
-//   },
-
-//   // UI
-//   {
-//     path: "/cards",
-//     element: <Cards />,
-//   },
-//   {
-//     path: "/tables",
-//     element: <Tables />,
-//   },
-
-//   // Auth
-//   {
-//     path: "/auth/login",
-//     element: <Login />,
-//     layout: "blank",
-//   },
-
-//   // Settings
-//   {
-//     path: "/settings",
-//     element: <Settings />,
-//   },
-
-//   // Error
-//   {
-//     path: "*",
-//     element: <Error404 />,
-//     layout: "blank",
-//   },
+  // Routes WITH layout + skeleton
+  {
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/try",
+        element: <Try />,
+      },
+    ],
+  },
 ];
 
 export { routes };

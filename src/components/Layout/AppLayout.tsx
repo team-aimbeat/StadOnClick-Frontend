@@ -4,6 +4,8 @@ import Footer from "./Footer"
 import { useSelector } from "react-redux"
 import { IRootState } from "@/app/store"
 import Header from "./Header"
+import { Suspense } from "react"
+import AppLayoutSkeleton from "@/components/Layout/skeletons/AppLayoutSkeleton"
 
 export default function AppLayout() {
   const themeConfig = useSelector((state: IRootState) => state.themeConfig);
@@ -28,7 +30,9 @@ export default function AppLayout() {
 
       {/* Page Content */}
       <main className="flex-1 p-6">
-        <Outlet />
+ <Suspense fallback={<AppLayoutSkeleton />}>
+           <Outlet /></Suspense>
+       
       </main>
 
       {/* Footer */}
