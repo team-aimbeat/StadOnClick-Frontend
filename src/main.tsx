@@ -5,14 +5,12 @@ import App from './App'
 import { Provider } from 'react-redux'
 import { store } from './app/store'
 import 'leaflet/dist/leaflet.css';
-import { BrowserRouter } from 'react-router-dom'
 
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
        <Provider store={store}>
-          <BrowserRouter><App /></BrowserRouter>
-         
+          <App />
        </Provider>
    
   </StrictMode>,
