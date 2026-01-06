@@ -1,12 +1,22 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import bgImage5 from "@/assets/user-onboarding/user-onboarding-5.png"
 import { OnboardingLayout } from "../components/user-onboarding/OnboardingLayout"
 import { OnboardingFormCard } from "../components/user-onboarding/OnboardingFormCard"
 import { StepLogin } from "../components/user-onboarding/StepLogin"
+import { useLoginMutation } from "@/features/auth/api/authApi"
+import { useAppDispatch } from "@/app/hooks"
+import { setUser } from "@/features/auth/authSlice"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
+
 
 export default function SignIn() {
+  const dispatch = useAppDispatch()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+
+  useEffect(() => {
+    dispatch(setPageTitle("Sign in"))
+  }, [dispatch])
 
   return (
     <OnboardingLayout

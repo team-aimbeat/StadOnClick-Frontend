@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
 import googleIcon from "@/assets/icons/google.png"
+import { useState } from "react"
 
 type SocialIcon = {
   src: string
@@ -33,93 +34,83 @@ export function StepLogin({
   setPassword,
   onSubmit,
 }: Props) {
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="space-y-2">
-        <Label className="text-sm text-[#2E2E2E]">Email</Label>
+        <Label className="text-sm font-medium text-slate-800">Email</Label>
         <Input
           type="email"
-          className="h-11 rounded-[8px] border border-[#ADADAD] text-sm"
-          placeholder="Enter your email"
+          className="h-12 rounded-lg border border-slate-200 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
+          placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm text-[#2E2E2E]">Password</Label>
-        <div className="relative">
-          <Input
-            type="password"
-            className="h-11 rounded-[8px] border border-[#ADADAD] pr-10 text-sm"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium text-slate-800">Password</Label>
           <button
             type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-            aria-label="Toggle password visibility"
+            className="text-xs font-semibold text-[#0b59a2] hover:underline"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5"
-            >
-              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" />
-              <path d="M3 3l18 18" />
-            </svg>
+            Forgot password?
           </button>
         </div>
-        <button
-          type="button"
-          className="text-[12px] text-[#E63946] hover:underline"
-        >
-          Forgot Password ?
-        </button>
+        <Input
+          type="password"
+          className="h-12 rounded-lg border border-slate-200 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#454545] justify-center">
-        <span className="text-sm text-slate-500">or continue with</span>
-      </div>
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 text-sm text-slate-500">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span>or continue with</span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
 
-      <div className="flex items-center justify-center gap-4 sm:gap-6">
-        {socialIcons.map((icon, index) => (
-          <a
-            key={index}
-            href={icon.href}
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-[41.46px] w-[41.46px] items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm"
-          >
-            <img
-              src={icon.src}
-              alt={icon.alt}
-              className="h-[22px] w-[22px] object-contain"
-            />
-          </a>
-        ))}
-        <span className="hidden sm:block h-px w-24 border-t border-dashed border-slate-300" />
+        <div className="flex items-center justify-center gap-4 sm:gap-6">
+          {socialIcons.map((icon) => (
+            <a
+              key={icon.href}
+              href={icon.href}
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#0b59a2]/50 hover:shadow"
+            >
+              <img
+                src={icon.src}
+                alt={icon.alt}
+                className="h-[22px] w-[22px] object-contain"
+              />
+            </a>
+          ))}
+        </div>
       </div>
 
       <div className="flex items-start gap-3 text-[12px] text-[#242426]">
-        <Checkbox className="w-[19px] h-[18px] border-[#404040]" />
-        <span>
+        <Checkbox
+          id="signin-terms"
+          checked={acceptedTerms}
+          onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+          className="w-[19px] h-[18px] border-[#404040]"
+        />
+        <label htmlFor="signin-terms" className="cursor-pointer">
           By continuing, you agree to our{" "}
           <span className="font-semibold text-[#3289FF]">Terms of Service</span>{" "}
           &{" "}
           <span className="font-semibold text-[#3289FF]">Privacy Policy</span>
-        </span>
+        </label>
       </div>
 
       <Button
-        className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-[16px] text-white"
-        disabled={!email || !password}
+        className="h-[52px] w-full max-w-[480px] mx-auto text-[16px]"
+        disabled={!email || !password || !acceptedTerms}
         onClick={onSubmit}
       >
         Continue
