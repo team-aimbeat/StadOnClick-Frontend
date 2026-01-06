@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -5,7 +6,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
 import googleIcon from "@/assets/icons/google.png"
-import { useState } from "react"
 
 type SocialIcon = {
   src: string
@@ -25,6 +25,8 @@ type Props = {
   setEmail: (v: string) => void
   setPassword: (v: string) => void
   onSubmit?: () => void
+  loading?: boolean
+  errorMessage?: string
 }
 
 export function StepLogin({
@@ -33,8 +35,11 @@ export function StepLogin({
   setEmail,
   setPassword,
   onSubmit,
+  loading = false,
+  errorMessage,
 }: Props) {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -61,7 +66,7 @@ export function StepLogin({
         <Input
           type="password"
           className="h-12 rounded-lg border border-slate-200 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
-          placeholder="••••••••"
+          placeholder="********"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -108,12 +113,16 @@ export function StepLogin({
         </label>
       </div>
 
+      {errorMessage ? (
+        <p className="text-sm text-red-600">{errorMessage}</p>
+      ) : null}
+
       <Button
         className="h-[52px] w-full max-w-[480px] mx-auto text-[16px]"
-        disabled={!email || !password || !acceptedTerms}
+        disabled={!email || !password || !acceptedTerms || loading}
         onClick={onSubmit}
       >
-        Continue
+        {loading ? "Signing in..." : "Continue"}
       </Button>
     </div>
   )

@@ -11,12 +11,31 @@ import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 
 export default function SignIn() {
   const dispatch = useAppDispatch()
+  const [login, { isLoading, error }] = useLoginMutation()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
   useEffect(() => {
     dispatch(setPageTitle("Sign in"))
   }, [dispatch])
+
+  const handleSubmit = async () => {
+    try {
+      const data = await login({ email, password }).unwrap()
+      if (data?.user) {
+        dispatch(setUser(data.user))
+      } else {
+        dispatch(setUser(data))
+      }
+    } catch (err) {
+      console.error("Login failed", err)
+    }
+  }
+
+  const errorMessage =
+    (error as any)?.data?.message ||
+    (error as any)?.error ||
+    undefined
 
   return (
     <OnboardingLayout
@@ -36,7 +55,9 @@ export default function SignIn() {
           password={password}
           setEmail={setEmail}
           setPassword={setPassword}
-          onSubmit={() => console.log("Continue")}
+          onSubmit={handleSubmit}
+          loading={isLoading}
+          errorMessage={errorMessage}
         />
       </OnboardingFormCard>
     </OnboardingLayout>
