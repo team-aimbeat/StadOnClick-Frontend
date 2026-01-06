@@ -21,6 +21,7 @@ type Props = {
   setEmail: (v: string) => void
   setLocation: (v: string) => void
   setAge: (v: string) => void
+  onBack?: () => void
   onNext: () => void
 }
 
