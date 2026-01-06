@@ -149,7 +149,7 @@ export function StepProfile({
         <div>
           <Label className="mb-1 inline-block">First name</Label>
           <Input
-            className="h-9 text-sm"
+            className="h-9 text-sm shadow-none focus:shadow-none focus-visible:shadow-none"
             placeholder="First name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
@@ -158,7 +158,7 @@ export function StepProfile({
         <div>
           <Label className="mb-1 inline-block">Last name</Label>
           <Input
-            className="h-9 text-sm"
+            className="h-9 text-sm shadow-none focus:shadow-none focus-visible:shadow-none"
             placeholder="Last name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
@@ -170,7 +170,7 @@ export function StepProfile({
         <div>
           <Label className="mb-1 inline-block">What should we call you?</Label>
           <Input
-            className="h-9 text-sm"
+            className="h-9 text-sm shadow-none focus:shadow-none focus-visible:shadow-none"
             placeholder="User name"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
@@ -179,7 +179,7 @@ export function StepProfile({
         <div>
           <Label className="mb-1 inline-block">Gender</Label>
           <Input
-            className="h-9 text-sm"
+            className="h-9 text-sm shadow-none focus:shadow-none focus-visible:shadow-none"
             placeholder="Your gender"
             value={gender}
             onChange={(e) => setGender(e.target.value)}
@@ -191,7 +191,7 @@ export function StepProfile({
         <div>
           <Label className="mb-1 inline-block">Language</Label>
           <select
-            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-[#4A4A4A] focus:border-[#3289FF] focus:outline-none focus:ring-2 focus:ring-[#3289FF]/40"
+            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-[#4A4A4A] shadow-none focus:border-[#3289FF] focus:outline-none focus:ring-2 focus:ring-[#3289FF]/40 focus:shadow-none focus-visible:shadow-none"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
           >
@@ -205,7 +205,7 @@ export function StepProfile({
           <Label className="mb-1 inline-block">Email</Label>
           <Input
             type="email"
-            className="h-9 text-sm"
+            className="h-9 text-sm shadow-none focus:shadow-none focus-visible:shadow-none"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -217,7 +217,7 @@ export function StepProfile({
         <div>
           <Label className="mb-1 inline-block">Location</Label>
           <Input
-            className="h-9 text-sm"
+            className="h-9 text-sm shadow-none focus:shadow-none focus-visible:shadow-none"
             placeholder="Street, city"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
@@ -240,7 +240,7 @@ export function StepProfile({
         <div>
           <Label className="mb-1 inline-block">Age</Label>
           <select
-            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-[#4A4A4A] focus:border-[#3289FF] focus:outline-none focus:ring-2 focus:ring-[#3289FF]/40"
+            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-[#4A4A4A] shadow-none focus:border-[#3289FF] focus:outline-none focus:ring-2 focus:ring-[#3289FF]/40 focus:shadow-none focus-visible:shadow-none"
             value={age}
             onChange={(e) => setAge(e.target.value)}
           >
@@ -253,11 +253,11 @@ export function StepProfile({
         </div>
       </div>
 
-      <div className="flex items-start gap-2 text-[11px] text-[#6B7280]">
-        <Checkbox className="w-[19px] h-[18px] border-[#404040]" />
-        <span>
+      <div className="flex items-start gap-2 text-[13px] text-[#6B7280]">
+        <Checkbox id="terms-profile" className="w-[19px] h-[18px] border-[#404040]" />
+        <label htmlFor="terms-profile" className="cursor-pointer">
           By continuing, you agree to our Terms of Service and Privacy Policy
-        </span>
+        </label>
       </div>
 
       <Button

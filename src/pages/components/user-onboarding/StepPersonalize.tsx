@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import timeIcon from "@/assets/icons/Time.svg"
 import heartLowIcon from "@/assets/icons/heart1.svg"
@@ -19,6 +20,21 @@ type Props = {
 }
 
 export function StepPersonalize({ onNext, onSkip }: Props) {
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([])
+  const [selectedEnergy, setSelectedEnergy] = useState<string[]>([])
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([])
+  const [selectedMoments, setSelectedMoments] = useState<string[]>([])
+
+  const toggleSelection = (
+    value: string,
+    selected: string[],
+    setSelected: React.Dispatch<React.SetStateAction<string[]>>,
+  ) => {
+    setSelected((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value],
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -34,7 +50,12 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
             <button
               key={label}
               type="button"
-              className="flex h-[40px] w-[96px] items-center justify-center gap-2 rounded-[9px] border border-[#D1D5DB] bg-white text-[12px] text-[#3B3B3B] shadow-sm hover:border-[#3289FF]"
+              onClick={() => toggleSelection(label, selectedTimes, setSelectedTimes)}
+              className={`flex h-[40px] w-[96px] items-center justify-center gap-2 rounded-[9px] border text-[12px] shadow-sm ${
+                selectedTimes.includes(label)
+                  ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
+                  : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
+              }`}
             >
               <img src={icon} alt="" className="h-4 w-4" />
               {label}
@@ -56,7 +77,12 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
             <button
               key={label}
               type="button"
-              className="flex h-[40px] items-center gap-2 rounded-[9px] border border-[#D1D5DB] bg-white px-3 text-[12px] text-[#3B3B3B] shadow-sm hover:border-[#3289FF]"
+              onClick={() => toggleSelection(label, selectedEnergy, setSelectedEnergy)}
+              className={`flex h-[40px] items-center gap-2 rounded-[9px] border px-3 text-[12px] shadow-sm ${
+                selectedEnergy.includes(label)
+                  ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
+                  : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
+              }`}
             >
               <img src={icon} alt="" className="h-4 w-4" />
               {label}
@@ -81,7 +107,12 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
             <button
               key={label}
               type="button"
-              className="flex h-[40px] items-center gap-2 rounded-[9px] border border-[#D1D5DB] bg-white px-3 text-[12px] text-[#3B3B3B] shadow-sm hover:border-[#3289FF]"
+              onClick={() => toggleSelection(label, selectedGoals, setSelectedGoals)}
+              className={`flex h-[40px] items-center gap-2 rounded-[9px] border px-3 text-[12px] shadow-sm ${
+                selectedGoals.includes(label)
+                  ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
+                  : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
+              }`}
             >
               <img src={icon} alt="" className="h-4 w-4" />
               {label}
@@ -103,7 +134,12 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
             <button
               key={label}
               type="button"
-              className="flex h-[40px] items-center gap-2 rounded-[9px] border border-[#D1D5DB] bg-white px-3 text-[12px] text-[#3B3B3B] shadow-sm hover:border-[#3289FF]"
+              onClick={() => toggleSelection(label, selectedMoments, setSelectedMoments)}
+              className={`flex h-[40px] items-center gap-2 rounded-[9px] border px-3 text-[12px] shadow-sm ${
+                selectedMoments.includes(label)
+                  ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
+                  : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
+              }`}
             >
               <img src={icon} alt="" className="h-4 w-4" />
               {label}
@@ -112,10 +148,15 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-500">
-        Based on your preferences, we’ll show activities that match your time,
-        energy, and interests.
-      </p>
+      <div className="flex items-start gap-2  text-[11px] text-[#6B7280]">
+        <div className="mt-[1px] flex h-5 w-5 items-center justify-center rounded-full border border-[#D1D5DB] text-[12px] text-[#242426]">
+          i
+        </div>
+        <p className="text-[12px] font-normal">
+          Based on your preferences, we&apos;ll show activities that match your time,
+          energy, and interests.
+        </p>
+      </div>
 
       <Button
         className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"

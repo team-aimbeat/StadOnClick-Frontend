@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
 import googleIcon from "@/assets/icons/google.png"
+import { useState } from "react"
 
 type SocialIcon = {
   src: string
@@ -26,10 +27,15 @@ type Props = {
 }
 
 const countryCode = "+46"
+const countryNameByCode: Record<string, string> = {
+  "+46": "Sweden",
+}
 const minDigits = 7
 const maxDigits = 15
 
 export function StepPhone({ phone, setPhone, onNext }: Props) {
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+
   const digitsOnly = phone.replace(/\D/g, "")
   const isValidPhone =
     digitsOnly.length >= minDigits && digitsOnly.length <= maxDigits
@@ -41,17 +47,18 @@ export function StepPhone({ phone, setPhone, onNext }: Props) {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <Label>Number</Label>
+        <Label>{countryNameByCode[countryCode] ?? "Country"}</Label>
 
-        <div className="flex items-center rounded-lg border border-[#4A4A4A] bg-white px-3 py-2 shadow-sm w-full">
-          <div className="px-1 text-sm font-semibold text-[#4A4A4A] whitespace-nowrap">
-            {countryCode}
+        <div className="flex items-center rounded-lg border border-[#bdbdbd] bg-white px-3 py-2 shadow-sm w-full">
+          <div className="flex h-[18px] w-[26px] items-center justify-center rounded-sm border border-[#c9c9c9] bg-[#1e5aa6]">
+            <div className="h-[14px] w-[3px] bg-[#f8d23c]" />
+            <div className="ml-[2px] h-[3px] w-[14px] bg-[#f8d23c]" />
           </div>
-          <Separator orientation="vertical" className="mx-2 h-6" />
+          <div className="mx-3 h-5 w-px bg-[#c9c9c9]" />
           <Input
             type="tel"
             inputMode="tel"
-            className="flex-1 border-none focus-visible:ring-0 px-0 text-base"
+            className="flex-1 border-none focus-visible:ring-0 !p-0 text-base"
             placeholder="Enter your mobile number"
             value={phone}
             onChange={handlePhoneChange}
@@ -89,13 +96,18 @@ export function StepPhone({ phone, setPhone, onNext }: Props) {
       </div>
 
       <div className="flex items-start gap-3 text-[12px] text-[#242426]">
-        <Checkbox className="w-[19px] h-[18px] border-[#404040]" />
-        <span>
+        <Checkbox
+          id="terms"
+          checked={acceptedTerms}
+          onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+          className="w-[19px] h-[18px] border-[#404040]"
+        />
+        <label htmlFor="terms" className="cursor-pointer">
           By continuing, you agree to our{" "}
           <span className="font-semibold text-[#3289FF]">Terms of Service</span>{" "}
           &{" "}
           <span className="font-semibold text-[#3289FF]">Privacy Policy</span>
-        </span>
+        </label>
       </div>
 
       <Button
