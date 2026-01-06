@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import bgImage1 from "@/assets/user-onboarding/user-onboarding-1.png"
 import { OnboardingLayout } from "../components/user-onboarding/OnboardingLayout"
 import { OnboardingFormCard } from "../components/user-onboarding/OnboardingFormCard"
@@ -9,12 +9,15 @@ import { StepPersonalize } from "../components/user-onboarding/StepPersonalize"
 import bgImage2 from "@/assets/user-onboarding/user-onboarding-2.png"
 import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png"
 import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 
 
 
 
 
 export default function SignUp() {
+  const dispatch = useAppDispatch()
   const [step, setStep] = useState(1)
   const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState("")
@@ -58,6 +61,10 @@ export default function SignUp() {
         }
     }
   }
+
+  useEffect(() => {
+    dispatch(setPageTitle(getTitles().title))
+  }, [dispatch, step])
 
 
   const getBackgroundImage = () => {
