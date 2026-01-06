@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "@/features/auth/authSlice";
 import themeConfigSlice from "@/features/Layout/themeConfigSlice";
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
     themeConfig: themeConfigSlice,
-
+    [authApi.reducerPath]: authApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authApi.middleware),
 });
 
 export type IRootState = ReturnType<typeof store.getState>;
