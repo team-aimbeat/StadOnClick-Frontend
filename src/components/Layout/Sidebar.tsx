@@ -16,7 +16,6 @@ import {
   HiDocumentText,
   HiRectangleStack,
   HiUserGroup,
-  HiBanknotes,
   HiCalendar,
   HiCube,
   HiChartBar,
@@ -70,6 +69,7 @@ const Sidebar = () => {
             onClick={() => dispatch(toggleSidebar())}
             className="w-8 h-8 flex items-center justify-center rounded-lg
                        hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            title={isCollapsed ? t("Expand") : t("Collapse")}
           >
             <HiChevronDown className="rotate-90 w-5 h-5 text-gray-500" />
           </button>
@@ -89,9 +89,18 @@ const Sidebar = () => {
                   "transition group",
                   currentMenu === "dashboard" && "bg-[#3289ff1a] text-primary"
                 )}
+                title={t("Dashboard")}
               >
                 <div className="flex items-center">
-                  <HiHome className="w-5 h-5 shrink-0 text-gray-400 group-hover:text-primary" />
+                  <span
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-lg",
+                      "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                      currentMenu === "dashboard" && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <HiHome className="w-5 h-5 shrink-0" />
+                  </span>
                   {!isCollapsed && <span className="ml-3">{t("Dashboard")}</span>}
                 </div>
                 {!isCollapsed && (
@@ -116,7 +125,10 @@ const Sidebar = () => {
                         className="block px-3 py-2 rounded-md
                                    hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
-                        {t(item)}
+                        <span className="flex items-center gap-2">
+                          <HiMinus className="w-3 h-3 text-gray-400" />
+                          {t(item)}
+                        </span>
                       </NavLink>
                     </li>
                   ))}
@@ -144,6 +156,7 @@ const Sidebar = () => {
               <li key={item.label}>
                 <NavLink
                   to={item.to}
+                  title={t(item.label)}
                   className={({ isActive }) =>
                     cn(
                       "flex items-center px-3 py-2.5 rounded-lg transition group",
@@ -153,8 +166,20 @@ const Sidebar = () => {
                     )
                   }
                 >
-                  <item.icon className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                  {!isCollapsed && <span className="ml-3">{t(item.label)}</span>}
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-lg",
+                          "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                          isActive && "bg-primary/10 text-primary"
+                        )}
+                      >
+                        <item.icon className="w-5 h-5" />
+                      </span>
+                      {!isCollapsed && <span className="ml-3">{t(item.label)}</span>}
+                    </>
+                  )}
                 </NavLink>
               </li>
             ))}
@@ -170,6 +195,7 @@ const Sidebar = () => {
             <li>
               <NavLink
                 to="/charts"
+                title={t("Charts")}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center px-3 py-2.5 rounded-lg transition group",
@@ -179,19 +205,50 @@ const Sidebar = () => {
                   )
                 }
               >
-                <HiChartBar className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                {!isCollapsed && <span className="ml-3">{t("Charts")}</span>}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-lg",
+                        "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                        isActive && "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <HiChartBar className="w-5 h-5" />
+                    </span>
+                    {!isCollapsed && <span className="ml-3">{t("Charts")}</span>}
+                  </>
+                )}
               </NavLink>
             </li>
 
             <li>
               <NavLink
                 to="/components"
-                className="flex items-center px-3 py-2.5 rounded-lg
-                           text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                title={t("Components")}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center px-3 py-2.5 rounded-lg transition group",
+                    isActive
+                      ? "bg-[#3289ff1a] text-primary"
+                      : "text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  )
+                }
               >
-                <HiCube className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                {!isCollapsed && <span className="ml-3">{t("Components")}</span>}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-lg",
+                        "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                        isActive && "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <HiCube className="w-5 h-5" />
+                    </span>
+                    {!isCollapsed && <span className="ml-3">{t("Components")}</span>}
+                  </>
+                )}
               </NavLink>
             </li>
 
