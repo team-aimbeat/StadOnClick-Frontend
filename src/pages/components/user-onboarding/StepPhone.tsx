@@ -24,6 +24,7 @@ type Props = {
   phone: string
   setPhone: (v: string) => void
   onNext: () => void
+  loading?: boolean
 }
 
 const countryCode = "+46"
@@ -33,7 +34,7 @@ const countryNameByCode: Record<string, string> = {
 const minDigits = 7
 const maxDigits = 15
 
-export function StepPhone({ phone, setPhone, onNext }: Props) {
+export function StepPhone({ phone, setPhone, onNext, loading }: Props) {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const digitsOnly = phone.replace(/\D/g, "")
@@ -115,13 +116,12 @@ export function StepPhone({ phone, setPhone, onNext }: Props) {
         </label>
       </div>
 
-      <Button
-        className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-[16px] text-white"
-        disabled={!isValidPhone}
-        onClick={onNext}
-      >
-        Send OTP
-      </Button>
+    <Button
+  disabled={!isValidPhone || !acceptedTerms || loading}
+  onClick={onNext}
+>
+  {loading ? "Sending..." : "Send OTP"}
+</Button>
     </div>
   )
 }

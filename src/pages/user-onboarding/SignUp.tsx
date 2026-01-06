@@ -11,7 +11,7 @@ import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png"
 import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png"
 import { useAppDispatch } from "@/app/hooks"
 import { setPageTitle } from "@/features/Layout/themeConfigSlice"
-
+import { useSendOtpMutation } from "@/features/auth/api/authApi"
 
 
 
@@ -30,6 +30,15 @@ export default function SignUp() {
   const [location, setLocation] = useState("")
   const [age, setAge] = useState("")
 
+ const [sendOtp, { isLoading: sendingOtp , error }] = useSendOtpMutation()
+const handleSendOtp = async () => {
+  try {
+    await sendOtp({ phone }).unwrap()
+    setStep(2)
+  } catch (err: any) {
+    alert(err?.data?.error ?? "Failed to send OTP")
+  }
+}
   const getTitles = () => {
     switch (step) {
       case 1:
@@ -98,7 +107,8 @@ export default function SignUp() {
           <StepPhone
             phone={phone}
             setPhone={setPhone}
-            onNext={() => setStep(2)}
+           onNext={handleSendOtp}
+  loading={sendingOtp}
           />
         )}
 
