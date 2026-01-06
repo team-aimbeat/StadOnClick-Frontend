@@ -11,9 +11,6 @@ import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png"
 import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png"
 
 
-
-
-
 export default function SignUp() {
   const [step, setStep] = useState(1)
   const [phone, setPhone] = useState("")

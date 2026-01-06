@@ -2,6 +2,8 @@ import themeConfig from '@/theme.config';
 import { createSlice } from '@reduxjs/toolkit';
 import i18next from 'i18next';
 
+
+
 const defaultState = {
     isDarkMode: false,
     mainLayout: 'app',
@@ -34,8 +36,9 @@ const defaultState = {
     semidark: false,
 };
 
+
 const initialState = {
-    theme: localStorage.getItem('theme') || themeConfig.theme,
+  theme: localStorage.getItem('theme') || themeConfig.theme,
     menu: localStorage.getItem('menu') || themeConfig.menu,
     layout: localStorage.getItem('layout') || themeConfig.layout,
     rtlClass: localStorage.getItem('rtlClass') || themeConfig.rtlClass,
@@ -70,7 +73,7 @@ const themeConfigSlice = createSlice({
     initialState: initialState,
     reducers: {
         toggleTheme(state, { payload }) {
-            payload = payload || state.theme; // light | dark | system
+             payload = payload || state.theme; // light | dark | system
             localStorage.setItem('theme', payload);
             state.theme = payload;
             if (payload === 'light') {

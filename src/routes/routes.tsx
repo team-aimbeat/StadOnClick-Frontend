@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import AppLayout from "@/components/Layout/AppLayout";
-import Signup from "@/pages/SignUp";
+import SignUp from "@/pages/user-onboarding/SignUp";
 
 const Try = lazy(() => import("@/pages/try"));
 
@@ -8,7 +8,7 @@ const routes = [
   // Public route (NO layout, NO skeleton)
   {
     path: "/",
-    element: <Signup />,
+    element: <SignUp />,
   },
 
   // Routes WITH layout + skeleton

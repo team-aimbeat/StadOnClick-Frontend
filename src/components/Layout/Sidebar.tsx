@@ -85,9 +85,9 @@ const Sidebar = () => {
                 onClick={() => toggleMenu("dashboard")}
                 className={cn(
                   "w-full flex items-center justify-between px-3 py-2.5 rounded-lg",
-                  "text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800",
+                  "text-gray-900 dark:text-gray-200 hover:text-primary hover:bg-primary/10",
                   "transition group",
-                  currentMenu === "dashboard" && "bg-[#3289ff1a] text-primary"
+                  currentMenu === "dashboard" && "bg-primary/10 text-blue-500 font-semibold"
                 )}
                 title={t("Dashboard")}
               >
@@ -95,13 +95,13 @@ const Sidebar = () => {
                   <span
                     className={cn(
                       "flex h-9 w-9 items-center justify-center rounded-lg",
-                      "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
-                      currentMenu === "dashboard" && "bg-primary/10 text-primary"
+                      "bg-slate-50 text-gray-500",
+                      currentMenu === "dashboard" && "bg-primary/10 text-blue-500"
                     )}
                   >
                     <HiHome className="w-5 h-5 shrink-0" />
                   </span>
-                  {!isCollapsed && <span className="ml-3">{t("Dashboard")}</span>}
+                  {!isCollapsed && <span className="ml-3 text-blue-500">{t("Dashboard")}</span>}
                 </div>
                 {!isCollapsed && (
                   <HiChevronRight
@@ -117,13 +117,19 @@ const Sidebar = () => {
                 duration={250}
                 height={currentMenu === "dashboard" && !isCollapsed ? "auto" : 0}
               >
-                <ul className="ml-10 mt-1 space-y-1 text-gray-500">
+                <ul className="ml-10 mt-1 space-y-1 text-gray-600">
                   {["Sales", "Analytics", "Finance", "Crypto"].map((item) => (
                     <li key={item}>
                       <NavLink
-                        to={`/${item === "sales" ? "" : item}`}
-                        className="block px-3 py-2 rounded-md
-                                   hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800"
+                        to={`/${item.toLowerCase() === "sales" ? "" : item.toLowerCase()}`}
+                        className={({ isActive }) =>
+                          cn(
+                            "block px-3 py-2 rounded-md transition-colors",
+                            isActive
+                              ? "text-blue-500 bg-primary/10"
+                              : "hover:text-primary hover:bg-primary/10"
+                          )
+                        }
                       >
                         <span className="flex items-center gap-2">
                           <HiMinus className="w-3 h-3 text-gray-400" />
@@ -139,7 +145,7 @@ const Sidebar = () => {
             {/* Section: Apps */}
             {!isCollapsed && (
               <h2 className="px-4 pt-5 pb-2 text-[11px] font-semibold tracking-wider uppercase
-                             text-black-500 bg-gray-100 dark:text-gray-400 font-inter">
+                             text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
                 {t("apps")}
               </h2>
             )}
@@ -161,8 +167,8 @@ const Sidebar = () => {
                     cn(
                       "flex items-center px-3 py-2.5 rounded-lg transition group",
                       isActive
-                        ? "bg-[#3289ff1a] text-primary"
-                        : "text-gray-700 dark:text-gray-400 text hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-primary/10 text-blue-500 font-semibold"
+                        : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
                     )
                   }
                 >
@@ -171,8 +177,8 @@ const Sidebar = () => {
                       <span
                         className={cn(
                           "flex h-9 w-9 items-center justify-center rounded-lg",
-                          "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
-                          isActive && "bg-primary/10 text-primary"
+                          "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                          isActive && "bg-primary/10 text-blue-500"
                         )}
                       >
                         <item.icon className="w-5 h-5" />
@@ -187,7 +193,7 @@ const Sidebar = () => {
             {/* Section: UI */}
             {!isCollapsed && (
               <h2 className="px-3 pt-5 pb-2 text-[11px] font-semibold tracking-wider uppercase
-                             text-black-500  bg-gray-100  dark:text-gray-400 font-inter">
+                             text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
                 {t("user_interface")}
               </h2>
             )}
@@ -200,8 +206,8 @@ const Sidebar = () => {
                   cn(
                     "flex items-center px-3 py-2.5 rounded-lg transition group",
                     isActive
-                      ? "bg-[#3289ff1a] text-primary"
-                      : "text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? "bg-primary/10 text-blue-500 font-semibold"
+                      : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
                   )
                 }
               >
@@ -210,8 +216,8 @@ const Sidebar = () => {
                     <span
                       className={cn(
                         "flex h-9 w-9 items-center justify-center rounded-lg",
-                        "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
-                        isActive && "bg-primary/10 text-primary"
+                        "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                        isActive && "bg-primary/10 text-blue-500"
                       )}
                     >
                       <HiChartBar className="w-5 h-5" />
@@ -230,8 +236,8 @@ const Sidebar = () => {
                   cn(
                     "flex items-center px-3 py-2.5 rounded-lg transition group",
                     isActive
-                      ? "bg-[#3289ff1a] text-primary"
-                      : "text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? "bg-primary/10 text-blue-500 font-semibold"
+                      : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
                   )
                 }
               >
@@ -240,8 +246,8 @@ const Sidebar = () => {
                     <span
                       className={cn(
                         "flex h-9 w-9 items-center justify-center rounded-lg",
-                        "bg-gray-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
-                        isActive && "bg-primary/10 text-primary"
+                        "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                        isActive && "bg-primary/10 text-blue-500"
                       )}
                     >
                       <HiCube className="w-5 h-5" />
