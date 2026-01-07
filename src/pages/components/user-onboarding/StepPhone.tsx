@@ -7,6 +7,7 @@ import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
 import googleIcon from "@/assets/icons/google.png"
 import swedenFlag from "@/assets/icons/flag-sweden.svg"
+import type { FieldErrors } from "react-hook-form"
 
 type SocialIcon = {
   src: string
@@ -22,9 +23,10 @@ const socialIcons: SocialIcon[] = [
 
 type Props = {
   phone: string
-  setPhone: (v: string) => void
+  onPhoneChange: (v: string) => void
   onNext: () => void
   loading?: boolean
+  errors?: FieldErrors
 }
 
 const countryCode = "+46"
@@ -34,7 +36,7 @@ const countryNameByCode: Record<string, string> = {
 const minDigits = 7
 const maxDigits = 15
 
-export function StepPhone({ phone, setPhone, onNext, loading }: Props) {
+export function StepPhone({ phone, onPhoneChange, onNext, loading, errors }: Props) {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const digitsOnly = phone.replace(/\D/g, "")
@@ -46,7 +48,7 @@ export function StepPhone({ phone, setPhone, onNext, loading }: Props) {
     const sanitized = raw
       .replace(/[^\d+]/g, "")
       .replace(/(?!^)\+/g, "")
-    setPhone(sanitized)
+    onPhoneChange(sanitized)
   }
 
   return (
@@ -80,6 +82,9 @@ export function StepPhone({ phone, setPhone, onNext, loading }: Props) {
             Enter a valid phone number ({minDigits}-{maxDigits} digits).
           </p>
         )}
+        {errors?.phone?.message ? (
+          <p className="text-[12px] text-red-600">{String(errors.phone.message)}</p>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#454545] justify-center">
@@ -116,12 +121,12 @@ export function StepPhone({ phone, setPhone, onNext, loading }: Props) {
         </label>
       </div>
 
-    <Button
-  disabled={!isValidPhone || !acceptedTerms || loading}
-  onClick={onNext}
->
-  {loading ? "Sending..." : "Send OTP"}
-</Button>
+      <Button
+        disabled={!isValidPhone || !acceptedTerms || loading}
+        onClick={onNext}
+      >
+        {loading ? "Sending..." : "Send OTP"}
+      </Button>
     </div>
   )
 }
