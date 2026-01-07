@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
   KeyboardEvent,
+  memo,
   useEffect,
   useRef,
   useState,
@@ -15,13 +16,14 @@ type Props = {
   setOtp: (v: string) => void;
   onBack: () => void;
   onNext: () => void;
-   loading?: boolean
-   errors?: FieldErrors
+  loading?: boolean
+  errors?: FieldErrors
+  onResend?: () => void
 };
 
 const OTP_LENGTH = 6;
 
-export function StepOtp({ otp, setOtp, onBack, onNext, loading, errors }: Props) {
+function StepOtpComponent({ otp, setOtp, onBack, onNext, loading, errors, onResend }: Props) {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const [localOtp, setLocalOtp] = useState(otp);
 
@@ -149,21 +151,34 @@ export function StepOtp({ otp, setOtp, onBack, onNext, loading, errors }: Props)
         Didn&apos;t receive the code?{" "}
         <button
           type="button"
-          className="text-[#3289FF] font-semibold hover:underline focus-visible:outline-none"
+          className="text-[#3289FF] font-semibold hover:underline focus-visible:outline-none disabled:opacity-60"
+          onClick={onResend}
+          disabled={loading}
         >
           Resend OTP
         </button>
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
-   <Button
-  type="submit"
-  className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"
-  disabled={!isComplete || loading}
->
-  {loading ? "Verifying..." : "Verify & Continue"}
-</Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-[52px] w-full sm:w-auto"
+          onClick={onBack}
+          disabled={loading}
+        >
+          Back
+        </Button>
+        <Button
+          type="submit"
+          className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"
+          disabled={!isComplete || loading}
+        >
+          {loading ? "Verifying..." : "Verify & Continue"}
+        </Button>
       </div>
     </form>
   );
 }
+
+export const StepOtp = memo(StepOtpComponent);

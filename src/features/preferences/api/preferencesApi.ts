@@ -1,16 +1,31 @@
 import { baseQuery } from "@/app/services/baseApi";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
+export type PublicInterest = {
+  id: string;
+  name: string;
+  icon?: string | null;
+  color?: string | null;
+};
+
+export type PublicTimeDuration = {
+  id: string;
+  label: string;
+  minutes: number;
+  icon?: string | null;
+  isDefault?: boolean;
+};
+
 export const preferencesApi = createApi({
   reducerPath: "preferencesApi",
   baseQuery: baseQuery,
   tagTypes: ["Preferences"],
   endpoints: (builder) => ({
-    getPublicInterests: builder.query<any[], void>({
+    getPublicInterests: builder.query<PublicInterest[], void>({
       query: () => "/preferences/public/interests",
     }),
 
-    getPublicTimeDurations: builder.query<any[], void>({
+    getPublicTimeDurations: builder.query<PublicTimeDuration[], void>({
       query: () => "/preferences/public/time-durations",
     }),
 

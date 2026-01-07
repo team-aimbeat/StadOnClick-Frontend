@@ -1,15 +1,15 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import {
+  useGetPublicInterestsQuery,
+  useGetPublicTimeDurationsQuery,
+  type PublicInterest,
+  type PublicTimeDuration,
+} from "@/features/preferences/api/preferencesApi"
 import timeIcon from "@/assets/icons/Time.svg"
 import heartLowIcon from "@/assets/icons/heart1.svg"
 import heartMidIcon from "@/assets/icons/heart2.svg"
 import heartHighIcon from "@/assets/icons/heart3.svg"
-import fitnessIcon from "@/assets/icons/barbell.svg"
-import wellnessIcon from "@/assets/icons/plant.svg"
-import focusIcon from "@/assets/icons/target.svg"
-import learningIcon from "@/assets/icons/book.svg"
-import socialIcon from "@/assets/icons/group.svg"
-import outdoorIcon from "@/assets/icons/earth.svg"
 import morningIcon from "@/assets/icons/sunrise.svg"
 import afternoonIcon from "@/assets/icons/sun.svg"
 import eveningIcon from "@/assets/icons/night.svg"
@@ -24,6 +24,16 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
   const [selectedEnergy, setSelectedEnergy] = useState<string[]>([])
   const [selectedGoals, setSelectedGoals] = useState<string[]>([])
   const [selectedMoments, setSelectedMoments] = useState<string[]>([])
+  const {
+    data: interestsData,
+    isLoading: interestsLoading,
+    isError: interestsError,
+  } = useGetPublicInterestsQuery()
+  const {
+    data: timeDurationsData,
+    isLoading: timeDurationsLoading,
+    isError: timeDurationsError,
+  } = useGetPublicTimeDurationsQuery()
 
   const toggleSelection = (
     value: string,
@@ -35,6 +45,31 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
     )
   }
 
+  useEffect(() => {
+    if (timeDurationsData?.length) {
+      const defaults = timeDurationsData.filter((item) => item.isDefault).map((item) => item.id)
+      if (defaults.length) {
+        setSelectedTimes((prev) => (prev.length ? prev : defaults))
+      }
+    }
+  }, [timeDurationsData])
+
+  const renderInterestIcon = (interest: PublicInterest) => {
+    if (interest.icon) {
+      return <span className="text-base leading-none">{interest.icon}</span>
+    }
+    const color = interest.color || "#3B82F6"
+    return <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+  }
+
+  const renderSkeletonPills = (count: number, width = "w-[96px]") =>
+    Array.from({ length: count }).map((_, idx) => (
+      <div
+        key={idx}
+        className={`h-[40px] ${width} rounded-[9px] border border-dashed border-slate-200 bg-slate-50 animate-pulse`}
+      />
+    ))
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -42,25 +77,31 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
           How much time do you usually have?
         </p>
         <div className="flex flex-wrap gap-2">
-          {[
-            { label: "15 min", icon: timeIcon },
-            { label: "30 min", icon: timeIcon },
-            { label: "1 hr", icon: timeIcon },
-          ].map(({ label, icon }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => toggleSelection(label, selectedTimes, setSelectedTimes)}
-              className={`flex h-[40px] w-[96px] items-center justify-center gap-2 rounded-[9px] border text-[12px] shadow-sm ${
-                selectedTimes.includes(label)
-                  ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
-                  : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
-              }`}
-            >
-              <img src={icon} alt="" className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
+          {timeDurationsLoading
+            ? renderSkeletonPills(3)
+            : timeDurationsError
+              ? <p className="text-xs text-red-600">Unable to load time options.</p>
+              : timeDurationsData?.length
+                ? timeDurationsData.map((duration: PublicTimeDuration) => (
+                    <button
+                      key={duration.id}
+                      type="button"
+                      onClick={() => toggleSelection(duration.id, selectedTimes, setSelectedTimes)}
+                      className={`flex h-[40px] w-[96px] items-center justify-center gap-2 rounded-[9px] border text-[12px] shadow-sm ${
+                        selectedTimes.includes(duration.id)
+                          ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
+                          : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
+                      }`}
+                    >
+                      {duration.icon ? (
+                        <span className="text-base leading-none">{duration.icon}</span>
+                      ) : (
+                        <img src={timeIcon} alt="" className="h-4 w-4" />
+                      )}
+                      {duration.label}
+                    </button>
+                  ))
+                : <p className="text-xs text-slate-500">No time durations available.</p>}
         </div>
       </div>
 
@@ -96,28 +137,27 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
           What are you looking for right now?
         </p>
         <div className="grid grid-cols-2 gap-2">
-          {[
-            { label: "Fitness & Movement", icon: fitnessIcon },
-            { label: "Wellness & Relaxation", icon: wellnessIcon },
-            { label: "Focus & Productivity", icon: focusIcon },
-            { label: "Learning & Skill Building", icon: learningIcon },
-            { label: "Social & Group Activities", icon: socialIcon },
-            { label: "Outdoor Experiences", icon: outdoorIcon },
-          ].map(({ label, icon }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => toggleSelection(label, selectedGoals, setSelectedGoals)}
-              className={`flex h-[40px] items-center gap-2 rounded-[9px] border px-3 text-[12px] shadow-sm ${
-                selectedGoals.includes(label)
-                  ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
-                  : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
-              }`}
-            >
-              <img src={icon} alt="" className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
+          {interestsLoading
+            ? renderSkeletonPills(6, "w-full")
+            : interestsError
+              ? <p className="col-span-2 text-xs text-red-600">Unable to load interests.</p>
+              : interestsData?.length
+                ? interestsData.map((interest: PublicInterest) => (
+                    <button
+                      key={interest.id}
+                      type="button"
+                      onClick={() => toggleSelection(interest.id, selectedGoals, setSelectedGoals)}
+                      className={`flex h-[40px] items-center gap-2 rounded-[9px] border px-3 text-[12px] shadow-sm ${
+                        selectedGoals.includes(interest.id)
+                          ? "border-[#3289FF] bg-[#EAF2FF] text-[#1F4FBF]"
+                          : "border-[#D1D5DB] bg-white text-[#3B3B3B] hover:border-[#3289FF]"
+                      }`}
+                    >
+                      {renderInterestIcon(interest)}
+                      {interest.name}
+                    </button>
+                  ))
+                : <p className="col-span-2 text-xs text-slate-500">No interests available right now.</p>}
         </div>
       </div>
 

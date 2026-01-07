@@ -1,5 +1,7 @@
 import { baseQuery } from "@/app/services/baseApi";
 import { createApi } from "@reduxjs/toolkit/query/react";
+import type { BasicProfileRequest } from "../types/basicProfile.types";
+import type { City } from "../types/city.types";
 
 export const authApi = createApi({
   reducerPath: "authApi",
@@ -14,11 +16,23 @@ export const authApi = createApi({
       query: (body) => ({ url: "/auth/verify-otp", method: "POST", body }),
     }),
 
-    completeProfile: builder.mutation<any, FormData>({
-      query: (formData) => ({
+    resendOtp: builder.mutation<any, { phone: string }>({
+      query: (body) => ({ url: "/auth/send-otp", method: "POST", body }),
+    }),
+
+    getCities: builder.query<{ data: City[] }, { q?: string } | void>({
+      query: (params) => ({
+        url: `/locations/cities`,
+        method: "GET",
+        params: params?.q ? { q: params.q } : undefined,
+      }),
+    }),
+
+    completeProfile: builder.mutation<any, BasicProfileRequest>({
+      query: (body) => ({
         url: "/auth/basic-profile",
         method: "POST",
-        body: formData,
+        body,
       }),
     }),
 
@@ -50,6 +64,8 @@ export const authApi = createApi({
 export const {
   useSendOtpMutation,
   useVerifyOtpMutation,
+  useResendOtpMutation,
+  useGetCitiesQuery,
   useCompleteProfileMutation,
   useLoginMutation,
   useLogoutMutation,
