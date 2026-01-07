@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -6,6 +5,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
 import googleIcon from "@/assets/icons/google.png"
+import type { FieldErrors } from "react-hook-form"
+import type { UseFormRegister } from "react-hook-form"
 
 type SocialIcon = {
   src: string
@@ -20,26 +21,26 @@ const socialIcons: SocialIcon[] = [
 ]
 
 type Props = {
-  email: string
-  password: string
-  setEmail: (v: string) => void
-  setPassword: (v: string) => void
+  register: UseFormRegister<any>
+  errors: FieldErrors
   onSubmit?: () => void
   loading?: boolean
   errorMessage?: string
+  isValid?: boolean
+  acceptTermsChecked?: boolean
+  setAcceptTerms?: (v: boolean) => void
 }
 
 export function StepLogin({
-  email,
-  password,
-  setEmail,
-  setPassword,
+  register,
+  errors,
   onSubmit,
   loading = false,
   errorMessage,
+  isValid = false,
+  acceptTermsChecked = false,
+  setAcceptTerms,
 }: Props) {
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
-
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -48,9 +49,11 @@ export function StepLogin({
           type="email"
           className="h-12 rounded-lg border border-slate-200 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
           placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          {...register("email")}
         />
+        {errors.email?.message ? (
+          <p className="text-sm text-red-600">{String(errors.email.message)}</p>
+        ) : null}
       </div>
 
       <div className="space-y-2">
@@ -67,9 +70,11 @@ export function StepLogin({
           type="password"
           className="h-12 rounded-lg border border-slate-200 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
           placeholder="********"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          {...register("password")}
         />
+        {errors.password?.message ? (
+          <p className="text-sm text-red-600">{String(errors.password.message)}</p>
+        ) : null}
       </div>
 
       <div className="space-y-3">
@@ -101,8 +106,11 @@ export function StepLogin({
       <div className="flex items-start gap-3 text-[12px] text-[#242426]">
         <Checkbox
           id="signin-terms"
-          checked={acceptedTerms}
-          onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+          checked={acceptTermsChecked}
+          onCheckedChange={(checked) => {
+            const next = checked === true
+            setAcceptTerms?.(next)
+          }}
           className="w-[19px] h-[18px] border-[#404040]"
         />
         <label htmlFor="signin-terms" className="cursor-pointer">
@@ -113,13 +121,15 @@ export function StepLogin({
         </label>
       </div>
 
-      {errorMessage ? (
-        <p className="text-sm text-red-600">{errorMessage}</p>
-      ) : null}
+      <div className="min-h-[20px]">
+        {errorMessage ? (
+          <p className="text-sm text-red-600">{errorMessage}</p>
+        ) : null}
+      </div>
 
       <Button
         className="h-[52px] w-full max-w-[480px] mx-auto text-[16px]"
-        disabled={!email || !password || !acceptedTerms || loading}
+        disabled={!isValid || loading}
         onClick={onSubmit}
       >
         {loading ? "Signing in..." : "Continue"}

@@ -24,6 +24,8 @@
     "react": "^19.2.0",
     "react-animate-height": "^3.2.3",
     "react-dom": "^19.2.0",
+    "react-hook-form": "^7.70.0",
+    "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.5.0",
     "react-icons": "^5.5.0",
     "react-leaflet": "^5.0.0",
