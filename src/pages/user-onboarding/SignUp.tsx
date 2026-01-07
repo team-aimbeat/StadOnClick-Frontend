@@ -11,6 +11,7 @@ import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png";
 import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
+import { setUser } from "@/features/auth/authSlice";
 import {
   useSendOtpMutation,
   useVerifyOtpMutation,
@@ -190,7 +191,10 @@ export default function SignUp() {
       };
 
       try {
-        await completeProfile(payload).unwrap();
+        const response = await completeProfile(payload).unwrap();
+        if (response?.user) {
+          dispatch(setUser(response.user as any));
+        }
         toast.success("Profile saved", { id: "profile-success" });
         setStep(4);
       } catch (err) {

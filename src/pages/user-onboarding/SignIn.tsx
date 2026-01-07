@@ -41,11 +41,8 @@ export default function SignIn() {
 
     try {
       const response = await login({ email: data.email, password: data.password }).unwrap()
-      if (response?.user) {
-        dispatch(setUser(response.user))
-      } else {
-        dispatch(setUser(response))
-      }
+      const user = response?.user ?? response
+      dispatch(setUser(user))
       toast.success("Signed in successfully", { id: "login-success" })
     } catch (err) {
       const { fieldErrors, formError: normalizedFormError, toastMessage } = normalizeApiError(
