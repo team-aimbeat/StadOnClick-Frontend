@@ -1,12 +1,13 @@
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Separator } from "@/components/ui/separator"
 import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
 import googleIcon from "@/assets/icons/google.png"
-import { useState } from "react"
+import swedenFlag from "@/assets/icons/flag-sweden.svg"
+import type { FieldErrors } from "react-hook-form"
 
 type SocialIcon = {
   src: string
@@ -22,8 +23,10 @@ const socialIcons: SocialIcon[] = [
 
 type Props = {
   phone: string
-  setPhone: (v: string) => void
+  onPhoneChange: (v: string) => void
   onNext: () => void
+  loading?: boolean
+  errors?: FieldErrors
 }
 
 const countryCode = "+46"
@@ -33,47 +36,55 @@ const countryNameByCode: Record<string, string> = {
 const minDigits = 7
 const maxDigits = 15
 
-export function StepPhone({ phone, setPhone, onNext }: Props) {
+export function StepPhone({ phone, onPhoneChange, onNext, loading, errors }: Props) {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const digitsOnly = phone.replace(/\D/g, "")
   const isValidPhone =
     digitsOnly.length >= minDigits && digitsOnly.length <= maxDigits
 
-  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPhone(event.target.value)
+  const handlePhoneChange = (rawValue: string) => {
+    const raw = rawValue
+    const sanitized = raw
+      .replace(/[^\d+]/g, "")
+      .replace(/(?!^)\+/g, "")
+    onPhoneChange(sanitized)
   }
 
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <Label>{countryNameByCode[countryCode] ?? "Country"}</Label>
+        <Label className="text-sm font-medium text-slate-800">
+          Phone number ({countryNameByCode[countryCode] ?? "Country"})
+        </Label>
 
-        <div className="flex items-center rounded-lg border border-[#bdbdbd] bg-white px-3 py-2 shadow-sm w-full">
-          <div className="flex h-[18px] w-[26px] items-center justify-center rounded-sm border border-[#c9c9c9] bg-[#1e5aa6]">
-            <div className="h-[14px] w-[3px] bg-[#f8d23c]" />
-            <div className="ml-[2px] h-[3px] w-[14px] bg-[#f8d23c]" />
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-200">
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-200">
+            <img src={swedenFlag} alt="Sweden flag" className="h-4 w-6 rounded-[2px] object-cover" />
+            <span className="text-sm font-semibold text-slate-800">{countryCode}</span>
           </div>
-          <div className="mx-3 h-5 w-px bg-[#c9c9c9]" />
           <Input
             type="tel"
             inputMode="tel"
-            className="flex-1 border-none focus-visible:ring-0 !p-0 text-base"
-            placeholder="Enter your mobile number"
-            value={phone}
-            onChange={handlePhoneChange}
+            autoComplete="tel"
+            className="flex-1 border-none px-0 text-base shadow-none focus-visible:ring-0"
+            placeholder="708 123 456"
+            value={phone.replace(countryCode, "")}
+            onChange={(event) => handlePhoneChange(`${countryCode}${event.target.value}`)}
           />
         </div>
 
-
-        <p className="text-[13px] text-[#282828]">
-          We&apos;ll send you a secure one-time password (OTP) to verify your number.
+        <p className="text-[13px] text-slate-700">
+          We&apos;ll text you a one-time code to verify your number.
         </p>
         {!isValidPhone && phone.length > 0 && (
           <p className="text-[12px] text-red-600">
             Enter a valid phone number ({minDigits}-{maxDigits} digits).
           </p>
         )}
+        {errors?.phone?.message ? (
+          <p className="text-[12px] text-red-600">{String(errors.phone.message)}</p>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#454545] justify-center">
@@ -111,11 +122,10 @@ export function StepPhone({ phone, setPhone, onNext }: Props) {
       </div>
 
       <Button
-        className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-[16px] text-white"
-        disabled={!isValidPhone}
+        disabled={!isValidPhone || !acceptedTerms || loading}
         onClick={onNext}
       >
-        Send OTP
+        {loading ? "Sending..." : "Send OTP"}
       </Button>
     </div>
   )

@@ -2,6 +2,8 @@ import themeConfig from '@/theme.config';
 import { createSlice } from '@reduxjs/toolkit';
 import i18next from 'i18next';
 
+const baseTitle = typeof __APP_TITLE__ !== 'undefined' ? __APP_TITLE__ : 'App';
+
 const defaultState = {
     isDarkMode: false,
     mainLayout: 'app',
@@ -63,6 +65,7 @@ const initialState = {
         { code: 'tr', name: 'Turkish' },
         { code: 'ae', name: 'Arabic' },
     ],
+    pageTitle: baseTitle,
 };
 
 const themeConfigSlice = createSlice({
@@ -134,7 +137,9 @@ const themeConfigSlice = createSlice({
         },
 
         setPageTitle(state, { payload }) {
-            document.title = `${payload} | VRISTO - Multipurpose Tailwind Dashboard Template`;
+            const nextTitle = payload || baseTitle;
+            state.pageTitle = nextTitle;
+            document.title = payload ? `${payload} | ${baseTitle}` : baseTitle;
         },
     },
 });
