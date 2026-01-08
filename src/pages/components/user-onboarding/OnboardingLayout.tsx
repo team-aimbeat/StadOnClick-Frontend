@@ -17,7 +17,7 @@ export function OnboardingLayout({
   children,
 }: OnboardingLayoutProps) {
   return (
-    <div className="relative min-h-screen w-full bg-[#F5F5F5] px-3 py-4 sm:px-6 sm:py-6">
+    <div className="relative min-h-screen w-full px-3 py-4 sm:px-6 sm:py-6">
       <div className="absolute inset-0">
         <div className="relative h-full w-full overflow-hidden rounded-2xl">
           <img
