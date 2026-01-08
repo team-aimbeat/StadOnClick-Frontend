@@ -1,8 +1,15 @@
 import { Link } from "react-router-dom"
+import WhiteCard from "@/components/ui/WhiteCard"
 import footballImage from "@/assets/images/football.jpg"
 import cricketImage from "@/assets/images/cricket.jpg"
 import badmintonImage from "@/assets/images/batminton.jpg"
 import tennisImage from "@/assets/images/tennis.jpg"
+import barbellIcon from "@/assets/icons/barbell.svg"
+import groupIcon from "@/assets/icons/group.svg"
+import s1Icon from "@/assets/icons/s1.png"
+import s2Icon from "@/assets/icons/s2.png"
+import sunIcon from "@/assets/icons/sun.svg"
+import targetIcon from "@/assets/icons/target.svg"
 
 const activities = [
   {
@@ -20,13 +27,12 @@ const activities = [
 ]
 
 const categories = [
-  { title: "Football Turfs", icon: "⚽", slug: "games-outings" },
-  { title: "Cricket Grounds", icon: "🏏", slug: "buffet-deals" },
-  { title: "Badminton Courts", icon: "🏸", slug: "spa-deals" },
-  { title: "Swimming Pools", icon: "🏊", slug: "new-deals" },
-  { title: "Corporate Events", icon: "🎉", slug: "new-deals" },
-  { title: "Fitness & Training", icon: "💪", slug: "health" },
-  
+  { title: "Football Turfs", icon: targetIcon, slug: "games-outings" },
+  { title: "Cricket Grounds", icon: sunIcon, slug: "buffet-deals" },
+  { title: "Badminton Courts", icon: s1Icon, slug: "spa-deals" },
+  { title: "Swimming Pools", icon: s2Icon, slug: "new-deals" },
+  { title: "Corporate Events", icon: groupIcon, slug: "new-deals" },
+  { title: "Fitness & Training", icon: barbellIcon, slug: "health" },
 ]
 
 export default function HomePopular() {
@@ -36,7 +42,7 @@ export default function HomePopular() {
         Explore by Category
       </h2>
 
-      <div className="mt-6 rounded-xl bg-white p-6 shadow-sm">
+      <WhiteCard className="mt-6 p-6">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
           <div className="relative overflow-hidden rounded-2xl">
@@ -110,9 +116,13 @@ export default function HomePopular() {
                   to={`/services/${category.slug}`}
                   className="flex min-h-[92px] items-center gap-4 rounded-2xl bg-[#F8F8F8] p-5 shadow-sm transition hover:bg-white"
                 >
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-xl">
-                    {category.icon}
-                  </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white">
+                  <img
+                    src={category.icon}
+                    alt=""
+                    className="h-7 w-7"
+                  />
+                </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
                       {category.title}
@@ -126,7 +136,8 @@ export default function HomePopular() {
             </div>
           </div>
         </div>
-      </div>
+      </WhiteCard>
     </section>
   )
 }
+

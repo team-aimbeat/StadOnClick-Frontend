@@ -73,7 +73,7 @@ export default function HomeNewYearDeals() {
 
           {/* RIGHT IMAGE */}
           <div className="relative">
-            <div className="overflow-hidden rounded-2xl bg-white/10 p-2">
+            <div className="overflow-hidden  p-2">
               <img
                 src={eventImage}
                 alt="Featured deal"
