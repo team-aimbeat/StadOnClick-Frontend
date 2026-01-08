@@ -11,7 +11,10 @@ export default function AppLayout() {
   const { pathname } = useLocation()
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isSidebarCollapsed = !themeConfig.sidebar;
-  const isFramedLayout = pathname.startsWith("/dashboard")
+  const isFramedLayout =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/chat") ||
+    pathname.startsWith("/kyc")
 
   if (!isFramedLayout) {
     return (
