@@ -3,6 +3,13 @@ import {
   HiEllipsisHorizontal,
   HiXMark,
 } from "react-icons/hi2";
+import profile7 from "@/assets/Images/profile-7.jpeg";
+import profile8 from "@/assets/Images/profile-8.jpeg";
+import profile9 from "@/assets/Images/profile-9.jpeg";
+import documentImage from "@/assets/Images/document.png";
+import iconEdit from "@/assets/Images/edit.png";
+import iconView from "@/assets/Images/view.png";
+import iconDelete from "@/assets/Images/delete.png";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import KycSkeleton from "./skeletons/KycSkeleton";
@@ -29,11 +36,11 @@ const data: VendorDoc[] = [
   {
     id: 355657,
     vendor: "Malmö Rörmokare",
-    avatar: "src/assets/images/profile-7.jpeg",
-    docImage: "src/assets/images/profile-7.jpeg",
+    avatar: profile7,
+    docImage: profile7,
     documents: [
-      { name: "Driving license", src: "src/assets/images/profile-7.jpeg" },
-      { name: "Company registration", src: "src/assets/images/profile-9.jpeg" },
+      { name: "Driving license", src: profile7 },
+      { name: "Company registration", src: profile9 },
     ],
     docType: "Company registration",
     category: "Hotel",
@@ -44,12 +51,12 @@ const data: VendorDoc[] = [
   {
     id: 355658,
     vendor: "Malmö Rörmokare",
-    avatar: "src/assets/images/profile-9.jpeg",
-    docImage: "src/assets/images/document.png",
+    avatar: profile9,
+    docImage: documentImage,
     documents: [
-      { name: "Business license", src: "src/assets/images/profile-9.jpeg" },
-      { name: "Tax certificate", src: "src/assets/images/profile-7.jpeg" },
-      { name: "Owner ID", src: "src/assets/images/profile-8.jpeg" },
+      { name: "Business license", src: profile9 },
+      { name: "Tax certificate", src: profile7 },
+      { name: "Owner ID", src: profile8 },
     ],
     docType: "Company registration",
     category: "Restaurant",
@@ -60,11 +67,11 @@ const data: VendorDoc[] = [
     {
     id: 355657,
     vendor: "Malmö Rörmokare",
-    avatar: "src/assets/images/profile-8.jpeg",
-    docImage: "src/assets/images/profile-8.jpeg",
+    avatar: profile8,
+    docImage: profile8,
     documents: [
-      { name: "Driving license", src: "src/assets/images/profile-7.jpeg" },
-      { name: "Company registration", src: "src/assets/images/profile-9.jpeg" },
+      { name: "Driving license", src: profile7 },
+      { name: "Company registration", src: profile9 },
     ],
     docType: "Company registration",
     category: "Hotel",
@@ -217,7 +224,7 @@ const VendorDocumentsTable: React.FC = () => {
           className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
           onSelect={() => setActiveDoc(row)}
         >
-          <img src='src/assets/images/edit.png' className="h-4 w-4" />
+          <img src={iconEdit} className="h-4 w-4" />
           Edit
         </DropdownMenuItem>
 
@@ -225,14 +232,14 @@ const VendorDocumentsTable: React.FC = () => {
           className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
           onSelect={() => setViewDoc(row)}
         >
-          <img src='src/assets/images/view.png' className="h-4 w-4" />
+          <img src={iconView} className="h-4 w-4" />
           View
         </DropdownMenuItem>
 
         <DropdownMenuSeparator className="my-1" />
 
         <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 focus:text-red-600">
-          <img src='src/assets/images/delete.png' className="h-4 w-4" />
+          <img src={iconDelete} className="h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

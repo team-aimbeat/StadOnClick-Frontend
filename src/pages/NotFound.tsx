@@ -38,7 +38,7 @@ const NotFound: React.FC = () => {
             Tillbaka till start
           </Link>
           <Link
-            to="/dashboard"
+            to="/admin/dashboard"
             className="rounded-full border bg-[#005293]  border-slate-700 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-100"
           >
             Ga till dashboard

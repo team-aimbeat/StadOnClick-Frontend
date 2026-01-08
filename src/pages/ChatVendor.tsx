@@ -27,7 +27,7 @@ import IconMicrophoneOff from '@/assets/Icon/IconMicrophoneOff';
 import IconDownload from '@/assets/Icon/IconDownload';
 import IconCamera from '@/assets/Icon/IconCamera';
 import { setPageTitle } from '@/features/Layout/themeConfigSlice';
-import { IRootState } from '@/app/store';
+import { RootState } from '@/app/store';
 import Dropdown from '@/components/ui/dropdown';
 import IconHorizontalDots from '@/assets/Icon/IconHorizontalDots';
 
@@ -210,8 +210,8 @@ const ChatVendor = () => {
     useEffect(() => {
         dispatch(setPageTitle('Chat'));
     });
-    const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
-    const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
+    const isRtl = useSelector((state: RootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
+    const isDark = useSelector((state: RootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
 
     const [isShowChatMenu, setIsShowChatMenu] = useState(false);
     const [searchUser, setSearchUser] = useState('');
@@ -270,7 +270,7 @@ const ChatVendor = () => {
                     <div className="flex justify-between items-center">
                         <div className="flex items-center">
                             <div className="flex-none">
-                                <img src="src/assets/images/profile-7.jpeg" className="rounded-full h-12 w-12 object-cover" alt="" />
+                                <img src='/src/assets/Images/profile-7.jpeg'className="rounded-full h-12 w-12 object-cover" alt="" />
                             </div>
                             <div className="mx-3">
                                 <p className="mb-1 font-semibold">Alon Smith</p>

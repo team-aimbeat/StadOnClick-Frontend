@@ -21,19 +21,30 @@ import {
   HiChartBar,
 } from "react-icons/hi2";
 
-import { IRootState } from "@/app/store";
+import { RootState } from "@/app/store";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
 import { cn } from "@/lib/utils";
 
-const Sidebar = () => {
+type SidebarProps = {
+  basePath?: string;
+};
+
+const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const [currentMenu, setCurrentMenu] = useState<string>("");
-  const themeConfig = useSelector((state: IRootState) => state.themeConfig);
+  const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const semidark = themeConfig.semidark;
   const isCollapsed = !themeConfig.sidebar;
 
   const location = useLocation();
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const normalizedBasePath = basePath.replace(/\/$/, "");
+  const withBase = (path: string) => {
+    if (!normalizedBasePath) return path.startsWith("/") ? path : `/${path}`;
+    return `${normalizedBasePath}/${path.replace(/^\//, "")}`;
+  };
+  const dashboardBase = withBase("dashboard");
+  const homePath = normalizedBasePath ? dashboardBase : "/";
 
   const toggleMenu = (value: string) => {
     setCurrentMenu((old) => (old === value ? "" : value));
@@ -57,7 +68,7 @@ const Sidebar = () => {
       >
         {/* Logo + Toggle */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-          <NavLink to="/" className="flex items-center justify-center">
+          <NavLink to={homePath} className="flex items-center justify-center">
             <img
               src="src/assets/logo/logo.png"
               className={isCollapsed ? "w-8" : "w-32"}
@@ -121,7 +132,11 @@ const Sidebar = () => {
                   {["Sales", "Analytics", "Finance", "Crypto"].map((item) => (
                     <li key={item}>
                       <NavLink
-                        to={`/${item.toLowerCase() === "sales" ? "" : item.toLowerCase()}`}
+                        to={
+                          item.toLowerCase() === "sales"
+                            ? dashboardBase
+                            : `${dashboardBase}/${item.toLowerCase()}`
+                        }
                         className={({ isActive }) =>
                           cn(
                             "block px-3 py-2 rounded-md transition-colors",
@@ -151,13 +166,13 @@ const Sidebar = () => {
             )}
 
             {[
-              { to: "/chat", icon: HiChatBubbleLeftRight,  label: "Chat" },
-              { to: "/apps/mailbox", icon: HiEnvelope, label: "Mailbox" },
-              { to: "/kyc", icon: HiClipboardDocumentCheck, label: "KYC" },
-              { to: "/apps/notes", icon: HiDocumentText, label: "Notes" },
-              { to: "/apps/scrumboard", icon: HiRectangleStack, label: "Scrumboard" },
-              { to: "/apps/contacts", icon: HiUserGroup, label: "Contacts" },
-              { to: "/apps/calendar", icon: HiCalendar, label: "Calendar" },
+              { to: withBase("chat"), icon: HiChatBubbleLeftRight, label: "Chat" },
+              { to: withBase("apps/mailbox"), icon: HiEnvelope, label: "Mailbox" },
+              { to: withBase("kyc"), icon: HiClipboardDocumentCheck, label: "KYC" },
+              { to: withBase("apps/notes"), icon: HiDocumentText, label: "Notes" },
+              { to: withBase("apps/scrumboard"), icon: HiRectangleStack, label: "Scrumboard" },
+              { to: withBase("apps/contacts"), icon: HiUserGroup, label: "Contacts" },
+              { to: withBase("apps/calendar"), icon: HiCalendar, label: "Calendar" },
             ].map((item) => (
               <li key={item.label}>
                 <NavLink
@@ -200,7 +215,7 @@ const Sidebar = () => {
 
             <li>
               <NavLink
-                to="/charts"
+                to={withBase("charts")}
                 title={t("Charts")}
                 className={({ isActive }) =>
                   cn(
@@ -230,7 +245,7 @@ const Sidebar = () => {
 
             <li>
               <NavLink
-                to="/components"
+                to={withBase("components")}
                 title={t("Components")}
                 className={({ isActive }) =>
                   cn(

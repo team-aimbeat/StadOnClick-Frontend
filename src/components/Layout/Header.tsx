@@ -23,8 +23,13 @@ import IconLockDots from "@/assets/Icon/IconLockDots";
 import IconLogout from "@/assets/Icon/IconLogout";
 
 import IconCaretDown from "@/assets/Icon/IconCaretDown";
+import logo from "@/assets/logo/logo.png";
+import menuHeader from "@/assets/Images/banner.png";
+import profile7 from "@/assets/Images/profile-7.jpeg";
+import profile8 from "@/assets/Images/profile-8.jpeg";
+import profile9 from "@/assets/Images/profile-9.jpeg";
 
-import { IRootState } from "@/app/store";
+import { RootState } from "@/app/store";
 import {
   toggleRTL,
   toggleSidebar,
@@ -61,12 +66,15 @@ const Header = () => {
   }, [location]);
 
   const isRtl =
-    useSelector((state: IRootState) => state.themeConfig.rtlClass) === "rtl"
+    useSelector((state: RootState) => state.themeConfig.rtlClass) === "rtl"
       ? true
       : false;
 
-  const themeConfig = useSelector((state: IRootState) => state.themeConfig);
+  const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const dispatch = useDispatch();
+  const getFlagUrl = (code: string) =>
+    new URL(`../../assets/flags/${code.toUpperCase()}.svg`, import.meta.url)
+      .href;
 
   function createMarkup(messages: any) {
     return { __html: messages };
@@ -113,21 +121,21 @@ const Header = () => {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      profile: "profile-7.jpeg",
+      profile: profile7,
       message:
         '<strong className="text-sm mr-1">John Doe</strong>invite you to <strong>Prototyping</strong>',
       time: "45 min ago",
     },
     {
       id: 2,
-      profile: "profile-8.jpeg",
+      profile: profile8,
       message:
         '<strong className="text-sm mr-1">Adam Nolan</strong>mentioned you to <strong>UX Basics</strong>',
       time: "9h Ago",
     },
     {
       id: 3,
-      profile: "profile-9.jpeg",
+      profile: profile9,
       message:
         '<strong className="text-sm mr-1">Anna Morgan</strong>Upload a file',
       time: "9h Ago",
@@ -178,7 +186,7 @@ const Header = () => {
             <Link to="/" className="main-logo flex items-center shrink-0">
               <img
                 className="w-8 ltr:-ml-1 rtl:-mr-1 inline"
-                src="/assets/images/logo.svg"
+                src={logo}
                 alt="logo"
               />
               <span className="text-2xl ltr:ml-1.5 rtl:mr-1.5  font-semibold  align-middle hidden md:inline dark:text-white-light transition-all duration-300">
@@ -310,7 +318,7 @@ const Header = () => {
                 button={
                   <img
                     className="w-5 h-5 object-cover rounded-full"
-                    src={`src/assets/flags/${flag.toUpperCase()}.svg`}
+                    src={getFlagUrl(flag)}
                     alt="flag"
                   />
                 }
@@ -333,7 +341,7 @@ const Header = () => {
                           }}
                         >
                           <img
-                            src={`src/assets/flags/${item.code.toUpperCase()}.svg`}
+                            src={getFlagUrl(item.code)}
                             alt="flag"
                             className="w-5 h-5 object-cover rounded-full"
                           />
@@ -358,7 +366,7 @@ const Header = () => {
                       <div
                         className="absolute h-full w-full bg-no-repeat bg-center bg-cover inset-0 bg-"
                         style={{
-                          backgroundImage: `url('/assets/images/menu-heade.jpg')`,
+                          backgroundImage: `url(${menuHeader})`,
                           backgroundRepeat: "no-repeat",
                           width: "100%",
                           height: "100%",
@@ -474,7 +482,7 @@ const Header = () => {
                                   <img
                                     className="w-12 h-12 rounded-full object-cover"
                                     alt="profile"
-                                    src={`src/assets/images/${notification.profile}`}
+                                    src={notification.profile}
                                   />
                                   <span className="bg-success w-2 h-2 rounded-full block absolute right-[6px] bottom-0"></span>
                                 </div>
@@ -536,7 +544,7 @@ const Header = () => {
                 button={
                   <img
                     className="w-9 h-9 rounded-full object-cover saturate-50 group-hover:saturate-100 transition"
-                    src="src/assets/images/profile-7.jpeg"
+                    src={profile7}
                     alt="userProfile"
                   />
                 }
@@ -546,7 +554,7 @@ const Header = () => {
                     <div className="flex items-center px-4 py-4">
                       <img
                         className="rounded-md w-10 h-10 object-cover"
-                        src="src/assets/images/profile-7.jpeg"
+                        src={profile7}
                         alt="userProfile"
                       />
                       <div className="ltr:pl-4 rtl:pr-4 truncate">
