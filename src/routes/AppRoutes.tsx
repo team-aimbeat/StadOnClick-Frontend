@@ -1,8 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/Layout/AppLayout";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import VendorLayout from "@/components/Layout/VendorLayout";
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
+import VendorDashboard from "@/pages/VendorDashboard";
 import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
@@ -44,18 +47,36 @@ const appRouter = createBrowserRouter([
         path: "/deals/:slug",
         element: <DealDetail />,
       },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    errorElement: <ErrorPage />,
+    children: [
       {
-        path: "/dashboard",
+        path: "dashboard",
         element: <AdminDashboard />,
         errorElement: <ErrorPage />,
       },
       {
-        path: "/kyc",
+        path: "kyc",
         element: <Kyc />,
       },
       {
-        path: "/chat",
+        path: "chat",
         element: <ChatVendor />,
+      },
+    ],
+  },
+  {
+    path: "/vendor",
+    element: <VendorLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "dashboard",
+        element: <VendorDashboard />,
       },
     ],
   },

@@ -19,7 +19,7 @@
 export const sidebarMenu = [
   // { key: "dashboard", label: "Dashboard", path: "/dashboard", icon:'' },
   { key: "Signup", label: "Signup", path: "/", icon: ''  },
-   { key: "dashboard", label: "Dashboard", path: "/dashboard" },
+  { key: "dashboard", label: "Dashboard", path: "/admin/dashboard" },
   { key: "customers", label: "Customers", path: "/customers", icon:''   },
   { key: "products", label: "Products", path: "/products", icon:''   },
   { key: "invoices", label: "Invoices", path: "/invoices", icon: ''  },

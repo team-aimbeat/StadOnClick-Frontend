@@ -270,7 +270,7 @@ const ChatVendor = () => {
                     <div className="flex justify-between items-center">
                         <div className="flex items-center">
                             <div className="flex-none">
-                                <img src="src/assets/images/profile-7.jpeg" className="rounded-full h-12 w-12 object-cover" alt="" />
+                                <img src='/src/assets/Images/profile-7.jpeg'className="rounded-full h-12 w-12 object-cover" alt="" />
                             </div>
                             <div className="mx-3">
                                 <p className="mb-1 font-semibold">Alon Smith</p>
