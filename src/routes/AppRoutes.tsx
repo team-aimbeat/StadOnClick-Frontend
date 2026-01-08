@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/Layout/AppLayout";
-import SiteLayout from "@/components/Layout/SiteLayout";
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -15,7 +14,8 @@ import NotFound from "@/pages/NotFound"
 
 const appRouter = createBrowserRouter([
   {
-    element: <SiteLayout />,
+    element: <AppLayout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/",
@@ -45,17 +45,11 @@ const appRouter = createBrowserRouter([
         element: <DealDetail />,
       },
       {
-        element: <AppLayout />,
+        path: "/dashboard",
+        element: <AdminDashboard />,
         errorElement: <ErrorPage />,
-        children: [
-          {
-            path: "/dashboard",
-            element: <AdminDashboard />,
-            errorElement: <ErrorPage />,
-          },
-        ],
       },
-       {
+      {
         path: "/kyc",
         element: <Kyc />,
       },
@@ -63,7 +57,6 @@ const appRouter = createBrowserRouter([
         path: "/chat",
         element: <ChatVendor />,
       },
-
     ],
   },
   {
