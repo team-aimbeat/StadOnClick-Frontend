@@ -44,18 +44,18 @@ const appRouter = createBrowserRouter([
         path: "/deals/:slug",
         element: <DealDetail />,
       },
+    ],
+  },
+  {
+    element: <AppLayout />,
+    errorElement: <ErrorPage />,
+    children: [
       {
-        element: <AppLayout />,
+        path: "/dashboard",
+        element: <AdminDashboard />,
         errorElement: <ErrorPage />,
-        children: [
-          {
-            path: "/dashboard",
-            element: <AdminDashboard />,
-            errorElement: <ErrorPage />,
-          },
-        ],
       },
-       {
+      {
         path: "/kyc",
         element: <Kyc />,
       },
@@ -63,7 +63,6 @@ const appRouter = createBrowserRouter([
         path: "/chat",
         element: <ChatVendor />,
       },
-
     ],
   },
   {
