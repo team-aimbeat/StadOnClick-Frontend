@@ -16,7 +16,6 @@ import {
   HiDocumentText,
   HiRectangleStack,
   HiUserGroup,
-  HiBanknotes,
   HiCalendar,
   HiCube,
   HiChartBar,
@@ -70,6 +69,7 @@ const Sidebar = () => {
             onClick={() => dispatch(toggleSidebar())}
             className="w-8 h-8 flex items-center justify-center rounded-lg
                        hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            title={isCollapsed ? t("Expand") : t("Collapse")}
           >
             <HiChevronDown className="rotate-90 w-5 h-5 text-gray-500" />
           </button>
@@ -85,14 +85,23 @@ const Sidebar = () => {
                 onClick={() => toggleMenu("dashboard")}
                 className={cn(
                   "w-full flex items-center justify-between px-3 py-2.5 rounded-lg",
-                  "text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800",
+                  "text-gray-900 dark:text-gray-200 hover:text-primary hover:bg-primary/10",
                   "transition group",
-                  currentMenu === "dashboard" && "bg-[#3289ff1a] text-primary"
+                  currentMenu === "dashboard" && "bg-primary/10 text-blue-500 font-semibold"
                 )}
+                title={t("Dashboard")}
               >
                 <div className="flex items-center">
-                  <HiHome className="w-5 h-5 shrink-0 text-gray-400 group-hover:text-primary" />
-                  {!isCollapsed && <span className="ml-3">{t("Dashboard")}</span>}
+                  <span
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-lg",
+                      "bg-slate-50 text-gray-500",
+                      currentMenu === "dashboard" && "bg-primary/10 text-blue-500"
+                    )}
+                  >
+                    <HiHome className="w-5 h-5 shrink-0" />
+                  </span>
+                  {!isCollapsed && <span className="ml-3 text-blue-500">{t("Dashboard")}</span>}
                 </div>
                 {!isCollapsed && (
                   <HiChevronRight
@@ -108,15 +117,24 @@ const Sidebar = () => {
                 duration={250}
                 height={currentMenu === "dashboard" && !isCollapsed ? "auto" : 0}
               >
-                <ul className="ml-10 mt-1 space-y-1 text-gray-500">
+                <ul className="ml-10 mt-1 space-y-1 text-gray-600">
                   {["Sales", "Analytics", "Finance", "Crypto"].map((item) => (
                     <li key={item}>
                       <NavLink
-                        to={`/${item === "sales" ? "" : item}`}
-                        className="block px-3 py-2 rounded-md
-                                   hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800"
+                        to={`/${item.toLowerCase() === "sales" ? "" : item.toLowerCase()}`}
+                        className={({ isActive }) =>
+                          cn(
+                            "block px-3 py-2 rounded-md transition-colors",
+                            isActive
+                              ? "text-blue-500 bg-primary/10"
+                              : "hover:text-primary hover:bg-primary/10"
+                          )
+                        }
                       >
-                        {t(item)}
+                        <span className="flex items-center gap-2">
+                          <HiMinus className="w-3 h-3 text-gray-400" />
+                          {t(item)}
+                        </span>
                       </NavLink>
                     </li>
                   ))}
@@ -127,15 +145,15 @@ const Sidebar = () => {
             {/* Section: Apps */}
             {!isCollapsed && (
               <h2 className="px-4 pt-5 pb-2 text-[11px] font-semibold tracking-wider uppercase
-                             text-black-500 bg-gray-100 dark:text-gray-400 font-inter">
+                             text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
                 {t("apps")}
               </h2>
             )}
 
             {[
-              { to: "/apps/chat", icon: HiChatBubbleLeftRight,  label: "Chat" },
+              { to: "/chat", icon: HiChatBubbleLeftRight,  label: "Chat" },
               { to: "/apps/mailbox", icon: HiEnvelope, label: "Mailbox" },
-              { to: "/apps/todolist", icon: HiClipboardDocumentCheck, label: "Todo_list" },
+              { to: "/kyc", icon: HiClipboardDocumentCheck, label: "KYC" },
               { to: "/apps/notes", icon: HiDocumentText, label: "Notes" },
               { to: "/apps/scrumboard", icon: HiRectangleStack, label: "Scrumboard" },
               { to: "/apps/contacts", icon: HiUserGroup, label: "Contacts" },
@@ -144,17 +162,30 @@ const Sidebar = () => {
               <li key={item.label}>
                 <NavLink
                   to={item.to}
+                  title={t(item.label)}
                   className={({ isActive }) =>
                     cn(
                       "flex items-center px-3 py-2.5 rounded-lg transition group",
                       isActive
-                        ? "bg-[#3289ff1a] text-primary"
-                        : "text-gray-700 dark:text-gray-400 text hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-primary/10 text-blue-500 font-semibold"
+                        : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
                     )
                   }
                 >
-                  <item.icon className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                  {!isCollapsed && <span className="ml-3">{t(item.label)}</span>}
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-lg",
+                          "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                          isActive && "bg-primary/10 text-blue-500"
+                        )}
+                      >
+                        <item.icon className="w-5 h-5" />
+                      </span>
+                      {!isCollapsed && <span className="ml-3">{t(item.label)}</span>}
+                    </>
+                  )}
                 </NavLink>
               </li>
             ))}
@@ -162,7 +193,7 @@ const Sidebar = () => {
             {/* Section: UI */}
             {!isCollapsed && (
               <h2 className="px-3 pt-5 pb-2 text-[11px] font-semibold tracking-wider uppercase
-                             text-black-500  bg-gray-100  dark:text-gray-400 font-inter">
+                             text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
                 {t("user_interface")}
               </h2>
             )}
@@ -170,28 +201,60 @@ const Sidebar = () => {
             <li>
               <NavLink
                 to="/charts"
+                title={t("Charts")}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center px-3 py-2.5 rounded-lg transition group",
                     isActive
-                      ? "bg-[#3289ff1a] text-primary"
-                      : "text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? "bg-primary/10 text-blue-500 font-semibold"
+                      : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
                   )
                 }
               >
-                <HiChartBar className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                {!isCollapsed && <span className="ml-3">{t("Charts")}</span>}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-lg",
+                        "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                        isActive && "bg-primary/10 text-blue-500"
+                      )}
+                    >
+                      <HiChartBar className="w-5 h-5" />
+                    </span>
+                    {!isCollapsed && <span className="ml-3">{t("Charts")}</span>}
+                  </>
+                )}
               </NavLink>
             </li>
 
             <li>
               <NavLink
                 to="/components"
-                className="flex items-center px-3 py-2.5 rounded-lg
-                           text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                title={t("Components")}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center px-3 py-2.5 rounded-lg transition group",
+                    isActive
+                      ? "bg-primary/10 text-blue-500 font-semibold"
+                      : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
+                  )
+                }
               >
-                <HiCube className="w-5 h-5 text-gray-400 group-hover:text-primary" />
-                {!isCollapsed && <span className="ml-3">{t("Components")}</span>}
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-lg",
+                        "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
+                        isActive && "bg-primary/10 text-blue-500"
+                      )}
+                    >
+                      <HiCube className="w-5 h-5" />
+                    </span>
+                    {!isCollapsed && <span className="ml-3">{t("Components")}</span>}
+                  </>
+                )}
               </NavLink>
             </li>
 

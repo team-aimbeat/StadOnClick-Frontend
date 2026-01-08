@@ -114,7 +114,7 @@ export default function StatCard({
             
             {percentage !== undefined && (
               <div className={cn(
-                "flex items-center ml-30 gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium",
+                "flex items-center ml-40 gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium",
                 trendColor
               )}>
                 
