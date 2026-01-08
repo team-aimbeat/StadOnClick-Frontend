@@ -67,6 +67,9 @@
 
 :root {
   --radius: 0.625rem;
+  --color-primary: #0f6c3c;
+  --color-secondary: #0ea5e9;
+  --color-tertiary: #f97316;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -353,6 +356,31 @@
     background: #f59e0b;
     box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16);
   }
+
+  .site-shell {
+    min-height: 100vh;
+    background: var(--site-bg, #ffffff);
+    color: var(--site-text, #0f172a);
+  }
+
+  .site-container {
+    width: 100%;
+    max-width: var(--site-max-width, 92rem);
+    margin: 0 auto;
+  }
+
+  .full-bleed {
+    position: relative;
+    left: 50%;
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    padding-left: 0;
+    padding-right: 0;
+    overflow-x: hidden;
+  }
+
   
   .cap-card {
     border: 1px solid rgba(17, 24, 39, 0.08);
