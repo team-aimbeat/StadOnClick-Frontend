@@ -1,33 +1,29 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-import { useTranslation } from "react-i18next";
-import i18next from "i18next";
-import IconMenu from "@/assets/Icon/IconMenu";
-import IconCalendar from "@/assets/Icon/IconCalendar";
-import IconEdit from "@/assets/Icon/IconEdit";
-import IconChatNotification from "@/assets/Icon/IconChatNotification";
-import IconSearch from "@/assets/Icon/IconSearch";
-import IconXCircle from "@/assets/Icon/IconXCircle";
-import IconSun from "@/assets/Icon/IconSun";
-import IconMoon from "@/assets/Icon/IconMoon";
-import IconLaptop from "@/assets/Icon/IconLaptop";
-import IconMailDot from "@/assets/Icon/IconMailDot";
 import IconArrowLeft from "@/assets/Icon/IconArrowLeft";
-import IconInfoCircle from "@/assets/Icon/IconInfoCircle";
 import IconBellBing from "@/assets/Icon/IconBellBing";
-import IconUser from "@/assets/Icon/IconUser";
-import IconMail from "@/assets/Icon/IconMail";
+import IconChatNotification from "@/assets/Icon/IconChatNotification";
+import IconInfoCircle from "@/assets/Icon/IconInfoCircle";
+import IconLaptop from "@/assets/Icon/IconLaptop";
 import IconLockDots from "@/assets/Icon/IconLockDots";
 import IconLogout from "@/assets/Icon/IconLogout";
+import IconMailDot from "@/assets/Icon/IconMailDot";
+import IconMenu from "@/assets/Icon/IconMenu";
+import IconMoon from "@/assets/Icon/IconMoon";
+import IconSearch from "@/assets/Icon/IconSearch";
+import IconSun from "@/assets/Icon/IconSun";
+import IconUser from "@/assets/Icon/IconUser";
+import IconXCircle from "@/assets/Icon/IconXCircle";
+import i18next from "i18next";
+import { useTranslation } from "react-i18next";
 
-import IconCaretDown from "@/assets/Icon/IconCaretDown";
-import logo from "@/assets/logo/logo.png";
 import menuHeader from "@/assets/Images/banner.png";
 import profile7 from "@/assets/Images/profile-7.jpeg";
 import profile8 from "@/assets/Images/profile-8.jpeg";
 import profile9 from "@/assets/Images/profile-9.jpeg";
+import logo from "@/assets/logo/logo.png";
 
 import { RootState } from "@/app/store";
 import {
@@ -312,18 +308,15 @@ const Header = () => {
               btnClassName={actionBtnClass}
               button={<IconMailDot />}
             >
-              <ul className="!py-0 text-dark dark:text-white-dark w-[300px] sm:w-[375px] text-xs">
+              <ul className="py-0! text-dark dark:text-white-dark w-[300px] sm:w-[375px] text-xs">
                 <li className="mb-5" onClick={(e) => e.stopPropagation()}>
                   <div className="hover:!bg-transparent overflow-hidden relative rounded-t-md p-5 text-white w-full !h-[68px]">
-                    <div
-                      className="absolute h-full w-full bg-no-repeat bg-center bg-cover inset-0 bg-"
-                      style={{
-                        backgroundImage: `url(${menuHeader})`,
-                        backgroundRepeat: "no-repeat",
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    ></div>
+                    <img
+                      src={menuHeader}
+                      alt="header message box banner image"
+                      aria-hidden
+                      className="absolute inset-0 h-full w-full object-cover object-center brightness-75"
+                    />
                     <h4 className="font-semibold relative z-10 text-lg">
                       Messages
                     </h4>
@@ -363,7 +356,7 @@ const Header = () => {
                         );
                       })}
                     </li>
-                    <li className="border-t border-white-light text-center dark:border-white/10 mt-5">
+                    <li className=" border-white-light text-center dark:border-white/10 mt-5">
                       <button
                         type="button"
                         className="text-primary font-semibold group dark:text-gray-400 justify-center !py-4 !h-[48px]"
