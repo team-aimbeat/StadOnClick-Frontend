@@ -1,15 +1,27 @@
-import { Outlet } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
 import Sidebar from "./Sidebar"
 import Footer from "./Footer"
 import { useSelector } from "react-redux"
-import { IRootState } from "@/app/store"
+import { RootState } from "@/app/store"
 import Header from "./Header"
 import { Suspense } from "react"
 import AppLayoutSkeleton from "@/components/Layout/skeletons/AppLayoutSkeleton"
 
 export default function AppLayout() {
-  const themeConfig = useSelector((state: IRootState) => state.themeConfig);
+  const { pathname } = useLocation()
+  const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isSidebarCollapsed = !themeConfig.sidebar;
+  const isFramedLayout = pathname.startsWith("/dashboard")
+
+  if (!isFramedLayout) {
+    return (
+      <div className="min-h-screen">
+        <Suspense fallback={<AppLayoutSkeleton />}>
+          <Outlet />
+        </Suspense>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
