@@ -170,7 +170,7 @@ const Header = () => {
     >
       <div className="shadow-sm">
         <div
-  className="
+          className="
     relative flex items-center gap-3
     px-6 py-3 my-4
     mx-4 md:mx-6 lg:mx-3
@@ -180,8 +180,7 @@ const Header = () => {
     shadow-[0_8px_30px_-20px_rgba(15,23,42,0.45)]
     backdrop-blur
   "
->
-
+        >
           <div className="horizontal-logo flex lg:hidden justify-between items-center ltr:mr-2 rtl:ml-2">
             <Link to="/" className="main-logo flex items-center shrink-0">
               <img
@@ -206,24 +205,6 @@ const Header = () => {
 
           <div className="ltr:mr-2 rtl:ml-2 hidden sm:block">
             <ul className="flex items-center gap-2 dark:text-[#d0d2d6]">
-              <li>
-                <Link
-                  to="/apps/calendar"
-                  className={actionBtnClass}
-                  title={t("Calendar")}
-                >
-                  <IconCalendar />
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/apps/todolist"
-                  className={actionBtnClass}
-                  title={t("Todo_list")}
-                >
-                  <IconEdit />
-                </Link>
-              </li>
               <li>
                 <Link
                   to="/apps/chat"
@@ -579,12 +560,7 @@ const Header = () => {
                       Profile
                     </Link>
                   </li>
-                  <li>
-                    <Link to="/apps/mailbox" className="dark:hover:text-white">
-                      <IconMail className="w-4.5 h-4.5 ltr:mr-2 rtl:ml-2 shrink-0" />
-                      Inbox
-                    </Link>
-                  </li>
+      
                   <li>
                     <Link
                       to="/auth/boxed-lockscreen"
