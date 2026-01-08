@@ -1,28 +1,40 @@
-import { baseQuery } from "@/app/services/baseApi";
 import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "@/app/services/baseApi";
 import type { BasicProfileRequest } from "../types/basicProfile.types";
 import type { City } from "../types/city.types";
 
 export const authApi = createApi({
   reducerPath: "authApi",
-  baseQuery: baseQuery,
+  baseQuery: baseQueryWithReauth, // ✅ IMPORTANT
   tagTypes: ["User"],
   endpoints: (builder) => ({
     sendOtp: builder.mutation<any, { phone: string }>({
-      query: (body) => ({ url: "/auth/send-otp", method: "POST", body }),
+      query: (body) => ({
+        url: "/auth/send-otp",
+        method: "POST",
+        body,
+      }),
     }),
 
     verifyOtp: builder.mutation<any, { phone: string; code: string }>({
-      query: (body) => ({ url: "/auth/verify-otp", method: "POST", body }),
+      query: (body) => ({
+        url: "/auth/verify-otp",
+        method: "POST",
+        body,
+      }),
     }),
 
     resendOtp: builder.mutation<any, { phone: string }>({
-      query: (body) => ({ url: "/auth/send-otp", method: "POST", body }),
+      query: (body) => ({
+        url: "/auth/send-otp",
+        method: "POST",
+        body,
+      }),
     }),
 
     getCities: builder.query<{ data: City[] }, { q?: string } | void>({
       query: (params) => ({
-        url: `/locations/cities`,
+        url: "/locations/cities",
         method: "GET",
         params: params?.q ? { q: params.q } : undefined,
       }),
@@ -41,14 +53,24 @@ export const authApi = createApi({
         url: "/auth/me",
         method: "GET",
       }),
+      providesTags: ["User"],
     }),
 
     login: builder.mutation<any, { email: string; password: string }>({
-      query: (body) => ({ url: "/auth/login", method: "POST", body }),
+      query: (body) => ({
+        url: "/auth/login",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User"],
     }),
 
     logout: builder.mutation<void, void>({
-      query: () => ({ url: "/auth/logout", method: "POST" }),
+      query: () => ({
+        url: "/auth/logout",
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
     }),
 
     uploadAvatar: builder.mutation<any, FormData>({
@@ -57,6 +79,7 @@ export const authApi = createApi({
         method: "POST",
         body: formData,
       }),
+      invalidatesTags: ["User"],
     }),
   }),
 });

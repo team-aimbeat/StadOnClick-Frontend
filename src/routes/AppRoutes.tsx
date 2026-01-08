@@ -4,6 +4,7 @@ import Signup from "@/pages/user-onboarding/SignUp"
 import SignIn from "@/pages/user-onboarding/SignIn"
 import AdminDashboard from "@/pages/AdminDashboard"
 import ErrorPage from "@/pages/ErrorPage"
+import Marketplace from "@/pages/Marketplace"
 
 const appRouter = createBrowserRouter([
   {
@@ -14,6 +15,11 @@ const appRouter = createBrowserRouter([
   {
     path: "/sign-in",
     element: <SignIn />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/marketplace",
+    element: <Marketplace />,
     errorElement: <ErrorPage />,
   },
   {

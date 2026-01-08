@@ -10,6 +10,7 @@ import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 import { toast } from "react-hot-toast"
 import { useForm, useFormState } from "react-hook-form"
 import { normalizeApiError } from "@/shared/utils/normalizeApiError"
+import { useNavigate } from "react-router-dom"
 
 type FormValues = {
   email: string
@@ -19,6 +20,7 @@ type FormValues = {
 
 export default function SignIn() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const [login, { isLoading }] = useLoginMutation()
   const [formError, setFormError] = useState<string | undefined>(undefined)
 
@@ -44,6 +46,7 @@ export default function SignIn() {
       const user = response?.user ?? response
       dispatch(setUser(user))
       toast.success("Signed in successfully", { id: "login-success" })
+      navigate("/marketplace", { replace: true })
     } catch (err) {
       const { fieldErrors, formError: normalizedFormError, toastMessage } = normalizeApiError(
         err,
@@ -58,7 +61,7 @@ export default function SignIn() {
       toast.error(toastMessage, { id: "login-error" })
       console.error("Login failed", err)
     }
-  }, [clearErrors, dispatch, login, setError])
+  }, [clearErrors, dispatch, login, navigate, setError])
 
   return (
     <OnboardingLayout
