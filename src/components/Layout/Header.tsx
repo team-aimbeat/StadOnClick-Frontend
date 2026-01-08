@@ -160,7 +160,7 @@ const Header = () => {
 
   const { t } = useTranslation();
   const actionBtnClass =
-    "group relative grid h-10 w-10 place-content-center rounded-full border border-gray-200/70 bg-white/80 text-gray-600 shadow-sm transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary dark:border-gray-800 dark:bg-black/60 dark:text-gray-300 dark:hover:bg-primary/10";
+    "group relative grid h-10 w-10 place-content-center rounded-full border  border-gray-200/70 bg-white/80 text-gray-600  transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary dark:border-gray-800 dark:bg-black/60 dark:text-gray-300 dark:hover:bg-primary/10";
 
   return (
     <header
@@ -209,7 +209,7 @@ const Header = () => {
                 className={actionBtnClass}
                 title={t("Chat")}
               >
-                <IconChatNotification />
+                <IconChatNotification className=""  />
               </Link>
             </li>
           </ul>
