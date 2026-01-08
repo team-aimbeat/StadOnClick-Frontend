@@ -4,9 +4,9 @@ import {
   HiXMark,
 } from "react-icons/hi2";
 import { Button } from "../ui/button";
-import VendorTable from "../ui/Customtable";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import KycSkeleton from "./skeletons/KycSkeleton";
+import VendorTable from "../ui/CustomTable";
 
 /* ================= TYPES ================= */
 

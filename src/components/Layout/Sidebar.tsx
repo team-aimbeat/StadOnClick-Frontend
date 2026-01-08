@@ -151,7 +151,7 @@ const Sidebar = () => {
             )}
 
             {[
-              { to: "/apps/chat", icon: HiChatBubbleLeftRight,  label: "Chat" },
+              { to: "/chat", icon: HiChatBubbleLeftRight,  label: "Chat" },
               { to: "/apps/mailbox", icon: HiEnvelope, label: "Mailbox" },
               { to: "/kyc", icon: HiClipboardDocumentCheck, label: "KYC" },
               { to: "/apps/notes", icon: HiDocumentText, label: "Notes" },
