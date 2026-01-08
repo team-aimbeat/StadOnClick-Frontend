@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import verifiedIcon from "../../../assets/icons/check.svg";
 import trustedIcon from "../../../assets/icons/Lock.svg";
@@ -16,31 +17,59 @@ export function OnboardingLayout({
   imageSubtitle,
   children,
 }: OnboardingLayoutProps) {
+  const [bgSrc, setBgSrc] = useState(image);
+  const [prevBgSrc, setPrevBgSrc] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [newLoaded, setNewLoaded] = useState(false);
+
+  useEffect(() => {
+    if (image !== bgSrc) {
+      setPrevBgSrc(bgSrc);
+      setBgSrc(image);
+      setIsTransitioning(true);
+      setNewLoaded(false);
+    }
+  }, [image, bgSrc]);
+
+  useEffect(() => {
+    if (isTransitioning && newLoaded) {
+      const timeout = setTimeout(() => {
+        setPrevBgSrc(null);
+        setIsTransitioning(false);
+      }, 650);
+      return () => clearTimeout(timeout);
+    }
+  }, [isTransitioning, newLoaded]);
+
+  const enteringClasses = isTransitioning
+    ? newLoaded
+      ? "opacity-100"
+      : "opacity-0"
+    : "opacity-100";
+
+  const exitingClasses = isTransitioning ? "opacity-0" : "opacity-100";
+
   return (
-    <div className="relative min-h-screen w-full px-3 py-4 sm:px-6 sm:py-6">
-      <div className="absolute inset-0">
-        <div className="relative h-full w-full overflow-hidden rounded-2xl">
-          <img
-            key={image}
-            src={image}
-            alt="Onboarding"
-            className="h-full w-full object-cover object-center bg-slide-in"
-            loading="lazy"
-          />
-          <div className="relative h-full w-full overflow-hidden notched-image">
-            <img
-              key={image}
-              src={image}
-              alt="Onboarding"
-              className="h-full w-full object-cover object-center bg-slide-in"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </div>
+    <div className="full-bleed relative min-h-screen w-screen max-w-none overflow-hidden">
+      {prevBgSrc ? (
+        <img
+          src={prevBgSrc}
+          alt=""
+          aria-hidden
+          className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-400 ease-in-out ${exitingClasses}`}
+        />
+      ) : null}
+
+      <img
+        src={bgSrc}
+        alt="Onboarding"
+        className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-400 ease-in-out ${enteringClasses}`}
+        loading="lazy"
+        onLoad={() => setNewLoaded(true)}
+      />
 
       <div className="relative z-20 flex min-h-screen items-start px-4 py-8 sm:px-6 lg:px-12 lg:py-12">
-        <div className="w-full flex justify-start gap-4 lg:flex-row lg:items-center lg:gap-40">
+        <div className="w-full flex justify-start gap-4 lg:flex-row lg:items-end lg:gap-40">
           <div className="flex justify-center lg:justify-start drop-shadow-lg">
             {children}
           </div>

@@ -151,6 +151,8 @@ const Header = () => {
   const [flag, setFlag] = useState(themeConfig.locale);
 
   const { t } = useTranslation();
+  const actionBtnClass =
+    "group relative grid h-10 w-10 place-content-center rounded-full border border-gray-200/70 bg-white/80 text-gray-600 shadow-sm transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary dark:border-gray-800 dark:bg-black/60 dark:text-gray-300 dark:hover:bg-primary/10";
 
   return (
     <header
@@ -161,13 +163,14 @@ const Header = () => {
       <div className="shadow-sm">
         <div
   className="
-    relative flex  items-center
-    px-8 py-2.5 my-4
+    relative flex items-center gap-3
+    px-6 py-3 my-4
     mx-4 md:mx-6 lg:mx-3
-    bg-white dark:bg-black
-    rounded-xl
-    border border-gray-200 dark:border-gray-800
-    shadow-sm
+    bg-white/90 dark:bg-black/70
+    rounded-2xl
+    border border-gray-200/70 dark:border-gray-800/80
+    shadow-[0_8px_30px_-20px_rgba(15,23,42,0.45)]
+    backdrop-blur
   "
 >
 
@@ -184,7 +187,7 @@ const Header = () => {
             </Link>
             <button
               type="button"
-              className="collapse-icon flex-none dark:text-[#d0d2d6] hover:text-primary dark:hover:text-primary flex lg:hidden ltr:ml-2 rtl:mr-2 p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:bg-white-light/90 dark:hover:bg-dark/60"
+              className={`${actionBtnClass} flex-none lg:hidden ltr:ml-2 rtl:mr-2`}
               onClick={() => {
                 dispatch(toggleSidebar());
               }}
@@ -194,11 +197,12 @@ const Header = () => {
           </div>
 
           <div className="ltr:mr-2 rtl:ml-2 hidden sm:block">
-            <ul className="flex items-center space-x-2 rtl:space-x-reverse dark:text-[#d0d2d6]">
+            <ul className="flex items-center gap-2 dark:text-[#d0d2d6]">
               <li>
                 <Link
                   to="/apps/calendar"
-                  className="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+                  className={actionBtnClass}
+                  title={t("Calendar")}
                 >
                   <IconCalendar />
                 </Link>
@@ -206,7 +210,8 @@ const Header = () => {
               <li>
                 <Link
                   to="/apps/todolist"
-                  className="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+                  className={actionBtnClass}
+                  title={t("Todo_list")}
                 >
                   <IconEdit />
                 </Link>
@@ -214,15 +219,16 @@ const Header = () => {
               <li>
                 <Link
                   to="/apps/chat"
-                  className="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+                  className={actionBtnClass}
+                  title={t("Chat")}
                 >
                   <IconChatNotification />
                 </Link>
               </li>
             </ul>
           </div>
-          <div className="sm:flex-1 ltr:sm:ml-0 ltr:ml-auto sm:rtl:mr-0 rtl:mr-auto flex items-center space-x-1.5 lg:space-x-2 rtl:space-x-reverse dark:text-[#d0d2d6]">
-            <div className="sm:ltr:mr-auto sm:rtl:ml-auto">
+          <div className="sm:flex-1 ltr:sm:ml-0 ltr:ml-auto sm:rtl:mr-0 rtl:mr-auto flex items-center space-x-2 lg:space-x-3 rtl:space-x-reverse dark:text-[#d0d2d6]">
+            <div className="sm:ltr:mr-auto sm:rtl:ml-auto w-full max-w-[520px]">
               {/* <form
                 className={`${
                   search && "!block"
@@ -254,7 +260,7 @@ const Header = () => {
               <button
                 type="button"
                 onClick={() => setSearch(!search)}
-                className="search_btn sm:hidden p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:bg-white-light/90 dark:hover:bg-dark/60"
+                className={`search_btn sm:hidden ${actionBtnClass}`}
               >
                 <IconSearch className="w-4.5 h-4.5 mx-auto dark:text-[#d0d2d6]" />
               </button>
@@ -262,13 +268,11 @@ const Header = () => {
             <div>
               {themeConfig.theme === "light" ? (
                 <button
-                  className={`${
-                    themeConfig.theme === "light" &&
-                    "flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-                  }`}
+                  className={actionBtnClass}
                   onClick={() => {
                     dispatch(toggleTheme("dark"));
                   }}
+                  title={t("Dark")}
                 >
                   <IconSun />
                 </button>
@@ -277,26 +281,22 @@ const Header = () => {
               )}
               {themeConfig.theme === "dark" && (
                 <button
-                  className={`${
-                    themeConfig.theme === "dark" &&
-                    "flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-                  }`}
+                  className={actionBtnClass}
                   onClick={() => {
                     dispatch(toggleTheme("system"));
                   }}
+                  title={t("System")}
                 >
                   <IconMoon />
                 </button>
               )}
               {themeConfig.theme === "system" && (
                 <button
-                  className={`${
-                    themeConfig.theme === "system" &&
-                    "flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-                  }`}
+                  className={actionBtnClass}
                   onClick={() => {
                     dispatch(toggleTheme("light"));
                   }}
+                  title={t("Light")}
                 >
                   <IconLaptop />
                 </button>
@@ -306,7 +306,7 @@ const Header = () => {
               <Dropdown
                 offset={[0, 8]}
                 placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
-                btnClassName="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+                btnClassName={actionBtnClass}
                 button={
                   <img
                     className="w-5 h-5 object-cover rounded-full"
@@ -349,7 +349,7 @@ const Header = () => {
               <Dropdown
                 offset={[0, 8]}
                 placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
-                btnClassName="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+                btnClassName={actionBtnClass}
                 button={<IconMailDot />}
               >
                 <ul className="!py-0 text-dark dark:text-white-dark w-[300px] sm:w-[375px] text-xs">
@@ -435,7 +435,7 @@ const Header = () => {
               <Dropdown
                 offset={[0, 8]}
                 placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
-                btnClassName="relative block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+                btnClassName={`${actionBtnClass} relative`}
                 button={
                   <span>
                     <IconBellBing />
@@ -532,10 +532,10 @@ const Header = () => {
               <Dropdown
                 offset={[0, 8]}
                 placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
-                btnClassName="relative group block"
+                btnClassName="relative group rounded-full p-0.5 border border-gray-200/70 bg-white/80 shadow-sm transition hover:border-primary/30 dark:border-gray-800 dark:bg-black/60"
                 button={
                   <img
-                    className="w-9 h-9 rounded-full object-cover saturate-50 group-hover:saturate-100"
+                    className="w-9 h-9 rounded-full object-cover saturate-50 group-hover:saturate-100 transition"
                     src="src/assets/images/profile-7.jpeg"
                     alt="userProfile"
                   />

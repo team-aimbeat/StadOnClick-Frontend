@@ -26,7 +26,7 @@ interface GmvCardProps {
 
   // Custom chart data for GMV card
  export const gmvChartData = [
-    { day: '1', value: 12456 },
+    { day: '1', value: 4440000 },
     { day: '2', value: 13450 },
     { day: '3', value: 2111890 },
     { day: '4', value: 14560 },
@@ -51,7 +51,7 @@ const GmvCard: React.FC<GmvCardProps> = ({
   currency = "$",
   showChart = true,
   chartData = [
-    { day: '1', value: 40000 },
+    { day: '1', value: 4440000 },
     { day: '2', value: 3000 },
     { day: '3', value: 5000 },
     { day: '4', value: 2780 },

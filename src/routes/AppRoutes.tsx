@@ -1,15 +1,21 @@
-import { createBrowserRouter } from "react-router-dom"
-import AppLayout from "@/components/Layout/AppLayout"
-import SiteLayout from "@/components/Layout/SiteLayout"
-import Signup from "@/pages/user-onboarding/SignUp"
-import AdminDashboard from "@/pages/AdminDashboard"
-import Home from "@/pages/Home"
-import DealDetail from "@/pages/DealDetail"
-import ServiceCategory from "@/pages/ServiceCategory"
+import { createBrowserRouter } from "react-router-dom";
+import AppLayout from "@/components/Layout/AppLayout";
+import Signup from "@/pages/user-onboarding/SignUp";
+import SignIn from "@/pages/user-onboarding/SignIn";
+import AdminDashboard from "@/pages/AdminDashboard";
+import ErrorPage from "@/pages/ErrorPage";
+import Marketplace from "@/pages/Marketplace";
+import Home from "@/pages/Home";
+import DealDetail from "@/pages/DealDetail";
+import ServiceCategory from "@/pages/ServiceCategory";
+import Kyc from "@/pages/Kyc"
+import ChatVendor from "@/pages/ChatVendor"
+import NotFound from "@/pages/NotFound"
 
 const appRouter = createBrowserRouter([
   {
-    element: <SiteLayout />,
+    element: <AppLayout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/",
@@ -18,6 +24,17 @@ const appRouter = createBrowserRouter([
       {
         path: "/signup",
         element: <Signup />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/sign-in",
+        element: <SignIn />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/marketplace",
+        element: <Marketplace />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "/services/:slug",
@@ -28,16 +45,24 @@ const appRouter = createBrowserRouter([
         element: <DealDetail />,
       },
       {
-        element: <AppLayout />,
-        children: [
-          {
-            path: "/dashboard",
-            element: <AdminDashboard />,
-          },
-        ],
+        path: "/dashboard",
+        element: <AdminDashboard />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/kyc",
+        element: <Kyc />,
+      },
+      {
+        path: "/chat",
+        element: <ChatVendor />,
       },
     ],
   },
-])
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);
 
-export default appRouter
+export default appRouter;
