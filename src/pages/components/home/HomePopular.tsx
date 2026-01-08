@@ -26,7 +26,6 @@ const categories = [
   { title: "Swimming Pools", icon: "🏊", slug: "new-deals" },
   { title: "Corporate Events", icon: "🎉", slug: "new-deals" },
   { title: "Fitness & Training", icon: "💪", slug: "health" },
-  
 ]
 
 export default function HomePopular() {
@@ -36,7 +35,7 @@ export default function HomePopular() {
         Explore by Category
       </h2>
 
-      <div className="mt-6 rounded-xl bg-white p-6 shadow-sm">
+      <div className="mt-6 rounded bg-slate-100 p-6 shadow">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
           <div className="relative overflow-hidden rounded-2xl">
