@@ -9,6 +9,9 @@ import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import ServiceCategory from "@/pages/ServiceCategory";
+import Kyc from "@/pages/Kyc"
+import ChatVendor from "@/pages/ChatVendor"
+import NotFound from "@/pages/NotFound"
 
 const appRouter = createBrowserRouter([
   {
@@ -52,7 +55,20 @@ const appRouter = createBrowserRouter([
           },
         ],
       },
+       {
+        path: "/kyc",
+        element: <Kyc />,
+      },
+      {
+        path: "/chat",
+        element: <ChatVendor />,
+      },
+
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 
