@@ -50,7 +50,7 @@ export function OnboardingLayout({
   const exitingClasses = isTransitioning ? "opacity-0" : "opacity-100";
 
   return (
-    <div className="full-bleed relative min-h-screen w-screen max-w-none overflow-hidden">
+    <div className="relative min-h-screen w-full max-w-full overflow-hidden">
       {prevBgSrc ? (
         <img
           src={prevBgSrc}
