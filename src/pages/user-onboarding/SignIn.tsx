@@ -83,8 +83,6 @@ export default function SignIn() {
           loading={isLoading || isSubmitting}
           errorMessage={formError}
           isValid={canSubmit}
-          acceptTermsChecked={values.acceptTerms}
-          setAcceptTerms={(value) => setValue("acceptTerms", value, { shouldValidate: true })}
         />
       </OnboardingFormCard>
     </OnboardingLayout>

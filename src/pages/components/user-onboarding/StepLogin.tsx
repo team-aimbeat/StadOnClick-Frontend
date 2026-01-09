@@ -103,23 +103,7 @@ export function StepLogin({
         </div>
       </div>
 
-      <div className="flex items-start gap-3 text-[12px] text-[#242426]">
-        <Checkbox
-          id="signin-terms"
-          checked={acceptTermsChecked}
-          onCheckedChange={(checked) => {
-            const next = checked === true
-            setAcceptTerms?.(next)
-          }}
-          className="w-[19px] h-[18px] border-[#404040]"
-        />
-        <label htmlFor="signin-terms" className="cursor-pointer">
-          By continuing, you agree to our{" "}
-          <span className="font-semibold text-[#3289FF]">Terms of Service</span>{" "}
-          &{" "}
-          <span className="font-semibold text-[#3289FF]">Privacy Policy</span>
-        </label>
-      </div>
+    
 
       <div className="min-h-[20px]">
         {errorMessage ? (
