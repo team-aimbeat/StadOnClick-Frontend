@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import Sidebar from "./Sidebar";
-import Header from "./Header";
+import AdminHeader from "./AdminHeader";
 import Footer from "./Footer";
 
 export default function AdminLayout() {
@@ -21,7 +21,7 @@ export default function AdminLayout() {
         ${!isSidebarCollapsed ? "lg:ml-[260px]" : ""}
       `}
       >
-        <Header />
+        <AdminHeader />
 
         <main className="flex-1 p-6">
           <Outlet />
