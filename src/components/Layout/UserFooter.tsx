@@ -141,33 +141,7 @@ const UserFooter = () => {
               </div>
             </div>
           </div>
-          {/* <div className="space-y-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm shadow-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:shadow-none">
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              <Globe className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-              Regions
-            </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              Select the marketplace that matches your current experience and currency.
-            </p>
-            <Label htmlFor={regionSelectId} className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Marketplace Region
-            </Label>
-            <Select defaultValue={regionOptions[0].value}>
-              <SelectTrigger id={regionSelectId} aria-label="Marketplace region selector">
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                  <SelectValue placeholder="Select a region" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {regionOptions.map((region) => (
-                  <SelectItem key={region.value} value={region.value}>
-                    {region.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div> */}
+         
           <div className="space-y-4">
             <div className="space-y-2">
               <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">Sign up for curated updates</p>
