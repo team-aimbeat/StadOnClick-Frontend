@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import Sidebar from "./Sidebar";
-import Header from "./Header";
+import VendorHeader from "./VendorHeader";
 import Footer from "./Footer";
 
 export default function VendorLayout() {
@@ -21,7 +21,7 @@ export default function VendorLayout() {
         ${!isSidebarCollapsed ? "lg:ml-[260px]" : ""}
       `}
       >
-        <Header />
+        <VendorHeader />
 
         <main className="flex-1 p-6">
           <Outlet />

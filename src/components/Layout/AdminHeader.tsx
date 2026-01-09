@@ -34,7 +34,7 @@ import {
 import Dropdown from "../ui/dropdown";
 import SearchBar from "../ui/SearchBar";
 
-const Header = () => {
+const AdminHeader = () => {
   const location = useLocation();
   useEffect(() => {
     const selector = document.querySelector(
@@ -549,4 +549,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default AdminHeader;
