@@ -142,7 +142,7 @@ export default function UserHeader() {
 
           {hovered === "Beauty & Spas" && beautyCategory?.subItems && (
             <div
-              className="pointer-events-auto absolute left-1/2 z-40 mt-1 w-[520px] -translate-x-1/2 rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.15)]"
+              className=" absolute right-1/2 z-40 mt-1 w-[520px]  rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.15)]"
             >
               <div className="px-8 py-6">
                 <div className="flex items-center justify-between">
