@@ -108,42 +108,42 @@ export default function UserHeader() {
               {item.label}
             </NavLink>
           ))}
-          {hovered === "Beauty & Spas" && beautyCategory?.subItems && (
-            <div
-              onMouseEnter={() => setHovered("Beauty & Spas")}
-              className="absolute top-full z-20 mt-2 w-[520px] rounded-2xl border border-slate-200 bg-white shadow-[0_30px_60px_rgba(15,23,42,0.1)]"
-              style={{ left: `${dropLeft}px` }}
-            >
-              <div className="relative px-8 py-6">
-                <button
-                  onClick={() => setHovered(null)}
-                  className="absolute right-4 top-4 text-sm font-semibold text-slate-500 hover:text-slate-800"
-                >
-                  x
-                </button>
-                <h3 className="text-lg font-semibold text-slate-800 mb-4">
-                  {beautyCategory.subTitle}
-                </h3>
-                <div className="grid grid-cols-2 gap-8 text-sm text-slate-700">
-                  {beautyCategory.subItems.slice(0, 2).map((col, idx) => (
-                    <ul key={idx} className="space-y-2">
-                      {col.map((entry) => (
-                        <li key={entry}>
-                          <Link
-                            to={`/marketplace/beauty?category=${encodeURIComponent(entry)}`}
-                            className="hover:text-primary transition-colors"
-                          >
-                            {entry}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  ))}
-                </div>
+        </div>
+        {hovered === "Beauty & Spas" && beautyCategory?.subItems && (
+          <div
+            onMouseEnter={() => setHovered("Beauty & Spas")}
+            className="absolute right-[50%] z-40 w-[520px] rounded border border-slate-200 bg-white shadow-[0_30px_60px_rgba(15,23,42,0.1)]"
+
+          >
+            <div className="relative px-8 py-6">
+              <button
+                onClick={() => setHovered(null)}
+                className="absolute right-4 top-4 text-sm font-semibold text-slate-500 hover:text-slate-800"
+              >
+                x
+              </button>
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">
+                {beautyCategory.subTitle}
+              </h3>
+              <div className="grid grid-cols-2 gap-8 text-sm text-slate-700">
+                {beautyCategory.subItems.slice(0, 2).map((col, idx) => (
+                  <ul key={idx} className="space-y-2">
+                    {col.map((entry) => (
+                      <li key={entry}>
+                        <Link
+                          to={`/marketplace/beauty?category=${encodeURIComponent(entry)}`}
+                          className="hover:text-primary transition-colors"
+                        >
+                          {entry}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </header>
   )
