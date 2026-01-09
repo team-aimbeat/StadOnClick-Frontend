@@ -14,6 +14,7 @@ import ServiceCategory from "@/pages/ServiceCategory";
 import Kyc from "@/pages/Kyc"
 import ChatVendor from "@/pages/ChatVendor"
 import NotFound from "@/pages/NotFound"
+import UserAccount from "@/pages/UserAccount";
 
 const appRouter = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/account",
+        element: <UserAccount />,
       },
       {
         path: "/signup",
