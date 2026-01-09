@@ -1,12 +1,10 @@
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
+import facebookIcon from "@/assets/icons/facebook.png"
 import googleIcon from "@/assets/icons/google.png"
-import type { FieldErrors } from "react-hook-form"
-import type { UseFormRegister } from "react-hook-form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import type { FieldErrors, UseFormRegister } from "react-hook-form"
 
 type SocialIcon = {
   src: string

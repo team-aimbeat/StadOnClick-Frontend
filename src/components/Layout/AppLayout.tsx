@@ -8,7 +8,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <UserHeader />
-      <main className="flex-1">
+      <main className="flex-1 min-w-0">
         <Suspense fallback={<AppLayoutSkeleton />}>
           <Outlet />
         </Suspense>

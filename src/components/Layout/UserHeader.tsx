@@ -118,7 +118,7 @@ export default function UserHeader() {
       </div>
 
       <div className="border-t border-slate-200 bg-white">
-        <div className="relative" onMouseLeave={() => setHovered(null)}>
+          <div className="relative" onMouseLeave={() => setHovered(null)}>
           <div
             ref={navRef}
             className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 overflow-x-auto px-4 py-3 sm:px-6"
@@ -142,8 +142,7 @@ export default function UserHeader() {
 
           {hovered === "Beauty & Spas" && beautyCategory?.subItems && (
             <div
-              className="absolute right-[50%] z-40 mt-1 w-[520px] rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.15)]"
-           
+              className="pointer-events-auto absolute left-1/2 z-40 mt-1 w-[520px] -translate-x-1/2 rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.15)]"
             >
               <div className="px-8 py-6">
                 <div className="flex items-center justify-between">
