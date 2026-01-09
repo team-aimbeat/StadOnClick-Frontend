@@ -3,6 +3,8 @@ import vacationImage from "@/assets/images/vacation.jpeg"
 import movieImage from "@/assets/images/movie.jpg"
 import footballImage from "@/assets/images/football.jpg"
 import heartIcon from "@/assets/icons/heart1.svg"
+import { Link } from "react-router-dom"
+import { useState } from "react"
 
 const services = [
   {
@@ -15,6 +17,7 @@ const services = [
     discount: "-15%",
     rating: "4.8 (1,209)",
     image: eventImage,
+    slug: "derma-bliss-hydrafacial",
   },
   {
     name: "Angels Touch",
@@ -26,6 +29,7 @@ const services = [
     discount: "-40%",
     rating: "5 (270)",
     image: vacationImage,
+    slug: "angels-touch-hydrafacial",
   },
   {
     name: "Heavenly Massage",
@@ -37,6 +41,7 @@ const services = [
     discount: "-21%",
     rating: "4.6 (19,100)",
     image: movieImage,
+    slug: "heavenly-massage-spa-day",
   },
   {
     name: "T'Amor Day & Wellness Spa",
@@ -48,10 +53,17 @@ const services = [
     discount: "-43%",
     rating: "4.7 (880)",
     image: footballImage,
+    slug: "tamor-day-wellness-spa",
   },
 ]
 
 export default function GlowCategory() {
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({})
+
+  const toggleFavorite = (slug: string) => {
+    setFavorites((prev) => ({ ...prev, [slug]: !prev[slug] }))
+  }
+
   return (
     <section className="mt-12">
       <div className="flex items-center justify-between gap-4">
@@ -61,12 +73,12 @@ export default function GlowCategory() {
             Brighten your look with facials and aesthetic treatments
           </p>
         </div>
-        <button
-          type="button"
+        <Link
+          to="/services/spa-deals"
           className="text-sm font-semibold text-emerald-700"
         >
           See More
-        </button>
+        </Link>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-4">
@@ -76,20 +88,40 @@ export default function GlowCategory() {
             className="rounded-2xl border border-slate-100 bg-white shadow-sm"
           >
             <div className="relative">
-              <img
-                src={service.image}
-                alt={service.name}
-                className="h-36 w-full rounded-t-2xl object-cover"
-              />
-              <span className="absolute left-3 top-3 rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow">
-                Popular Gift
-              </span>
-              <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600">
+              <Link to={`/deals/${service.slug}`} className="block">
+                <img
+                  src={service.image}
+                  alt={service.name}
+                  className="h-36 w-full rounded-t-2xl object-cover"
+                />
+                <span className="absolute left-3 top-3 rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-700 shadow">
+                  Popular Gift
+                </span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => toggleFavorite(service.slug)}
+                aria-pressed={Boolean(favorites[service.slug])}
+                aria-label={
+                  favorites[service.slug]
+                    ? `Remove ${service.name} from favorites`
+                    : `Add ${service.name} to favorites`
+                }
+                className={`absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold shadow transition ${
+                  favorites[service.slug]
+                    ? "border-rose-200 bg-rose-50 text-rose-600"
+                    : "border-slate-200 bg-white text-slate-600"
+                }`}
+              >
                 <img src={heartIcon} alt="" className="h-3 w-3" />
-              </span>
+                {favorites[service.slug] ? "" : ""}
+              </button>
             </div>
 
-            <div className="space-y-2 p-4">
+            <Link
+              to={`/deals/${service.slug}`}
+              className="block space-y-2 p-4"
+            >
               <p className="text-sm font-semibold text-slate-900">
                 {service.name}
               </p>
@@ -112,7 +144,7 @@ export default function GlowCategory() {
                   {service.price}
                 </span>
               </div>
-            </div>
+            </Link>
           </article>
         ))}
       </div>
