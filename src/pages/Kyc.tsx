@@ -2,6 +2,7 @@ import RecentActivities, {
   recentActivities,
 } from "@/components/AdminDashboard/RecentActivities";
 import VendorDocumentsTable from "@/components/Layout/columns";
+import profile7 from "@/assets/Images/profile-7.jpeg";
 import AdminDashboardSkeleton from "@/components/Layout/skeletons/AdminDashboardSkeleton";
 import KycSkeleton from "@/components/Layout/skeletons/KycSkeleton";
 import Breadcrumb from "@/components/ui/Breadcrumb";
@@ -18,40 +19,19 @@ import {
 } from "react-icons/hi2";
 import { HiEllipsisHorizontal, HiEye, HiCheck, HiXMark } from "react-icons/hi2";
 
-type VendorDoc = {
-  id: number;
-  vendor: string;
-  avatar: string;
-  docType: string;
-  category: string;
-  status: string;
-  submitted: string;
+const vendorProfile = {
+  name: "Malmo Romokare",
+  id: "355657",
+  avatar: profile7,
+  location: "Malmo",
+  verified: true,
 };
 
-const data: VendorDoc[] = [
-  {
-    id: 355657,
-    vendor: "Malmö Rörmokare",
-    avatar: "/avatars/vendor-1.jpg",
-    docType: "Company registration",
-    category: "Hotel",
-    status: "Pending",
-    submitted: "Dec 26, 2025",
-  },
-  {
-    id: 355658,
-    vendor: "Malmö Rörmokare",
-    avatar: "/avatars/vendor-1.jpg",
-    docType: "Company registration",
-    category: "Restaurant",
-    status: "Completed",
-    submitted: "Dec 26, 2025",
-  },
-];
 
 const Kyc: React.FC = () => {
   const [loading, setLoading] = useState(true);
-    useEffect(() => {
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
     }, 2000); // 2 seconds
@@ -121,7 +101,7 @@ const Kyc: React.FC = () => {
       <div className="grid lg:grid-cols-1 gap-4">
         {/* Content Section */}
         <div className="p-6">
-         <VendorDocumentsTable/>
+         <VendorDocumentsTable vendor={vendorProfile} />
         </div>
       </div>
     </div>
