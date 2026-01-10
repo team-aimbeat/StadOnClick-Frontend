@@ -1,8 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
-import AppLayout from "@/components/Layout/AppLayout";
+import AppLayout from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import VendorLayout from "@/components/layout/VendorLayout";
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
+import VendorDashboard from "@/pages/VendorDashboard";
 import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
@@ -13,6 +16,7 @@ import NotFound from "@/pages/NotFound"
 import About from "@/pages/About"
 import Teams from "@/pages/Teams"
 import Support from "@/pages/Support"
+import UserAccount from "@/pages/UserAccount";
 
 const appRouter = createBrowserRouter([
   {
@@ -22,6 +26,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/account",
+        element: <UserAccount />,
       },
       {
         path: "/signup",
@@ -54,18 +62,36 @@ const appRouter = createBrowserRouter([
         path: "/deals/:slug",
         element: <DealDetail />,
       },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    errorElement: <ErrorPage />,
+    children: [
       {
-        path: "/dashboard",
+        path: "dashboard",
         element: <AdminDashboard />,
         errorElement: <ErrorPage />,
       },
       {
-        path: "/kyc",
+        path: "kyc",
         element: <Kyc />,
       },
       {
-        path: "/chat",
+        path: "chat",
         element: <ChatVendor />,
+      },
+    ],
+  },
+  {
+    path: "/vendor",
+    element: <VendorLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "dashboard",
+        element: <VendorDashboard />,
       },
     ],
   },

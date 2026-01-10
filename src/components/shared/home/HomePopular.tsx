@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import WhiteCard from "@/components/ui/WhiteCard"
+import WhiteCard from "@/components/shared/WhiteCard"
 import footballImage from "@/assets/images/football.jpg"
 import cricketImage from "@/assets/images/cricket.jpg"
 import badmintonImage from "@/assets/images/batminton.jpg"

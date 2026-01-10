@@ -2,6 +2,10 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
+import profile7 from "@/assets/images/profile-7.jpeg";
+import profile8 from "@/assets/images/profile-8.jpeg";
+import profile9 from "@/assets/images/profile-9.jpeg";
+import profile10 from "@/assets/images/profile-10.jpeg";
 
 interface Activity {
   id: string | number;
@@ -26,7 +30,7 @@ export const recentActivities: Activity[] = [
     category: "Yoga Classes",
     status: "Delivered",
     price: "$23",
-    avatar: "src/assets/images/profile-7.jpeg",
+    avatar: profile7,
   },
   {
     id: 3446,
@@ -34,7 +38,7 @@ export const recentActivities: Activity[] = [
     category: "Wedding Event",
     status: "Pending",
     price: "$23",
-    avatar: "src/assets/images/profile-8.jpeg",
+    avatar: profile8,
   },
   {
     id: 3447,
@@ -42,7 +46,7 @@ export const recentActivities: Activity[] = [
     category: "Finance",
     status: "Canceled",
     price: "$23",
-    avatar: "src/assets/images/profile-9.jpeg",
+    avatar: profile9,
   },
   {
     id: 3448,
@@ -50,7 +54,7 @@ export const recentActivities: Activity[] = [
     category: "Finance",
     status: "In Transit",
     price: "$23",
-    avatar: "src/assets/images/profile-10.jpeg",
+    avatar: profile10,
   },
 ];
 
@@ -131,7 +135,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
                 {/* Avatar */}
                 <div className="flex items-center gap-3">
                   <img
-                    src={activity.avatar || "/assets/images/user-profile.jpeg"}
+                    src={activity.avatar || profile7}
                     alt={activity.name}
                     className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700"
                   />

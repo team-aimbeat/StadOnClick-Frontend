@@ -1,12 +1,10 @@
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import facebookIcon from "@/assets/icons/facebook.png"
 import appleIcon from "@/assets/icons/apple.png"
+import facebookIcon from "@/assets/icons/facebook.png"
 import googleIcon from "@/assets/icons/google.png"
-import type { FieldErrors } from "react-hook-form"
-import type { UseFormRegister } from "react-hook-form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import type { FieldErrors, UseFormRegister } from "react-hook-form"
 
 type SocialIcon = {
   src: string
@@ -84,42 +82,44 @@ export function StepLogin({
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
-        <div className="flex items-center justify-center gap-4 sm:gap-6">
-          {socialIcons.map((icon) => (
-            <a
-              key={icon.href}
-              href={icon.href}
-              target="_blank"
-              rel="noreferrer"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#0b59a2]/50 hover:shadow"
-            >
-              <img
-                src={icon.src}
-                alt={icon.alt}
-                className="h-[22px] w-[22px] object-contain"
-              />
-            </a>
-          ))}
-        </div>
+       <div className="flex items-center justify-center gap-4 sm:gap-6">
+  {/* Google OAuth */}
+  <button
+    type="button"
+    onClick={() => {
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
+    }}
+    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#0b59a2]/50 hover:shadow"
+  >
+    <img
+      src={googleIcon}
+      alt="Continue with Google"
+      className="h-[22px] w-[22px] object-contain"
+    />
+  </button>
+
+  {/* Apple (placeholder for later) */}
+  <button
+    type="button"
+    disabled
+    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 opacity-50"
+  >
+    <img src={appleIcon} alt="Apple" className="h-[22px] w-[22px]" />
+  </button>
+
+  {/* Facebook (placeholder) */}
+  <button
+    type="button"
+    disabled
+    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 opacity-50"
+  >
+    <img src={facebookIcon} alt="Facebook" className="h-[22px] w-[22px]" />
+  </button>
+</div>
+
       </div>
 
-      <div className="flex items-start gap-3 text-[12px] text-[#242426]">
-        <Checkbox
-          id="signin-terms"
-          checked={acceptTermsChecked}
-          onCheckedChange={(checked) => {
-            const next = checked === true
-            setAcceptTerms?.(next)
-          }}
-          className="w-[19px] h-[18px] border-[#404040]"
-        />
-        <label htmlFor="signin-terms" className="cursor-pointer">
-          By continuing, you agree to our{" "}
-          <span className="font-semibold text-[#3289FF]">Terms of Service</span>{" "}
-          &{" "}
-          <span className="font-semibold text-[#3289FF]">Privacy Policy</span>
-        </label>
-      </div>
+    
 
       <div className="min-h-[20px]">
         {errorMessage ? (

@@ -1,13 +1,13 @@
-import BreadcrumbSkeleton from "@/components/Layout/skeletons/BreadcrumbSkeleton";
-import StatCardSkeleton from "@/components/Layout/skeletons/StatCardSkeleton";
-import ChartCardSkeleton from "@/components/Layout/skeletons/ChartCardSkeleton";
-import RecentActivitiesSkeleton from "@/components/Layout/skeletons/RecentActivitiesSkeleton";
-import MapcitySkeleton from "@/components/Layout/skeletons/MapcitySkeleton";
-import GmvCardSkeleton from "@/components/Layout/skeletons/GmvCardSkeleton";
-import CustomerAcquisitionCardSkeleton from "@/components/Layout/skeletons/CustomerAcquisitionCardSkeleton";
-import VendorsOverviewSkeleton from "@/components/Layout/skeletons/VendorsOverviewSkeleton";
-import AIAlertInsightsSkeleton from "@/components/Layout/skeletons/AIAlertInsightsSkeleton";
-import NewSubscriptionsCardSkeleton from "@/components/Layout/skeletons/NewSubscriptionsCardSkeleton";
+import BreadcrumbSkeleton from "@/components/skeletons/BreadcrumbSkeleton";
+import StatCardSkeleton from "@/components/skeletons/StatCardSkeleton";
+import ChartCardSkeleton from "@/components/skeletons/ChartCardSkeleton";
+import RecentActivitiesSkeleton from "@/components/skeletons/RecentActivitiesSkeleton";
+import MapcitySkeleton from "@/components/skeletons/MapcitySkeleton";
+import GmvCardSkeleton from "@/components/skeletons/GmvCardSkeleton";
+import CustomerAcquisitionCardSkeleton from "@/components/skeletons/CustomerAcquisitionCardSkeleton";
+import VendorsOverviewSkeleton from "@/components/skeletons/VendorsOverviewSkeleton";
+import AIAlertInsightsSkeleton from "@/components/skeletons/AIAlertInsightsSkeleton";
+import NewSubscriptionsCardSkeleton from "@/components/skeletons/NewSubscriptionsCardSkeleton";
 
 const AdminDashboardSkeleton = () => {
   return (

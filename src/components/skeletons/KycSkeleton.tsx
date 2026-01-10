@@ -1,6 +1,6 @@
-import BreadcrumbSkeleton from "@/components/Layout/skeletons/BreadcrumbSkeleton";
-import StatCardSkeleton from "@/components/Layout/skeletons/StatCardSkeleton";
-import RecentActivitiesSkeleton from "./RecentActivitiesSkeleton";
+import BreadcrumbSkeleton from "@/components/skeletons/BreadcrumbSkeleton";
+import StatCardSkeleton from "@/components/skeletons/StatCardSkeleton";
+import RecentActivitiesSkeleton from "@/components/skeletons/RecentActivitiesSkeleton";
 
 const KycSkeleton = () => {
   return (
@@ -14,7 +14,7 @@ const KycSkeleton = () => {
       </div>
 
       <div className="grid lg:grid-cols-1 gap-4 ">
-      <RecentActivitiesSkeleton />
+        <RecentActivitiesSkeleton />
       </div>
 
     </div>

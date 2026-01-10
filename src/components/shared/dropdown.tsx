@@ -37,7 +37,7 @@ export default function Dropdown({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 z-50 bg-white dark:bg-black border rounded shadow-lg">
+        <div className="absolute right-0 z-50 mt-2">
           {children}
         </div>
       )}

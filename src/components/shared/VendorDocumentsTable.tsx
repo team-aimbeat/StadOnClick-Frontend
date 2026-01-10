@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   HiEllipsisHorizontal,
   HiXMark,
 } from "react-icons/hi2";
+import profile7 from "@/assets/images/profile-7.jpeg";
+import profile8 from "@/assets/images/profile-8.jpeg";
+import profile9 from "@/assets/images/profile-9.jpeg";
+import documentImage from "@/assets/images/document.png";
+import iconEdit from "@/assets/images/edit.png";
+import iconView from "@/assets/images/view.png";
+import iconDelete from "@/assets/images/delete.png";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import KycSkeleton from "./skeletons/KycSkeleton";
-import VendorTable from "../ui/CustomTable";
+import VendorTable from "./CustomTable";
+
 
 /* ================= TYPES ================= */
 
@@ -28,12 +35,12 @@ export type VendorDoc = {
 const data: VendorDoc[] = [
   {
     id: 355657,
-    vendor: "Malmö Rörmokare",
-    avatar: "src/assets/images/profile-7.jpeg",
-    docImage: "src/assets/images/profile-7.jpeg",
+    vendor: "Malm├╢ R├╢rmokare",
+    avatar: profile7,
+    docImage: profile7,
     documents: [
-      { name: "Driving license", src: "src/assets/images/profile-7.jpeg" },
-      { name: "Company registration", src: "src/assets/images/profile-9.jpeg" },
+      { name: "Driving license", src: profile7 },
+      { name: "Company registration", src: profile9 },
     ],
     docType: "Company registration",
     category: "Hotel",
@@ -43,13 +50,13 @@ const data: VendorDoc[] = [
   },
   {
     id: 355658,
-    vendor: "Malmö Rörmokare",
-    avatar: "src/assets/images/profile-9.jpeg",
-    docImage: "src/assets/images/document.png",
+    vendor: "Malm├╢ R├╢rmokare",
+    avatar: profile9,
+    docImage: documentImage,
     documents: [
-      { name: "Business license", src: "src/assets/images/profile-9.jpeg" },
-      { name: "Tax certificate", src: "src/assets/images/profile-7.jpeg" },
-      { name: "Owner ID", src: "src/assets/images/profile-8.jpeg" },
+      { name: "Business license", src: profile9 },
+      { name: "Tax certificate", src: profile7 },
+      { name: "Owner ID", src: profile8 },
     ],
     docType: "Company registration",
     category: "Restaurant",
@@ -59,12 +66,12 @@ const data: VendorDoc[] = [
   },
     {
     id: 355657,
-    vendor: "Malmö Rörmokare",
-    avatar: "src/assets/images/profile-8.jpeg",
-    docImage: "src/assets/images/profile-8.jpeg",
+    vendor: "Malm├╢ R├╢rmokare",
+    avatar: profile8,
+    docImage: profile8,
     documents: [
-      { name: "Driving license", src: "src/assets/images/profile-7.jpeg" },
-      { name: "Company registration", src: "src/assets/images/profile-9.jpeg" },
+      { name: "Driving license", src: profile7 },
+      { name: "Company registration", src: profile9 },
     ],
     docType: "Company registration",
     category: "Hotel",
@@ -111,9 +118,9 @@ const VendorDocumentsTable: React.FC = () => {
   }, [activeDoc]);
 
   const activityLog = [
-    { title: "Request submitted", time: "Dec 18 • 10:12", tone: "bg-emerald-400" },
-    { title: "Documents received", time: "Dec 18 • 10:18", tone: "bg-emerald-400" },
-    { title: "Review completed", time: "Dec 18 • 14:32", tone: "bg-blue-400" },
+    { title: "Request submitted", time: "Dec 18 ΓÇó 10:12", tone: "bg-emerald-400" },
+    { title: "Documents received", time: "Dec 18 ΓÇó 10:18", tone: "bg-emerald-400" },
+    { title: "Review completed", time: "Dec 18 ΓÇó 14:32", tone: "bg-blue-400" },
     { title: "Vendor approved", time: "Recorded automatically", tone: "bg-slate-300" },
   ];
 
@@ -217,7 +224,7 @@ const VendorDocumentsTable: React.FC = () => {
           className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
           onSelect={() => setActiveDoc(row)}
         >
-          <img src='src/assets/images/edit.png' className="h-4 w-4" />
+          <img src={iconEdit} className="h-4 w-4" />
           Edit
         </DropdownMenuItem>
 
@@ -225,14 +232,14 @@ const VendorDocumentsTable: React.FC = () => {
           className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
           onSelect={() => setViewDoc(row)}
         >
-          <img src='src/assets/images/view.png' className="h-4 w-4" />
+          <img src={iconView} className="h-4 w-4" />
           View
         </DropdownMenuItem>
 
         <DropdownMenuSeparator className="my-1" />
 
         <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 focus:text-red-600">
-          <img src='src/assets/images/delete.png' className="h-4 w-4" />
+          <img src={iconDelete} className="h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -368,7 +375,7 @@ const VendorDocumentsTable: React.FC = () => {
                      {viewDoc.vendor}
                    </p>
                    <p className="text-xs text-gray-500">
-                     Vendor verification • Documents & audit trail
+                     Vendor verification ΓÇó Documents & audit trail
                    </p>
                  </div>
                </div>
@@ -399,7 +406,7 @@ const VendorDocumentsTable: React.FC = () => {
                      Uploaded documents
                    </p>
                    <p className="text-xs text-gray-500">
-                     {viewDoc.documents.length} files • Click a card to open viewer
+                     {viewDoc.documents.length} files ΓÇó Click a card to open viewer
                    </p>
                  </div>
                  <input
@@ -422,7 +429,7 @@ const VendorDocumentsTable: React.FC = () => {
                          <p className="text-sm font-semibold text-gray-900">
                            {doc.name}
                          </p>
-                         <p className="text-xs text-gray-500">PDF • 1.2 MB</p>
+                         <p className="text-xs text-gray-500">PDF ΓÇó 1.2 MB</p>
                        </div>
                      </div>
                      <div className="mt-3 flex items-center justify-between gap-2">
