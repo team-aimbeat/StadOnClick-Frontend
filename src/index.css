@@ -162,6 +162,7 @@
   body {
     font-family: 'proxima-regular','proxima-medium','proxima-semibold','proxima-condensed-bold','proxima-extrabold', system-ui, -apple-system,
       BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #ffffff;
   }
   
   label {
