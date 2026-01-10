@@ -1,7 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import AppLayout from "@/components/layout/AppLayout";
-import AdminLayout from "@/components/layout/AdminLayout";
-import VendorLayout from "@/components/layout/VendorLayout";
+
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -10,11 +8,16 @@ import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
-import ServiceCategory from "@/pages/ServiceCategory";
 import Kyc from "@/pages/Kyc"
 import ChatVendor from "@/pages/ChatVendor"
 import NotFound from "@/pages/NotFound"
+import About from "@/pages/About"
+import Teams from "@/pages/Teams"
+import Support from "@/pages/Support"
 import UserAccount from "@/pages/UserAccount";
+import AppLayout from "@/components/Layout/AppLayout";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import VendorLayout from "@/components/Layout/VendorLayout";
 
 const appRouter = createBrowserRouter([
   {
@@ -45,8 +48,16 @@ const appRouter = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: "/services/:slug",
-        element: <ServiceCategory />,
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/teams",
+        element: <Teams />,
+      },
+      {
+        path: "/support",
+        element: <Support />,
       },
       {
         path: "/deals/:slug",
