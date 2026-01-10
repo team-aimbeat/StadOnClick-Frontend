@@ -1,7 +1,15 @@
+import { useEffect } from "react";
 import { Link, useRouteError, isRouteErrorResponse } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 
 export default function ErrorPage() {
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    dispatch(setPageTitle("Error"));
+  }, [dispatch]);
+
   const error = useRouteError();
 
   const status =

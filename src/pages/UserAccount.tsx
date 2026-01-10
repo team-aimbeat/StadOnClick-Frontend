@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { Eye, Lock, MapPin, Sparkles, User, Wallet } from "lucide-react";
 import React from "react";
 import { StepPersonalize } from "@/components/shared/user-onboarding/StepPersonalize";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 
 type SectionKey = "personal" | "password" | "shipping" | "payment" | "personalization";
 
@@ -58,6 +60,11 @@ const UserAccount = () => {
   const [avatarPreview, setAvatarPreview] = React.useState<string>("");
   const avatarUrlRef = React.useRef<string | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const dispatch = useAppDispatch();
+
+  React.useEffect(() => {
+    dispatch(setPageTitle("My Account"));
+  }, [dispatch]);
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

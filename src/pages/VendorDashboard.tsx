@@ -19,6 +19,8 @@ import CategorySelectionCard from '@/components/CategorySelectionCard';
 import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import StatCard from '@/components/shared/StatCard';
+import { useAppDispatch } from '@/app/hooks';
+import { setPageTitle } from '@/features/Layout/themeConfigSlice';
 
 const workflowSteps = [
   { id: 1, title: 'Vendor information', subtitle: 'Add personal & business contact info' },
@@ -30,6 +32,7 @@ const workflowSteps = [
 ];
 
 const VendorDashboard: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [vendorInfo, setVendorInfo] = useState<VendorInfo>({
     firstName: '',
     lastName: '',
@@ -104,6 +107,10 @@ const VendorDashboard: React.FC = () => {
       }
     };
   }, [photoPreview]);
+
+  useEffect(() => {
+    dispatch(setPageTitle("Vendor Dashboard"));
+  }, [dispatch]);
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {

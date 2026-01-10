@@ -1,6 +1,14 @@
+import { useEffect } from "react"
 import { Link } from "react-router-dom"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 
 const NotFound: React.FC = () => {
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle("Page not found"))
+  }, [dispatch])
   return (
     <div className="relative min-h-screen overflow-hidden bg-white text-slate-100">
       <div className="absolute inset-0">

@@ -19,19 +19,25 @@ import VendorsOverview from '@/components/AdminDashboard/VendorsOverview';
 import AIAlertInsights from '@/components/AdminDashboard/AIAlertInsights';
 import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
 import NewSubscriptionsCard from '@/components/AdminDashboard/NewSubscriptionsCard.';
+import { useAppDispatch } from '@/app/hooks';
+import { setPageTitle } from '@/features/Layout/themeConfigSlice';
 
 
 
 const AdminDashboard: React.FC = () => {
-
-    const [loading, setLoading] = useState(true);
-    useEffect(() => {
+  const dispatch = useAppDispatch();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
     }, 2000); // 2 seconds
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    dispatch(setPageTitle("Admin Dashboard"));
+  }, [dispatch]);
 
   //  SHOW SKELETON FIRST
   if (loading) {

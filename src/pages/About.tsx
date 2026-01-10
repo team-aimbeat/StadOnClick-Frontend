@@ -1,3 +1,6 @@
+import { useEffect } from "react"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 import eventImage from "@/assets/images/event.jpg"
 import vacationImage from "@/assets/images/vacation.jpeg"
 import hotel1 from "@/assets/images/hotel1.jpg"
@@ -34,6 +37,12 @@ const timeline = [
 ]
 
 export default function About() {
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle("About"))
+  }, [dispatch])
+
   return (
     <main className="mx-auto w-full max-w-[92rem] px-4 sm:px-6 lg:px-8 text-slate-900">
    <header
