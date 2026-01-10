@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   HiEllipsisHorizontal,
   HiXMark,
@@ -11,7 +11,8 @@ import iconEdit from "@/assets/images/edit.png";
 import iconView from "@/assets/images/view.png";
 import iconDelete from "@/assets/images/delete.png";
 import { Button } from "../ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import VendorTable from "./CustomTable";
 
 
@@ -22,6 +23,7 @@ export type VendorDoc = {
   vendor: string;
   avatar: string;
   docImage: string;
+  vendorId: VendorProfile["id"];
   documents: { name: string; src: string }[];
   docType: string;
   category: string;
@@ -30,16 +32,31 @@ export type VendorDoc = {
   submittedTime: string;
 };
 
-/* ================= DATA ================= */
+export type VendorProfile = {
+  name: string;
+  id: string | number;
+  avatar?: string;
+  location?: string;
+  verified?: boolean;
+};
 
-const data: VendorDoc[] = [
+const defaultVendor: VendorProfile = {
+  name: "Malmo Romokare",
+  id: "355657",
+  avatar: profile7,
+  location: "Malmo",
+  verified: true,
+};
+
+const createSeedDocuments = (vendor: VendorProfile): VendorDoc[] => [
   {
     id: 355657,
-    vendor: "Malm├╢ R├╢rmokare",
-    avatar: profile7,
-    docImage: profile7,
+    vendor: vendor.name,
+    vendorId: vendor.id,
+    avatar: vendor.avatar ?? profile7,
+    docImage: vendor.avatar ?? profile7,
     documents: [
-      { name: "Driving license", src: profile7 },
+      { name: "Driving license", src: vendor.avatar ?? profile7 },
       { name: "Company registration", src: profile9 },
     ],
     docType: "Company registration",
@@ -50,12 +67,13 @@ const data: VendorDoc[] = [
   },
   {
     id: 355658,
-    vendor: "Malm├╢ R├╢rmokare",
-    avatar: profile9,
+    vendor: vendor.name,
+    vendorId: vendor.id,
+    avatar: vendor.avatar ?? profile9,
     docImage: documentImage,
     documents: [
       { name: "Business license", src: profile9 },
-      { name: "Tax certificate", src: profile7 },
+      { name: "Tax certificate", src: vendor.avatar ?? profile7 },
       { name: "Owner ID", src: profile8 },
     ],
     docType: "Company registration",
@@ -64,13 +82,14 @@ const data: VendorDoc[] = [
     submitted: "Dec 26, 2025",
     submittedTime: "11:10",
   },
-    {
-    id: 355657,
-    vendor: "Malm├╢ R├╢rmokare",
+  {
+    id: 355659,
+    vendor: vendor.name,
+    vendorId: vendor.id,
     avatar: profile8,
     docImage: profile8,
     documents: [
-      { name: "Driving license", src: profile7 },
+      { name: "Driving license", src: vendor.avatar ?? profile7 },
       { name: "Company registration", src: profile9 },
     ],
     docType: "Company registration",
@@ -81,12 +100,49 @@ const data: VendorDoc[] = [
   },
 ];
 
+const getVendorKey = (vendorId: VendorProfile["id"]) => String(vendorId);
+
+/* ================= DATA ================= */
 /* ================= COMPONENT ================= */
 
-const VendorDocumentsTable: React.FC = () => {
+type VendorDocumentsTableProps = {
+  vendor?: VendorProfile;
+};
+
+const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
+  vendor = defaultVendor,
+}) => {
+  const [documentsByVendor, setDocumentsByVendor] = useState<Record<string, VendorDoc[]>>(
+    () => ({
+      [getVendorKey(vendor.id)]: createSeedDocuments(vendor),
+    })
+  );
   const [activeDoc, setActiveDoc] = useState<VendorDoc | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [viewDoc, setViewDoc] = useState<VendorDoc | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const uploadedObjectUrlsRef = useRef<string[]>([]);
+  const vendorAvatar = vendor.avatar ?? profile7;
+  const vendorStatusLabel = vendor.verified ? "Verified" : "Pending";
+  const [approveMenuOpen, setApproveMenuOpen] = useState(false);
+  const [approveReason, setApproveReason] = useState("");
+  const [approveComment, setApproveComment] = useState("");
+  const vendorKey = getVendorKey(vendor.id);
+  const vendorDocs = documentsByVendor[vendorKey] ?? [];
+
+  useEffect(() => {
+    setDocumentsByVendor((prev) => {
+      const key = getVendorKey(vendor.id);
+      if (prev[key]) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [key]: createSeedDocuments(vendor),
+      };
+    });
+  }, [vendor]);
 
   useEffect(() => {
     if (!activeDoc) {
@@ -95,10 +151,6 @@ const VendorDocumentsTable: React.FC = () => {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (confirmOpen) {
-          setConfirmOpen(false);
-          return;
-        }
         if (viewDoc) {
           setViewDoc(null);
           return;
@@ -109,13 +161,92 @@ const VendorDocumentsTable: React.FC = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeDoc, confirmOpen, viewDoc]);
+  }, [activeDoc, viewDoc]);
 
   useEffect(() => {
-    if (!activeDoc) {
-      setConfirmOpen(false);
+    if (!viewDoc) {
+      setApproveMenuOpen(false);
     }
-  }, [activeDoc]);
+  }, [viewDoc]);
+
+  useEffect(() => {
+    if (!approveMenuOpen) {
+      setApproveReason("");
+      setApproveComment("");
+    }
+  }, [approveMenuOpen]);
+
+  useEffect(() => {
+    return () => {
+      uploadedObjectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  const addFiles = (files: FileList | File[]) => {
+    const nextDocs: VendorDoc[] = Array.from(files).map((file) => {
+      const vendorName = vendor.name;
+      const vendorAvatar = vendor.avatar ?? profile7;
+      const createdAt = new Date();
+      const dateLabel = createdAt.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      const objectUrl = URL.createObjectURL(file);
+      uploadedObjectUrlsRef.current.push(objectUrl);
+      const ext = file.name.split(".").pop()?.toUpperCase() || "FILE";
+      return {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        vendor: vendorName,
+        vendorId: vendor.id,
+        avatar: vendorAvatar,
+        docImage: objectUrl,
+        documents: [{ name: file.name, src: objectUrl }],
+        docType: `${ext} document`,
+        category: "Business",
+        status: "Under Review",
+        submitted: dateLabel,
+        submittedTime: createdAt.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+    });
+
+    setDocumentsByVendor((prev) => {
+      const existing = prev[vendorKey] ?? [];
+      return {
+        ...prev,
+        [vendorKey]: [...nextDocs, ...existing],
+      };
+    });
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      addFiles(files);
+      event.target.value = "";
+    }
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      addFiles(event.dataTransfer.files);
+      event.dataTransfer.clearData();
+    }
+  };
+
+  const handleApprove = () => {
+    if (!approveReason) {
+      return;
+    }
+    setViewDoc(null);
+    setApproveComment("");
+    setApproveReason("");
+  };
 
   const activityLog = [
     { title: "Request submitted", time: "Dec 18 ΓÇó 10:12", tone: "bg-emerald-400" },
@@ -250,7 +381,184 @@ const VendorDocumentsTable: React.FC = () => {
 
  return (
    <>
-     <VendorTable<VendorDoc> columns={columns} data={data} />
+      <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-col gap-3">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Documents & Verification
+              </p>
+              <p className="text-xs text-gray-500">
+                Upload and manage your business documents.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              <img
+                src={vendorAvatar}
+                alt={vendor.name}
+                className="h-10 w-10 rounded-full border border-gray-200 object-cover"
+              />
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {vendor.name}
+                  <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                    {vendorStatusLabel}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-400">
+                  ID: {vendor.id}
+                  {vendor.location ? ` · ${vendor.location}` : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+          <Button
+            className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+            onClick={() => setUploadOpen(true)}
+          >
+            Upload document
+          </Button>
+        </div>
+      </div>
+     <VendorTable<VendorDoc> columns={columns} data={vendorDocs} />
+     {uploadOpen ? (
+       <div
+         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+         onClick={() => setUploadOpen(false)}
+       >
+         <div
+           className="relative w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl"
+           onClick={(event) => event.stopPropagation()}
+         >
+           <button
+             type="button"
+             onClick={() => setUploadOpen(false)}
+             className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
+           >
+             <HiXMark className="h-4 w-4" />
+           </button>
+
+           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 pb-4">
+             <div>
+               <p className="text-sm font-semibold text-gray-900">
+                 Documents & Verification
+               </p>
+               <p className="text-xs text-gray-500">
+                 Upload and manage your business documents. Approved documents
+                 increase trust and visibility.
+               </p>
+             </div>
+            <div className="flex items-center gap-3">
+              <img
+                src={vendorAvatar}
+                alt="Vendor profile"
+                className="h-10 w-10 rounded-full object-cover"
+              />
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {vendor.name}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>ID: {vendor.id}</span>
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                    {vendorStatusLabel}
+                  </span>
+                </div>
+              </div>
+            </div>
+           </div>
+
+           <div className="mt-5 rounded-2xl border border-gray-200 p-4">
+             <div className="flex flex-wrap items-center justify-between gap-4">
+               <div>
+                 <p className="text-sm font-semibold text-gray-900">
+                   Upload a new document
+                 </p>
+                 <p className="text-xs text-gray-500">
+                   Business registration, insurance certificate, owner ID, tax
+                   documents (PDF, JPG, PNG)
+                 </p>
+               </div>
+               <Button
+                 className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                 onClick={() => fileInputRef.current?.click()}
+               >
+                 Upload document
+               </Button>
+             </div>
+             <div
+               className={`mt-4 rounded-xl border border-dashed px-4 py-6 text-center text-xs ${
+                 isDragging
+                   ? "border-blue-400 bg-blue-50 text-blue-600"
+                   : "border-blue-200 bg-blue-50/30 text-gray-500"
+               }`}
+               onDragOver={(event) => {
+                 event.preventDefault();
+                 setIsDragging(true);
+               }}
+               onDragLeave={() => setIsDragging(false)}
+               onDrop={handleDrop}
+               onClick={() => fileInputRef.current?.click()}
+               role="button"
+               tabIndex={0}
+               onKeyDown={(event) => {
+                 if (event.key === "Enter" || event.key === " ") {
+                   event.preventDefault();
+                   fileInputRef.current?.click();
+                 }
+               }}
+             >
+               Drag & drop files here, or click "Upload document"
+             </div>
+             <input
+               ref={fileInputRef}
+               type="file"
+               accept=".pdf,.png,.jpg,.jpeg"
+               multiple
+               className="hidden"
+               onChange={handleFileChange}
+             />
+           </div>
+
+           <div className="mt-4 flex flex-wrap items-center gap-3">
+             <div className="relative flex-1">
+               <input
+                 placeholder="Search documents..."
+                 className="h-10 w-full rounded-full border border-gray-200 pl-10 pr-4 text-xs text-gray-600 outline-none focus:border-blue-500"
+               />
+               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                 <HiEllipsisHorizontal className="h-4 w-4 rotate-90" />
+               </span>
+             </div>
+             <Button
+               variant="outline"
+               className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50"
+             >
+               Status filter
+             </Button>
+             <Button
+               variant="outline"
+               className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50"
+             >
+               Type filter
+             </Button>
+           </div>
+
+           <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+             <span className="font-semibold text-gray-700">Your documents</span>
+             <span>Last updated: today</span>
+           </div>
+
+           <div className="mt-3">
+               <VendorTable<VendorDoc>
+                 columns={columns}
+                 data={vendorDocs}
+                 showToolbar={false}
+               />
+           </div>
+         </div>
+       </div>
+     ) : null}
      {activeDoc ? (
        <div
          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
@@ -321,33 +629,55 @@ const VendorDocumentsTable: React.FC = () => {
                  </div>
                </div>
 
-               <div>
-                 <label className="text-sm font-medium text-gray-700">
-                   Comment
-                 </label>
-                 <textarea
-                   placeholder="Add a note for this KYC review"
-                   className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
-                 />
-               </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-700">
+                    Comment
+                  </label>
+                  <textarea
+                    placeholder="Add a note for this KYC review"
+                    value={approveComment}
+                    onChange={(event) => setApproveComment(event.target.value)}
+                    className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
+                  />
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Reason *
+                    </label>
+                    <Select value={approveReason} onValueChange={(value) => setApproveReason(value)}>
+                      <SelectTrigger className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                      <SelectContent className="w-full rounded-2xl border border-gray-200 bg-white">
+                        <SelectItem value="valid">Document is valid</SelectItem>
+                        <SelectItem value="verified">Verified vendor</SelectItem>
+                        <SelectItem value="other">Other follow-up</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-2 text-xs text-gray-500">
+                      The selected reason is logged and shared with the vendor.
+                    </p>
+              
+                  </div>
+                </div>
 
-               <div className="mt-auto flex flex-wrap gap-3">
-                 <Button className="bg-red-500 text-white hover:bg-red-600">
-                   Decline
-                 </Button>
-                 <Button
-                   className="bg-blue-600 text-white hover:bg-blue-700"
-                   onClick={() => setConfirmOpen(true)}
-                 >
-                   Approve
-                 </Button>
-                 <Button
-                   variant="outline"
-                   className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                 >
-                   Request reupload
-                 </Button>
-               </div>
+                <div className="mt-auto flex flex-wrap gap-3">
+                   <Button
+                        className="bg-blue-600 text-white hover:bg-blue-700"
+                        onClick={handleApprove}
+                        disabled={!approveReason}
+                      >
+                        Approve
+                      </Button>
+                  <Button className="bg-red-500 text-white hover:bg-red-600">
+                    Decline
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                  >
+                    Request reupload
+                  </Button>
+                </div>
              </div>
            </div>
          </div>
@@ -496,74 +826,6 @@ const VendorDocumentsTable: React.FC = () => {
                  </div>
                </div>
              </div>
-           </div>
-         </div>
-       </div>
-     ) : null}
-     {activeDoc && confirmOpen ? (
-       <div
-         className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 px-4 py-6"
-         onClick={() => setConfirmOpen(false)}
-       >
-         <div
-           className="relative w-full max-w-lg rounded-2xl border border-blue-300 bg-white p-6 shadow-xl"
-           onClick={(event) => event.stopPropagation()}
-         >
-           <button
-             type="button"
-             onClick={() => setConfirmOpen(false)}
-             className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:bg-gray-100"
-           >
-             <HiXMark className="h-4 w-4" />
-           </button>
-
-           <div className="space-y-1">
-             <p className="text-sm font-semibold text-gray-900">
-               Confirm action
-             </p>
-             <p className="text-sm text-gray-500">
-               Approve - {activeDoc.docType}
-             </p>
-           </div>
-
-           <div className="mt-5 space-y-4 text-sm">
-             <div>
-               <label className="text-sm font-medium text-gray-700">
-                 Reason *
-               </label>
-               <select className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
-                 <option value="">Select a reason</option>
-                 <option value="valid">Valid document</option>
-                 <option value="verified">Verified vendor</option>
-               </select>
-             </div>
-
-             <div>
-               <label className="text-sm font-medium text-gray-700">
-                 Additional comments *
-               </label>
-               <textarea
-                 placeholder="Explain what was checked"
-                 className="mt-2 min-h-[120px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
-               />
-             </div>
-
-             <p className="text-xs text-gray-500">
-               This message will be sent to the vendor and stored for audit.
-             </p>
-           </div>
-
-           <div className="mt-6 flex justify-end gap-3">
-             <Button
-               variant="outline"
-               className="border-blue-500 text-blue-600 hover:bg-blue-50"
-               onClick={() => setConfirmOpen(false)}
-             >
-               Cancel
-             </Button>
-             <Button className="bg-blue-600 text-white hover:bg-blue-700">
-               Confirm
-             </Button>
            </div>
          </div>
        </div>
