@@ -31,8 +31,9 @@ import {
   toggleSidebar,
   toggleTheme,
 } from "@/features/Layout/themeConfigSlice";
-import Dropdown from "../ui/dropdown";
-import SearchBar from "../ui/SearchBar";
+import Dropdown from "../shared/dropdown";
+import SearchBar from "../shared/SearchBar";
+
 
 const AdminHeader = () => {
   const location = useLocation();

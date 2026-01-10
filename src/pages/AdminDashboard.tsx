@@ -17,8 +17,8 @@ import Mapcity from '@/components/AdminDashboard/Mapcity';
 import CustomerAcquisitionCard from '@/components/AdminDashboard/CustomerAcquisitionCard';
 import VendorsOverview from '@/components/AdminDashboard/VendorsOverview';
 import AIAlertInsights from '@/components/AdminDashboard/AIAlertInsights';
-import NewSubscriptionsCard from '@/components/AdminDashboard/NewSubscriptionsCard';
 import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
+import NewSubscriptionsCard from '@/components/AdminDashboard/NewSubscriptionsCard.';
 
 
 

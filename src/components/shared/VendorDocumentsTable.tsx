@@ -12,8 +12,8 @@ import iconView from "@/assets/images/view.png";
 import iconDelete from "@/assets/images/delete.png";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import KycSkeleton from "./skeletons/KycSkeleton";
-import VendorTable from "../ui/CustomTable";
+import VendorTable from "./CustomTable";
+
 
 /* ================= TYPES ================= */
 
