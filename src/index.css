@@ -1712,19 +1712,19 @@
 
 @layer components {
   .modal-content[data-state="open"] {
-    animation: modalFadeIn 0.35s ease-out forwards;
+    animation: modalFadeIn 0.15s ease-out forwards;
   }
 
   .modal-content[data-state="closed"] {
-    animation: modalFadeOut 0.25s ease-in forwards;
+    animation: modalFadeOut 0.15s ease-in forwards;
   }
 
   .modal-overlay[data-state="open"] {
-    animation: overlayFadeIn 0.35s ease-out forwards;
+    animation: overlayFadeIn 0.15s ease-out forwards;
   }
 
   .modal-overlay[data-state="closed"] {
-    animation: overlayFadeOut 0.25s ease-in forwards;
+    animation: overlayFadeOut 0.15s ease-in forwards;
   }
 }
 
