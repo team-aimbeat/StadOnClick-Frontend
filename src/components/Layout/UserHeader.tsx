@@ -216,7 +216,7 @@ export default function UserHeader() {
                       </button>
                     </div>
 
-<Link to="/account">
+<a href="/account">
                     <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
                         {userInitial}
@@ -227,7 +227,7 @@ export default function UserHeader() {
                       </div>
                       <ChevronRight className="h-4 w-4 text-slate-400" />
                     </div>
-</Link>
+</a>
                     <div className="space-y-1 px-4 py-3">
                       {menuItems.map((item) => (
                         <button
@@ -249,10 +249,10 @@ export default function UserHeader() {
                       ))}
                     </div>
 
-                    <div className="border-t border-sky-100 px-5 py-3">
+                    <div className="border-t border-sky-100 hover:bg-gray-200 transition-colors duration-100 cursor-pointer  rounded-b-2xl px-5 py-3">
                       <button
                         type="button"
-                        className="w-full text-left text-sm font-semibold text-blue-700 transition hover:text-blue-900 disabled:cursor-wait disabled:text-slate-400"
+                        className="w-full text-left text-sm font-semibold cursor-pointer  text-blue-700 transition hover:text-blue-900 disabled:cursor-wait disabled:text-slate-400"
                         onClick={handleSignOut}
                         disabled={isSigningOut}
                       >
