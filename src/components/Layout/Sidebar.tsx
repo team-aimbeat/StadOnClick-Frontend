@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
 import AnimateHeight from "react-animate-height";
 import { useState, useEffect } from "react";
+import logo from'@/assets/logo/logo.png'
 
 import {
   HiChevronDown,
@@ -70,8 +71,8 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
           <NavLink to={homePath} className="flex items-center justify-center">
             <img
-              src="src/assets/logo/logo.png"
-              className={isCollapsed ? "w-8" : "w-32"}
+              src={logo}
+              className={isCollapsed ? "w-8" : "w-25 ml-10"}
               alt="logo"
             />
           </NavLink>

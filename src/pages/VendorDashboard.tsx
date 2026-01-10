@@ -2,6 +2,7 @@
 import BusinessDetailsForm, { BusinessDetails } from '@/components/BusinessDetailsForm';
 import VendorInfoForm, { VendorInfo } from '@/components/VendorInfoForm';
 import SeoAdvancedSection from '@/components/SeoAdvancedSection';
+import VendorSetupSummary from '@/components/VendorSetupSummary';
 import React, { useEffect, useState } from 'react';
 import {
   HiOutlineShoppingBag,
@@ -229,6 +230,19 @@ const VendorDashboard: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const sidebar = document.querySelector(".sidebar");
+    if (!sidebar) return;
+    if (!isSetupComplete) {
+      sidebar.classList.add("vendor-sidebar-locked");
+    } else {
+      sidebar.classList.remove("vendor-sidebar-locked");
+    }
+    return () => {
+      sidebar.classList.remove("vendor-sidebar-locked");
+    };
+  }, [isSetupComplete]);
+
   if (loading) {
     return <AdminDashboardSkeleton />;
   }
@@ -263,7 +277,7 @@ const VendorDashboard: React.FC = () => {
                     <span
                       className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
                         isComplete
-                          ? 'border-blue-500 bg-blue-500 text-white'
+                          ? 'border-blue-900 bg-blue-500 text-white'
                           : isActive
                             ? 'border-blue-500 bg-white text-blue-500'
                             : 'border-slate-200 bg-white text-slate-400'
@@ -350,6 +364,20 @@ const VendorDashboard: React.FC = () => {
                 onKeywordKeyDown={onSeoKeywordKeyDown}
                 onRemoveKeyword={removeSeoKeyword}
                 onToggleIndexing={toggleIndexing}
+              />
+            </div>
+          )}
+          {currentStep === 6 && (
+            <div className="mx-auto w-full max-w-4xl">
+              <VendorSetupSummary
+                vendorInfo={vendorInfo}
+                categories={selectedCategories}
+                businessDetails={businessDetails}
+                facilities={selectedFacilities}
+                seoTitle={seoTitle}
+                seoDescription={seoDescription}
+                seoKeywords={seoKeywords}
+                allowIndexing={allowIndexing}
               />
             </div>
           )}
