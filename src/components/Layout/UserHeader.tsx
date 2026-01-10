@@ -21,7 +21,14 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from "react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clearAuth } from "@/features/auth/authSlice";
 import { useLogoutMutation } from "@/features/auth/api/authApi";
@@ -48,7 +55,10 @@ export default function UserHeader() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
         setProfileMenuOpen(false);
       }
     };
@@ -70,26 +80,66 @@ export default function UserHeader() {
         icon: <Leaf className="h-4 w-4 text-pink-500" />,
         subTitle: "Beauty & Spas",
         subItems: [
-          ["Massage", "Hair Removal", "Face & Skin Care", "Cosmetic Procedures"],
+          [
+            "Massage",
+            "Hair Removal",
+            "Face & Skin Care",
+            "Cosmetic Procedures",
+          ],
           ["Spas", "Hair & Styling", "Health & Fitness", "Weight Loss"],
           ["Nail Salons", "Dental", "Brows & Lashes", "Tanning"],
         ],
       },
-      { label: "Things To Do", to: "/marketplace/things-to-do", icon: <Activity className="h-4 w-4 text-purple-500" /> },
-      { label: "Auto & Home", to: "/marketplace/auto-home", icon: <Home className="h-4 w-4 text-amber-500" /> },
-      { label: "Food & Drink", to: "/marketplace/food", icon: <Coffee className="h-4 w-4 text-orange-500" /> },
-      { label: "Gifts", to: "/marketplace/gifts", icon: <Gift className="h-4 w-4 text-rose-500" /> },
-      { label: "Local", to: "/marketplace/local", icon: <MapPin className="h-4 w-4 text-sky-500" /> },
-      { label: "Travel", to: "/marketplace/travel", icon: <Plane className="h-4 w-4 text-indigo-500" /> },
-      { label: "Goods", to: "/marketplace/goods", icon: <Box className="h-4 w-4 text-yellow-500" /> },
-      { label: "Coupons", to: "/marketplace/coupons", icon: <Ticket className="h-4 w-4 text-violet-500" /> },
+      {
+        label: "Things To Do",
+        to: "/marketplace/things-to-do",
+        icon: <Activity className="h-4 w-4 text-purple-500" />,
+      },
+      {
+        label: "Auto & Home",
+        to: "/marketplace/auto-home",
+        icon: <Home className="h-4 w-4 text-amber-500" />,
+      },
+      {
+        label: "Food & Drink",
+        to: "/marketplace/food",
+        icon: <Coffee className="h-4 w-4 text-orange-500" />,
+      },
+      {
+        label: "Gifts",
+        to: "/marketplace/gifts",
+        icon: <Gift className="h-4 w-4 text-rose-500" />,
+      },
+      {
+        label: "Local",
+        to: "/marketplace/local",
+        icon: <MapPin className="h-4 w-4 text-sky-500" />,
+      },
+      {
+        label: "Travel",
+        to: "/marketplace/travel",
+        icon: <Plane className="h-4 w-4 text-indigo-500" />,
+      },
+      {
+        label: "Goods",
+        to: "/marketplace/goods",
+        icon: <Box className="h-4 w-4 text-yellow-500" />,
+      },
+      {
+        label: "Coupons",
+        to: "/marketplace/coupons",
+        icon: <Ticket className="h-4 w-4 text-violet-500" />,
+      },
     ],
     []
   );
 
   const beautyCategory = categories.find((c) => c.label === "Beauty & Spas");
 
-  const handleHover = (_event: ReactMouseEvent<HTMLAnchorElement>, label: string) => {
+  const handleHover = (
+    _event: ReactMouseEvent<HTMLAnchorElement>,
+    label: string
+  ) => {
     setHovered(label);
   };
 
@@ -171,13 +221,20 @@ export default function UserHeader() {
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
       <div className="bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900">
+          <Link
+            to="/"
+            className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900"
+          >
             <div className="h-10 w-10 rounded-full bg-blue-700">
               <span className="sr-only">StadOnClick logo</span>
             </div>
             <div className="leading-tight">
-              <p className="text-sm uppercase tracking-[0.4em] text-slate-500">StadOnClick</p>
-              <p className="text-base font-semibold text-slate-900">Discover Sweden</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
+                StadOnClick
+              </p>
+              <p className="text-base font-semibold text-slate-900">
+                Discover Sweden
+              </p>
             </div>
           </Link>
 
@@ -186,9 +243,20 @@ export default function UserHeader() {
           </div>
 
           <div className="flex items-center gap-3">
-            <IconButton icon={<Heart className="h-5 w-5 text-slate-500" />} label="Wishlist" />
-            <IconButton icon={<ShoppingCart className="h-5 w-5 text-slate-500" />} label="Cart" badge="3" />
-            <IconButton icon={<Bell className="h-5 w-5 text-slate-500" />} label="Alerts" badge="9" />
+            <IconButton
+              icon={<Heart className="h-5 w-5 text-slate-500" />}
+              label="Wishlist"
+            />
+            <IconButton
+              icon={<ShoppingCart className="h-5 w-5 text-slate-500" />}
+              label="Cart"
+              badge="3"
+            />
+            <IconButton
+              icon={<Bell className="h-5 w-5 text-slate-500" />}
+              label="Alerts"
+              badge="9"
+            />
             {user ? (
               <div ref={profileRef} className="relative">
                 <button
@@ -205,7 +273,9 @@ export default function UserHeader() {
                 {profileMenuOpen && (
                   <div className="absolute z-50 -right-[190%] mt-2 w-75 rounded-3xl border  bg-white shadow-[0_45px_90px_rgba(15,23,42,0.18)]">
                     <div className="flex items-center justify-between px-5 py-4 border-b border-sky-100">
-                      <p className="text-sm font-semibold text-slate-900">Hi, {greetingName}!</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        Hi, {greetingName}!
+                      </p>
                       <button
                         type="button"
                         className="rounded-full p-1 text-sky-500 transition hover:bg-slate-100 hover:text-sky-700"
@@ -216,18 +286,22 @@ export default function UserHeader() {
                       </button>
                     </div>
 
-<a href="/account">
-                    <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
-                        {userInitial}
+                    <a href="/account">
+                      <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
+                          {userInitial}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">
+                            {accountName}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {user.email}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-slate-400" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{accountName}</p>
-                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-400" />
-                    </div>
-</a>
+                    </a>
                     <div className="space-y-1 px-4 py-3">
                       {menuItems.map((item) => (
                         <button
@@ -277,9 +351,7 @@ export default function UserHeader() {
 
       <div className="border-t border-sky-200 bg-sky-50">
         <div className="relative" onMouseLeave={() => setHovered(null)}>
-          <div
-            className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 overflow-x-auto px-4 py-3 sm:px-6"
-          >
+          <div className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 overflow-x-auto px-4 py-3 sm:px-6">
             {categories.map((item) => (
               <NavLink
                 key={item.to}
@@ -287,7 +359,9 @@ export default function UserHeader() {
                 onMouseEnter={(event) => handleHover(event, item.label)}
                 className={({ isActive }) =>
                   `${navLinkBase} ${
-                    isActive ? "text-blue-700" : "text-slate-700 hover:text-blue-600"
+                    isActive
+                      ? "text-blue-700"
+                      : "text-slate-700 hover:text-blue-600"
                   }`
                 }
               >
@@ -298,12 +372,12 @@ export default function UserHeader() {
           </div>
 
           {hovered === "Beauty & Spas" && beautyCategory?.subItems && (
-            <div
-              className=" absolute right-1/2 z-40 mt-1 w-[520px]  rounded-3xl border border-sky-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.15)]"
-            >
+            <div className=" absolute right-1/2 z-40 mt-1 w-[520px]  rounded-3xl border border-sky-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.15)]">
               <div className="px-8 py-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900">{beautyCategory.subTitle}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {beautyCategory.subTitle}
+                  </h3>
                   <button
                     className="text-sm font-semibold text-slate-500 hover:text-slate-900"
                     onClick={() => setHovered(null)}
@@ -317,7 +391,9 @@ export default function UserHeader() {
                       {col.map((entry) => (
                         <li key={entry}>
                           <Link
-                            to={`/marketplace/beauty?category=${encodeURIComponent(entry)}`}
+                            to={`/marketplace/beauty?category=${encodeURIComponent(
+                              entry
+                            )}`}
                             className="hover:text-blue-600 transition-colors"
                           >
                             {entry}
