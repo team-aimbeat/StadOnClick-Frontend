@@ -1,15 +1,9 @@
-import RecentActivities, {
-  recentActivities,
-} from "@/components/AdminDashboard/RecentActivities";
-import VendorDocumentsTable from "@/components/Layout/columns";
 import profile7 from "@/assets/Images/profile-7.jpeg";
-import AdminDashboardSkeleton from "@/components/Layout/skeletons/AdminDashboardSkeleton";
-import KycSkeleton from "@/components/Layout/skeletons/KycSkeleton";
-import Breadcrumb from "@/components/ui/Breadcrumb";
-import SearchBar from "@/components/ui/SearchBar";
-import StatCard from "@/components/ui/StatCard";
-import Table from "@/components/ui/Table";
-import { Columns } from "lucide-react";
+import Breadcrumb from "@/components/shared/Breadcrumb";
+import StatCard from "@/components/shared/StatCard";
+import VendorDocumentsTable from "@/components/shared/VendorDocumentsTable";
+import KycSkeleton from "@/components/skeletons/KycSkeleton";
+
 import { useEffect, useState } from "react";
 import {
   HiOutlineChartBar,
@@ -17,7 +11,6 @@ import {
   HiOutlineUser,
   HiOutlineUserGroup,
 } from "react-icons/hi2";
-import { HiEllipsisHorizontal, HiEye, HiCheck, HiXMark } from "react-icons/hi2";
 
 const vendorProfile = {
   name: "Malmo Romokare",

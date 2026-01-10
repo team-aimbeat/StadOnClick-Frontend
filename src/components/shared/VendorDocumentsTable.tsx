@@ -11,7 +11,8 @@ import iconEdit from "@/assets/images/edit.png";
 import iconView from "@/assets/images/view.png";
 import iconDelete from "@/assets/images/delete.png";
 import { Button } from "../ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import VendorTable from "./CustomTable";
 
 
@@ -22,6 +23,7 @@ export type VendorDoc = {
   vendor: string;
   avatar: string;
   docImage: string;
+  vendorId: VendorProfile["id"];
   documents: { name: string; src: string }[];
   docType: string;
   category: string;
@@ -50,6 +52,7 @@ const createSeedDocuments = (vendor: VendorProfile): VendorDoc[] => [
   {
     id: 355657,
     vendor: vendor.name,
+    vendorId: vendor.id,
     avatar: vendor.avatar ?? profile7,
     docImage: vendor.avatar ?? profile7,
     documents: [
@@ -65,6 +68,7 @@ const createSeedDocuments = (vendor: VendorProfile): VendorDoc[] => [
   {
     id: 355658,
     vendor: vendor.name,
+    vendorId: vendor.id,
     avatar: vendor.avatar ?? profile9,
     docImage: documentImage,
     documents: [
@@ -81,6 +85,7 @@ const createSeedDocuments = (vendor: VendorProfile): VendorDoc[] => [
   {
     id: 355659,
     vendor: vendor.name,
+    vendorId: vendor.id,
     avatar: profile8,
     docImage: profile8,
     documents: [
@@ -95,6 +100,8 @@ const createSeedDocuments = (vendor: VendorProfile): VendorDoc[] => [
   },
 ];
 
+const getVendorKey = (vendorId: VendorProfile["id"]) => String(vendorId);
+
 /* ================= DATA ================= */
 /* ================= COMPONENT ================= */
 
@@ -105,11 +112,12 @@ type VendorDocumentsTableProps = {
 const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
   vendor = defaultVendor,
 }) => {
-  const [documents, setDocuments] = useState<VendorDoc[]>(
-    () => createSeedDocuments(vendor)
+  const [documentsByVendor, setDocumentsByVendor] = useState<Record<string, VendorDoc[]>>(
+    () => ({
+      [getVendorKey(vendor.id)]: createSeedDocuments(vendor),
+    })
   );
   const [activeDoc, setActiveDoc] = useState<VendorDoc | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [viewDoc, setViewDoc] = useState<VendorDoc | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -117,9 +125,23 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
   const uploadedObjectUrlsRef = useRef<string[]>([]);
   const vendorAvatar = vendor.avatar ?? profile7;
   const vendorStatusLabel = vendor.verified ? "Verified" : "Pending";
+  const [approveMenuOpen, setApproveMenuOpen] = useState(false);
+  const [approveReason, setApproveReason] = useState("");
+  const [approveComment, setApproveComment] = useState("");
+  const vendorKey = getVendorKey(vendor.id);
+  const vendorDocs = documentsByVendor[vendorKey] ?? [];
 
   useEffect(() => {
-    setDocuments(createSeedDocuments(vendor));
+    setDocumentsByVendor((prev) => {
+      const key = getVendorKey(vendor.id);
+      if (prev[key]) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [key]: createSeedDocuments(vendor),
+      };
+    });
   }, [vendor]);
 
   useEffect(() => {
@@ -129,10 +151,6 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (confirmOpen) {
-          setConfirmOpen(false);
-          return;
-        }
         if (viewDoc) {
           setViewDoc(null);
           return;
@@ -143,13 +161,20 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeDoc, confirmOpen, viewDoc]);
+  }, [activeDoc, viewDoc]);
 
   useEffect(() => {
-    if (!activeDoc) {
-      setConfirmOpen(false);
+    if (!viewDoc) {
+      setApproveMenuOpen(false);
     }
-  }, [activeDoc]);
+  }, [viewDoc]);
+
+  useEffect(() => {
+    if (!approveMenuOpen) {
+      setApproveReason("");
+      setApproveComment("");
+    }
+  }, [approveMenuOpen]);
 
   useEffect(() => {
     return () => {
@@ -173,6 +198,7 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
       return {
         id: Date.now() + Math.floor(Math.random() * 1000),
         vendor: vendorName,
+        vendorId: vendor.id,
         avatar: vendorAvatar,
         docImage: objectUrl,
         documents: [{ name: file.name, src: objectUrl }],
@@ -187,7 +213,13 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
       };
     });
 
-    setDocuments((prev) => [...nextDocs, ...prev]);
+    setDocumentsByVendor((prev) => {
+      const existing = prev[vendorKey] ?? [];
+      return {
+        ...prev,
+        [vendorKey]: [...nextDocs, ...existing],
+      };
+    });
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,6 +237,15 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
       addFiles(event.dataTransfer.files);
       event.dataTransfer.clearData();
     }
+  };
+
+  const handleApprove = () => {
+    if (!approveReason) {
+      return;
+    }
+    setViewDoc(null);
+    setApproveComment("");
+    setApproveReason("");
   };
 
   const activityLog = [
@@ -379,7 +420,7 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
           </Button>
         </div>
       </div>
-     <VendorTable<VendorDoc> columns={columns} data={documents} />
+     <VendorTable<VendorDoc> columns={columns} data={vendorDocs} />
      {uploadOpen ? (
        <div
          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
@@ -509,11 +550,11 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
            </div>
 
            <div className="mt-3">
-             <VendorTable<VendorDoc>
-               columns={columns}
-               data={documents}
-               showToolbar={false}
-             />
+               <VendorTable<VendorDoc>
+                 columns={columns}
+                 data={vendorDocs}
+                 showToolbar={false}
+               />
            </div>
          </div>
        </div>
@@ -588,33 +629,55 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
                  </div>
                </div>
 
-               <div>
-                 <label className="text-sm font-medium text-gray-700">
-                   Comment
-                 </label>
-                 <textarea
-                   placeholder="Add a note for this KYC review"
-                   className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
-                 />
-               </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-700">
+                    Comment
+                  </label>
+                  <textarea
+                    placeholder="Add a note for this KYC review"
+                    value={approveComment}
+                    onChange={(event) => setApproveComment(event.target.value)}
+                    className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
+                  />
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Reason *
+                    </label>
+                    <Select value={approveReason} onValueChange={(value) => setApproveReason(value)}>
+                      <SelectTrigger className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                      <SelectContent className="w-full rounded-2xl border border-gray-200 bg-white">
+                        <SelectItem value="valid">Document is valid</SelectItem>
+                        <SelectItem value="verified">Verified vendor</SelectItem>
+                        <SelectItem value="other">Other follow-up</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-2 text-xs text-gray-500">
+                      The selected reason is logged and shared with the vendor.
+                    </p>
+              
+                  </div>
+                </div>
 
-               <div className="mt-auto flex flex-wrap gap-3">
-                 <Button className="bg-red-500 text-white hover:bg-red-600">
-                   Decline
-                 </Button>
-                 <Button
-                   className="bg-blue-600 text-white hover:bg-blue-700"
-                   onClick={() => setConfirmOpen(true)}
-                 >
-                   Approve
-                 </Button>
-                 <Button
-                   variant="outline"
-                   className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                 >
-                   Request reupload
-                 </Button>
-               </div>
+                <div className="mt-auto flex flex-wrap gap-3">
+                   <Button
+                        className="bg-blue-600 text-white hover:bg-blue-700"
+                        onClick={handleApprove}
+                        disabled={!approveReason}
+                      >
+                        Approve
+                      </Button>
+                  <Button className="bg-red-500 text-white hover:bg-red-600">
+                    Decline
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                  >
+                    Request reupload
+                  </Button>
+                </div>
              </div>
            </div>
          </div>
@@ -763,74 +826,6 @@ const VendorDocumentsTable: React.FC<VendorDocumentsTableProps> = ({
                  </div>
                </div>
              </div>
-           </div>
-         </div>
-       </div>
-     ) : null}
-     {activeDoc && confirmOpen ? (
-       <div
-         className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 px-4 py-6"
-         onClick={() => setConfirmOpen(false)}
-       >
-         <div
-           className="relative w-full max-w-lg rounded-2xl border border-blue-300 bg-white p-6 shadow-xl"
-           onClick={(event) => event.stopPropagation()}
-         >
-           <button
-             type="button"
-             onClick={() => setConfirmOpen(false)}
-             className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition hover:bg-gray-100"
-           >
-             <HiXMark className="h-4 w-4" />
-           </button>
-
-           <div className="space-y-1">
-             <p className="text-sm font-semibold text-gray-900">
-               Confirm action
-             </p>
-             <p className="text-sm text-gray-500">
-               Approve - {activeDoc.docType}
-             </p>
-           </div>
-
-           <div className="mt-5 space-y-4 text-sm">
-             <div>
-               <label className="text-sm font-medium text-gray-700">
-                 Reason *
-               </label>
-               <select className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500">
-                 <option value="">Select a reason</option>
-                 <option value="valid">Valid document</option>
-                 <option value="verified">Verified vendor</option>
-               </select>
-             </div>
-
-             <div>
-               <label className="text-sm font-medium text-gray-700">
-                 Additional comments *
-               </label>
-               <textarea
-                 placeholder="Explain what was checked"
-                 className="mt-2 min-h-[120px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
-               />
-             </div>
-
-             <p className="text-xs text-gray-500">
-               This message will be sent to the vendor and stored for audit.
-             </p>
-           </div>
-
-           <div className="mt-6 flex justify-end gap-3">
-             <Button
-               variant="outline"
-               className="border-blue-500 text-blue-600 hover:bg-blue-50"
-               onClick={() => setConfirmOpen(false)}
-             >
-               Cancel
-             </Button>
-             <Button className="bg-blue-600 text-white hover:bg-blue-700">
-               Confirm
-             </Button>
            </div>
          </div>
        </div>
