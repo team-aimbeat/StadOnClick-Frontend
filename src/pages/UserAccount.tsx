@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { AddShippingAddressDialog } from "@/components/modals/account/AddShippingAddressDialog";
 import { cn } from "@/lib/utils";
-import { Eye, Lock, MapPin, User, Wallet } from "lucide-react";
+import { Eye, Lock, MapPin, Sparkles, User, Wallet } from "lucide-react";
 import React from "react";
 import { StepPersonalize } from "@/components/shared/user-onboarding/StepPersonalize";
 
@@ -31,7 +31,7 @@ const navigation: NavigationItem[] = [
   { label: "Change password", icon: Lock, section: "password" },
   { label: "Shipping addresses", icon: MapPin, section: "shipping" },
   { label: "Payment method", icon: Wallet, section: "payment" },
-  { label: "Personalization", icon: Wallet, section: "personalization" },
+  { label: "Personalization", icon: Sparkles, section: "personalization" },
 ];
 
 const sectionDescriptions: Record<SectionKey, string> = {
