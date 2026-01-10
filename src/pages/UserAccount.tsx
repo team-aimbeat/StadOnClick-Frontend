@@ -16,8 +16,9 @@ import { AddShippingAddressDialog } from "@/components/modals/account/AddShippin
 import { cn } from "@/lib/utils";
 import { Eye, Lock, MapPin, User, Wallet } from "lucide-react";
 import React from "react";
+import { StepPersonalize } from "@/components/shared/user-onboarding/StepPersonalize";
 
-type SectionKey = "personal" | "password" | "shipping" | "payment";
+type SectionKey = "personal" | "password" | "shipping" | "payment" | "personalization";
 
 type NavigationItem = {
   label: string;
@@ -30,6 +31,7 @@ const navigation: NavigationItem[] = [
   { label: "Change password", icon: Lock, section: "password" },
   { label: "Shipping addresses", icon: MapPin, section: "shipping" },
   { label: "Payment method", icon: Wallet, section: "payment" },
+  { label: "Personalization", icon: Wallet, section: "personalization" },
 ];
 
 const sectionDescriptions: Record<SectionKey, string> = {
@@ -37,6 +39,7 @@ const sectionDescriptions: Record<SectionKey, string> = {
   password: "Update your password to keep your account secure.",
   shipping: "Manage the addresses you typically ship to.",
   payment: "Review or edit your saved payment options.",
+  personalization: "Manage your personalization preferences.",
 };
 
 const genderOptions = [
@@ -48,9 +51,7 @@ const genderOptions = [
 
 const UserAccount = () => {
   const [gender, setGender] = React.useState("");
-  const [activeSection, setActiveSection] = React.useState<
-    "personal" | "password" | "shipping" | "payment"
-  >("personal");
+  const [activeSection, setActiveSection] = React.useState<SectionKey>("personal");
   const activeNavItem = navigation.find(
     (item) => item.section === activeSection
   );
@@ -286,6 +287,10 @@ const UserAccount = () => {
                     open={isDialogOpen}
                     onOpenChange={setIsDialogOpen}
                   />
+                </div>
+              ) : activeSection === "personalization" ? (
+                <div className="mt-6">
+                  <StepPersonalize onNext={() => {}} onSkip={() => {}} />
                 </div>
               ) : (
                 <div className="mt-6 text-sm text-slate-500">

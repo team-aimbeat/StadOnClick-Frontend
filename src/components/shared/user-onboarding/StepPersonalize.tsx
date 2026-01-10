@@ -235,20 +235,16 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
         </p>
       </div>
 
-      <Button
+<div className="">
+ <Button
         className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"
         onClick={handleSave}
         disabled={savingPreferences}
       >
-        {savingPreferences ? "Saving..." : "Continue"}
+        {savingPreferences ? "Saving..." : "Save Preferences"}
       </Button>
-      <Button
-        variant="outline"
-        className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] border-[#3289FF] px-6 text-[#3289FF]"
-        onClick={onSkip}
-      >
-        Skip for now
-      </Button>
+</div>
+     
     </div>
   )
 }
