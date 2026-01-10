@@ -36,11 +36,9 @@ export function StepLogin({
   loading = false,
   errorMessage,
   isValid = false,
-  acceptTermsChecked = false,
-  setAcceptTerms,
 }: Props) {
   return (
-    <div className="space-y-6">
+    <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
       <div className="space-y-2">
         <Label className="text-sm font-medium text-slate-800">Email</Label>
         <Input
@@ -75,46 +73,42 @@ export function StepLogin({
         ) : null}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 w-full">
         <div className="flex items-center gap-3 text-sm text-slate-500">
           <div className="h-px flex-1 bg-slate-200" />
           <span>or continue with</span>
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
-       <div className="flex items-center justify-center gap-4 sm:gap-6">
-  {/* Google OAuth */}
-  <button
-    type="button"
-    onClick={() => {
-      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
-    }}
-    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#0b59a2]/50 hover:shadow"
-  >
-    <img
-      src={googleIcon}
-      alt="Continue with Google"
-      className="h-[22px] w-[22px] object-contain"
-    />
-  </button>
+        <div className="flex items-center justify-center gap-4 sm:gap-6">
+          {/* Google OAuth */}
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#0b59a2]/50 hover:shadow"
+          >
+            <img
+              src={googleIcon}
+              alt="Continue with Google"
+              className="h-[22px] w-[22px] object-contain"
+            />
+          </button>
 
-
-  {/* Facebook (placeholder) */}
-  <button
-    type="button"
-    onClick={() => {
-      window.location.href =
-        `${import.meta.env.VITE_API_URL}/auth/facebook`
-    }}
-    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#1877F2]/50 hover:shadow"
-  >
-    <img src={facebookIcon} alt="Facebook" className="h-[22px] w-[22px]" />
-  </button>
-</div>
-
+          {/* Facebook (placeholder) */}
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href =
+                `${import.meta.env.VITE_API_URL}/auth/facebook`
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#1877F2]/50 hover:shadow"
+          >
+            <img src={facebookIcon} alt="Facebook" className="h-[22px] w-[22px]" />
+          </button>
+        </div>
       </div>
-
-    
 
       <div className="min-h-[20px]">
         {errorMessage ? (

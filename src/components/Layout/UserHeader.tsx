@@ -199,10 +199,6 @@ export default function UserHeader() {
 
   const menuItems = [
     { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
-    {
-      label: "Preferences",
-      icon: <Settings className="h-4 w-4" />,
-    },
 
     {
       label: "Notifications",
@@ -337,13 +333,13 @@ export default function UserHeader() {
                 )}
               </div>
             ) : (
-              <Link
-                to="/sign-in"
+              <a
+                href="/sign-in"
                 className="flex items-center gap-2 rounded-full border border-blue-200 px-4 py-2 text-sm font-semibold text-sky-900 transition hover:border-yellow-400"
               >
                 <UserRound className="h-5 w-5" />
                 Sign In
-              </Link>
+              </a>
             )}
           </div>
         </div>

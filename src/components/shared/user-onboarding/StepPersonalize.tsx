@@ -1,8 +1,9 @@
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react"
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react"
 import { Button } from "@/components/ui/button"
 import {
   useGetPublicInterestsQuery,
   useGetPublicTimeDurationsQuery,
+  useGetMyPreferencesQuery,
   useSaveMyPreferencesMutation,
   type PublicInterest,
   type PublicTimeDuration,
@@ -38,14 +39,71 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
     isError: timeDurationsError,
   } = useGetPublicTimeDurationsQuery()
 
+  const { data: myPreferencesData } = useGetMyPreferencesQuery()
+  const preferencesAppliedRef = useRef(false)
+
   useEffect(() => {
+    if (
+      selectedTimes.length ||
+      myPreferencesData?.preferredDurationId ||
+      !timeDurationsData?.length
+    ) {
+      return
+    }
     if (timeDurationsData?.length) {
       const defaultId = timeDurationsData.find((item) => item.isDefault)?.id
       if (defaultId) {
         setSelectedTimes((prev) => (prev.length ? prev : [defaultId]))
       }
     }
-  }, [timeDurationsData])
+  }, [timeDurationsData, myPreferencesData, selectedTimes])
+
+  useEffect(() => {
+    if (!myPreferencesData || preferencesAppliedRef.current) {
+      return
+    }
+
+    const durationId =
+      myPreferencesData.preferredDurationId || myPreferencesData.preferredDuration?.id
+    if (durationId) {
+      setSelectedTimes([durationId])
+    }
+
+    const energyLabelMap: Record<string, string> = {
+      LOW: "Low energy",
+      MEDIUM: "Medium energy",
+      HIGH: "Active & intense",
+    }
+    if (myPreferencesData.energyLevel) {
+      const energyLabel = energyLabelMap[myPreferencesData.energyLevel]
+      if (energyLabel) {
+        setSelectedEnergy([energyLabel])
+      }
+    }
+
+    if (Array.isArray(myPreferencesData.interests)) {
+      const interestIds = myPreferencesData.interests
+        .map((item: any) => item.interestId ?? item.interest?.id)
+        .filter(Boolean)
+      setSelectedGoals(interestIds)
+    }
+
+    const timeLabelMap: Record<string, string> = {
+      MORNING: "Morning",
+      AFTERNOON: "Afternoon",
+      EVENING: "Evening",
+    }
+    if (Array.isArray(myPreferencesData.preferredTimes)) {
+      setSelectedMoments(
+        myPreferencesData.preferredTimes
+          .map((time: any) => time.timeOfDay || time)
+          .map((time: string) => timeLabelMap[time])
+          .filter(Boolean),
+      )
+    }
+
+    preferencesAppliedRef.current = true
+  }, [myPreferencesData])
 
   const renderInterestIcon = (interest: PublicInterest) => {
     if (interest.icon) {
@@ -235,20 +293,16 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
         </p>
       </div>
 
-      <Button
+<div className="">
+ <Button
         className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"
         onClick={handleSave}
         disabled={savingPreferences}
       >
-        {savingPreferences ? "Saving..." : "Continue"}
+        {savingPreferences ? "Saving..." : "Save Preferences"}
       </Button>
-      <Button
-        variant="outline"
-        className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] border-[#3289FF] px-6 text-[#3289FF]"
-        onClick={onSkip}
-      >
-        Skip for now
-      </Button>
+</div>
+     
     </div>
   )
 }
