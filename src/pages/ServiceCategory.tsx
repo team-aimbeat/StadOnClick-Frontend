@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { Link, useParams } from "react-router-dom"
 import icon1 from "@/assets/icons/s1.png"
 import icon2 from "@/assets/icons/s2.png"
@@ -7,6 +8,8 @@ import icon5 from "@/assets/icons/s5.png"
 import icon6 from "@/assets/icons/s6.png"
 import icon7 from "@/assets/icons/s7.png"
 import icon8 from "@/assets/icons/s8.png"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 
 const categories = [
   { label: "Buffet Deals", icon: icon1, slug: "buffet-deals" },
@@ -35,6 +38,11 @@ export default function ServiceCategory() {
   const current = categories.find((item) => item.slug === slug)
   const suggestionSlugs = suggestionsBySlug[slug ?? ""] ?? []
   const suggestions = categories.filter((item) => suggestionSlugs.includes(item.slug))
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle(current?.label ?? "Services"))
+  }, [dispatch, current?.label])
 
   if (!current) {
     return (

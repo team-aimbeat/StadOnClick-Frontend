@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import {
   Activity,
   ArrowUpDown,
@@ -24,6 +25,8 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 
 type Deal = {
   id: string
@@ -338,6 +341,11 @@ function DealCard({ deal }: { deal: Deal }) {
 }
 
 export default function Marketplace() {
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle("Marketplace"))
+  }, [dispatch])
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">

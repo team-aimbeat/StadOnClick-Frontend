@@ -1,4 +1,7 @@
+import { useEffect } from "react"
 import { Link, useParams } from "react-router-dom"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 import yogaImage from "@/assets/images/yoga.jpg"
 import eventImage from "@/assets/images/event.jpg"
 import vacationImage from "@/assets/images/vacation.jpeg"
@@ -72,6 +75,11 @@ export default function DealDetail() {
   const suggestions = serviceCategories.filter((item) =>
     suggestionSlugs.includes(item.slug),
   )
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle(deal ? deal.title : "Deal details"))
+  }, [dispatch, deal])
 
   if (!deal) {
     return (

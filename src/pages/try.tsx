@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 
 export default function Try() {
   const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setPageTitle("Try"));
+  }, [dispatch]);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 2000);
