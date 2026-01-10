@@ -1,22 +1,18 @@
-﻿import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Activity,
   Bell,
   Box,
   ChevronRight,
   Coffee,
-  DollarSign,
-  Eye,
   Gift,
   Heart,
   Home,
   Leaf,
   MapPin,
   Plane,
-  Settings,
   ShoppingCart,
   Sparkles,
-  Tag,
   Ticket,
   UserRound,
   X,
@@ -41,6 +37,56 @@ type Category = {
   subItems?: string[][];
 };
 
+type CartPreviewItem = {
+  title: string;
+  detail: string;
+  price: string;
+};
+
+type NotificationItem = {
+  title: string;
+  time: string;
+};
+
+const cartPreviewItems: CartPreviewItem[] = [
+  {
+    title: "Nordic Spa Evening",
+    detail: "2 guests - Feb 12",
+    price: "$145",
+  },
+  {
+    title: "Stockholm Street Food Tour",
+    detail: "1 guest - Feb 14",
+    price: "$95",
+  },
+  {
+    title: "Archipelago Kayak Adventure",
+    detail: "1 guest - Feb 18",
+    price: "$110",
+  },
+];
+
+const notificationItems: NotificationItem[] = [
+  {
+    title: "Curated local moments just dropped",
+    time: "2h ago",
+  },
+  {
+    title: "Download the companion app for offline use",
+    time: "Yesterday",
+  },
+  {
+    title: "Live chat is now available 24/7",
+    time: "Just now",
+  },
+];
+
+const cartPreviewSubtotal = cartPreviewItems.reduce(
+  (total, item) =>
+    total + Number(item.price.replace(/[^0-9.]/g, "")),
+  0
+);
+
 const navLinkBase =
   "relative flex items-center gap-1 text-xs sm:text-sm whitespace-nowrap font-semibold text-slate-700 transition-colors duration-200";
 
@@ -48,18 +94,40 @@ export default function UserHeader() {
   const [hovered, setHovered] = useState<string | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const cartRef = useRef<HTMLDivElement | null>(null);
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
+
+  const [cartMenuOpen, setCartMenuOpen] = useState(false);
+  const [notificationsMenuOpen, setNotificationsMenuOpen] = useState(false);
 
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [logout, { isLoading: isSigningOut }] = useLogoutMutation();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
       if (
         profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
+        !profileRef.current.contains(target)
       ) {
         setProfileMenuOpen(false);
+      }
+
+      if (
+        cartRef.current &&
+        !cartRef.current.contains(target)
+      ) {
+        setCartMenuOpen(false);
+      }
+
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(target)
+      ) {
+        setNotificationsMenuOpen(false);
       }
     };
 
@@ -242,17 +310,135 @@ export default function UserHeader() {
             <IconButton
               icon={<Heart className="h-5 w-5 text-slate-500" />}
               label="Wishlist"
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/wishlist");
+              }}
             />
-            <IconButton
-              icon={<ShoppingCart className="h-5 w-5 text-slate-500" />}
-              label="Cart"
-              badge="3"
-            />
-            <IconButton
-              icon={<Bell className="h-5 w-5 text-slate-500" />}
-              label="Alerts"
-              badge="9"
-            />
+            <div ref={cartRef} className="relative">
+              <IconButton
+                icon={<ShoppingCart className="h-5 w-5 text-slate-500" />}
+                label="Cart"
+                badge="3"
+                onClick={() => {
+                  setCartMenuOpen((prev) => !prev);
+                  setNotificationsMenuOpen(false);
+                  setProfileMenuOpen(false);
+                }}
+              />
+
+              {cartMenuOpen && (
+                <div className="absolute right-0 top-full z-40 mt-2 w-[320px] rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)]">
+                  <div className="px-5 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          Shopping cart
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Ready when you are
+                        </p>
+                      </div>
+                      <span className="text-xs font-semibold text-sky-500">
+                        {cartPreviewItems.length} items
+                      </span>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {cartPreviewItems.map((item) => (
+                        <div
+                          key={item.title}
+                          className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 px-3 py-2"
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-slate-900">
+                              {item.title}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {item.detail}
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-slate-900">
+                            {item.price}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                      <Link
+                        to="/cart"
+                        className="text-sky-600 transition hover:text-sky-900"
+                      >
+                        View cart
+                      </Link>
+                      <span className="text-xs font-semibold text-slate-500">
+                        Subtotal ${cartPreviewSubtotal.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div ref={notificationsRef} className="relative">
+              <IconButton
+                icon={<Bell className="h-5 w-5 text-slate-500" />}
+                label="Alerts"
+                badge="9"
+                onClick={() => {
+                  setNotificationsMenuOpen((prev) => !prev);
+                  setCartMenuOpen(false);
+                  setProfileMenuOpen(false);
+                }}
+              />
+
+              {notificationsMenuOpen && (
+                <div className="absolute right-0 top-full z-40 mt-2 w-[320px] rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)]">
+                  <div className="px-5 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          Notifications
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Live updates from StadOnClick
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-slate-400 transition hover:text-slate-700"
+                      >
+                        Mark read
+                      </button>
+                    </div>
+                    <ul className="mt-4 space-y-3 text-sm text-slate-600">
+                      {notificationItems.map((item) => (
+                        <li key={item.title} className="flex gap-3">
+                          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-sky-500"></span>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-slate-900">
+                              {item.title}
+                            </p>
+                            <p className="text-xs text-slate-500">{item.time}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                      {utilityLinks.map((link) => (
+                        <button
+                          key={link}
+                          type="button"
+                          className="rounded-xl border border-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                        >
+                          {link}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             {user ? (
               <div ref={profileRef} className="relative">
                 <button
@@ -412,11 +598,16 @@ type IconButtonProps = {
   icon: ReactNode;
   label: string;
   badge?: string;
+  onClick?: () => void;
 };
 
-function IconButton({ icon, label, badge }: IconButtonProps) {
+function IconButton({ icon, label, badge, onClick }: IconButtonProps) {
   return (
-    <button className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-white p-2 text-blue-700 transition hover:border-yellow-400">
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-white p-2 text-blue-700 transition hover:border-yellow-400"
+    >
       {icon}
       {badge ? (
         <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[11px] font-semibold text-white">
@@ -427,3 +618,5 @@ function IconButton({ icon, label, badge }: IconButtonProps) {
     </button>
   );
 }
+
+
