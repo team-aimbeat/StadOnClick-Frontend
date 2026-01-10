@@ -1,6 +1,6 @@
-import { Outlet } from "react-router-dom";
+﻿import { Outlet } from "react-router-dom";
 import { Suspense } from "react";
-import AppLayoutSkeleton from "@/components/Layout/skeletons/AppLayoutSkeleton";
+import AppLayoutSkeleton from "@/components/skeletons/AppLayoutSkeleton";
 import UserFooter from "./UserFooter";
 import UserHeader from "./UserHeader";
 

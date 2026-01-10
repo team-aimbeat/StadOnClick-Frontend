@@ -1,4 +1,4 @@
-import { useId, type FormEvent } from "react";
+﻿import { useId, type FormEvent } from "react";
 
 import {
   Accordion,
@@ -148,7 +148,7 @@ const UserFooter = () => {
                 <div className="flex items-center gap-2 text-sm font-medium text-amber-500">
                   <Star className="h-4 w-4" aria-hidden />
                   <span className="text-slate-600 dark:text-slate-300">
-                    4.9 · 120K+ downloads
+                    4.9 ┬╖ 120K+ downloads
                   </span>
                 </div>
               </div>
@@ -246,7 +246,7 @@ const UserFooter = () => {
         </div>
         <div className="mt-10 border-t border-slate-200/70 pt-6 text-xs text-slate-600 dark:border-slate-800/80 dark:text-slate-400 sm:flex sm:items-center sm:justify-between">
           <p className="text-xs text-slate-600 dark:text-slate-400">
-            © {new Date().getFullYear()} StadOnClick. All rights reserved.
+            ┬⌐ {new Date().getFullYear()} StadOnClick. All rights reserved.
           </p>
           <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400 sm:mt-0">
             {legalLinks.map((link) => (

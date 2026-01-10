@@ -1,17 +1,7 @@
-import Breadcrumb from "@/components/ui/Breadcrumb";
+import Breadcrumb from "@/components/shared/Breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -22,8 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AddShippingAddressDialog } from "@/components/modals/account/AddShippingAddressDialog";
 import { cn } from "@/lib/utils";
-import { Eye, Lock, MapPin, User, Wallet, X } from "lucide-react";
+import { Eye, Lock, MapPin, User, Wallet } from "lucide-react";
 import React from "react";
 
 type SectionKey = "personal" | "password" | "shipping" | "payment";
@@ -55,16 +46,6 @@ const genderOptions = [
   { value: "preferNotToSay", label: "Prefer not to say" },
 ];
 
-const shippingStates = [
-  "Stockholm",
-  "Västra Götaland",
-  "Skåne",
-  "Uppsala",
-  "Östergötland",
-  "Västmanland",
-  "Norrbotten",
-];
-
 const UserAccount = () => {
   const [gender, setGender] = React.useState("");
   const [activeSection, setActiveSection] = React.useState<
@@ -76,7 +57,6 @@ const UserAccount = () => {
   const [avatarPreview, setAvatarPreview] = React.useState<string>("");
   const avatarUrlRef = React.useRef<string | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [selectedState, setSelectedState] = React.useState("");
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -296,83 +276,16 @@ const UserAccount = () => {
                       Add one to speed up future checkouts within Sweden.
                     </p>
                   </div>
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="rounded-full bg-slate-900 px-6 py-3 text-base shadow-none">
-                        + Add shipping address
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[640px]">
-                      <DialogHeader>
-                        <div className="flex items-center justify-between gap-4">
-                          <DialogTitle>New shipping address</DialogTitle>
-                          <DialogClose aria-label="Close dialog">
-                            <X className="h-4 w-4" />
-                          </DialogClose>
-                        </div>
-                        <DialogDescription className="text-sm text-slate-500">
-                          Enter the details for this Swedish address.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <Label htmlFor="shipping-name">First and Last Name</Label>
-                          <Input id="shipping-name" placeholder="First and Last Name" className="h-12 text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="shipping-address">Address</Label>
-                          <Input id="shipping-address" placeholder="Address" className="h-12 text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="shipping-apt">Apartment, Suite (Optional)</Label>
-                          <Input id="shipping-apt" placeholder="Apartment, Suite" className="h-12 text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="shipping-city">City</Label>
-                          <Input id="shipping-city" placeholder="City (Sweden)" className="h-12 text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="shipping-zip">Zip code</Label>
-                          <Input id="shipping-zip" placeholder="Zip code" className="h-12 text-sm" />
-                        </div>
-                        <div className="space-y-1">
-                        <Label htmlFor="shipping-state">State/County</Label>
-                        <Select value={selectedState} onValueChange={setSelectedState}>
-                          <SelectTrigger id="shipping-state" className="w-full text-sm h-12">
-                            <SelectValue placeholder="State/County" />
-                          </SelectTrigger>
-                          <SelectContent className="w-full rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
-                            <SelectGroup>
-                              <SelectLabel className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                                Sweden
-                              </SelectLabel>
-                              <SelectSeparator className="my-1 h-px bg-slate-100" />
-                              {shippingStates.map((state) => (
-                                <SelectItem
-                                  key={state}
-                                  value={state}
-                                  className="rounded-xl px-3 py-2 text-sm text-slate-700 outline-none transition hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:text-slate-900"
-                                >
-                                  {state}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button variant="outline" className="rounded-full px-6 py-3 text-base text-slate-600 shadow-none">
-                            Cancel
-                          </Button>
-                        </DialogClose>
-                        <Button className="rounded-full bg-slate-900 px-8 py-3 text-base shadow-none">
-                          Add shipping address
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    className="rounded-full bg-slate-900 px-6 py-3 text-base shadow-none"
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    + Add shipping address
+                  </Button>
+                  <AddShippingAddressDialog
+                    open={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                  />
                 </div>
               ) : (
                 <div className="mt-6 text-sm text-slate-500">

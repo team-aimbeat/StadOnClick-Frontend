@@ -1,8 +1,8 @@
-import Breadcrumb from '@/components/ui/Breadcrumb';
+import Breadcrumb from '@/components/shared/Breadcrumb';
 import ChartCard, { bookingsData } from '@/components/AdminDashboard/ChartCard';
 import GmvCard, { gmvChartData } from '@/components/AdminDashboard/GmvChartCard';
 import RecentActivities, { recentActivities } from '@/components/AdminDashboard/RecentActivities';
-import StatCard from '@/components/ui/StatCard';
+import StatCard from '@/components/shared/StatCard';
 import React, { useEffect, useState } from 'react';
 import {
   HiOutlineUsers,
@@ -17,8 +17,8 @@ import Mapcity from '@/components/AdminDashboard/Mapcity';
 import CustomerAcquisitionCard from '@/components/AdminDashboard/CustomerAcquisitionCard';
 import VendorsOverview from '@/components/AdminDashboard/VendorsOverview';
 import AIAlertInsights from '@/components/AdminDashboard/AIAlertInsights';
-import NewSubscriptionsCard from '@/components/AdminDashboard/NewSubscriptionsCard.';
-import AdminDashboardSkeleton from '@/components/Layout/skeletons/AdminDashboardSkeleton';
+import NewSubscriptionsCard from '@/components/AdminDashboard/NewSubscriptionsCard';
+import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
 
 
 

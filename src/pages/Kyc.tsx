@@ -1,13 +1,13 @@
 import RecentActivities, {
   recentActivities,
 } from "@/components/AdminDashboard/RecentActivities";
-import VendorDocumentsTable from "@/components/Layout/columns";
-import AdminDashboardSkeleton from "@/components/Layout/skeletons/AdminDashboardSkeleton";
-import KycSkeleton from "@/components/Layout/skeletons/KycSkeleton";
-import Breadcrumb from "@/components/ui/Breadcrumb";
-import SearchBar from "@/components/ui/SearchBar";
-import StatCard from "@/components/ui/StatCard";
-import Table from "@/components/ui/Table";
+import VendorDocumentsTable from "@/components/shared/VendorDocumentsTable";
+import AdminDashboardSkeleton from "@/components/skeletons/AdminDashboardSkeleton";
+import KycSkeleton from "@/components/skeletons/KycSkeleton";
+import Breadcrumb from "@/components/shared/Breadcrumb";
+import SearchBar from "@/components/shared/SearchBar";
+import StatCard from "@/components/shared/StatCard";
+import Table from "@/components/shared/Table";
 import { Columns } from "lucide-react";
 import { useEffect, useState } from "react";
 import {

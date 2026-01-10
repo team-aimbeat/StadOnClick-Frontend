@@ -1,13 +1,13 @@
-import HomeHero from "@/pages/components/home/HomeHero"
-import HomeNewYearDeals from "@/pages/components/home/HomeOffer"
-import HomePopular from "@/pages/components/home/HomePopular"
-import GlowCategory from "@/pages/components/home/GlowCategory"
-import FitnessCategory from "@/pages/components/home/FitnessCategory"
-import NewSkillsCategory from "@/pages/components/home/NewSkillsCategory"
-import HomeBrowse from "@/pages/components/home/HomeBrowse"
-import HomeWhy from "@/pages/components/home/HomeWhy"
-import HomeTestimonial from "@/pages/components/home/HomeTestimonial"
-import HomeTopCategories from "@/pages/components/home/HomeTopCategories"
+import HomeHero from "@/components/shared/home/HomeHero"
+import HomeNewYearDeals from "@/components/shared/home/HomeOffer"
+import HomePopular from "@/components/shared/home/HomePopular"
+import GlowCategory from "@/components/shared/home/GlowCategory"
+import FitnessCategory from "@/components/shared/home/FitnessCategory"
+import NewSkillsCategory from "@/components/shared/home/NewSkillsCategory"
+import HomeBrowse from "@/components/shared/home/HomeBrowse"
+import HomeWhy from "@/components/shared/home/HomeWhy"
+import HomeTestimonial from "@/components/shared/home/HomeTestimonial"
+import HomeTopCategories from "@/components/shared/home/HomeTopCategories"
 
 export default function Home() {
   return (
