@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import bgImage1 from "@/assets/user-onboarding/user-onboarding-1.png";
-import { OnboardingLayout } from "../components/user-onboarding/OnboardingLayout";
-import { OnboardingFormCard } from "../components/user-onboarding/OnboardingFormCard";
-import { StepPhone } from "../components/user-onboarding/StepPhone";
-import { StepProfile } from "../components/user-onboarding/StepProfile";
-import { StepOtp } from "../components/user-onboarding/StepOtp";
-import { StepPersonalize } from "../components/user-onboarding/StepPersonalize";
+import { OnboardingLayout } from "@/components/shared/user-onboarding/OnboardingLayout";
+import { OnboardingFormCard } from "@/components/shared/user-onboarding/OnboardingFormCard";
+import { StepPhone } from "@/components/shared/user-onboarding/StepPhone";
+import { StepProfile } from "@/components/shared/user-onboarding/StepProfile";
+import { StepOtp } from "@/components/shared/user-onboarding/StepOtp";
+import { StepPersonalize } from "@/components/shared/user-onboarding/StepPersonalize";
 import bgImage2 from "@/assets/user-onboarding/user-onboarding-2.png";
 import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png";
 import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png";

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react"
 import bgImage5 from "@/assets/user-onboarding/user-onboarding-5.png"
-import { OnboardingLayout } from "../components/user-onboarding/OnboardingLayout"
-import { OnboardingFormCard } from "../components/user-onboarding/OnboardingFormCard"
-import { StepLogin } from "../components/user-onboarding/StepLogin"
+import { OnboardingLayout } from "@/components/shared/user-onboarding/OnboardingLayout"
+import { OnboardingFormCard } from "@/components/shared/user-onboarding/OnboardingFormCard"
+import { StepLogin } from "@/components/shared/user-onboarding/StepLogin"
 import { useLoginMutation } from "@/features/auth/api/authApi"
 import { useAppDispatch } from "@/app/hooks"
 import { setUser } from "@/features/auth/authSlice"
@@ -83,8 +83,6 @@ export default function SignIn() {
           loading={isLoading || isSubmitting}
           errorMessage={formError}
           isValid={canSubmit}
-          acceptTermsChecked={values.acceptTerms}
-          setAcceptTerms={(value) => setValue("acceptTerms", value, { shouldValidate: true })}
         />
       </OnboardingFormCard>
     </OnboardingLayout>

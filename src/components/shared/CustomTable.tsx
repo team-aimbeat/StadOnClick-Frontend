@@ -6,7 +6,7 @@ import {
   TableHead,
   TableRow,
   TableCell,
-} from "@/components/ui/Table";
+} from "@/components/shared/Table";
 import { cn } from "@/lib/utils";
 import {
   HiMagnifyingGlass,

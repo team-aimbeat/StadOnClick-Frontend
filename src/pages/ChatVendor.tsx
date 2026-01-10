@@ -2,34 +2,34 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
-import profile7 from "@/assets/Images/profile-7.jpeg";
-import profile8 from "@/assets/Images/profile-8.jpeg";
-import profile9 from "@/assets/Images/profile-9.jpeg";
-import profile1 from "@/assets/Images/profile-8.jpeg";
-import IconSettings from '@/assets/Icon/IconSettings';
-import IconHelpCircle from '@/assets/Icon/IconHelpCircle';
-import IconLogin from '@/assets/Icon/IconLogin';
-import IconSearch from '@/assets/Icon/IconSearch';
-import IconMessagesDot from '@/assets/Icon/IconMessagesDot';
-import IconPhone from '@/assets/Icon/IconPhone';
-import IconUserPlus from '@/assets/Icon/IconUserPlus';
-import IconBell from '@/assets/Icon/IconBell';
-import IconMenu from '@/assets/Icon/IconMenu';
-import IconMessage from '@/assets/Icon/IconMessage';
-import IconPhoneCall from '@/assets/Icon/IconPhoneCall';
-import IconVideo from '@/assets/Icon/IconVideo';
-import IconCopy from '@/assets/Icon/IconCopy';
-import IconTrashLines from '@/assets/Icon/IconTrashLines';
-import IconShare from '@/assets/Icon/IconShare';
-import IconMoodSmile from '@/assets/Icon/IconMoodSmile';
-import IconSend from '@/assets/Icon/IconSend';
-import IconMicrophoneOff from '@/assets/Icon/IconMicrophoneOff';
-import IconDownload from '@/assets/Icon/IconDownload';
-import IconCamera from '@/assets/Icon/IconCamera';
+import profile7 from "@/assets/images/profile-7.jpeg";
+import profile8 from "@/assets/images/profile-8.jpeg";
+import profile9 from "@/assets/images/profile-9.jpeg";
+import profile1 from "@/assets/images/profile-8.jpeg";
+import IconSettings from '@/components/icons/IconSettings';
+import IconHelpCircle from '@/components/icons/IconHelpCircle';
+import IconLogin from '@/components/icons/IconLogin';
+import IconSearch from '@/components/icons/IconSearch';
+import IconMessagesDot from '@/components/icons/IconMessagesDot';
+import IconPhone from '@/components/icons/IconPhone';
+import IconUserPlus from '@/components/icons/IconUserPlus';
+import IconBell from '@/components/icons/IconBell';
+import IconMenu from '@/components/icons/IconMenu';
+import IconMessage from '@/components/icons/IconMessage';
+import IconPhoneCall from '@/components/icons/IconPhoneCall';
+import IconVideo from '@/components/icons/IconVideo';
+import IconCopy from '@/components/icons/IconCopy';
+import IconTrashLines from '@/components/icons/IconTrashLines';
+import IconShare from '@/components/icons/IconShare';
+import IconMoodSmile from '@/components/icons/IconMoodSmile';
+import IconSend from '@/components/icons/IconSend';
+import IconMicrophoneOff from '@/components/icons/IconMicrophoneOff';
+import IconDownload from '@/components/icons/IconDownload';
+import IconCamera from '@/components/icons/IconCamera';
 import { setPageTitle } from '@/features/Layout/themeConfigSlice';
 import { RootState } from '@/app/store';
-import Dropdown from '@/components/ui/dropdown';
-import IconHorizontalDots from '@/assets/Icon/IconHorizontalDots';
+import Dropdown from '@/components/shared/dropdown';
+import IconHorizontalDots from '@/components/icons/IconHorizontalDots';
 
 const contactList = [
     {
@@ -270,7 +270,7 @@ const ChatVendor = () => {
                     <div className="flex justify-between items-center">
                         <div className="flex items-center">
                             <div className="flex-none">
-                                <img src='/src/assets/Images/profile-7.jpeg'className="rounded-full h-12 w-12 object-cover" alt="" />
+                                <img src='/src/assets/images/profile-7.jpeg'className="rounded-full h-12 w-12 object-cover" alt="" />
                             </div>
                             <div className="mx-3">
                                 <p className="mb-1 font-semibold">Alon Smith</p>

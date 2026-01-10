@@ -1,17 +1,22 @@
-import { useId, type FormEvent } from "react"
+﻿import { useId, type FormEvent } from "react";
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight,
   Facebook,
@@ -21,28 +26,28 @@ import {
   Star,
   X,
   type LucideIcon,
-} from "lucide-react"
+} from "lucide-react";
 
 type FooterLink = {
-  label: string
-  href: string
-}
+  label: string;
+  href: string;
+};
 
 type FooterColumn = {
-  title: string
-  links: FooterLink[]
-}
+  title: string;
+  links: FooterLink[];
+};
 
 type RegionOption = {
-  value: string
-  label: string
-}
+  value: string;
+  label: string;
+};
 
 type SocialLink = {
-  label: string
-  href: string
-  icon: LucideIcon
-}
+  label: string;
+  href: string;
+  icon: LucideIcon;
+};
 
 const navColumns: FooterColumn[] = [
   {
@@ -74,27 +79,27 @@ const navColumns: FooterColumn[] = [
       { label: "Leadership", href: "#" },
     ],
   },
-]
+];
 
 const quickLinks: FooterLink[] = [
   { label: "Gift Collections", href: "#" },
   { label: "Curated Deals", href: "#" },
   { label: "Premium Experiences", href: "#" },
-]
+];
 
 const regionOptions: RegionOption[] = [
   { value: "usa", label: "USA" },
   { value: "india", label: "India" },
   { value: "uk", label: "United Kingdom" },
   { value: "eu", label: "European Union" },
-]
+];
 
 const socialLinks: SocialLink[] = [
   { label: "Follow us on Facebook", href: "#", icon: Facebook },
   { label: "Follow us on Instagram", href: "#", icon: Instagram },
   { label: "Follow us on X", href: "#", icon: X },
   { label: "Connect on LinkedIn", href: "#", icon: Linkedin },
-]
+];
 
 const legalLinks: FooterLink[] = [
   { label: "Terms", href: "#" },
@@ -102,15 +107,15 @@ const legalLinks: FooterLink[] = [
   { label: "Do Not Sell", href: "#" },
   { label: "Sitemap", href: "#" },
   { label: "Licenses", href: "#" },
-]
+];
 
 const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault()
-}
+  event.preventDefault();
+};
 
 const UserFooter = () => {
-  const emailInputId = useId()
-  const regionSelectId = useId()
+  const emailInputId = useId();
+  const regionSelectId = useId();
 
   return (
     <footer className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
@@ -129,59 +134,31 @@ const UserFooter = () => {
                   Download the StadOnClick App
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-300">
-                  Unlock curated experiences, deals, and vendor intelligence in one trusted destination.
+                  Unlock curated experiences, deals, and vendor intelligence in
+                  one trusted destination.
                 </p>
-                <Button variant="default" className="w-full sm:w-auto" type="button" aria-label="Get the StadOnClick app">
+                <Button
+                  variant="default"
+                  className="w-full sm:w-auto"
+                  type="button"
+                  aria-label="Get the StadOnClick app"
+                >
                   Get the App
                 </Button>
                 <div className="flex items-center gap-2 text-sm font-medium text-amber-500">
                   <Star className="h-4 w-4" aria-hidden />
-                  <span className="text-slate-600 dark:text-slate-300">4.9 · 120K+ downloads</span>
+                  <span className="text-slate-600 dark:text-slate-300">
+                    4.9 ┬╖ 120K+ downloads
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-         
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">Sign up for curated updates</p>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                Get newsletter content that highlights premium partnerships, expert buying guides, and app-only offers.
-              </p>
-            </div>
-            <form className="space-y-3" onSubmit={handleNewsletterSubmit} noValidate>
-              <div className="flex flex-col gap-3 md:flex-row md:items-end">
-                <div className="w-full md:basis-2/3">
-                  <Label htmlFor={emailInputId} className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Email address
-                  </Label>
-                  <Input id={emailInputId} name="email" type="email" placeholder="hello@domain.com" required />
-                </div>
-                <div className="flex grow items-center gap-2">
-                  <Button type="submit" className="hidden md:inline-flex" size="default">
-                    Subscribe
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                  <Button type="submit" className="inline-flex md:hidden" size="icon" aria-label="Subscribe to newsletter">
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                By subscribing, you consent to receive updates and agree to our{" "}
-                <a className="text-slate-900 underline-offset-4 hover:underline dark:text-white" href="#" aria-label="Review terms">
-                  Terms
-                </a>{" "}
-                and{" "}
-                <a className="text-slate-900 underline-offset-4 hover:underline dark:text-white" href="#" aria-label="Review privacy policy">
-                  Privacy Policy
-                </a>
-                .
-              </p>
-            </form>
-          </div>
+
           <div className="flex flex-col gap-3 lg:items-end">
-            <p className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Follow us</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              Follow us
+            </p>
             <div className="flex gap-3 text-slate-600 dark:text-slate-200">
               {socialLinks.map((link) => (
                 <a
@@ -208,7 +185,10 @@ const UserFooter = () => {
               <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <a className="hover:text-slate-900 hover:underline dark:hover:text-white" href={link.href}>
+                    <a
+                      className="hover:text-slate-900 hover:underline dark:hover:text-white"
+                      href={link.href}
+                    >
                       {link.label}
                     </a>
                   </li>
@@ -220,11 +200,16 @@ const UserFooter = () => {
             <p className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               Quick Links
             </p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Categories</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Categories
+            </p>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
               {quickLinks.map((link) => (
                 <li key={link.label}>
-                  <a className="hover:text-slate-900 hover:underline dark:hover:text-white" href={link.href}>
+                  <a
+                    className="hover:text-slate-900 hover:underline dark:hover:text-white"
+                    href={link.href}
+                  >
                     {link.label}
                   </a>
                 </li>
@@ -233,7 +218,11 @@ const UserFooter = () => {
           </div>
         </div>
         <div className="mt-6 lg:hidden">
-          <Accordion type="single" collapsible className="rounded-2xl border border-slate-200 bg-white/60 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+          <Accordion
+            type="single"
+            collapsible
+            className="rounded-2xl border border-slate-200 bg-white/60 shadow-sm dark:border-slate-800 dark:bg-slate-900/70"
+          >
             <AccordionItem value="quick-links">
               <AccordionTrigger className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 Categories
@@ -242,7 +231,10 @@ const UserFooter = () => {
                 <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                   {quickLinks.map((link) => (
                     <li key={link.label}>
-                      <a className="hover:text-slate-900 hover:underline dark:hover:text-white" href={link.href}>
+                      <a
+                        className="hover:text-slate-900 hover:underline dark:hover:text-white"
+                        href={link.href}
+                      >
                         {link.label}
                       </a>
                     </li>
@@ -254,7 +246,7 @@ const UserFooter = () => {
         </div>
         <div className="mt-10 border-t border-slate-200/70 pt-6 text-xs text-slate-600 dark:border-slate-800/80 dark:text-slate-400 sm:flex sm:items-center sm:justify-between">
           <p className="text-xs text-slate-600 dark:text-slate-400">
-            © {new Date().getFullYear()} StadOnClick. All rights reserved.
+            ┬⌐ {new Date().getFullYear()} StadOnClick. All rights reserved.
           </p>
           <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400 sm:mt-0">
             {legalLinks.map((link) => (
@@ -266,7 +258,7 @@ const UserFooter = () => {
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default UserFooter
+export default UserFooter;

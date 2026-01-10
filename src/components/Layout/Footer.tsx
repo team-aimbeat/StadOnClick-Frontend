@@ -1,6 +1,6 @@
-
+﻿
 const Footer = () => {
-    return <div className="dark:text-white-dark ltr:sm:text-left rtl:sm:text-right p-6 pt-0 mt-auto">© {new Date().getFullYear()}. StadonClick All rights reserved.</div>;
+    return <div className="dark:text-white-dark ltr:sm:text-left rtl:sm:text-right p-6 pt-0 mt-auto">┬⌐ {new Date().getFullYear()}. StadonClick All rights reserved.</div>;
 };
 
 export default Footer;
@@ -62,7 +62,7 @@ export default Footer;
 //                     </div>
 //                 </div>
 //                 <div className="border-t border-white/15 px-6 py-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs text-white/70">
-//                     <div>© {new Date().getFullYear()} StadonClick. All rights reserved.</div>
+//                     <div>┬⌐ {new Date().getFullYear()} StadonClick. All rights reserved.</div>
 //                     <div className="flex items-center gap-2">
 //                         <span className="inline-flex h-2 w-2 rounded-full bg-[#FFCD00]" />
 //                         <span>Built with Nordic clarity</span>
