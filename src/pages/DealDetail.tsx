@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom"
-import yogaImage from "@/assets/images/yoga.jpg"
+import yogaImage from "@/assets/images/yoga.png"
 import eventImage from "@/assets/images/event.jpg"
 import vacationImage from "@/assets/images/vacation.jpeg"
 import movieImage from "@/assets/images/movie.jpg"
