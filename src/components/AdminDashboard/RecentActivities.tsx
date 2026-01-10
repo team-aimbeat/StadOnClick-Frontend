@@ -2,10 +2,10 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
-import profile7 from "@/assets/Images/profile-7.jpeg";
-import profile8 from "@/assets/Images/profile-8.jpeg";
-import profile9 from "@/assets/Images/profile-9.jpeg";
-import profile10 from "@/assets/Images/profile-10.jpeg";
+import profile7 from "@/assets/images/profile-7.jpeg";
+import profile8 from "@/assets/images/profile-8.jpeg";
+import profile9 from "@/assets/images/profile-9.jpeg";
+import profile10 from "@/assets/images/profile-10.jpeg";
 
 interface Activity {
   id: string | number;

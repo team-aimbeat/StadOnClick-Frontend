@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
-import AppLayout from "@/components/Layout/AppLayout";
-import AdminLayout from "@/components/Layout/AdminLayout";
-import VendorLayout from "@/components/Layout/VendorLayout";
+import AppLayout from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import VendorLayout from "@/components/layout/VendorLayout";
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -14,6 +14,7 @@ import ServiceCategory from "@/pages/ServiceCategory";
 import Kyc from "@/pages/Kyc"
 import ChatVendor from "@/pages/ChatVendor"
 import NotFound from "@/pages/NotFound"
+import UserAccount from "@/pages/UserAccount";
 
 const appRouter = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/account",
+        element: <UserAccount />,
       },
       {
         path: "/signup",

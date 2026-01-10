@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import {
   HiEllipsisHorizontal,
   HiXMark,
 } from "react-icons/hi2";
-import profile7 from "@/assets/Images/profile-7.jpeg";
-import profile8 from "@/assets/Images/profile-8.jpeg";
-import profile9 from "@/assets/Images/profile-9.jpeg";
-import documentImage from "@/assets/Images/document.png";
-import iconEdit from "@/assets/Images/edit.png";
-import iconView from "@/assets/Images/view.png";
-import iconDelete from "@/assets/Images/delete.png";
+import profile7 from "@/assets/images/profile-7.jpeg";
+import profile8 from "@/assets/images/profile-8.jpeg";
+import profile9 from "@/assets/images/profile-9.jpeg";
+import documentImage from "@/assets/images/document.png";
+import iconEdit from "@/assets/images/edit.png";
+import iconView from "@/assets/images/view.png";
+import iconDelete from "@/assets/images/delete.png";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import KycSkeleton from "./skeletons/KycSkeleton";
-import VendorTable from "../ui/CustomTable";
+import VendorTable from "./CustomTable";
+
 
 /* ================= TYPES ================= */
 
@@ -35,7 +35,7 @@ export type VendorDoc = {
 const data: VendorDoc[] = [
   {
     id: 355657,
-    vendor: "Malmö Rörmokare",
+    vendor: "Malm├╢ R├╢rmokare",
     avatar: profile7,
     docImage: profile7,
     documents: [
@@ -50,7 +50,7 @@ const data: VendorDoc[] = [
   },
   {
     id: 355658,
-    vendor: "Malmö Rörmokare",
+    vendor: "Malm├╢ R├╢rmokare",
     avatar: profile9,
     docImage: documentImage,
     documents: [
@@ -66,7 +66,7 @@ const data: VendorDoc[] = [
   },
     {
     id: 355657,
-    vendor: "Malmö Rörmokare",
+    vendor: "Malm├╢ R├╢rmokare",
     avatar: profile8,
     docImage: profile8,
     documents: [
@@ -118,9 +118,9 @@ const VendorDocumentsTable: React.FC = () => {
   }, [activeDoc]);
 
   const activityLog = [
-    { title: "Request submitted", time: "Dec 18 • 10:12", tone: "bg-emerald-400" },
-    { title: "Documents received", time: "Dec 18 • 10:18", tone: "bg-emerald-400" },
-    { title: "Review completed", time: "Dec 18 • 14:32", tone: "bg-blue-400" },
+    { title: "Request submitted", time: "Dec 18 ΓÇó 10:12", tone: "bg-emerald-400" },
+    { title: "Documents received", time: "Dec 18 ΓÇó 10:18", tone: "bg-emerald-400" },
+    { title: "Review completed", time: "Dec 18 ΓÇó 14:32", tone: "bg-blue-400" },
     { title: "Vendor approved", time: "Recorded automatically", tone: "bg-slate-300" },
   ];
 
@@ -375,7 +375,7 @@ const VendorDocumentsTable: React.FC = () => {
                      {viewDoc.vendor}
                    </p>
                    <p className="text-xs text-gray-500">
-                     Vendor verification • Documents & audit trail
+                     Vendor verification ΓÇó Documents & audit trail
                    </p>
                  </div>
                </div>
@@ -406,7 +406,7 @@ const VendorDocumentsTable: React.FC = () => {
                      Uploaded documents
                    </p>
                    <p className="text-xs text-gray-500">
-                     {viewDoc.documents.length} files • Click a card to open viewer
+                     {viewDoc.documents.length} files ΓÇó Click a card to open viewer
                    </p>
                  </div>
                  <input
@@ -429,7 +429,7 @@ const VendorDocumentsTable: React.FC = () => {
                          <p className="text-sm font-semibold text-gray-900">
                            {doc.name}
                          </p>
-                         <p className="text-xs text-gray-500">PDF • 1.2 MB</p>
+                         <p className="text-xs text-gray-500">PDF ΓÇó 1.2 MB</p>
                        </div>
                      </div>
                      <div className="mt-3 flex items-center justify-between gap-2">

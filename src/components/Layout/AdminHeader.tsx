@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 
-import IconArrowLeft from "@/assets/Icon/IconArrowLeft";
-import IconBellBing from "@/assets/Icon/IconBellBing";
-import IconChatNotification from "@/assets/Icon/IconChatNotification";
-import IconInfoCircle from "@/assets/Icon/IconInfoCircle";
-import IconLaptop from "@/assets/Icon/IconLaptop";
-import IconLockDots from "@/assets/Icon/IconLockDots";
-import IconLogout from "@/assets/Icon/IconLogout";
-import IconMailDot from "@/assets/Icon/IconMailDot";
-import IconMenu from "@/assets/Icon/IconMenu";
-import IconMoon from "@/assets/Icon/IconMoon";
-import IconSearch from "@/assets/Icon/IconSearch";
-import IconSun from "@/assets/Icon/IconSun";
-import IconUser from "@/assets/Icon/IconUser";
-import IconXCircle from "@/assets/Icon/IconXCircle";
+import IconArrowLeft from "@/components/icons/IconArrowLeft";
+import IconBellBing from "@/components/icons/IconBellBing";
+import IconChatNotification from "@/components/icons/IconChatNotification";
+import IconInfoCircle from "@/components/icons/IconInfoCircle";
+import IconLaptop from "@/components/icons/IconLaptop";
+import IconLockDots from "@/components/icons/IconLockDots";
+import IconLogout from "@/components/icons/IconLogout";
+import IconMailDot from "@/components/icons/IconMailDot";
+import IconMenu from "@/components/icons/IconMenu";
+import IconMoon from "@/components/icons/IconMoon";
+import IconSearch from "@/components/icons/IconSearch";
+import IconSun from "@/components/icons/IconSun";
+import IconUser from "@/components/icons/IconUser";
+import IconXCircle from "@/components/icons/IconXCircle";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 
-import menuHeader from "@/assets/Images/banner.png";
-import profile7 from "@/assets/Images/profile-7.jpeg";
-import profile8 from "@/assets/Images/profile-8.jpeg";
-import profile9 from "@/assets/Images/profile-9.jpeg";
+import menuHeader from "@/assets/images/banner.png";
+import profile7 from "@/assets/images/profile-7.jpeg";
+import profile8 from "@/assets/images/profile-8.jpeg";
+import profile9 from "@/assets/images/profile-9.jpeg";
 import logo from "@/assets/logo/logo.png";
 
 import { RootState } from "@/app/store";
@@ -31,8 +31,9 @@ import {
   toggleSidebar,
   toggleTheme,
 } from "@/features/Layout/themeConfigSlice";
-import Dropdown from "../ui/dropdown";
-import SearchBar from "../ui/SearchBar";
+import Dropdown from "../shared/dropdown";
+import SearchBar from "../shared/SearchBar";
+
 
 const AdminHeader = () => {
   const location = useLocation();

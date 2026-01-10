@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+﻿import { Link, NavLink } from "react-router-dom";
 import {
   Activity,
   Bell,
@@ -216,6 +216,7 @@ export default function UserHeader() {
                       </button>
                     </div>
 
+<Link to="/account">
                     <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
                         {userInitial}
@@ -226,7 +227,7 @@ export default function UserHeader() {
                       </div>
                       <ChevronRight className="h-4 w-4 text-slate-400" />
                     </div>
-
+</Link>
                     <div className="space-y-1 px-4 py-3">
                       {menuItems.map((item) => (
                         <button
