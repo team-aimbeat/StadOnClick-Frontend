@@ -15,6 +15,7 @@ import About from "@/pages/About"
 import Teams from "@/pages/Teams"
 import Support from "@/pages/Support"
 import UserAccount from "@/pages/UserAccount";
+import Wishlist from "@/pages/Wishlist";
 import AppLayout from "@/components/Layout/AppLayout";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
@@ -46,6 +47,10 @@ const appRouter = createBrowserRouter([
         path: "/marketplace",
         element: <Marketplace />,
         errorElement: <ErrorPage />,
+      },
+      {
+        path: "/wishlist",
+        element: <Wishlist />,
       },
       {
         path: "/about",
