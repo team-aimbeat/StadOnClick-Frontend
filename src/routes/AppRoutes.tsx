@@ -7,10 +7,12 @@ import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
-import ServiceCategory from "@/pages/ServiceCategory";
 import Kyc from "@/pages/Kyc"
 import ChatVendor from "@/pages/ChatVendor"
 import NotFound from "@/pages/NotFound"
+import About from "@/pages/About"
+import Teams from "@/pages/Teams"
+import Support from "@/pages/Support"
 
 const appRouter = createBrowserRouter([
   {
@@ -37,8 +39,16 @@ const appRouter = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: "/services/:slug",
-        element: <ServiceCategory />,
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/teams",
+        element: <Teams />,
+      },
+      {
+        path: "/support",
+        element: <Support />,
       },
       {
         path: "/deals/:slug",
