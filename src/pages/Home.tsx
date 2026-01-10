@@ -1,10 +1,10 @@
-import HomeHero from "@/pages/components/home/HomeHero"
-import HomeLaunchStrip from "@/pages/components/home/Promo"
-import HomeGlowSale from "@/pages/components/home/Sale"
-import HomeNewYearDeals from "@/pages/components/home/HomeOffer"
-import HomeBrowse from "@/pages/components/home/HomeBrowse"
-import HomeWhy from "@/pages/components/home/HomeWhy"
-import HomeTestimonial from "@/pages/components/home/HomeTestimonial"
+import HomeBrowse from "@/components/shared/home/HomeBrowse";
+import HomeHero from "@/components/shared/home/HomeHero";
+import HomeNewYearDeals from "@/components/shared/home/HomeOffer";
+import HomeTestimonial from "@/components/shared/home/HomeTestimonial";
+import HomeWhy from "@/components/shared/home/HomeWhy";
+import HomeLaunchStrip from "@/components/shared/home/Promo";
+import HomeGlowSale from "@/components/shared/home/Sale";
 
 export default function Home() {
   return (

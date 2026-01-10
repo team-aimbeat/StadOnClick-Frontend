@@ -1,7 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import AppLayout from "@/components/layout/AppLayout";
-import AdminLayout from "@/components/layout/AdminLayout";
-import VendorLayout from "@/components/layout/VendorLayout";
+
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -17,6 +15,9 @@ import About from "@/pages/About"
 import Teams from "@/pages/Teams"
 import Support from "@/pages/Support"
 import UserAccount from "@/pages/UserAccount";
+import AppLayout from "@/components/Layout/AppLayout";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import VendorLayout from "@/components/Layout/VendorLayout";
 
 const appRouter = createBrowserRouter([
   {
