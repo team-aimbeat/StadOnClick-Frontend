@@ -1,5 +1,4 @@
-﻿import Breadcrumb from '@/components/ui/Breadcrumb';
-import StatCard from '@/components/ui/StatCard';
+﻿
 import VendorInfoForm, { VendorInfo } from '@/components/VendorInfoForm';
 import React, { useEffect, useState } from 'react';
 import {
@@ -12,12 +11,14 @@ import {
   HiOutlineArrowRight,
   HiCheck,
 } from 'react-icons/hi2';
-import AdminDashboardSkeleton from '@/components/Layout/skeletons/AdminDashboardSkeleton';
 import profile7 from '@/assets/Images/profile-7.jpeg';
 import verify from '@/assets/Images/right.png';
 import crown from '@/assets/Images/crown.png';
 import KycStatusCard from '@/components/KycStatusCard';
 import CategorySelectionCard from '@/components/CategorySelectionCard';
+import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
+import Breadcrumb from '@/components/shared/Breadcrumb';
+import StatCard from '@/components/shared/StatCard';
 
 const workflowSteps = [
   { id: 1, title: 'Vendor information', subtitle: 'Add personal & business contact info' },

@@ -72,7 +72,7 @@ const navColumns: FooterColumn[] = [
   {
     title: "Company",
     links: [
-      { label: "About", href: "#" },
+      { label: "About", href: "/about" },
       { label: "Careers", href: "#" },
       { label: "Press", href: "#" },
       { label: "Investor Relations", href: "#" },
@@ -148,7 +148,7 @@ const UserFooter = () => {
                 <div className="flex items-center gap-2 text-sm font-medium text-amber-500">
                   <Star className="h-4 w-4" aria-hidden />
                   <span className="text-slate-600 dark:text-slate-300">
-                    4.9 ┬╖ 120K+ downloads
+                    4.9  120K+ downloads
                   </span>
                 </div>
               </div>
