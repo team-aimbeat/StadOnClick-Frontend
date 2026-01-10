@@ -98,20 +98,15 @@ export function StepLogin({
     />
   </button>
 
-  {/* Apple (placeholder for later) */}
-  <button
-    type="button"
-    disabled
-    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 opacity-50"
-  >
-    <img src={appleIcon} alt="Apple" className="h-[22px] w-[22px]" />
-  </button>
 
   {/* Facebook (placeholder) */}
   <button
     type="button"
-    disabled
-    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-100 opacity-50"
+    onClick={() => {
+      window.location.href =
+        `${import.meta.env.VITE_API_URL}/auth/facebook`
+    }}
+    className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition hover:border-[#1877F2]/50 hover:shadow"
   >
     <img src={facebookIcon} alt="Facebook" className="h-[22px] w-[22px]" />
   </button>
