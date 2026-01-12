@@ -1,45 +1,13 @@
 import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { HiMapPin } from 'react-icons/hi2';
 
-type City = {
-  name: string;
-  percent: number;
-  lat: number;
-  lng: number;
-  color: string;
-};
-
-const cities: City[] = [
-  {
-    name: 'Stockholm',
-    percent: 81.57,
-    lat: 59.3293,
-    lng: 18.0686,
-    color: '#3B82F6', // blue
-  },
-  {
-    name: 'Gothenburg',
-    percent: 63.25,
-    lat: 57.7089,
-    lng: 11.9746,
-    color: '#9333EA', // purple
-  },
-  {
-    name: 'Malmö',
-    percent: 52.95,
-    lat: 55.605,
-    lng: 13.0038,
-    color: '#FACC15', // yellow
-  },
-  {
-    name: 'Uppsala',
-    percent: 47.29,
-    lat: 59.8586,
-    lng: 17.6389,
-    color: '#10B981', // green
-  },
+const cities = [
+  { name: 'Stockholm', percent: 81.57, lat: 59.3293, lng: 18.0686, color: '#3B82F6' },
+  { name: 'Gothenburg', percent: 63.25, lat: 57.7089, lng: 11.9746, color: '#9333EA' },
+  { name: 'Malmo', percent: 52.95, lat: 55.605, lng: 13.0038, color: '#FACC15' },
+  { name: 'Uppsala', percent: 47.29, lat: 59.8586, lng: 17.6389, color: '#10B981' },
 ];
 
 const createMarker = (color: string) =>
@@ -47,8 +15,8 @@ const createMarker = (color: string) =>
     className: '',
     html: `
       <div style="
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         background: ${color};
         border-radius: 50%;
         box-shadow: 0 0 0 6px ${color}33;
@@ -58,75 +26,56 @@ const createMarker = (color: string) =>
 
 const Mapcity: React.FC = () => {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">
-          Top cities<HiMapPin className="w-6 h-6 inline ml-5" />
-        </h3>
-        <h3 className="text-sm font-semibold text-gray-900">
-          Vendor List 
-        </h3>
+    <div className="rounded-[28px] border border-white/70 bg-white p-4 shadow-sm min-w-[280px] max-w-sm">
+      <div className="h-40 overflow-hidden rounded-2xl border border-slate-100">
+        <MapContainer
+          center={[58.0, 15]}
+          zoom={5}
+          className="h-full w-full"
+          zoomControl={false}
+          scrollWheelZoom={false}
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          {cities.map((city) => (
+            <Marker
+              key={city.name}
+              position={[city.lat, city.lng]}
+              icon={createMarker(city.color)}
+            />
+          ))}
+        </MapContainer>
       </div>
 
-      {/* Content */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* LEFT: City list */}
-        <div className="space-y-4">
+      <div className="mt-4 space-y-3 px-1">
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <HiMapPin className="h-5 w-5 text-sky-500" />
+          <span>Top cities</span>
+        </div>
+
+        <div className="space-y-3">
           {cities.map((city) => (
-            <div key={city.name}>
-              <div className="flex items-center justify-between text-sm mb-1">
+            <div key={city.name} className="space-y-1">
+              <div className="flex items-center justify-between text-sm text-slate-600">
                 <div className="flex items-center gap-2">
                   <span
-                    className="w-3 h-3 rounded-full"
+                    className="inline-flex h-3 w-3 rounded-full"
                     style={{ backgroundColor: city.color }}
                   />
-                  <span className="text-gray-700">{city.name}</span>
+                  <span className="text-slate-900">{city.name}</span>
                 </div>
-                <span className="text-gray-900  font-medium">
-                  {city.percent}%
-                </span>
+                <span className="text-sm font-semibold text-slate-900">{city.percent.toFixed(2)}%</span>
               </div>
-
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-1.5 rounded-full bg-slate-100">
                 <div
                   className="h-full rounded-full"
                   style={{
                     width: `${city.percent}%`,
-                    backgroundColor: city.color,
+                    backgroundImage: `linear-gradient(90deg, ${city.color}, ${city.color}aa)`,
                   }}
                 />
               </div>
             </div>
           ))}
-        </div>
-
-        {/* RIGHT: Sweden Map */}
-        <div className="h-[240px] rounded-lg overflow-hidden border">
-          <MapContainer
-            center={[62, 15]}
-            zoom={5}
-            className="h-full w-full"
-            zoomControl={false}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-
-            {cities.map((city) => (
-              <Marker
-                key={city.name}
-                position={[city.lat, city.lng]}
-                icon={createMarker(city.color)}
-              >
-                <Popup>
-                  <div className="text-sm font-medium">
-                    {city.name} – {city.percent}%
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
         </div>
       </div>
     </div>

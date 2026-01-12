@@ -198,6 +198,11 @@ const AdminHeader = () => {
           </button>
         </div>
 
+        <div className="hidden lg:flex flex-col gap-0.5 ltr:mr-6 rtl:ml-6">
+          <p className="text-xs uppercase tracking-[0.4em] text-blue-400">Overview</p>
+          <h1 className="text-2xl font-semibold text-blue-900">Dashboard</h1>
+        </div>
+
         <div className="ltr:mr-2 rtl:ml-2 hidden sm:block">
           <ul className="flex items-center gap-2 dark:text-[#d0d2d6]">
             <li>

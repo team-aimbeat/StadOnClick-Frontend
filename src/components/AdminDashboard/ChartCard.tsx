@@ -95,7 +95,7 @@ const ChartCard: React.FC<DualBarChartProps> = ({
             {title}
           </h3>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <span className="text-2xl font-bold text-blue-600 dark:text-gray-100">
               {typeof value === 'number' ? value.toLocaleString() : value}
             </span>
             {trend && (

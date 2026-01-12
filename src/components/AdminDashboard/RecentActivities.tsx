@@ -80,21 +80,21 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   title = "Recent activities",
   activities = recentActivities,
   className,
+
+
+  
 }) => {
   return (
     <div
       className={cn(
-        "bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm",
+        "rounded-[32px] border border-gray-100 bg-white p-0 ",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
-        <h3
-          className="text-sm font-semibold text-gray-900 dark:text-gray-100"
-
-        >
-        {title}
+      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
+          {title}
         </h3>
 
         <button className="flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
@@ -103,9 +103,8 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
         </button>
       </div>
 
-      {/* Table Wrapper (FULL BORDER) */}
-      <div className="px-5 py-4">
-        <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+      <div className="px-6 py-5">
+        <div className="border border-gray-200 rounded-[24px] overflow-hidden bg-white">
           {/* Table Header */}
           <div
             className="grid grid-cols-5 bg-gray-50 dark:bg-gray-800/40
