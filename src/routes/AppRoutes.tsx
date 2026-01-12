@@ -16,9 +16,10 @@ import Teams from "@/pages/Teams"
 import Support from "@/pages/Support"
 import UserAccount from "@/pages/UserAccount";
 import Wishlist from "@/pages/Wishlist";
-import AppLayout from "@/components/Layout/AppLayout";
-import AdminLayout from "@/components/Layout/AdminLayout";
-import VendorLayout from "@/components/Layout/VendorLayout";
+import AppLayout from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import VendorLayout from "@/components/layout/VendorLayout";
+
 
 const appRouter = createBrowserRouter([
   {
@@ -34,7 +35,7 @@ const appRouter = createBrowserRouter([
         element: <UserAccount />,
       },
       {
-        path: "/signup",
+        path: "/sign-up",
         element: <Signup />,
         errorElement: <ErrorPage />,
       },
