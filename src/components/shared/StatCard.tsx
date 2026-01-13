@@ -32,12 +32,19 @@ export default function StatCard({
     neutral: "—",
   };
 
-  const trendColor =
+  const trendBadgeClass =
     trend === "up"
-      ? "text-emerald-700 bg-emerald-100"
+      ? "bg-emerald-100 text-emerald-700"
       : trend === "down"
-      ? "text-rose-600 bg-rose-100"
-      : "text-slate-500 bg-slate-100";
+      ? "bg-rose-100 text-rose-600"
+      : "bg-slate-100 text-slate-500";
+
+  const trendTextClass =
+    trend === "up"
+      ? "text-emerald-600"
+      : trend === "down"
+      ? "text-rose-600"
+      : "text-slate-500";
 
   const displayValue = typeof value === "number" ? value.toLocaleString() : value;
 
@@ -64,11 +71,11 @@ export default function StatCard({
           <span
             className={cn(
               "flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold",
-              trendColor
+              trendBadgeClass
             )}
           >
             {showTrendIcon && <span>{trendIcon[trend]}</span>}
-            <span>
+            <span className={trendTextClass}>
               {(trend === "up" ? "+" : trend === "down" ? "-" : "") +
                 Math.abs(percentage)}
               %
