@@ -11,6 +11,7 @@ type StatCardProps = {
   accentColor?: "blue" | "green" | "red" | "yellow" | "purple";
   className?: string;
   showTrendIcon?: boolean;
+  avatars?: string[];
 };
 
 export default function StatCard({
@@ -23,6 +24,7 @@ export default function StatCard({
   accentColor = "blue",
   className,
   showTrendIcon = true,
+  avatars = [],
 }: StatCardProps) {
   const trendIcon = {
     up: "↑",
@@ -42,7 +44,7 @@ export default function StatCard({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 rounded-[30px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg",
+        "flex flex-col gap-2 rounded-[30px]  bg-white p-4  transition hover:scale-105",
         className
       )}
     >
@@ -57,7 +59,7 @@ export default function StatCard({
         )}
       </div>
       <div className="flex items-end justify-between">
-        <p className="text-3xl font-semibold text-blue-600">{displayValue}</p>
+        <p className="text-3xl font-semibold text-blue-800">{displayValue}</p>
         {percentage !== undefined && (
           <span
             className={cn(
@@ -75,6 +77,20 @@ export default function StatCard({
         )}
       </div>
       {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+      {avatars.length > 0 && (
+        <div className="mt-2 ml-50 flex">
+          <div className="flex -space-x-2">
+            {avatars.slice(0, 3).map((src, index) => (
+              <img
+                key={`${src}-${index}`}
+                src={src}
+                alt={`avatar-${index}`}
+                className="h-8 w-8 rounded-full border-2 border-white bg-slate-50 object-cover shadow-sm"
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

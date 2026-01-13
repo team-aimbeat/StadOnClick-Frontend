@@ -26,7 +26,7 @@ const createMarker = (color: string) =>
 
 const Mapcity: React.FC = () => {
   return (
-    <div className="rounded-[28px] border border-white/70 bg-white p-4 shadow-sm min-w-[280px] max-w-sm">
+    <div className="rounded-[28px]  bg-white p-4  min-w-[280px] max-w-sm">
       <div className="h-40 overflow-hidden rounded-2xl border border-slate-100">
         <MapContainer
           center={[58.0, 15]}
