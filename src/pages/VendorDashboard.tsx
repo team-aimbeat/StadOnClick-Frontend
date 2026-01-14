@@ -21,8 +21,8 @@ import crown from '@/assets/Images/crown.png';
 import KycStatusCard from '@/components/KycStatusCard';
 import CategorySelectionCard from '@/components/CategorySelectionCard';
 import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
-import Breadcrumb from '@/components/shared/Breadcrumb';
-import StatCard from '@/components/shared/StatCard';
+import TitleBreadCrumbs from '@/components/shared/TitleBreadCrumbs';
+import StatsCard from '@/components/shared/StatsCard';
 import { setPageTitle } from '@/features/Layout/themeConfigSlice';
 import { useAppDispatch } from '@/app/hooks';
 
@@ -256,7 +256,10 @@ const VendorDashboard: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6 bg-white min-h-screen text-slate-900">
-      <Breadcrumb />
+      <TitleBreadCrumbs
+        title="Vendor Dashboard"
+        breadCrumbTitle="Dashboard / Vendor"
+      />
 
       {!isSetupComplete ? (
         <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg w-full">
@@ -434,7 +437,7 @@ const VendorDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-5 gap-4">
-            <StatCard
+            <StatsCard
               title="Today's orders"
               value={9934}
               percentage={6.3}
@@ -444,7 +447,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Today's Orders"
             />
 
-            <StatCard
+            <StatsCard
               title="Active vel today"
               value={3812}
               percentage={50}
@@ -454,7 +457,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Active visit Today"
             />
 
-            <StatCard
+            <StatsCard
               title="Active customer today"
               value={132}
               percentage={132}
@@ -464,7 +467,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Active Customer Today"
             />
 
-            <StatCard
+            <StatsCard
               title="Active customer today"
               value={132}
               percentage={132}
@@ -474,7 +477,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Active User Today"
             />
 
-            <StatCard
+            <StatsCard
               title="Active user today"
               value={132}
               percentage={120}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import profile7 from "@/assets/Images/profile-7.jpeg";
 import Breadcrumb from "@/components/shared/Breadcrumb";
-import StatCard from "@/components/shared/StatCard";
+import StatCard from "@/components/shared/StatsCard";
 import VendorDocumentsTable from "@/components/shared/VendorDocumentsTable";
 import KycSkeleton from "@/components/skeletons/KycSkeleton";
 import { useAppDispatch } from "@/app/hooks";

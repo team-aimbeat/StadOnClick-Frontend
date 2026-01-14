@@ -1,5 +1,5 @@
-import Breadcrumb from "@/components/shared/Breadcrumb";
-import StatCard from "@/components/shared/StatCard";
+import StatsCard from "@/components/shared/StatsCard";
+import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import ChartCard, { bookingsData } from "@/components/AdminDashboard/ChartCard";
 import GmvCard, {
   gmvChartData,
@@ -8,6 +8,7 @@ import RecentActivities, {
   recentActivities,
 } from "@/components/AdminDashboard/RecentActivities";
 import React, { useEffect, useState } from "react";
+import { IconType } from "react-icons";
 import {
   HiOutlineShoppingBag,
   HiOutlineChartBar,
@@ -26,6 +27,17 @@ import spaImg from "@/assets/images/spa.png";
 import bakeryImg from "@/assets/images/bakery.png";
 import viewImg from "@/assets/images/view.png";
 import documentImg from "@/assets/images/document.png";
+
+type QuickMetric = {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  percentage?: number;
+  changeValue?: number | string;
+  trend?: "up" | "down" | "neutral";
+  icon: IconType;
+  accentColor?: "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
+};
 
 const AdminDashboard: React.FC = () => {
   const popularProducts = [
@@ -96,13 +108,7 @@ const AdminDashboard: React.FC = () => {
     },
   ];
 
-  const sampleAvatars = [
-    "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=80&q=80",
-    "https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?auto=format&fit=crop&w=80&q=80",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80",
-  ];
-
-  const quickMetrics = [
+  const quickMetrics: QuickMetric[] = [
     {
       title: "Today's orders",
       value: 9934,
@@ -120,7 +126,6 @@ const AdminDashboard: React.FC = () => {
       icon: HiOutlineChartBar,
       accentColor: "purple",
       subtitle: "Active Visits Today",
-      avatars: sampleAvatars,
     },
     {
       title: "Active customers today",
@@ -130,7 +135,6 @@ const AdminDashboard: React.FC = () => {
       icon: HiOutlineUserGroup,
       accentColor: "green",
       subtitle: "Active Customers Today",
-      avatars: sampleAvatars,
     },
     {
       title: "Active users today",
@@ -140,7 +144,6 @@ const AdminDashboard: React.FC = () => {
       icon: HiOutlineUserGroup,
       accentColor: "yellow",
       subtitle: "Active Users Today",
-      avatars: sampleAvatars,
     },
     {
       title: "New users today",
@@ -150,7 +153,6 @@ const AdminDashboard: React.FC = () => {
       icon: HiOutlineUser,
       accentColor: "red",
       subtitle: "New Users Today",
-      avatars: sampleAvatars,
     },
   ];
 
@@ -163,23 +165,23 @@ const AdminDashboard: React.FC = () => {
   if (loading) return <AdminDashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gray-100 text-slate-900">
+    <div className="min-h-screen  text-slate-900">
       <div className="mx-auto w-full space-y-6 px-4 lg:px-2">
-        <div className="rounded-[28px] w-[300px] bg-white p-5 shadow-sm">
-          <Breadcrumb />
-        </div>
+        <TitleBreadCrumbs
+          title="Admin Dashboard"
+          breadCrumbTitle="Admin / Dashboard"
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {quickMetrics.map((metric) => (
-            <StatCard
+            <StatsCard
               key={metric.title}
               title={metric.title}
               value={metric.value}
               percentage={metric.percentage}
-              trend="up"
+              trend={metric.trend}
               icon={metric.icon}
-              accentColor={metric.accentColor as any}
+              accentColor={metric.accentColor}
               subtitle={metric.subtitle}
-              avatars={metric.avatars}
             />
           ))}
         </div>
