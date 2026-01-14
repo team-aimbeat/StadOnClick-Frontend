@@ -17,13 +17,20 @@ const TitleBreadCrumbs: React.FC<TitleBreadCrumbsProps> = ({
     .filter(Boolean);
 
   return (
-    <div className="flex flex-col gap-1">
-      <h1 className="page-title">{title}</h1>
+    <div className="flex items-center justify-between">
+      {/* LEFT — PAGE TITLE */}
+      <h1 className="text-2xl font-semibold text-slate-900">
+        {title}
+      </h1>
 
-      <nav aria-label="breadcrumb" className="flex items-center gap-2 text-sm">
+      {/* RIGHT — BREADCRUMBS */}
+      <nav
+        aria-label="breadcrumb"
+        className="flex items-center gap-2 text-sm text-slate-500"
+      >
         <Link
           to="/"
-          className="flex items-center text-gray-500 transition-colors duration-200 hover:text-primary-red"
+          className="flex items-center transition-colors hover:text-slate-700"
           aria-label="Home"
         >
           <IconHome className="h-4 w-4" />
@@ -31,14 +38,15 @@ const TitleBreadCrumbs: React.FC<TitleBreadCrumbsProps> = ({
 
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
+
           return (
             <React.Fragment key={`${crumb}-${index}`}>
-              <span className="text-gray-400">/</span>
+              <span className="text-slate-400">/</span>
               <span
                 className={
                   isLast
-                    ? 'font-["proxima-medium"] text-primary-black dark:text-white'
-                    : 'font-["proxima-regular"] text-gray-500'
+                    ? "font-medium text-slate-900"
+                    : "font-normal text-slate-500"
                 }
               >
                 {crumb}
