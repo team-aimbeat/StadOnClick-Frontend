@@ -163,9 +163,9 @@ const AdminDashboard: React.FC = () => {
   if (loading) return <AdminDashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 text-slate-900">
       <div className="mx-auto w-full space-y-6 px-4 lg:px-2">
-        <div className="rounded-[28px] w-[300px]  p-5">
+        <div className="rounded-[28px] w-[300px] bg-white p-5 shadow-sm">
           <Breadcrumb />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -184,9 +184,9 @@ const AdminDashboard: React.FC = () => {
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] ">
+        <div className="grid gap-6 lg:grid-cols-1">
           <div className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)]">
               <div className="space-y-6 rounded-[28px]   bg-white p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-base font-semibold text-slate-900">
@@ -262,14 +262,9 @@ const AdminDashboard: React.FC = () => {
               <Mapcity />
             </div>
 
-            <div className="rounded-[28px] bg-white p-6">
+            <div className="rounded-[28px]">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-slate-900">
-                  Product view
-                </h2>
-                <button className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-500">
-                  Last 7 days
-                </button>
+          
               </div>
               <div className="mt-6">
                 <ChartCard
@@ -312,7 +307,7 @@ const AdminDashboard: React.FC = () => {
               <NewSubscriptionsCard />
             </div>
           </div>
-          <div className="space-y-6">
+          {/* <div className="space-y-6">
             <CalendarAgendaCard />
             <div className="rounded-[28px] bg-white p-6">
               <div className="flex items-center justify-between">
@@ -398,7 +393,7 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -137,7 +137,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         className={cn(
           "sidebar fixed inset-y-0 z-50 my-4 lg:my-3",
           "transition-all duration-300 ease-in-out",
-          "bg-white rounded-[32px] border border-slate-100 shadow-[0_30px_60px_rgba(15,23,42,0.1)]",
+          "bg-white rounded-[32px]",
           isCollapsed ? "w-[72px]" : "w-[260px]"
         )}
       >
@@ -242,7 +242,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                         cn(
                           "flex items-center gap-3 rounded-2xl px-3 py-2.5 transition",
                           isActive
-                            ? "bg-slate-100 text-slate-900"
+                            ? "bg-blue-400 text-white"
                             : "text-slate-500 hover:text-slate-900"
                         )
                       }

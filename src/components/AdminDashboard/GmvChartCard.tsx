@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { cn } from "@/lib/utils";
 import {
   LineChart,
@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
 
 type ChartDatum = {
@@ -18,10 +17,10 @@ type ChartDatum = {
 };
 
 export const gmvChartData: ChartDatum[] = [
-  { month: "Jan", value: 160, highlight: false },
-  { month: "Feb", value: 190 },
+  { month: "Jan", value: 160 },
+  { month: "Feb", value: 30 },
   { month: "Mar", value: 210 },
-  { month: "Apr", value: 200, highlight: true },
+  { month: "Apr", value: 130, highlight: true },
   { month: "May", value: 170 },
 ];
 
@@ -38,62 +37,24 @@ interface GmvCardProps {
 }
 
 const GmvCard: React.FC<GmvCardProps> = ({
-  title = "GMV today",
-  value = "$1,24,560",
-  percentage = 1.01,
-  periodLabel = "last month",
+  title = "Sales Statistic",
+  value = 27200,
+  percentage = 10,
+  periodLabel = "Last month",
   trend = "up",
   className,
   currency = "$",
   showChart = true,
   chartData = gmvChartData,
 }) => {
-  const formatIndianNumber = (num: number): string => {
-    if (num >= 100000) {
-      const lakhs = num / 100000;
-      return `${currency}${lakhs.toFixed(2)} L`;
-    }
+  const formatValue = (val: string | number) =>
+    typeof val === "number" ? `${currency}${val.toLocaleString()}` : val;
 
-    const numStr = num.toString();
-    const lastThree = numStr.slice(-3);
-    const otherNumbers = numStr.slice(0, -3);
-
-    if (otherNumbers !== "") {
-      return `${currency}${otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",")},${lastThree}`;
-    }
-
-    return `${currency}${lastThree}`;
-  };
-
-  const formattedValue =
-    typeof value === "number" ? formatIndianNumber(value) : value;
+  const formattedValue = formatValue(value);
   const isPositive = trend === "up";
   const percentageLabel = Number.isFinite(percentage)
-    ? `${percentage.toFixed(2)}%`
+    ? `${percentage.toFixed(0)}%`
     : `${percentage}%`;
-
-  const renderDot = ({
-    cx,
-    cy,
-    payload,
-  }: {
-    cx?: number;
-    cy?: number;
-    payload?: ChartDatum;
-  }) => {
-    if (cx === undefined || cy === undefined) return null;
-    const isHighlight = payload?.highlight;
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={isHighlight ? 5 : 2.5}
-        stroke="#111827"
-        strokeWidth={isHighlight ? 2 : 1}
-        fill={isHighlight ? "#111827" : "#ffffff"}
-      />
-    );
-  };
 
   const maxValue = Math.max(...chartData.map((d) => d.value));
   const yAxisDomain = [0, maxValue * 1.2];
@@ -101,66 +62,80 @@ const GmvCard: React.FC<GmvCardProps> = ({
   return (
     <div
       className={cn(
-        "bg-white rounded-3xl  p-5",
-        "flex h-full flex-col gap-3",
+        "rounded-3xl  bg-white p-6 ",
+        "flex h-full flex-col gap-4",
         className
       )}
     >
-      <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{title}</p>
-        <button className="text-xs font-semibold text-slate-500 hover:text-slate-700">
-          View Report
-        </button>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{title}</p>
+          <p className="text-[32px] font-semibold text-slate-900">{formattedValue}</p>
+        </div>
+        <select
+          value="Yearly"
+          onChange={() => {}}
+          className="rounded-full border border-slate-200 bg-white px-4 py-1 text-xs font-semibold text-slate-600 outline-none"
+        >
+          <option>Yearly</option>
+          <option>Monthly</option>
+          <option>Weekly</option>
+        </select>
       </div>
 
-      <div>
-        <p className="text-3xl font-bold text-slate-900">{formattedValue}</p>
-        <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400">{periodLabel}</p>
-      </div>
-
-      <div className="flex items-center gap-3 text-xs">
+      <div className="flex flex-wrap items-center gap-3">
         <span
           className={cn(
-            "text-2xl font-semibold leading-none",
-            isPositive ? "text-emerald-600" : "text-rose-500"
+            "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-semibold",
+            isPositive
+              ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+              : "border-rose-100 bg-rose-50 text-rose-600"
           )}
         >
-          {isPositive ? "+" : "-"}
-          {percentageLabel}
+          {isPositive ? "▲" : "▼"} {percentageLabel}
         </span>
-        <span className="text-xs uppercase tracking-[0.4em] text-slate-400">Customers</span>
+        <span className="text-sm font-semibold text-slate-500">+ $1,500 per day</span>
+      </div>
+
+      <div className="flex text-xs uppercase tracking-[0.3em] text-slate-400">
+        <span className="mr-2">{periodLabel}</span>
+        <span className="text-slate-300">•</span>
+        <span className="ml-2">Customers</span>
       </div>
 
       {showChart && (
-        <div className="mt-auto h-[190px]">
+        <div className="mt-2 h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 0, right: 0, left: -4, bottom: -4 }}>
-              <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} opacity={0.6} />
-              <ReferenceLine
-                x="Apr"
-                stroke="#22c55e"
+            <LineChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+              <CartesianGrid
+                stroke="#e5e7eb"
                 strokeDasharray="4 4"
-                strokeOpacity={0.4}
+                vertical={false}
+                opacity={0.6}
               />
               <XAxis
                 dataKey="month"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
+                tick={{ fontSize: 12, fill: "#94a3b8" }}
                 padding={{ left: 8, right: 8 }}
               />
-              <YAxis domain={yAxisDomain} hide />
+              <YAxis
+                domain={yAxisDomain}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "#cbd5f5" }}
+              />
               <Tooltip
                 cursor={{
-                  stroke: "#d1d5db",
-                  strokeDasharray: "3 3",
-                  strokeOpacity: 0.8,
+                  stroke: "#cbd5f5",
+                  strokeDasharray: "4 4",
                 }}
                 contentStyle={{
                   backgroundColor: "#ffffff",
                   border: "1px solid #e5e7eb",
-                  borderRadius: 8,
-                  padding: "6px 8px",
+                  borderRadius: 12,
+                  padding: "8px 10px",
                   fontSize: 12,
                 }}
                 labelStyle={{ color: "#1f2937" }}
@@ -169,14 +144,14 @@ const GmvCard: React.FC<GmvCardProps> = ({
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#111827"
-                strokeWidth={2}
-                dot={renderDot}
+                stroke="#3B82F6"
+                strokeWidth={4}
+                dot={false}
                 activeDot={{
                   r: 5,
                   stroke: "#ffffff",
-                  strokeWidth: 2,
-                  fill: "#111827",
+                  strokeWidth: 3,
+                  fill: "#2563EB",
                 }}
               />
             </LineChart>
