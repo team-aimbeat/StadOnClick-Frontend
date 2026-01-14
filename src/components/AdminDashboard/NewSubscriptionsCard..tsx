@@ -6,76 +6,60 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Tooltip,
+  CartesianGrid,
 } from "recharts";
 
 const data = [
-  { day: "Mon", value: 420 },
-  { day: "Tue", value: 360 },
-  { day: "Wed", value: 480 },
-  { day: "Thu", value: 520 },
-  { day: "Fri", value: 430 },
-  { day: "Sat", value: 380 },
+  { month: "Jan", purchase: 330, returns: 90 },
+  { month: "Feb", purchase: 380, returns: 110 },
+  { month: "Mar", purchase: 410, returns: 90 },
+  { month: "Apr", purchase: 450, returns: 130 },
+  { month: "May", purchase: 430, returns: 120 },
 ];
 
 const NewSubscriptionsCard = () => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm h-[250px] w-[350px]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-medium text-gray-500">
-          New subscriptions
-        </h3>
-        <div className="flex items-center gap-1 text-xs text-green-600">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          New (Paid)
+    <div className="rounded-[32px] border border-slate-100 bg-white p-6 ">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">New Subscriptions</p>
+          <p className="text-3xl font-bold text-slate-900">1,248</p>
         </div>
+        <button className="text-xs font-semibold text-slate-500 hover:text-slate-700">View Report</button>
       </div>
 
-      {/* KPI */}
-      <div className="flex items-end gap-2 mb-2">
-        <span className="text-2xl font-bold text-gray-900">1,248</span>
-        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
-          +4%
+      <div className="mt-3 flex items-center gap-3">
+        <span className="text-xs text-slate-500">Purchase Ratio</span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-0.5 text-xs font-semibold text-emerald-600">
+          +4% ↑
         </span>
       </div>
 
-      {/* Chart */}
-      <div className="h-[150px]">
+      <div className="mt-4 h-[190px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            {/* Dotted vertical reference line (Thu) */}
-            <ReferenceLine
-              x="Thu"
-              stroke="#22c55e"
-              strokeDasharray="4 4"
-            />
-
-            <XAxis
-              dataKey="day"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 11, fill: "#6B7280" }}
-            />
-            <YAxis
-              hide
-              domain={[200, 600]}
-            />
-
+          <LineChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#6B7280" }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#6B7280" }} />
             <Tooltip
-              cursor={false}
-              contentStyle={{
-                fontSize: "12px",
-                borderRadius: "8px",
-              }}
+              cursor={{ stroke: "#CBD5F5", strokeWidth: 2 }}
+              contentStyle={{ borderRadius: 12, padding: "8px 10px", fontSize: 12 }}
             />
-
             <Line
               type="monotone"
-              dataKey="value"
-              stroke="#22c55e"
-              strokeWidth={2}
-              dot={{ r: 3, fill: "#22c55e" }}
+              dataKey="purchase"
+              stroke="#2563EB"
+              strokeWidth={3}
+              dot={false}
               activeDot={{ r: 5 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="returns"
+              stroke="#F97316"
+              strokeWidth={2.5}
+              strokeDasharray="4 2"
+              dot={false}
             />
           </LineChart>
         </ResponsiveContainer>

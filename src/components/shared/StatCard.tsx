@@ -1,26 +1,18 @@
-import { IconType } from "react-icons"
-import { cn } from "@/lib/utils"
-import ArrowUpImg from '@/assets/images/ArrowRise.png';
-import ArrowdownImg from '@/assets/images/ArrowFall.png';
-// or: ../assets/icons/arrow-up.svg
-
-import { 
-  ArrowUp, 
-  ArrowDown,
-  Minus
-} from "lucide-react"
+import { IconType } from "react-icons";
+import { cn } from "@/lib/utils";
 
 type StatCardProps = {
-  title: string
-  value: string | number
-  subtitle?: string
-  percentage?: number
-  trend?: "up" | "down" | "neutral"
-  icon?: IconType
-  accentColor?: "blue" | "green" | "red" | "yellow" | "purple"
-  className?: string
-  showTrendIcon?: boolean
-}
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  percentage?: number;
+  trend?: "up" | "down" | "neutral";
+  icon?: IconType;
+  accentColor?: "blue" | "green" | "red" | "yellow" | "purple";
+  className?: string;
+  showTrendIcon?: boolean;
+  avatars?: string[];
+};
 
 export default function StatCard({
   title,
@@ -32,119 +24,108 @@ export default function StatCard({
   accentColor = "blue",
   className,
   showTrendIcon = true,
+  avatars = [],
 }: StatCardProps) {
-  // Trend colors based on the design
-  const trendColor =
-    trend === "up"
-      ? "text-emerald-600 bg-emerald-50"
-      : trend === "down"
-      ? "text-rose-600 bg-rose-50"
-      : "text-gray-600 bg-gray-100"
-
   const trendIcon = {
-   up: (
-  <img
-    src={ArrowUpImg}
-    alt="Up"
-    className="h-3 w-3 inline-block"
-  />
-),
+    up: "↑",
+    down: "↓",
+    neutral: "—",
+  };
 
-   down: (
-  <img
-    src={ArrowdownImg}
-    alt="down"
-    className="h-3 w-3 inline-block"
-  />
-),
+  const trendBadgeClass =
+    trend === "up"
+      ? "bg-emerald-50 text-emerald-700"
+      : trend === "down"
+      ? "bg-rose-50 text-rose-600"
+      : "bg-slate-100 text-slate-500";
 
-    neutral: <Minus className="h-3 w-3" />,
-  }
+  const trendTextClass =
+    trend === "up"
+      ? "text-emerald-600"
+      : trend === "down"
+      ? "text-rose-600"
+      : "text-slate-500";
 
-  // Gradient backgrounds based on the design (EGF2FF to FFFFFF)
-  const gradientMap = {
-    blue: "from-[#EGF2FF] to-white",
-    green: "from-[#E8F5E9] to-white",
-    red: "from-[#FFEBEE] to-white",
-    yellow: "from-[#FFFDE7] to-white",
-    purple: "from-[#F3E5F5] to-white",
-  }
+  const displayValue = typeof value === "number" ? value.toLocaleString() : value;
 
-  // Accent colors for the bottom line
-  const accentMap = {
-    blue: "bg-blue-500",
-    green: "bg-emerald-500",
-    red: "bg-rose-500",
-    yellow: "bg-amber-500",
-    purple: "bg-purple-500",
-  }
+  const gradientMap: Record<
+    NonNullable<StatCardProps["accentColor"]>,
+    string
+  > = {
+    blue: "from-[#D3E5FF] via-white/90 to-white",
+    green: "from-[#D1FADF] via-white/90 to-white",
+    red: "from-[#FEE2E2] via-white/90 to-white",
+    yellow: "from-[#FEF3C7] via-white/90 to-white",
+    purple: "from-[#EDE9FE] via-white/90 to-white",
+  };
+
+  const iconBgMap: Record<
+    NonNullable<StatCardProps["accentColor"]>,
+    string
+  > = {
+    blue: "bg-sky-500/10 text-sky-600",
+    green: "bg-emerald-500/10 text-emerald-600",
+    red: "bg-rose-500/10 text-rose-600",
+    yellow: "bg-amber-500/10 text-amber-600",
+    purple: "bg-purple-500/10 text-purple-600",
+  };
 
   return (
     <div
       className={cn(
-        "group relative w-[300px] min-w-[200px] rounded-xl border border-gray-200",
-        "bg-gradient-to-b",
+        "flex flex-col gap-1 rounded-[28px] border border-slate-100 bg-gradient-to-r p-3 transition hover:-translate-y-0.5",
         gradientMap[accentColor],
-        "p-3 shadow-[0_1px_8px_0_rgba(83,85,155,0.16)]",
-        "transition-all duration-200 hover:shadow-[0_4px_12px_0_rgba(83,85,155,0.24)]",
         className
       )}
     >
-      {/* Content container */}
-      <div className="flex h-full flex-col gap-2">
-        {/* Header row with title and icon */}
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-600">
-            {title}
-          </h4>
-
-          {Icon && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-700">
-              <Icon size={25} />
-            </div>
-          )}
-        </div>
-
-        {/* Main value row */}
-        <div className="flex items-end justify-between">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-gray-900">
-              {typeof value === "number" ? value.toLocaleString() : value}
-            </span>
-            
-            {percentage !== undefined && (
-              <div className={cn(
-                "flex items-center ml-40 gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium",
-                trendColor
-              )}>
-                
-                <span>
-                  {trend === "up" && "+"}
-                  {percentage}%
-                </span>
-                {showTrendIcon && trendIcon[trend]}
-              </div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-black">
+          {title}
+        </p>
+        {Icon && (
+          <div
+            className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-full border border-white/60 text-lg shadow-inner text-white",
+              iconBgMap[accentColor]
             )}
+          >
+            <Icon size={35} />
           </div>
-
-        </div>
-
-        {/* Optional description line from the design */}
-        {subtitle && (
-          <p className="text-xs text-gray-500 mt-1">
-            {subtitle}
-          </p>
         )}
       </div>
-
-      {/* Accent bottom border - optional based on design */}
-      <div
-        className={cn(
-          "absolute inset-x-0 bottom-0 h-[2px] rounded-b-xl",
-          accentMap[accentColor],
-          "opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+      <div className="flex items-end justify-between">
+        <p className="text-3xl font-semibold text-black">{displayValue}</p>
+        {percentage !== undefined && (
+          <span
+            className={cn(
+              "flex items-center gap-1 rounded-full px-3 py-1  text-xs font-semibold",
+              trendBadgeClass
+            )}
+          >
+            {showTrendIcon && <span>{trendIcon[trend]}</span>}
+            <span className={trendTextClass}>
+              {(trend === "up" ? "+" : trend === "down" ? "-" : "") +
+                Math.abs(percentage)}
+              %
+            </span>
+          </span>
         )}
-      />
+      </div>
+      {subtitle && <p className="text-xs text-black">{subtitle}</p>}
+      {avatars.length > 0 && (
+        <div className="mt-2 flex ml-50">
+          <div className="flex -space-x-2">
+            {avatars.slice(0, 3).map((src, index) => (
+              <img
+                key={`${src}-${index}`}
+                src={src}
+                alt={`avatar-${index}`}
+                className="h-6 w-6 rounded-full border-2  border-white bg-slate-50 object-cover shadow-sm"
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

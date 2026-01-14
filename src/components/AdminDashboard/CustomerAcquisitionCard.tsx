@@ -22,7 +22,7 @@ const StatBox = ({ value, label }: { value: string; label: string }) => (
 
 const CustomerAcquisitionCard = () => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+    <div className="bg-white rounded-2xl  p-5 ">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-gray-900">

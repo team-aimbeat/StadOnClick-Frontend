@@ -1,7 +1,5 @@
-// components/ui/cards/RecentActivities.tsx
 import React from "react";
 import { cn } from "@/lib/utils";
-import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
 import profile7 from "@/assets/images/profile-7.jpeg";
 import profile8 from "@/assets/images/profile-8.jpeg";
 import profile9 from "@/assets/images/profile-9.jpeg";
@@ -13,6 +11,7 @@ interface Activity {
   category: string;
   status: string;
   price: string | number;
+  retained: string;
   avatar?: string;
 }
 
@@ -22,7 +21,6 @@ interface RecentActivitiesProps {
   className?: string;
 }
 
-// Mock data
 export const recentActivities: Activity[] = [
   {
     id: 3445,
@@ -30,6 +28,7 @@ export const recentActivities: Activity[] = [
     category: "Yoga Classes",
     status: "Delivered",
     price: "$23",
+    retained: "5 min ago",
     avatar: profile7,
   },
   {
@@ -38,6 +37,7 @@ export const recentActivities: Activity[] = [
     category: "Wedding Event",
     status: "Pending",
     price: "$23",
+    retained: "12 min ago",
     avatar: profile8,
   },
   {
@@ -46,6 +46,7 @@ export const recentActivities: Activity[] = [
     category: "Finance",
     status: "Canceled",
     price: "$23",
+    retained: "15 min ago",
     avatar: profile9,
   },
   {
@@ -54,6 +55,7 @@ export const recentActivities: Activity[] = [
     category: "Finance",
     status: "In Transit",
     price: "$23",
+    retained: "17 min ago",
     avatar: profile10,
   },
 ];
@@ -62,110 +64,76 @@ const statusBadge = (status: string) => {
   const s = status.toLowerCase();
 
   if (s.includes("delivered"))
-    return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+    return "bg-emerald-100 text-emerald-800";
 
   if (s.includes("pending"))
-    return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+    return "bg-amber-100 text-amber-700";
 
   if (s.includes("cancel"))
-    return "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400";
+    return "bg-rose-100 text-rose-700";
 
   if (s.includes("transit"))
-    return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+    return "bg-sky-100 text-sky-700";
 
-  return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
+  return "bg-slate-100 text-slate-600";
 };
 
 const RecentActivities: React.FC<RecentActivitiesProps> = ({
-  title = "Recent activities",
+  title = "Recent Activity",
   activities = recentActivities,
   className,
 }) => {
   return (
     <div
       className={cn(
-        "bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm",
+        "rounded-[32px] bg-white p-0",
         className
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800">
-        <h3
-          className="text-sm font-semibold text-gray-900 dark:text-gray-100"
-
-        >
-        {title}
-        </h3>
-
-        <button className="flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-          <HiOutlineAdjustmentsHorizontal className="w-5 h-5" />
-          Filter
+      <div className="flex items-center justify-between px-6 pt-6">
+        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+        <button className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+          View All &rarr;
         </button>
       </div>
-
-      {/* Table Wrapper (FULL BORDER) */}
-      <div className="px-5 py-4">
-        <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-          {/* Table Header */}
-          <div
-            className="grid grid-cols-5 bg-gray-50 dark:bg-gray-800/40
-                          text-xs font-medium text-gray-400 uppercase px-4 py-3"
-          >
-            <div>ID</div>
-            <div>Name</div>
-
-            <div>Category</div>
-            <div>Status</div>
-            <div>Price</div>
+      <div className="mt-4 px-4 pb-4">
+        <div className="overflow-hidden rounded-[26px] border border-slate-100 bg-white">
+          <div className="grid grid-cols-[minmax(220px,1.5fr)_auto_auto_auto_minmax(120px,0.8fr)] items-center border-b border-slate-100 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-[0.25em] uppercase text-slate-400">
+            <span>Customer</span>
+            <span>ID</span>
+            <span>Retained</span>
+            <span>Amount</span>
+            <span>Status</span>
           </div>
-
-          {/* Rows */}
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
-            {activities.map((activity, index) => (
+          <div className="divide-y divide-slate-100">
+            {activities.map((activity) => (
               <div
-                key={`${activity.id}-${index}`}
-                className="grid grid-cols-5 items-center text-sm px-4 py-3
-                           hover:bg-gray-50 dark:hover:bg-gray-800/40 transition"
+                key={activity.id}
+                className="grid grid-cols-[minmax(220px,1.5fr)_auto_auto_auto_minmax(120px,0.8fr)] items-center gap-0 px-5 py-4 transition hover:bg-slate-50"
               >
-                {/* ID */}
-                <div className="font-medium text-gray-900 dark:text-gray-100">
-                  {activity.id}
-                </div>
-
-                {/* Avatar */}
                 <div className="flex items-center gap-3">
                   <img
                     src={activity.avatar || profile7}
                     alt={activity.name}
-                    className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                    className="h-10 w-10 rounded-full border border-slate-100 object-cover"
                   />
-                  <span className="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                    {activity.name}
-                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{activity.name}</p>
+                    <p className="text-xs text-slate-500">{activity.category}</p>
+                  </div>
                 </div>
-
-                {/* Category */}
-                <div className="text-gray-600 dark:text-gray-400">
-                  {activity.category}
-                </div>
-
-                {/* Status */}
+                <div className="text-sm font-semibold text-slate-800">#{activity.id}</div>
+                <div className="text-sm text-slate-500">{activity.retained}</div>
+                <div className="text-sm font-semibold text-slate-900">{activity.price}</div>
                 <div>
                   <span
                     className={cn(
-                      "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
+                      "rounded-full px-3 py-1 text-xs font-semibold",
                       statusBadge(activity.status)
                     )}
                   >
                     {activity.status}
                   </span>
-                </div>
-
-                {/* Price */}
-                <div className="font-medium text-gray-900 dark:text-gray-100">
-                  {typeof activity.price === "number"
-                    ? `$${activity.price}`
-                    : activity.price}
                 </div>
               </div>
             ))}
@@ -177,3 +145,4 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
 };
 
 export default RecentActivities;
+

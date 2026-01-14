@@ -38,7 +38,7 @@ const VendorItem = ({ icon, title, count }: VendorItemProps) => (
 
 const VendorsOverview = () => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+    <div className="bg-white rounded-2xl p-5 ">
       {/* Header */}
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
         Vendors overview
@@ -50,32 +50,32 @@ const VendorsOverview = () => {
           title="Cafe"
           count={334}
     
-          icon={<HiOutlineBuildingStorefront className="w-6 h-6" />}
+          icon={<HiOutlineBuildingStorefront className="w-6 h-6 text-secondary-blue" />}
         />
         <VendorItem
           title="Wellness"
           count={45}
-          icon={<HiOutlineHeart className="w-6 h-6" />}
+          icon={<HiOutlineHeart className="w-6 h-6 text-secondary-blue" />}
         />
         <VendorItem
           title="Events"
           count={53}
-          icon={<HiOutlineTicket className="w-6 h-6" />}
+          icon={<HiOutlineTicket className="w-6 h-6 text-secondary-blue" />}
         />
         <VendorItem
           title="Baking"
           count={33}
-          icon={<HiMiniCake className="w-6 h-6" />}
+          icon={<HiMiniCake className="w-6 h-6 text-secondary-blue" />}
         />
          <VendorItem
           title="Wedding"
           count={44}
-          icon={<HiOutlineBuildingStorefront className="w-6 h-6" />}
+          icon={<HiOutlineBuildingStorefront className="w-6 h-6 text-secondary-blue" />}
         />
          <VendorItem
           title="Shop"
           count={12}
-          icon={<HiOutlineShoppingCart className="w-6 h-6" />}
+          icon={<HiOutlineShoppingCart className="w-6 h-6 text-secondary-blue" />}
         />
       </div>
     </div>

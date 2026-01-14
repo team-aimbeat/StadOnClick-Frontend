@@ -1,38 +1,50 @@
-﻿import PerfectScrollbar from "react-perfect-scrollbar";
+import PerfectScrollbar from "react-perfect-scrollbar";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
-import AnimateHeight from "react-animate-height";
 import { useState, useEffect } from "react";
+import logo from "@/assets/logo/logo.png";
 
 import {
   HiChevronDown,
-  HiChevronRight,
-  HiMinus,
+  HiChevronLeft,
   HiHome,
-  HiChatBubbleLeftRight,
-  HiEnvelope,
-  HiClipboardDocumentCheck,
   HiDocumentText,
-  HiRectangleStack,
   HiUserGroup,
   HiCalendar,
-  HiCube,
+  HiClipboardDocumentCheck,
   HiChartBar,
+  HiCube,
 } from "react-icons/hi2";
 
 import { RootState } from "@/app/store";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
 import { cn } from "@/lib/utils";
+import type { IconType } from "react-icons";
 
 type SidebarProps = {
   basePath?: string;
 };
 
+type NavChild = {
+  label: string;
+  to: string;
+};
+
+type NavItem = {
+  id: string;
+  label: string;
+  icon: IconType;
+  to?: string;
+  badge?: string;
+  children?: NavChild[];
+};
+
 const Sidebar = ({ basePath = "" }: SidebarProps) => {
-  const [currentMenu, setCurrentMenu] = useState<string>("");
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+    income: false,
+  });
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
-  const semidark = themeConfig.semidark;
   const isCollapsed = !themeConfig.sidebar;
 
   const location = useLocation();
@@ -46,233 +58,220 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const dashboardBase = withBase("dashboard");
   const homePath = normalizedBasePath ? dashboardBase : "/";
 
-  const toggleMenu = (value: string) => {
-    setCurrentMenu((old) => (old === value ? "" : value));
-  };
-
   useEffect(() => {
     if (window.innerWidth < 1024 && themeConfig.sidebar) {
       dispatch(toggleSidebar());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
+  const navItems: NavItem[] = [
+    {
+      id: "dashboard",
+      label: t("Dashboard"),
+      icon: HiHome,
+      to: homePath,
+    },
+    {
+      id: "chat",
+      label: t("Chat"),
+      icon: HiUserGroup,
+      to: withBase("chat"),
+    },
+    {
+      id: "kyc",
+      label: t("KYC"),
+      icon: HiDocumentText,
+      to: withBase("kyc"),
+    },
+    {
+      id: "schedules",
+      label: t("Schedules"),
+      icon: HiCalendar,
+      to: withBase("schedules"),
+    },
+    {
+      id: "income",
+      label: t("Income"),
+      icon: HiClipboardDocumentCheck,
+      children: [
+        { label: t("Earnings"), to: withBase("income/earnings") },
+        { label: t("Refunds"), to: withBase("income/refunds") },
+        { label: t("Declines"), to: withBase("income/declines") },
+        { label: t("Payouts"), to: withBase("income/payouts") },
+      ],
+    },
+    {
+      id: "promote",
+      label: t("Promote"),
+      icon: HiChartBar,
+      to: withBase("promote"),
+    },
+    {
+      id: "components",
+      label: t("Components"),
+      icon: HiCube,
+      to: withBase("components"),
+    },
+  ];
+
+  const isPathActive = (path?: string) => {
+    if (!path) return false;
+    return location.pathname.startsWith(path);
+  };
+
+  const isItemActive = (item: NavItem) => {
+    if (item.children) {
+      return item.children.some((child) => isPathActive(child.to));
+    }
+    return isPathActive(item.to);
+  };
+
+  const toggleMenu = (value: string) => {
+    setOpenMenus((old) => ({ ...old, [value]: !old[value] }));
+  };
+
   return (
-    <div className={semidark ? "dark" : ""}>
+    <div className="h-full">
       <nav
         className={cn(
           "sidebar fixed inset-y-0 z-50 my-4 lg:my-3",
           "transition-all duration-300 ease-in-out",
-          "bg-white dark:bg-black rounded-2xl shadow-md",
+          "bg-white rounded-[32px]",
           isCollapsed ? "w-[72px]" : "w-[260px]"
         )}
       >
-        {/* Logo + Toggle */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-          <NavLink to={homePath} className="flex items-center justify-center">
+        <div className="relative flex items-center justify-center border-b border-slate-100 px-4 py-6 gap-3">
+          <div className="absolute left-4 top-3 flex items-center gap-2 ">
+            <span className="h-2 w-2 rounded-full bg-red-400" />
+            <span className="h-2 w-2 rounded-full bg-amber-400" />
+            <span className="h-2 w-2 rounded-full bg-blue-400" />
+          </div>
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-100 bg-slate-50 shadow-sm">
             <img
-              src="src/assets/logo/logo.png"
-              className={isCollapsed ? "w-8" : "w-32"}
+              src={logo}
               alt="logo"
+              className="h-12 w-12 rounded-full object-contain"
             />
-          </NavLink>
-
+          </div>
           <button
             onClick={() => dispatch(toggleSidebar())}
-            className="w-8 h-8 flex items-center justify-center rounded-lg
-                       hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-            title={isCollapsed ? t("Expand") : t("Collapse")}
+            className="absolute right-[-12px] top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition hover:bg-white"
+            aria-label="Toggle sidebar"
           >
-            <HiChevronDown className="rotate-90 w-5 h-5 text-gray-500" />
+            <HiChevronLeft
+              className={cn(
+                "h-4 w-4 text-slate-600 transition-transform",
+                isCollapsed && "rotate-180"
+              )}
+            />
           </button>
         </div>
 
-        {/* Menu */}
-        <PerfectScrollbar className="h-[calc(100vh-80px)]">
-          <ul className="px-3 py-4 space-y-1 text-sm">
-
-            {/* Dashboard */}
-            <li>
-              <button
-                onClick={() => toggleMenu("dashboard")}
-                className={cn(
-                  "w-full flex items-center justify-between px-3 py-2.5 rounded-lg",
-                  "text-gray-900 dark:text-gray-200 hover:text-primary hover:bg-primary/10",
-                  "transition group",
-                  currentMenu === "dashboard" && "bg-primary/10 text-blue-500 font-semibold"
-                )}
-                title={t("Dashboard")}
-              >
-                <div className="flex items-center">
-                  <span
-                    className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-lg",
-                      "bg-slate-50 text-gray-500",
-                      currentMenu === "dashboard" && "bg-primary/10 text-blue-500"
-                    )}
-                  >
-                    <HiHome className="w-5 h-5 shrink-0" />
-                  </span>
-                  {!isCollapsed && <span className="ml-3 text-blue-500">{t("Dashboard")}</span>}
-                </div>
-                {!isCollapsed && (
-                  <HiChevronRight
-                    className={cn(
-                      "w-4 h-4 transition-transform",
-                      currentMenu === "dashboard" && "rotate-90"
-                    )}
-                  />
-                )}
-              </button>
-
-              <AnimateHeight
-                duration={250}
-                height={currentMenu === "dashboard" && !isCollapsed ? "auto" : 0}
-              >
-                <ul className="ml-10 mt-1 space-y-1 text-gray-600">
-                  {["Sales", "Analytics", "Finance", "Crypto"].map((item) => (
-                    <li key={item}>
-                      <NavLink
-                        to={
-                          item.toLowerCase() === "sales"
-                            ? dashboardBase
-                            : `${dashboardBase}/${item.toLowerCase()}`
-                        }
-                        className={({ isActive }) =>
-                          cn(
-                            "block px-3 py-2 rounded-md transition-colors",
-                            isActive
-                              ? "text-blue-500 bg-primary/10"
-                              : "hover:text-primary hover:bg-primary/10"
-                          )
-                        }
-                      >
-                        <span className="flex items-center gap-2">
-                          <HiMinus className="w-3 h-3 text-gray-400" />
-                          {t(item)}
-                        </span>
-                      </NavLink>
-                    </li>
-                  ))}
-                </ul>
-              </AnimateHeight>
-            </li>
-
-            {/* Section: Apps */}
-            {!isCollapsed && (
-              <h2 className="px-4 pt-5 pb-2 text-[11px] font-semibold tracking-wider uppercase
-                             text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
-                {t("apps")}
-              </h2>
-            )}
-
-            {[
-              { to: withBase("chat"), icon: HiChatBubbleLeftRight, label: "Chat" },
-              { to: withBase("apps/mailbox"), icon: HiEnvelope, label: "Mailbox" },
-              { to: withBase("kyc"), icon: HiClipboardDocumentCheck, label: "KYC" },
-              { to: withBase("apps/notes"), icon: HiDocumentText, label: "Notes" },
-              { to: withBase("apps/scrumboard"), icon: HiRectangleStack, label: "Scrumboard" },
-              { to: withBase("apps/contacts"), icon: HiUserGroup, label: "Contacts" },
-              { to: withBase("apps/calendar"), icon: HiCalendar, label: "Calendar" },
-            ].map((item) => (
-              <li key={item.label}>
-                <NavLink
-                  to={item.to}
-                  title={t(item.label)}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center px-3 py-2.5 rounded-lg transition group",
-                      isActive
-                        ? "bg-primary/10 text-blue-500 font-semibold"
-                        : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
-                    )
-                  }
-                >
-                  {({ isActive }) => (
+        <PerfectScrollbar className="h-[calc(100vh-104px)]">
+          <ul className="px-3 py-5 space-y-2 text-sm">
+            {navItems.map((item) => {
+              const ItemIcon = item.icon;
+              const active = isItemActive(item);
+              return (
+                <li key={item.id}>
+                  {item.children ? (
                     <>
-                      <span
+                      <button
+                        type="button"
+                        onClick={() => toggleMenu(item.id)}
                         className={cn(
-                          "flex h-9 w-9 items-center justify-center rounded-lg",
-                          "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
-                          isActive && "bg-primary/10 text-blue-500"
+                          "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition",
+                          active
+                            ? "bg-slate-100 text-slate-900"
+                            : "text-slate-500 hover:text-slate-900"
                         )}
                       >
-                        <item.icon className="w-5 h-5" />
-                      </span>
-                      {!isCollapsed && <span className="ml-3">{t(item.label)}</span>}
+                        <span
+                          className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-2xl",
+                            active
+                              ? "bg-white text-slate-900 shadow"
+                              : "bg-slate-50"
+                          )}
+                        >
+                          <ItemIcon className="h-5 w-5" />
+                        </span>
+                        {!isCollapsed && (
+                          <span className="flex-1 text-sm font-semibold">
+                            {item.label}
+                          </span>
+                        )}
+                        {!isCollapsed && (
+                          <HiChevronDown
+                            className={cn(
+                              "h-5 w-5 text-slate-400 transition-transform",
+                              openMenus[item.id] && "rotate-180"
+                            )}
+                          />
+                        )}
+                      </button>
+
+                      {!isCollapsed && openMenus[item.id] && (
+                        <ul className="mt-1 space-y-1 pl-12 text-xs font-medium tracking-wide text-slate-500">
+                          {item.children.map((child) => (
+                            <li key={child.label}>
+                              <NavLink
+                                to={child.to}
+                                className={({ isActive }) =>
+                                  cn(
+                                    "flex items-center gap-2 rounded-2xl px-3 py-1 hover:text-slate-900 hover:bg-slate-100",
+                                    isActive ? "text-slate-900 bg-slate-50" : ""
+                                  )
+                                }
+                              >
+                                {child.label}
+                                <span className="ml-auto text-[10px] uppercase tracking-[0.4em] text-slate-400">
+                                  →
+                                </span>
+                              </NavLink>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </>
+                  ) : (
+                    <NavLink
+                      to={item.to ?? "/"}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-3 rounded-2xl px-3 py-2.5 transition",
+                          isActive
+                            ? "bg-blue-400 text-white"
+                            : "text-slate-500 hover:text-slate-900"
+                        )
+                      }
+                    >
+                      <span
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-2xl",
+                          "bg-slate-50 text-slate-500"
+                        )}
+                      >
+                        <ItemIcon className="h-5 w-5" />
+                      </span>
+                      {!isCollapsed && (
+                        <>
+                          <span className="flex-1 text-sm font-semibold">
+                            {item.label}
+                          </span>
+                          {item.badge && (
+                            <span className="rounded-full bg-slate-200 px-3 py-0.5 text-xs font-semibold text-slate-500">
+                              {item.badge}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </NavLink>
                   )}
-                </NavLink>
-              </li>
-            ))}
-
-            {/* Section: UI */}
-            {!isCollapsed && (
-              <h2 className="px-3 pt-5 pb-2 text-[11px] font-semibold tracking-wider uppercase
-                             text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800">
-                {t("user_interface")}
-              </h2>
-            )}
-
-            <li>
-              <NavLink
-                to={withBase("charts")}
-                title={t("Charts")}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center px-3 py-2.5 rounded-lg transition group",
-                    isActive
-                      ? "bg-primary/10 text-blue-500 font-semibold"
-                      : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-lg",
-                        "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
-                        isActive && "bg-primary/10 text-blue-500"
-                      )}
-                    >
-                      <HiChartBar className="w-5 h-5" />
-                    </span>
-                    {!isCollapsed && <span className="ml-3">{t("Charts")}</span>}
-                  </>
-                )}
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink
-                to={withBase("components")}
-                title={t("Components")}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center px-3 py-2.5 rounded-lg transition group",
-                    isActive
-                      ? "bg-primary/10 text-blue-500 font-semibold"
-                      : "text-gray-800 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-lg",
-                        "bg-slate-50 text-gray-500 group-hover:text-primary group-hover:bg-primary/10",
-                        isActive && "bg-primary/10 text-blue-500"
-                      )}
-                    >
-                      <HiCube className="w-5 h-5" />
-                    </span>
-                    {!isCollapsed && <span className="ml-3">{t("Components")}</span>}
-                  </>
-                )}
-              </NavLink>
-            </li>
-
+                </li>
+              );
+            })}
           </ul>
         </PerfectScrollbar>
       </nav>
