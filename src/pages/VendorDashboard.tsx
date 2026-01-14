@@ -476,6 +476,15 @@ const VendorDashboard: React.FC = () => {
               accentColor="red"
               subtitle="New User Today"
             />
+              <StatCard
+              title="Active user today"
+              value={132}
+              percentage={120}
+              trend="up"
+              icon={HiOutlineUser}
+              accentColor="red"
+              subtitle="New User Today"
+            />
           </div>
         </>
       )}
