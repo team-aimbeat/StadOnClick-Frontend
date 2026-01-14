@@ -17,13 +17,13 @@ import RecentActivities, {
 import CustomerAcquisitionCard from "@/components/AdminDashboard/CustomerAcquisitionCard";
 import VendorsOverview from "@/components/AdminDashboard/VendorsOverview";
 import AIAlertInsights from "@/components/AdminDashboard/AIAlertInsights";
-import NewSubscriptionsCard from "@/components/AdminDashboard/NewSubscriptionsCard";
 import PendingPayoutsCard from "@/components/AdminDashboard/finance/PendingPayoutsCard";
 import RefundRequestsCard from "@/components/AdminDashboard/finance/RefundRequestsCard";
 import KycPendingCard from "@/components/AdminDashboard/compliance/KycPendingCard";
 import VendorApplicationsCard from "@/components/AdminDashboard/compliance/VendorApplicationsCard";
 import AdminDashboardSkeleton from "@/components/skeletons/AdminDashboardSkeleton";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import SwedenDemandMapCard from "@/components/AdminDashboard/SwedenDemandMapCard";
 import {
   HiOutlineChartBar,
   HiOutlineShoppingBag,
@@ -116,9 +116,9 @@ const AdminDashboard: React.FC = () => {
           </DashboardGrid>
         </DashboardSection>
 
-        <DashboardSection title="Bookings & Revenue">
+        <DashboardSection title="Bookings, Revenue & Demand">
           <DashboardGrid>
-            <DashboardCol span={12}>
+            <DashboardCol span={8}>
               <ChartCard
                 data={bookingsData}
                 height={260}
@@ -128,13 +128,12 @@ const AdminDashboard: React.FC = () => {
                 secondaryLabel="Last Week"
                 showLegend
                 showPeriodSelect={false}
+                className="h-full"
               />
             </DashboardCol>
-          </DashboardGrid>
-        </DashboardSection>
-
-        <DashboardSection title="Recent Activity">
-          <DashboardGrid>
+            <DashboardCol span={4}>
+              <SwedenDemandMapCard />
+            </DashboardCol>
             <DashboardCol span={12}>
               <RecentActivities
                 title="Recent activity"
@@ -168,11 +167,8 @@ const AdminDashboard: React.FC = () => {
 
         <DashboardSection title="Alerts & Insights">
           <DashboardGrid>
-            <DashboardCol span={6}>
+            <DashboardCol span={12}>
               <AIAlertInsights />
-            </DashboardCol>
-            <DashboardCol span={6}>
-              <NewSubscriptionsCard />
             </DashboardCol>
           </DashboardGrid>
         </DashboardSection>

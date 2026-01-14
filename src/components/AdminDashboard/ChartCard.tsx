@@ -67,7 +67,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   return (
     <div
       className={cn(
-        "rounded border border-slate-200 bg-white p-6",
+        "flex h-full flex-col rounded border border-slate-200 bg-white p-6",
         className
       )}
     >
@@ -106,7 +106,10 @@ const ChartCard: React.FC<ChartCardProps> = ({
         </span>
       </div>
 
-      <div className="mt-6" style={{ height }}>
+      <div
+        className="mt-6 flex-1"
+        style={{ minHeight: height }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />

@@ -7,7 +7,7 @@ type DashboardGridProps = PropsWithChildren<{
 
 export function DashboardGrid({ children, className }: DashboardGridProps) {
   return (
-    <div className={cn("grid grid-cols-12 gap-6", className)}>
+    <div className={cn("grid grid-cols-12 gap-6 items-stretch", className)}>
       {children}
     </div>
   );

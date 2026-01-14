@@ -16,7 +16,7 @@ const AdminCardShell = ({
   return (
     <div
       className={cn(
-        "rounded  border border-slate-200 bg-white p-6",
+        "flex h-full flex-col rounded border border-slate-200 bg-white p-6",
         className
       )}
     >
@@ -24,7 +24,7 @@ const AdminCardShell = ({
         <p className="text-sm font-semibold text-slate-900">{title}</p>
         {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
       </div>
-      <div className="mt-4">{children}</div>
+      <div className="mt-4 flex flex-1 flex-col">{children}</div>
     </div>
   );
 };

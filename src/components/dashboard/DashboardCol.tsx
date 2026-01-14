@@ -25,7 +25,7 @@ type DashboardColProps = PropsWithChildren<{
 
 export function DashboardCol({ span, children, className }: DashboardColProps) {
   return (
-    <div className={cn(spanClassMap[span], className)}>
+    <div className={cn(spanClassMap[span], "h-full", className)}>
       {children}
     </div>
   );

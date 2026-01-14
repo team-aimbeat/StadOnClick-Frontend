@@ -98,7 +98,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
       </div>
       <div className="mt-4 px-4 pb-4">
         <div className="overflow-hidden rounded-[26px] border border-slate-100 bg-white">
-          <div className="grid grid-cols-[minmax(220px,1.5fr)_auto_auto_auto_minmax(120px,0.8fr)] items-center border-b border-slate-100 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-[0.25em] uppercase text-slate-400">
+          <div className="grid grid-cols-[minmax(220px,1.6fr)_minmax(120px,0.9fr)_minmax(140px,0.9fr)_minmax(120px,0.8fr)_minmax(140px,1fr)] items-center gap-6 border-b border-slate-100 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-[0.25em] uppercase text-slate-400">
             <span>Customer</span>
             <span>ID</span>
             <span>Retained</span>
@@ -109,7 +109,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
             {activities.map((activity) => (
               <div
                 key={activity.id}
-                className="grid grid-cols-[minmax(220px,1.5fr)_auto_auto_auto_minmax(120px,0.8fr)] items-center gap-0 px-5 py-4 transition hover:bg-slate-50"
+                className="grid grid-cols-[minmax(220px,1.6fr)_minmax(120px,0.9fr)_minmax(140px,0.9fr)_minmax(120px,0.8fr)_minmax(140px,1fr)] items-center gap-6 px-5 py-4 transition hover:bg-slate-50"
               >
                 <div className="flex items-center gap-3">
                   <img
