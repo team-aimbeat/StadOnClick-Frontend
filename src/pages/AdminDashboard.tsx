@@ -162,7 +162,7 @@ const AdminDashboard: React.FC = () => {
 
         <DashboardSection title="Business Health">
           <DashboardGrid>
-            <DashboardCol span={4}>
+            <DashboardCol span={6}>
               <GmvCard
                 title="GMV today"
                 value={124560}
@@ -173,7 +173,7 @@ const AdminDashboard: React.FC = () => {
                 chartData={gmvChartData}
               />
             </DashboardCol>
-            <DashboardCol span={4}>
+            <DashboardCol span={6}>
               <CustomerAcquisitionCard />
             </DashboardCol>
          
