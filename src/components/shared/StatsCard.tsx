@@ -7,6 +7,7 @@ import {
 } from "react-icons/hi2";
 import { cn } from "@/lib/utils";
 import { JSX } from "react";
+import { FaChevronCircleDown, FaChevronCircleUp } from "react-icons/fa";
 
 type Trend = "up" | "down" | "neutral";
 type AccentColor = "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
@@ -64,8 +65,8 @@ export default function StatsCard({
   };
 
   const trendIcon: Record<Trend, JSX.Element> = {
-    up: <HiOutlineArrowSmallUp className="h-4 w-4" aria-hidden />,
-    down: <HiOutlineArrowSmallDown className="h-4 w-4" aria-hidden />,
+    up: <FaChevronCircleUp className="h-4 w-4" aria-hidden />,
+    down: <FaChevronCircleDown  className="h-4 w-4" aria-hidden />,
     neutral: <HiOutlineMinusSmall className="h-4 w-4" aria-hidden />,
   };
 
@@ -91,7 +92,7 @@ export default function StatsCard({
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-xl border border-slate-200 bg-gradient-to-r p-4 text-slate-700 ",
+        "flex h-full flex-col rounded border border-slate-200 bg-gradient-to-r p-4 text-slate-700 ",
         gradientMap[accentColor],
         className
       )}
