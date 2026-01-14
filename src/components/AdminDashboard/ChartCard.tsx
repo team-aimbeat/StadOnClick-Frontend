@@ -73,11 +73,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
     >
       <div className="flex items-start justify-between">
         <div>
-          
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-            {title}
-          </p>
-          
+          <p className="text-sm font-semibold text-slate-900">{title}</p>
           <p className="text-3xl font-bold text-slate-900">{value}</p>
         </div>
         {showPeriodSelect && (

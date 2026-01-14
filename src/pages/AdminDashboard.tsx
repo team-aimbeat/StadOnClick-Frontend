@@ -23,7 +23,10 @@ import KycPendingCard from "@/components/AdminDashboard/compliance/KycPendingCar
 import VendorApplicationsCard from "@/components/AdminDashboard/compliance/VendorApplicationsCard";
 import AdminDashboardSkeleton from "@/components/skeletons/AdminDashboardSkeleton";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
-import SwedenDemandMapCard from "@/components/AdminDashboard/SwedenDemandMapCard";
+import LeadPlanSubscribersCard from "@/components/AdminDashboard/LeadPlanSubscribersCard";
+import Mapcity from "@/components/AdminDashboard/Mapcity";
+import UsersOverviewCard from "@/components/AdminDashboard/UsersOverviewCard";
+import LeadSourceDistributionCard from "@/components/AdminDashboard/LeadSourceDistributionCard";
 import {
   HiOutlineChartBar,
   HiOutlineShoppingBag,
@@ -118,7 +121,7 @@ const AdminDashboard: React.FC = () => {
 
         <DashboardSection title="Bookings, Revenue & Demand">
           <DashboardGrid>
-            <DashboardCol span={8}>
+            <DashboardCol span={6}>
               <ChartCard
                 data={bookingsData}
                 height={260}
@@ -131,9 +134,21 @@ const AdminDashboard: React.FC = () => {
                 className="h-full"
               />
             </DashboardCol>
-            <DashboardCol span={4}>
-              <SwedenDemandMapCard />
+            <DashboardCol span={3}>
+              <LeadPlanSubscribersCard />
             </DashboardCol>
+            <DashboardCol span={3}>
+              <LeadSourceDistributionCard />
+            </DashboardCol>
+            <DashboardCol span={6}>
+              <Mapcity />
+            </DashboardCol>
+            
+          </DashboardGrid>
+        </DashboardSection>
+
+        <DashboardSection title="Recent Activity">
+          <DashboardGrid>
             <DashboardCol span={12}>
               <RecentActivities
                 title="Recent activity"
@@ -170,6 +185,7 @@ const AdminDashboard: React.FC = () => {
             <DashboardCol span={12}>
               <AIAlertInsights />
             </DashboardCol>
+         
           </DashboardGrid>
         </DashboardSection>
 

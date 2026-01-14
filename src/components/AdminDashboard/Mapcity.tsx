@@ -26,9 +26,9 @@ const createMarker = (color: string) =>
 
 const Mapcity: React.FC = () => {
   return (
-    <div className="rounded-[32px] border border-slate-100 bg-white p-5 shadow-[0_25px_60px_rgba(15,23,42,0.08)]">
+    <div className="rounded  border border-slate-200 bg-white p-5 ">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">Top Regions</h2>
+        <h2 className="text-sm font-semibold text-slate-900">Top Regions</h2>
         <select className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
           <option>Today</option>
           <option>Weekly</option>
