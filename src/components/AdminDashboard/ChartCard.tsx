@@ -30,6 +30,7 @@ interface ChartCardProps {
   activePeriod?: string;
   periodOptions?: string[];
   onPeriodChange?: (period: string) => void;
+  className?: string;
 }
 
 export const bookingsData = [
@@ -61,11 +62,13 @@ const ChartCard: React.FC<ChartCardProps> = ({
   activePeriod = "Today",
   periodOptions = ["Today", "Week", "Month"],
   onPeriodChange,
+  className,
 }) => {
   return (
     <div
       className={cn(
-        "rounded-[32px]  bg-white p-6 ",
+        "rounded border border-slate-200 bg-white p-6",
+        className
       )}
     >
       <div className="flex items-start justify-between">
@@ -103,7 +106,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
         </span>
       </div>
 
-      <div className="mt-6 h-[230px]">
+      <div className="mt-6" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />

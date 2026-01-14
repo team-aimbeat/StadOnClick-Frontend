@@ -86,7 +86,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   return (
     <div
       className={cn(
-        "rounded-[32px] bg-white p-0",
+        "rounded border border-slate-200 bg-white p-0",
         className
       )}
     >
