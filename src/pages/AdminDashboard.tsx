@@ -143,7 +143,9 @@ const AdminDashboard: React.FC = () => {
             <DashboardCol span={6}>
               <Mapcity />
             </DashboardCol>
-            
+               <DashboardCol span={6}>
+              <VendorsOverview />
+            </DashboardCol>
           </DashboardGrid>
         </DashboardSection>
 
@@ -174,9 +176,7 @@ const AdminDashboard: React.FC = () => {
             <DashboardCol span={4}>
               <CustomerAcquisitionCard />
             </DashboardCol>
-            <DashboardCol span={4}>
-              <VendorsOverview />
-            </DashboardCol>
+         
           </DashboardGrid>
         </DashboardSection>
 
