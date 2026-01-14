@@ -139,12 +139,20 @@ const ChartCard: React.FC<ChartCardProps> = ({
                 border: "1px solid #E5E7EB",
                 fontSize: 12,
               }}
-              formatter={(value: number, name: string) => {
+              formatter={(
+                value: number | string | undefined,
+                name: string | number | undefined
+              ): [string, string] => {
                 const labelMap: Record<string, string> = {
                   value1: "Current week",
                   value2: "Last week",
                 };
-                return [`SEK ${value.toLocaleString()}`, labelMap[name]];
+                const numeric = Number(value ?? 0);
+                const labelKey = name !== undefined ? String(name) : "";
+                const formattedValue = Number.isFinite(numeric)
+                  ? `SEK ${numeric.toLocaleString()}`
+                  : `SEK ${value ?? 0}`;
+                return [formattedValue, labelMap[labelKey] ?? ""];
               }}
               labelFormatter={(label) => `Month: ${label}`}
             />
