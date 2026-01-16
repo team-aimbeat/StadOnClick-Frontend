@@ -509,7 +509,7 @@ const AdminHeader = () => {
                       <h4 className="text-base">
                         John Doe
                         <span className="ltr:ml-2 rtl:ml-2 rounded bg-success-light px-1 text-xs text-success">
-                          Pro
+                          Admin
                         </span>
                       </h4>
                       <button
@@ -521,18 +521,7 @@ const AdminHeader = () => {
                     </div>
                   </div>
                 </li>
-                <li>
-                  <Link
-                    to="/users/profile"
-                    className="flex items-center px-4 py-2 hover:text-primary dark:hover:text-white"
-                  >
-                    <User
-                      className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2"
-                      strokeWidth={1.8}
-                    />
-                    Profile
-                  </Link>
-                </li>
+               
                 <li>
                   <Link
                     to="/auth/boxed-lockscreen"
