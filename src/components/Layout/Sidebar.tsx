@@ -131,7 +131,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       icon: HiBanknotes,
       children: [
         { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
-        { label: t("Platform Wallet (Coming Soon)"), to: withBase("finance/platform-wallet") },
+        { label: t("Platform Wallet "), to: withBase("finance/platform-wallet") },
       ],
     },
 
