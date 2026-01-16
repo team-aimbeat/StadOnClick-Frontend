@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import { IconType } from "react-icons";
 import {
   DashboardCol,
@@ -229,4 +229,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default memo(AdminDashboard);

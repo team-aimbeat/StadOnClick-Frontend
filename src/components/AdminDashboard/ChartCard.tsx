@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
@@ -165,4 +165,4 @@ const ChartCard: React.FC<ChartCardProps> = ({
   );
 };
 
-export default ChartCard;
+export default memo(ChartCard);
