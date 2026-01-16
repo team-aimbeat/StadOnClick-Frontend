@@ -201,11 +201,11 @@ const loginUser = {
   path: profile7,
   designation: "Software Developer",
 };
-const ChatVendor = () => {
+const ChatBox = () => {
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(setPageTitle("Chat"));
-  });
+    dispatch(setPageTitle("Admin Chatbox"));
+  }, [dispatch]);
   const isRtl =
     useSelector((state: RootState) => state.themeConfig.rtlClass) === "rtl"
       ? true
@@ -266,10 +266,13 @@ const ChatVendor = () => {
     }
   };
   return (
-    <div className="space-y-4 p-4">
-      <TitleBreadCrumbs title="Chat" breadCrumbTitle="Vendor / Chat" />
+    <div className="mx-auto  px-4 lg:px-6">
+      <TitleBreadCrumbs
+        title="Admin Chatbox"
+        breadCrumbTitle="Admin / Chatbox"
+      />
       <div
-        className={`flex gap-5 relative sm:h-[calc(100vh_-_150px)] p-4 h-full sm:min-h-0 ${
+        className={`relative flex flex-col xl:flex-row gap-5 p-4 min-h-[calc(100vh_-_150px)] ${
           isShowChatMenu ? "min-h-[999px]" : ""
         }`}
       >
@@ -289,7 +292,7 @@ const ChatVendor = () => {
               </div>
               <div className="mx-3">
                 <p className="mb-1 font-semibold">Alon Smith</p>
-                <p className="text-xs text-white-dark">Software Developer</p>
+                <p className="text-xs text-white-dark">Admin - Role</p>
               </div>
             </div>
             <div className="dropdown">
@@ -569,8 +572,8 @@ const ChatVendor = () => {
             </div>
           )}
           {isShowUserChat && selectedUser ? (
-            <div className="relative h-full">
-              <div className="flex justify-between items-center p-4">
+            <div className="relative flex h-full min-h-[calc(100vh_-_200px)] flex-col">
+              <div className="flex justify-between items-center p-4 bg-white dark:bg-black sticky top-0 z-10">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse">
                   <button
                     type="button"
@@ -645,8 +648,8 @@ const ChatVendor = () => {
               </div>
               <div className="h-px w-full border-b border-white-light dark:border-[#1b2e4b]"></div>
 
-              <PerfectScrollbar className="relative h-full sm:h-[calc(100vh_-_300px)] chat-conversation-box">
-                <div className="space-y-5 p-4 sm:pb-0 pb-[68px] sm:min-h-[300px] min-h-[400px]">
+              <PerfectScrollbar className="chat-conversation-box relative flex-1 min-h-[160px] max-h-[calc(100vh_-_200px)] sm:max-h-[calc(100vh_-_280px)]">
+                <div className="space-y-5 p-4 pb-24 sm:pb-6 min-h-[200px]">
                   <div className="block m-6 mt-0">
                     <h4 className="text-xs text-center border-b border-[#f4f4f4] dark:border-gray-800 relative">
                       <span className="relative top-2 px-3 bg-white dark:bg-black">
@@ -733,7 +736,7 @@ const ChatVendor = () => {
                   )}
                 </div>
               </PerfectScrollbar>
-              <div className="p-4 absolute bottom-0 left-0 w-full">
+              <div className="p-4 sticky bottom-0 left-0 w-full bg-white dark:bg-black border-t border-white-light dark:border-[#1b2e4b] shadow-[0_-6px_20px_rgba(0,0,0,0.05)]">
                 <div className="sm:flex w-full space-x-3 rtl:space-x-reverse items-center">
                   <div className="relative flex-1">
                     <input
@@ -795,4 +798,4 @@ const ChatVendor = () => {
   );
 };
 
-export default ChatVendor;
+export default ChatBox;

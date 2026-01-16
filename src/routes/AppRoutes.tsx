@@ -9,7 +9,7 @@ import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import Kyc from "@/pages/Kyc"
-import ChatVendor from "@/pages/ChatVendor"
+import ChatBox from "@/pages/ChatBox"
 import NotFound from "@/pages/NotFound"
 import About from "@/pages/About"
 import Teams from "@/pages/Teams"
@@ -87,7 +87,7 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "chat",
-        element: <ChatVendor />,
+        element: <ChatBox />,
       },
     ],
   },
