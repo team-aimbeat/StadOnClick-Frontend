@@ -1,5 +1,8 @@
 ﻿
+import BusinessDetailsForm, { BusinessDetails } from '@/components/BusinessDetailsForm';
 import VendorInfoForm, { VendorInfo } from '@/components/VendorInfoForm';
+import SeoAdvancedSection from '@/components/SeoAdvancedSection';
+import VendorSetupSummary from '@/components/VendorSetupSummary';
 import React, { useEffect, useState } from 'react';
 import {
   HiOutlineShoppingBag,
@@ -11,16 +14,17 @@ import {
   HiOutlineArrowRight,
   HiCheck,
 } from 'react-icons/hi2';
+
 import profile7 from '@/assets/Images/profile-7.jpeg';
 import verify from '@/assets/Images/right.png';
 import crown from '@/assets/Images/crown.png';
 import KycStatusCard from '@/components/KycStatusCard';
 import CategorySelectionCard from '@/components/CategorySelectionCard';
 import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
-import Breadcrumb from '@/components/shared/Breadcrumb';
-import StatCard from '@/components/shared/StatCard';
-import { useAppDispatch } from '@/app/hooks';
+import TitleBreadCrumbs from '@/components/shared/TitleBreadCrumbs';
+import StatsCard from '@/components/shared/StatsCard';
 import { setPageTitle } from '@/features/Layout/themeConfigSlice';
+import { useAppDispatch } from '@/app/hooks';
 
 const workflowSteps = [
   { id: 1, title: 'Vendor information', subtitle: 'Add personal & business contact info' },
@@ -30,6 +34,14 @@ const workflowSteps = [
   { id: 5, title: 'SEO', subtitle: 'Add discovery-friendly descriptions & media' },
   { id: 6, title: 'Preview & confirm', subtitle: 'Review everything before publishing' },
 ];
+
+const BUSINESS_FIELD_LABELS: Record<keyof BusinessDetails, string> = {
+  businessName: 'Business name',
+  businessType: 'Business type',
+  location: 'Location',
+  phone: 'Phone',
+  description: 'Description',
+};
 
 const VendorDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -46,6 +58,24 @@ const VendorDashboard: React.FC = () => {
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categoryError, setCategoryError] = useState("");
+  const [businessDetails, setBusinessDetails] = useState<BusinessDetails>({
+    businessName: '',
+    businessType: '',
+    location: '',
+    phone: '',
+    description: '',
+  });
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
+  const [businessErrors, setBusinessErrors] = useState<string[]>([]);
+  const [businessFacilityError, setBusinessFacilityError] = useState('');
+  const [businessUploadName, setBusinessUploadName] = useState('');
+  const [seoSectionOpen, setSeoSectionOpen] = useState(false);
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
+  const [seoKeywordInput, setSeoKeywordInput] = useState('');
+  const [seoKeywordError, setSeoKeywordError] = useState('');
+  const [allowIndexing, setAllowIndexing] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = workflowSteps.length;
   const isSetupComplete = currentStep > totalSteps;
@@ -69,6 +99,7 @@ const VendorDashboard: React.FC = () => {
       }
       setFormErrors([]);
     }
+
     if (currentStep === 3) {
       if (selectedCategories.length === 0) {
         setCategoryError("Select at least one category.");
@@ -76,6 +107,27 @@ const VendorDashboard: React.FC = () => {
       }
       setCategoryError("");
     }
+
+    if (currentStep === 4) {
+      const missingFields: string[] = [];
+      if (!businessDetails.businessName.trim()) missingFields.push("Business name");
+      if (!businessDetails.businessType.trim()) missingFields.push("Business type");
+      if (!businessDetails.location.trim()) missingFields.push("Location");
+      if (!businessDetails.phone.trim()) missingFields.push("Phone");
+      if (!businessDetails.description.trim()) missingFields.push("Description");
+
+      setBusinessErrors(missingFields);
+      if (missingFields.length) {
+        return;
+      }
+
+      if (selectedFacilities.length === 0) {
+        setBusinessFacilityError("Select at least one facility.");
+        return;
+      }
+      setBusinessFacilityError("");
+    }
+
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps + 1));
   };
 
@@ -91,6 +143,73 @@ const VendorDashboard: React.FC = () => {
     }
     const url = URL.createObjectURL(file);
     setPhotoPreview(url);
+  };
+
+  const handleBusinessDetailChange = (field: keyof BusinessDetails, value: string) => {
+    setBusinessDetails((prev) => ({ ...prev, [field]: value }));
+    const label = BUSINESS_FIELD_LABELS[field];
+    setBusinessErrors((prev) => prev.filter((error) => error !== label));
+  };
+
+  const handleFacilityToggle = (facility: string) => {
+    setBusinessFacilityError('');
+    setSelectedFacilities((prev) =>
+      prev.includes(facility) ? prev.filter((item) => item !== facility) : [...prev, facility]
+    );
+  };
+
+  const handleBusinessUploadChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBusinessUploadName(file.name);
+      return;
+    }
+    setBusinessUploadName('');
+  };
+
+  const toggleSeoSection = () => {
+    setSeoSectionOpen((prev) => !prev);
+  };
+
+  const resetSeoKeywordError = () => {
+    setSeoKeywordError("");
+  };
+
+  const addSeoKeyword = () => {
+    const value = seoKeywordInput.trim();
+    if (!value) {
+      return;
+    }
+    if (seoKeywords.length >= 20) {
+      setSeoKeywordError("You can add up to 20 keywords.");
+      return;
+    }
+    if (value.length < 2 || value.length > 40) {
+      setSeoKeywordError("Each keyword must be between 2 and 40 characters.");
+      return;
+    }
+    if (seoKeywords.some((item) => item.toLowerCase() === value.toLowerCase())) {
+      setSeoKeywordError("Keyword already added.");
+      return;
+    }
+    setSeoKeywords((prev) => [...prev, value]);
+    setSeoKeywordInput('');
+    resetSeoKeywordError();
+  };
+
+  const onSeoKeywordKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addSeoKeyword();
+    }
+  };
+
+  const removeSeoKeyword = (keyword: string) => {
+    setSeoKeywords((prev) => prev.filter((item) => item !== keyword));
+  };
+
+  const toggleIndexing = () => {
+    setAllowIndexing((prev) => !prev);
   };
 
   const handleCategoryToggle = (category: string) => {
@@ -118,13 +237,29 @@ const VendorDashboard: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const sidebar = document.querySelector(".sidebar");
+    if (!sidebar) return;
+    if (!isSetupComplete) {
+      sidebar.classList.add("vendor-sidebar-locked");
+    } else {
+      sidebar.classList.remove("vendor-sidebar-locked");
+    }
+    return () => {
+      sidebar.classList.remove("vendor-sidebar-locked");
+    };
+  }, [isSetupComplete]);
+
   if (loading) {
     return <AdminDashboardSkeleton />;
   }
 
   return (
     <div className="p-6 space-y-6 bg-white min-h-screen text-slate-900">
-      <Breadcrumb />
+      <TitleBreadCrumbs
+        title="Vendor Dashboard"
+        breadCrumbTitle="Dashboard / Vendor"
+      />
 
       {!isSetupComplete ? (
         <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg w-full">
@@ -152,7 +287,7 @@ const VendorDashboard: React.FC = () => {
                     <span
                       className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
                         isComplete
-                          ? 'border-blue-500 bg-blue-500 text-white'
+                          ? 'border-blue-900 bg-blue-500 text-white'
                           : isActive
                             ? 'border-blue-500 bg-white text-blue-500'
                             : 'border-slate-200 bg-white text-slate-400'
@@ -204,6 +339,58 @@ const VendorDashboard: React.FC = () => {
               />
             </div>
           )}
+          {currentStep === 4 && (
+            <div className="mx-auto w-full max-w-3xl">
+              <BusinessDetailsForm
+                details={businessDetails}
+                onDetailChange={handleBusinessDetailChange}
+                selectedFacilities={selectedFacilities}
+                onFacilityToggle={handleFacilityToggle}
+                facilityError={businessFacilityError}
+                errors={businessErrors}
+                uploadFileName={businessUploadName}
+                onUpload={handleBusinessUploadChange}
+              />
+            </div>
+          )}
+          {currentStep === 5 && (
+            <div className="mx-auto w-full max-w-3xl">
+              <SeoAdvancedSection
+                isOpen={seoSectionOpen}
+                onToggle={toggleSeoSection}
+                title={seoTitle}
+                description={seoDescription}
+                keywords={seoKeywords}
+                keywordInput={seoKeywordInput}
+                keywordError={seoKeywordError}
+                allowIndexing={allowIndexing}
+                onTitleChange={setSeoTitle}
+                onDescriptionChange={setSeoDescription}
+                onKeywordInputChange={(value) => {
+                  setSeoKeywordInput(value);
+                  resetSeoKeywordError();
+                }}
+                onAddKeyword={addSeoKeyword}
+                onKeywordKeyDown={onSeoKeywordKeyDown}
+                onRemoveKeyword={removeSeoKeyword}
+                onToggleIndexing={toggleIndexing}
+              />
+            </div>
+          )}
+          {currentStep === 6 && (
+            <div className="mx-auto w-full max-w-4xl">
+              <VendorSetupSummary
+                vendorInfo={vendorInfo}
+                categories={selectedCategories}
+                businessDetails={businessDetails}
+                facilities={selectedFacilities}
+                seoTitle={seoTitle}
+                seoDescription={seoDescription}
+                seoKeywords={seoKeywords}
+                allowIndexing={allowIndexing}
+              />
+            </div>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 pt-4 text-sm text-slate-500">
             <div className="flex items-center gap-2">
               <HiInformationCircle className="h-4 w-4 text-blue-500" />
@@ -250,7 +437,7 @@ const VendorDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-5 gap-4">
-            <StatCard
+            <StatsCard
               title="Today's orders"
               value={9934}
               percentage={6.3}
@@ -260,7 +447,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Today's Orders"
             />
 
-            <StatCard
+            <StatsCard
               title="Active vel today"
               value={3812}
               percentage={50}
@@ -270,7 +457,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Active visit Today"
             />
 
-            <StatCard
+            <StatsCard
               title="Active customer today"
               value={132}
               percentage={132}
@@ -280,7 +467,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Active Customer Today"
             />
 
-            <StatCard
+            <StatsCard
               title="Active customer today"
               value={132}
               percentage={132}
@@ -290,7 +477,7 @@ const VendorDashboard: React.FC = () => {
               subtitle="Active User Today"
             />
 
-            <StatCard
+            <StatsCard
               title="Active user today"
               value={132}
               percentage={120}

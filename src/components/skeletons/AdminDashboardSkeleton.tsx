@@ -1,8 +1,13 @@
+import {
+  DashboardCol,
+  DashboardContainer,
+  DashboardGrid,
+  DashboardSection,
+} from "@/components/dashboard";
 import BreadcrumbSkeleton from "@/components/skeletons/BreadcrumbSkeleton";
 import StatCardSkeleton from "@/components/skeletons/StatCardSkeleton";
 import ChartCardSkeleton from "@/components/skeletons/ChartCardSkeleton";
 import RecentActivitiesSkeleton from "@/components/skeletons/RecentActivitiesSkeleton";
-import MapcitySkeleton from "@/components/skeletons/MapcitySkeleton";
 import GmvCardSkeleton from "@/components/skeletons/GmvCardSkeleton";
 import CustomerAcquisitionCardSkeleton from "@/components/skeletons/CustomerAcquisitionCardSkeleton";
 import VendorsOverviewSkeleton from "@/components/skeletons/VendorsOverviewSkeleton";
@@ -11,36 +16,95 @@ import NewSubscriptionsCardSkeleton from "@/components/skeletons/NewSubscription
 
 const AdminDashboardSkeleton = () => {
   return (
-    <div className="p-6 space-y-6">
-      <BreadcrumbSkeleton />
+    <div className="bg-slate-50 pb-10">
+      <DashboardContainer className="space-y-8 pt-4">
+        <BreadcrumbSkeleton />
 
-      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-5 gap-4">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <StatCardSkeleton key={index} />
-        ))}
-      </div>
+        <DashboardSection>
+          <DashboardGrid>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <DashboardCol key={index} span={3}>
+                <StatCardSkeleton />
+              </DashboardCol>
+            ))}
+          </DashboardGrid>
+        </DashboardSection>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <ChartCardSkeleton />
-        <div className="grid gap-6">
-          <RecentActivitiesSkeleton />
-        </div>
-      </div>
+        <DashboardSection>
+          <DashboardGrid>
+            <DashboardCol span={12}>
+              <ChartCardSkeleton />
+            </DashboardCol>
+          </DashboardGrid>
+        </DashboardSection>
 
-      <div>
-        <MapcitySkeleton />
-      </div>
+        <DashboardSection>
+          <DashboardGrid>
+            <DashboardCol span={12}>
+              <RecentActivitiesSkeleton />
+            </DashboardCol>
+          </DashboardGrid>
+        </DashboardSection>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-        <GmvCardSkeleton />
-        <CustomerAcquisitionCardSkeleton />
-        <VendorsOverviewSkeleton />
-      </div>
+        <DashboardSection>
+          <DashboardGrid>
+            <DashboardCol span={4}>
+              <GmvCardSkeleton />
+            </DashboardCol>
+            <DashboardCol span={4}>
+              <CustomerAcquisitionCardSkeleton />
+            </DashboardCol>
+            <DashboardCol span={4}>
+              <VendorsOverviewSkeleton />
+            </DashboardCol>
+          </DashboardGrid>
+        </DashboardSection>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-        <AIAlertInsightsSkeleton />
-        <NewSubscriptionsCardSkeleton />
-      </div>
+        <DashboardSection>
+          <DashboardGrid>
+            <DashboardCol span={6}>
+              <AIAlertInsightsSkeleton />
+            </DashboardCol>
+            <DashboardCol span={6}>
+              <NewSubscriptionsCardSkeleton />
+            </DashboardCol>
+          </DashboardGrid>
+        </DashboardSection>
+
+        <DashboardSection>
+          <DashboardGrid>
+            <DashboardCol span={6}>
+              <div className="h-full rounded border border-slate-200 bg-white p-6">
+                <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
+                <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
+              </div>
+            </DashboardCol>
+            <DashboardCol span={6}>
+              <div className="h-full rounded border border-slate-200 bg-white p-6">
+                <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+                <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
+              </div>
+            </DashboardCol>
+          </DashboardGrid>
+        </DashboardSection>
+
+        <DashboardSection>
+          <DashboardGrid>
+            <DashboardCol span={6}>
+              <div className="h-full rounded border border-slate-200 bg-white p-6">
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
+              </div>
+            </DashboardCol>
+            <DashboardCol span={6}>
+              <div className="h-full rounded border border-slate-200 bg-white p-6">
+                <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
+                <div className="mt-4 h-24 animate-pulse rounded-xl bg-slate-100" />
+              </div>
+            </DashboardCol>
+          </DashboardGrid>
+        </DashboardSection>
+      </DashboardContainer>
     </div>
   );
 };

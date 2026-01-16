@@ -113,7 +113,7 @@ export default function About() {
       {/* STATS */}
       <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div key={item.label} className="rounded border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-2xl font-semibold">{item.value}</p>
             <p className="mt-1 text-xs text-slate-500">{item.label}</p>
           </div>
