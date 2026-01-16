@@ -45,7 +45,6 @@ type SnapshotMetric = {
   accentColor?: "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
 };
 
-
 const platformSnapshotMetrics: SnapshotMetric[] = [
   {
     title: "Total Revenue (MTD)",
@@ -95,7 +94,6 @@ const platformSnapshotMetrics: SnapshotMetric[] = [
     subtitle: "views to bookings",
   },
 ];
-
 
 const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -191,7 +189,6 @@ const AdminDashboard: React.FC = () => {
             <DashboardCol span={6}>
               <CustomerAcquisitionCard />
             </DashboardCol>
-         
           </DashboardGrid>
         </DashboardSection>
 
@@ -200,7 +197,6 @@ const AdminDashboard: React.FC = () => {
             <DashboardCol span={12}>
               <AIAlertInsights />
             </DashboardCol>
-         
           </DashboardGrid>
         </DashboardSection>
 

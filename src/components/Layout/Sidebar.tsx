@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
 import {
   HiHome,
@@ -43,6 +43,10 @@ type NavItem = {
 
 const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const [submenuHeights, setSubmenuHeights] = useState<Record<string, number>>({});
+  const listRef = useRef<HTMLUListElement | null>(null);
+  const menuRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const submenuRefs = useRef<Record<string, HTMLUListElement | null>>({});
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isCollapsed = !themeConfig.sidebar;
 
@@ -155,7 +159,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       children: [
         { label: t("API Health"), to: withBase("system/health") },
         { label: t("API Docs"), to: withBase("system/docs") },
-        { label: t("Admin Activity (Coming Soon)"), to: withBase("system/audit") },
+        { label: t("Admin Activity"), to: withBase("system/audit") },
       ],
     },
   ];
@@ -164,6 +168,37 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     () => ["#F59E0B", "#22C55E", "#EC4899", "#A855F7", "#0EA5E9", "#F97316", "#10B981"],
     []
   );
+
+  useEffect(() => {
+    const openId = Object.keys(openMenus).find((key) => openMenus[key]);
+    if (!openId) return;
+    const target = menuRefs.current[openId];
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    const submenu = submenuRefs.current[openId];
+    if (submenu) {
+      const nextHeight = submenu.scrollHeight;
+      setSubmenuHeights((prev) =>
+        prev[openId] === nextHeight ? prev : { ...prev, [openId]: nextHeight }
+      );
+    }
+  }, [openMenus]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const openId = Object.keys(openMenus).find((key) => openMenus[key]);
+      if (!openId) return;
+      const submenu = submenuRefs.current[openId];
+      if (!submenu) return;
+      const nextHeight = submenu.scrollHeight;
+      setSubmenuHeights((prev) =>
+        prev[openId] === nextHeight ? prev : { ...prev, [openId]: nextHeight }
+      );
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [openMenus]);
 
   const isPathActive = (path?: string) => {
     if (!path) return false;
@@ -207,15 +242,21 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         </div>
 
         <PerfectScrollbar className="h-[calc(100vh-104px)] will-change-transform">
-          <ul className="px-3 py-5 space-y-2 text-sm">
+          <ul ref={listRef} className="px-3 py-5 space-y-2 text-sm">
             {navItems.map((item) => {
               const ItemIcon = item.icon;
               const active = isItemActive(item);
               const isOpen = openMenus[item.id];
               const displayActive = active || isOpen;
               const submenuOpen = !isCollapsed && isOpen;
+              const submenuHeight = submenuHeights[item.id] ?? 0;
               return (
-                <li key={item.id}>
+                <li
+                  key={item.id}
+                  ref={(node) => {
+                    menuRefs.current[item.id] = node;
+                  }}
+                >
                   {item.children ? (
                     <>
                       <button
@@ -260,18 +301,22 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
 
                       {!isCollapsed && (
                         <ul
+                          ref={(node) => {
+                            submenuRefs.current[item.id] = node;
+                          }}
                           className={cn(
-                            "ml-6 overflow-hidden transform-gpu transition-[max-height,opacity,transform,padding] duration-200 ease-out origin-top",
+                            "ml-6 overflow-hidden transform-gpu transition-[max-height,opacity,transform,padding] duration-300 ease-in-out origin-top",
                             submenuOpen
-                              ? "mt-2 max-h-[320px] opacity-100 translate-y-0 p-2"
-                              : "max-h-0 opacity-0 -translate-y-2 p-0"
+                              ? "mt-2 opacity-100 translate-y-0 p-2"
+                              : "opacity-0 -translate-y-2 p-0"
                           )}
+                          style={{ maxHeight: submenuOpen ? `${submenuHeight}px` : "0px" }}
                         >
                           {item.children.map((child, idx) => (
                             <li
                               key={child.label}
                               className={cn(
-                                "transition-[opacity,transform,margin] duration-200 ease-out",
+                                "transition-[opacity,transform,margin] duration-250 ease-in-out",
                                 submenuOpen
                                   ? "mt-1 first:mt-0 translate-y-0 opacity-100"
                                   : "translate-y-2 opacity-0"
