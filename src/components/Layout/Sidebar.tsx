@@ -158,6 +158,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
               const ItemIcon = item.icon;
               const active = isItemActive(item);
               const isOpen = openMenus[item.id];
+              const displayActive = active || isOpen;
               const submenuOpen = !isCollapsed && isOpen;
               return (
                 <li key={item.id}>
@@ -168,7 +169,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                         className={cn(
                           "flex h-[48px] w-full items-center rounded-lg px-4 transition",
                           isCollapsed ? "justify-center" : "justify-between",
-                          active
+                          displayActive
                             ? "bg-[#4F7DFF] text-white"
                             : "text-slate-600 hover:bg-slate-100"
                         )}
@@ -183,7 +184,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                           <ItemIcon
                             className={cn(
                               "h-5 w-5",
-                              active ? "text-white" : "text-slate-600"
+                              displayActive ? "text-white" : "text-slate-600"
                             )}
                           />
                           <span className="sidebar-text text-sm font-semibold">
@@ -194,7 +195,9 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                           <HiChevronDown
                             className={cn(
                               "h-5 w-5 transition-transform",
-                              active ? "text-white/80" : "text-slate-500",
+                              displayActive
+                                ? "text-white/80"
+                                : "text-slate-500",
                               isOpen && "rotate-180"
                             )}
                           />
