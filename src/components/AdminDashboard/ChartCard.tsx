@@ -69,7 +69,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded border border-slate-200 bg-white p-6",
+        "flex h-full flex-col rounded-lg border border-slate-200 bg-white p-6",
         className
       )}
     >

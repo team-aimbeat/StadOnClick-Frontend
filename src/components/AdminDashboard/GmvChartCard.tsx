@@ -66,7 +66,7 @@ const GmvCard: React.FC<GmvCardProps> = ({
   return (
     <div
       className={cn(
-        "flex h-full flex-col gap-4 rounded border border-slate-200 bg-white p-6",
+        "flex h-full flex-col gap-4 rounded-lg border border-slate-200 bg-white p-6",
         className
       )}
     >

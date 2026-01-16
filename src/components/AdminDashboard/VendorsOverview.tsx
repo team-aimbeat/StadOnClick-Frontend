@@ -72,7 +72,7 @@ const VendorsOverview = () => {
   const totalVendors = vendorCategories.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="flex h-full flex-col rounded border border-slate-200 bg-white p-5">
+    <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5">
       <div className="mb-4 flex items-start justify-between">
         <div>
           <h3 className="text-sm font-semibold text-slate-900">Vendors Overview</h3>
