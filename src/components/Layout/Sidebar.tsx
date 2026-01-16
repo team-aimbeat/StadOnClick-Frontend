@@ -43,7 +43,9 @@ type NavItem = {
 
 const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
-  const [submenuHeights, setSubmenuHeights] = useState<Record<string, number>>({});
+  const [submenuHeights, setSubmenuHeights] = useState<Record<string, number>>(
+    {}
+  );
   const listRef = useRef<HTMLUListElement | null>(null);
   const menuRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const submenuRefs = useRef<Record<string, HTMLUListElement | null>>({});
@@ -90,8 +92,14 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       icon: HiUserGroup,
       children: [
         { label: t("All Vendors"), to: withBase("vendors") },
-        { label: t("Vendor Applications"), to: withBase("vendors/applications") },
-        { label: t("Vendor Staff (Coming Soon)"), to: withBase("vendors/staff") },
+        {
+          label: t("Vendor Applications"),
+          to: withBase("vendors/applications"),
+        },
+        {
+          label: t("Vendor Staff (Coming Soon)"),
+          to: withBase("vendors/staff"),
+        },
       ],
     },
 
@@ -117,8 +125,14 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       icon: HiChartBar,
       children: [
         { label: t("Lead Plans"), to: withBase("leads/plans") },
-        { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
-        { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
+        {
+          label: t("Vendor Subscriptions"),
+          to: withBase("leads/subscriptions"),
+        },
+        {
+          label: t("Lead Activity (Coming Soon)"),
+          to: withBase("leads/activity"),
+        },
       ],
     },
 
@@ -130,8 +144,14 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       label: t("Finance"),
       icon: HiBanknotes,
       children: [
-        { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
-        { label: t("Platform Wallet "), to: withBase("finance/platform-wallet") },
+        {
+          label: t("Payout Requests (Disabled)"),
+          to: withBase("finance/payouts"),
+        },
+        {
+          label: t("Platform Wallet "),
+          to: withBase("finance/platform-wallet"),
+        },
       ],
     },
 
@@ -165,7 +185,15 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   ];
 
   const accentPalette = useMemo(
-    () => ["#F59E0B", "#22C55E", "#EC4899", "#A855F7", "#0EA5E9", "#F97316", "#10B981"],
+    () => [
+      "#F59E0B",
+      "#22C55E",
+      "#EC4899",
+      "#A855F7",
+      "#0EA5E9",
+      "#F97316",
+      "#10B981",
+    ],
     []
   );
 
@@ -310,7 +338,11 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                               ? "mt-2 opacity-100 translate-y-0 p-2"
                               : "opacity-0 -translate-y-2 p-0"
                           )}
-                          style={{ maxHeight: submenuOpen ? `${submenuHeight}px` : "0px" }}
+                          style={{
+                            maxHeight: submenuOpen
+                              ? `${submenuHeight}px`
+                              : "0px",
+                          }}
                         >
                           {item.children.map((child, idx) => (
                             <li
@@ -341,12 +373,16 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                                       <span
                                         style={{
                                           ["--dot-color" as string]:
-                                            accentPalette[idx % accentPalette.length],
+                                            accentPalette[
+                                              idx % accentPalette.length
+                                            ],
                                         }}
                                         className="h-2.5 w-2.5 rounded-full transition-colors bg-[var(--dot-color)] group-hover:bg-[#4F7DFF] data-[active=true]:bg-[#4F7DFF]"
                                         data-active={isActive}
                                       />
-                                      <span className="font-semibold">{child.label}</span>
+                                      <span className="font-semibold">
+                                        {child.label}
+                                      </span>
                                     </div>
                                   </div>
                                 )}
