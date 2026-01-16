@@ -135,37 +135,19 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     <div className="h-full">
       <nav
         className={cn(
-          "sidebar fixed inset-y-0 z-50 my-4 lg:my-3",
+          "sidebar fixed inset-y-0 z-50 ",
           "transition-all duration-300 ease-in-out",
-          "bg-white rounded-[32px]",
+          "bg-white ",
           isCollapsed ? "w-[72px]" : "w-[260px]"
         )}
       >
-        <div className="relative flex items-center justify-center border-b border-slate-100 px-4 py-6 gap-3">
+        <div className="relative flex items-center justify-center border border-slate-100 px-4 py-[18.5px] gap-3">
           <div className="absolute left-4 top-3 flex items-center gap-2 ">
             <span className="h-2 w-2 rounded-full bg-red-400" />
             <span className="h-2 w-2 rounded-full bg-amber-400" />
-            <span className="h-2 w-2 rounded-full bg-blue-400" />
+            <span className="h-2 w-2 rounded-full bg-[#4f7df3]" />
           </div>
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-100 bg-slate-50 shadow-sm">
-            <img
-              src={logo}
-              alt="logo"
-              className="h-12 w-12 rounded-full object-contain"
-            />
-          </div>
-          <button
-            onClick={() => dispatch(toggleSidebar())}
-            className="absolute right-[-12px] top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition hover:bg-white"
-            aria-label="Toggle sidebar"
-          >
-            <HiChevronLeft
-              className={cn(
-                "h-4 w-4 text-slate-600 transition-transform",
-                isCollapsed && "rotate-180"
-              )}
-            />
-          </button>
+          <h1 className="text-2xl font-semibold">StadonClick</h1>
         </div>
 
         <PerfectScrollbar className="h-[calc(100vh-104px)]">
