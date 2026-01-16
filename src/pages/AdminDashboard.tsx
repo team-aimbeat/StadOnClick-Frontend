@@ -25,7 +25,8 @@ import AdminDashboardSkeleton from "@/components/skeletons/AdminDashboardSkeleto
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import LeadPlanSubscribersCard from "@/components/AdminDashboard/LeadPlanSubscribersCard";
 import Mapcity from "@/components/AdminDashboard/Mapcity";
-import UsersOverviewCard from "@/components/AdminDashboard/UsersOverviewCard";
+import { HiOutlineArrowTrendingUp } from "react-icons/hi2";
+
 import LeadSourceDistributionCard from "@/components/AdminDashboard/LeadSourceDistributionCard";
 import {
   HiOutlineChartBar,
@@ -43,6 +44,7 @@ type SnapshotMetric = {
   icon: IconType;
   accentColor?: "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
 };
+
 
 const platformSnapshotMetrics: SnapshotMetric[] = [
   {
@@ -81,7 +83,19 @@ const platformSnapshotMetrics: SnapshotMetric[] = [
     accentColor: "red",
     subtitle: "vs yesterday",
   },
+
+  // ✅ New StatsCard
+  {
+    title: "Conversion Rate (Today)",
+    value: "3.8%",
+    percentage: 0.6,
+    trend: "up",
+    icon: HiOutlineArrowTrendingUp,
+    accentColor: "cyan",
+    subtitle: "views to bookings",
+  },
 ];
+
 
 const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -102,9 +116,9 @@ const AdminDashboard: React.FC = () => {
         />
 
         <DashboardSection title="Platform Snapshot">
-          <DashboardGrid>
+          <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {platformSnapshotMetrics.map((metric) => (
-              <DashboardCol key={metric.title} span={3}>
+              <DashboardCol key={metric.title} span={1}>
                 <StatsCard
                   title={metric.title}
                   value={metric.value}
