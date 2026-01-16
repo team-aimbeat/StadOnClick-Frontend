@@ -16,7 +16,7 @@ export default function VendorLayout() {
       <div
         className={`
         flex flex-col flex-1
-        transition-[margin] duration-500 ease-in-out
+        transition-[margin] duration-300 ease-out
         lg:ml-[70px]
         ${!isSidebarCollapsed ? "lg:ml-[260px]" : ""}
       `}

@@ -1,13 +1,10 @@
-import PerfectScrollbar from "react-perfect-scrollbar";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import logo from "@/assets/logo/logo.png";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 import {
   HiChevronDown,
-  HiChevronLeft,
   HiHome,
   HiDocumentText,
   HiUserGroup,
@@ -51,12 +48,14 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const normalizedBasePath = basePath.replace(/\/$/, "");
-  const withBase = (path: string) => {
-    if (!normalizedBasePath) return path.startsWith("/") ? path : `/${path}`;
-    return `${normalizedBasePath}/${path.replace(/^\//, "")}`;
-  };
-  const dashboardBase = withBase("dashboard");
-  const homePath = normalizedBasePath ? dashboardBase : "/";
+  const withBase = useCallback(
+    (path: string) => {
+      if (!normalizedBasePath) return path.startsWith("/") ? path : `/${path}`;
+      return `${normalizedBasePath}/${path.replace(/^\//, "")}`;
+    },
+    [normalizedBasePath]
+  );
+  const homePath = normalizedBasePath ? withBase("dashboard") : "/";
 
   useEffect(() => {
     if (window.innerWidth < 1024 && themeConfig.sidebar) {
@@ -65,55 +64,58 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
-  const navItems: NavItem[] = [
-    {
-      id: "dashboard",
-      label: t("Dashboard"),
-      icon: HiHome,
-      to: homePath,
-    },
-    {
-      id: "chat",
-      label: t("Chat"),
-      icon: HiUserGroup,
-      to: withBase("chat"),
-    },
-    {
-      id: "kyc",
-      label: t("KYC"),
-      icon: HiDocumentText,
-      to: withBase("kyc"),
-    },
-    {
-      id: "schedules",
-      label: t("Schedules"),
-      icon: HiCalendar,
-      to: withBase("schedules"),
-    },
-    {
-      id: "income",
-      label: t("Income"),
-      icon: HiClipboardDocumentCheck,
-      children: [
-        { label: t("Earnings"), to: withBase("income/earnings") },
-        { label: t("Refunds"), to: withBase("income/refunds") },
-        { label: t("Declines"), to: withBase("income/declines") },
-        { label: t("Payouts"), to: withBase("income/payouts") },
-      ],
-    },
-    {
-      id: "promote",
-      label: t("Promote"),
-      icon: HiChartBar,
-      to: withBase("promote"),
-    },
-    {
-      id: "components",
-      label: t("Components"),
-      icon: HiCube,
-      to: withBase("components"),
-    },
-  ];
+  const navItems: NavItem[] = useMemo(
+    () => [
+      {
+        id: "dashboard",
+        label: t("Dashboard"),
+        icon: HiHome,
+        to: homePath,
+      },
+      {
+        id: "chat",
+        label: t("Chat"),
+        icon: HiUserGroup,
+        to: withBase("chat"),
+      },
+      {
+        id: "kyc",
+        label: t("KYC"),
+        icon: HiDocumentText,
+        to: withBase("kyc"),
+      },
+      {
+        id: "schedules",
+        label: t("Schedules"),
+        icon: HiCalendar,
+        to: withBase("schedules"),
+      },
+      {
+        id: "income",
+        label: t("Income"),
+        icon: HiClipboardDocumentCheck,
+        children: [
+          { label: t("Earnings"), to: withBase("income/earnings") },
+          { label: t("Refunds"), to: withBase("income/refunds") },
+          { label: t("Declines"), to: withBase("income/declines") },
+          { label: t("Payouts"), to: withBase("income/payouts") },
+        ],
+      },
+      {
+        id: "promote",
+        label: t("Promote"),
+        icon: HiChartBar,
+        to: withBase("promote"),
+      },
+      {
+        id: "components",
+        label: t("Components"),
+        icon: HiCube,
+        to: withBase("components"),
+      },
+    ],
+    [homePath, t, withBase]
+  );
 
   const isPathActive = (path?: string) => {
     if (!path) return false;
@@ -136,7 +138,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       <nav
         className={cn(
           "sidebar fixed inset-y-0 z-50 bg-white overflow-hidden transform-gpu",
-          "transition-[width] duration-200 ease-out will-change-[width]",
+          "transition-[width] duration-300 ease-out will-change-[width]",
           isCollapsed ? "w-[72px]" : "w-[280px]"
         )}
         data-collapsed={isCollapsed}
@@ -152,7 +154,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
           </h1>
         </div>
 
-        <PerfectScrollbar className="h-[calc(100vh-104px)] will-change-transform">
+        <div className="h-[calc(100vh-104px)] overflow-y-auto will-change-transform">
           <ul className="px-3 py-5 space-y-2 text-sm">
             {navItems.map((item) => {
               const ItemIcon = item.icon;
@@ -207,16 +209,26 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                       {!isCollapsed && (
                         <ul
                           className={cn(
-                            "ml-6 rounded-lg bg-[#dfe5ee] overflow-hidden transition-all duration-200 ease-out origin-top",
+                            "ml-6 rounded-lg bg-[#d7e1f1] overflow-hidden transform-gpu transition-[max-height,opacity,transform,padding] duration-200 ease-out origin-top",
                             submenuOpen
                               ? "mt-2 max-h-[320px] opacity-100 translate-y-0 p-2"
                               : "max-h-0 opacity-0 -translate-y-2 p-0"
                           )}
                         >
-                          {item.children.map((child) => (
+                          {item.children.map((child, idx) => (
                             <li
                               key={child.label}
-                              className={submenuOpen ? "mt-1 first:mt-0" : ""}
+                              className={cn(
+                                "transition-[opacity,transform,margin] duration-200 ease-out",
+                                submenuOpen
+                                  ? "mt-1 first:mt-0 translate-y-0 opacity-100"
+                                  : "translate-y-2 opacity-0"
+                              )}
+                              style={{
+                                transitionDelay: submenuOpen
+                                  ? `${idx * 40}ms`
+                                  : "0ms",
+                              }}
                             >
                               <NavLink to={child.to} className="block">
                                 {({ isActive }) => (
@@ -291,7 +303,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
               );
             })}
           </ul>
-        </PerfectScrollbar>
+        </div>
       </nav>
     </div>
   );
