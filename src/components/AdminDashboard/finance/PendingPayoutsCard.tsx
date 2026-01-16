@@ -1,4 +1,10 @@
 import AdminCardShell from "../AdminCardShell";
+import {
+  AdminTable,
+  AdminTableCell,
+  AdminTableRow,
+} from "@/components/AdminDashboard/table/AdminTable";
+import AdminPill from "@/components/AdminDashboard/table/AdminPill";
 
 const pendingPayouts = [
   {
@@ -20,46 +26,59 @@ const PendingPayoutsCard = () => {
 
   return (
     <AdminCardShell title="Pending Payouts" subtitle="Finance queue">
-      <div className="flex h-full flex-col gap-4">
-        <div className="overflow-hidden rounded-lg border border-slate-200">
-          <div className="grid grid-cols-[1.6fr_auto_auto_auto] items-center gap-3 bg-slate-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-            <span>Vendor</span>
-            <span>Amount</span>
-            <span>Requested</span>
-            <span>Status</span>
+      <AdminTable
+        className="mt-4 flex-1"
+        columns={[
+          { key: "vendor", label: "Vendor", width: "minmax(200px,1.4fr)" },
+          {
+            key: "amount",
+            label: "Amount",
+            width: "minmax(120px,0.8fr)",
+            align: "right",
+          },
+          {
+            key: "requested",
+            label: "Requested",
+            width: "minmax(140px,0.9fr)",
+          },
+          {
+            key: "status",
+            label: "Status",
+            width: "minmax(120px,0.8fr)",
+          },
+        ]}
+      >
+        {hasItems ? (
+          pendingPayouts.map((payout) => (
+            <AdminTableRow key={`${payout.vendor}-${payout.amount}`}>
+              <AdminTableCell className="text-sm font-semibold text-slate-900">
+                {payout.vendor}
+              </AdminTableCell>
+              <AdminTableCell
+                align="right"
+                className="text-sm font-semibold text-slate-900"
+              >
+                {payout.amount}
+              </AdminTableCell>
+              <AdminTableCell className="text-sm text-slate-500">
+                {payout.requestedAt}
+              </AdminTableCell>
+              <AdminTableCell>
+                <AdminPill tone="warning">{payout.status}</AdminPill>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))
+        ) : (
+          <div className="px-5 py-10 text-center text-sm text-slate-500">
+            No records found
           </div>
-          <div className="divide-y divide-slate-200">
-            {hasItems ? (
-              pendingPayouts.map((payout) => (
-                <div
-                  key={`${payout.vendor}-${payout.amount}`}
-                  className="grid grid-cols-[1.6fr_auto_auto_auto] items-center gap-3 px-4 py-3 text-sm text-slate-800"
-                >
-                  <span className="font-semibold text-slate-900">
-                    {payout.vendor}
-                  </span>
-                  <span className="font-medium text-slate-800">
-                    {payout.amount}
-                  </span>
-                  <span className="text-slate-600">{payout.requestedAt}</span>
-                  <span className="inline-flex items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                    {payout.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-slate-500">
-                No pending items
-              </div>
-            )}
-          </div>
-        </div>
-        {hasItems && (
-          <p className="mt-auto text-xs font-semibold text-slate-500">
-            Approvals coming soon
-          </p>
         )}
-      </div>
+      </AdminTable>
+      {hasItems && (
+        <p className="mt-3 text-xs font-semibold text-slate-500">
+          Approvals coming soon
+        </p>
+      )}
     </AdminCardShell>
   );
 };

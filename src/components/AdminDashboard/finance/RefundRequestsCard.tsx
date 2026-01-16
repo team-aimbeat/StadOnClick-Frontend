@@ -1,4 +1,9 @@
 import AdminCardShell from "../AdminCardShell";
+import {
+  AdminTable,
+  AdminTableCell,
+  AdminTableRow,
+} from "@/components/AdminDashboard/table/AdminTable";
 
 const refundRequests = [
   {
@@ -14,40 +19,49 @@ const RefundRequestsCard = () => {
 
   return (
     <AdminCardShell title="Refund Requests" subtitle="Finance queue">
-      <div className="flex h-full flex-col">
-        <div className="overflow-hidden rounded-lg border border-slate-200">
-          <div className="grid grid-cols-[auto_auto_auto] items-center gap-3 bg-slate-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-            <span>Booking</span>
-            <span>User</span>
-            <span className="text-right">Amount</span>
-          </div>
-          <div className="divide-y divide-slate-200">
-            {hasItems ? (
-              refundRequests.map((request) => (
-                <div
-                  key={request.bookingId}
-                  className="px-4 py-3 text-sm text-slate-800"
-                >
-                  <div className="grid grid-cols-[auto_auto_auto] items-center gap-3">
-                    <span className="font-semibold text-slate-900">
-                      {request.bookingId}
-                    </span>
-                    <span className="text-slate-700">{request.user}</span>
-                    <span className="text-right font-semibold text-slate-900">
-                      {request.amount}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500">{request.reason}</p>
+      <AdminTable
+        className="mt-4 flex-1"
+        columns={[
+          { key: "booking", label: "Booking", width: "minmax(180px,1.2fr)" },
+          { key: "user", label: "User", width: "minmax(180px,1.2fr)" },
+          {
+            key: "amount",
+            label: "Amount",
+            width: "minmax(120px,0.8fr)",
+            align: "right",
+          },
+        ]}
+      >
+        {hasItems ? (
+          refundRequests.map((request) => (
+            <AdminTableRow key={request.bookingId}>
+              <AdminTableCell>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-semibold text-slate-900">
+                    {request.bookingId}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {request.reason}
+                  </span>
                 </div>
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-slate-500">
-                No pending items
-              </div>
-            )}
+              </AdminTableCell>
+              <AdminTableCell className="text-sm text-slate-700">
+                {request.user}
+              </AdminTableCell>
+              <AdminTableCell
+                align="right"
+                className="text-sm font-semibold text-slate-900"
+              >
+                {request.amount}
+              </AdminTableCell>
+            </AdminTableRow>
+          ))
+        ) : (
+          <div className="px-5 py-10 text-center text-sm text-slate-500">
+            No records found
           </div>
-        </div>
-      </div>
+        )}
+      </AdminTable>
     </AdminCardShell>
   );
 };

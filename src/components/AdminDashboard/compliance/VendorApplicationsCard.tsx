@@ -1,4 +1,10 @@
 import AdminCardShell from "../AdminCardShell";
+import {
+  AdminTable,
+  AdminTableCell,
+  AdminTableRow,
+} from "@/components/AdminDashboard/table/AdminTable";
+import AdminPill from "@/components/AdminDashboard/table/AdminPill";
 
 const vendorApplications = [
   {
@@ -13,37 +19,34 @@ const VendorApplicationsCard = () => {
 
   return (
     <AdminCardShell title="Vendor Applications" subtitle="Compliance queue">
-      <div className="flex h-full flex-col">
-        <div className="overflow-hidden rounded-lg border border-slate-200">
-          <div className="grid grid-cols-[1.4fr_auto_auto] items-center gap-3 bg-slate-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-            <span>Vendor</span>
-            <span>City</span>
-            <span>Applied</span>
+      <AdminTable
+        className="mt-4 flex-1"
+        columns={[
+          { key: "vendor", label: "Vendor", width: "minmax(220px,1.4fr)" },
+          { key: "city", label: "City", width: "minmax(160px,1fr)" },
+          { key: "applied", label: "Applied", width: "minmax(140px,0.8fr)" },
+        ]}
+      >
+        {hasItems ? (
+          vendorApplications.map((application) => (
+            <AdminTableRow key={`${application.vendor}-${application.city}`}>
+              <AdminTableCell className="text-sm font-semibold text-slate-900">
+                {application.vendor}
+              </AdminTableCell>
+              <AdminTableCell className="text-sm text-slate-700">
+                {application.city}
+              </AdminTableCell>
+              <AdminTableCell>
+                <AdminPill tone="neutral">{application.appliedAt}</AdminPill>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))
+        ) : (
+          <div className="px-5 py-10 text-center text-sm text-slate-500">
+            No records found
           </div>
-          <div className="divide-y divide-slate-200">
-            {hasItems ? (
-              vendorApplications.map((application) => (
-                <div
-                  key={`${application.vendor}-${application.city}`}
-                  className="grid grid-cols-[1.4fr_auto_auto] items-center gap-3 px-4 py-3 text-sm text-slate-800"
-                >
-                  <span className="font-semibold text-slate-900">
-                    {application.vendor}
-                  </span>
-                  <span className="text-slate-700">{application.city}</span>
-                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                    {application.appliedAt}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-slate-500">
-                No pending items
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        )}
+      </AdminTable>
     </AdminCardShell>
   );
 };
