@@ -6,7 +6,7 @@ const SearchBar = () => {
 
   return (
     <form
-      className="relative w-full"
+      className="relative z-20 w-full"
       onSubmit={(e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
@@ -14,7 +14,7 @@ const SearchBar = () => {
         }
       }}
     >
-      <Search className="absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-gray-500" />
+      <Search className="absolute  left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-gray-500" />
       <input
         type="text"
         value={searchQuery}

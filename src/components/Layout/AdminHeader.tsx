@@ -151,7 +151,7 @@ const AdminHeader = () => {
   ]);
 
   const actionBtnClass =
-    "group grid h-10 w-10 place-content-center rounded-full border border-gray-200 bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800";
+    "group grid h-10 w-10 place-content-center rounded-md mx-2 cursor-pointer border border-gray-200 bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800";
 
   const getFlagUrl = (code: string) =>
     new URL(`../../assets/flags/${code.toUpperCase()}.svg`, import.meta.url)

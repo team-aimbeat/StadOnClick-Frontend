@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
@@ -31,6 +31,9 @@ interface ChartCardProps {
   periodOptions?: string[];
   onPeriodChange?: (period: string) => void;
   className?: string;
+  animate?: boolean;
+  animationDuration?: number;
+  animationEasing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear";
 }
 
 export const bookingsData = [
@@ -63,6 +66,9 @@ const ChartCard: React.FC<ChartCardProps> = ({
   periodOptions = ["Week", "Month", "Year"],
   onPeriodChange,
   className,
+  animate = false,
+  animationDuration = 0,
+  animationEasing = "ease-out",
 }) => {
   const showGrowthPlaceholder = true;
 
@@ -122,8 +128,12 @@ const ChartCard: React.FC<ChartCardProps> = ({
         className="mt-6 flex-1"
         style={{ minHeight: height }}
       >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height="100%" debounce={120}>
+          <BarChart
+            data={data}
+            margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
+            barCategoryGap="28%"
+          >
             <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
             <XAxis
               dataKey="day"
@@ -156,8 +166,24 @@ const ChartCard: React.FC<ChartCardProps> = ({
               }}
               labelFormatter={(label) => `Month: ${label}`}
             />
-            <Bar dataKey="value1" fill={primaryColor} radius={[6, 6, 0, 0]} barSize={14} />
-            <Bar dataKey="value2" fill={secondaryColor} radius={[6, 6, 0, 0]} barSize={14} />
+            <Bar
+              dataKey="value1"
+              fill={primaryColor}
+              radius={[6, 6, 0, 0]}
+              barSize={14}
+              isAnimationActive={animate}
+              animationDuration={animationDuration}
+              animationEasing={animationEasing}
+            />
+            <Bar
+              dataKey="value2"
+              fill={secondaryColor}
+              radius={[6, 6, 0, 0]}
+              barSize={14}
+              isAnimationActive={animate}
+              animationDuration={animationDuration}
+              animationEasing={animationEasing}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -165,4 +191,4 @@ const ChartCard: React.FC<ChartCardProps> = ({
   );
 };
 
-export default ChartCard;
+export default memo(ChartCard);

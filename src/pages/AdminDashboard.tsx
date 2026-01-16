@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import { IconType } from "react-icons";
 import {
   DashboardCol,
@@ -146,6 +146,7 @@ const AdminDashboard: React.FC = () => {
                 showLegend
                 showPeriodSelect={false}
                 className="h-full"
+                animate={false}
               />
             </DashboardCol>
             <DashboardCol span={3}>
@@ -229,4 +230,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default memo(AdminDashboard);

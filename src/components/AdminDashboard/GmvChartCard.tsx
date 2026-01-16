@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 import {
   LineChart,
@@ -176,4 +176,4 @@ const GmvCard: React.FC<GmvCardProps> = ({
   );
 };
 
-export default GmvCard;
+export default memo(GmvCard);
