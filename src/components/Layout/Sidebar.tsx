@@ -135,11 +135,11 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     <div className="h-full">
       <nav
         className={cn(
-          "sidebar fixed inset-y-0 z-50 ",
-          "transition-all duration-300 ease-in-out",
-          "bg-white ",
-          isCollapsed ? "w-[72px]" : "w-[260px]"
+          "sidebar fixed inset-y-0 z-50 bg-white overflow-hidden transform-gpu",
+          "transition-[width] duration-200 ease-out will-change-[width]",
+          isCollapsed ? "w-[72px]" : "w-[280px]"
         )}
+        data-collapsed={isCollapsed}
       >
         <div className="relative flex items-center justify-center border border-slate-100 px-4 py-[18.5px] gap-3">
           <div className="absolute left-4 top-3 flex items-center gap-2 ">
@@ -147,70 +147,87 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
             <span className="h-2 w-2 rounded-full bg-amber-400" />
             <span className="h-2 w-2 rounded-full bg-[#4f7df3]" />
           </div>
-          <h1 className="text-2xl font-semibold">StadonClick</h1>
+          <h1 className="text-2xl font-semibold">
+            {isCollapsed ? "S" : "StadonClick"}
+          </h1>
         </div>
 
-        <PerfectScrollbar className="h-[calc(100vh-104px)]">
+        <PerfectScrollbar className="h-[calc(100vh-104px)] will-change-transform">
           <ul className="px-3 py-5 space-y-2 text-sm">
             {navItems.map((item) => {
               const ItemIcon = item.icon;
               const active = isItemActive(item);
+              const isOpen = openMenus[item.id];
               return (
                 <li key={item.id}>
                   {item.children ? (
                     <>
                       <button
                         type="button"
-                        onClick={() => toggleMenu(item.id)}
                         className={cn(
-                          "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition",
+                          "flex h-[48px] w-full items-center rounded-lg px-4 transition",
+                          isCollapsed ? "justify-center" : "justify-between",
                           active
-                            ? "bg-slate-100 text-slate-900"
-                            : "text-slate-500 hover:text-slate-900"
+                            ? "bg-[#4F7DFF] text-white"
+                            : "text-slate-600 hover:bg-slate-100"
                         )}
+                        onClick={() => toggleMenu(item.id)}
                       >
-                        <span
+                        <div
                           className={cn(
-                            "flex h-10 w-10 items-center justify-center rounded-2xl",
-                            active
-                              ? "bg-white text-slate-900 shadow"
-                              : "bg-slate-50"
+                            "flex items-center transition-[gap] duration-150",
+                            isCollapsed ? "gap-0" : "gap-3"
                           )}
                         >
-                          <ItemIcon className="h-5 w-5" />
-                        </span>
-                        {!isCollapsed && (
-                          <span className="flex-1 text-sm font-semibold">
+                          <ItemIcon
+                            className={cn(
+                              "h-5 w-5",
+                              active ? "text-white" : "text-slate-600"
+                            )}
+                          />
+                          <span className="sidebar-text text-sm font-semibold">
                             {item.label}
                           </span>
-                        )}
+                        </div>
                         {!isCollapsed && (
                           <HiChevronDown
                             className={cn(
-                              "h-5 w-5 text-slate-400 transition-transform",
-                              openMenus[item.id] && "rotate-180"
+                              "h-5 w-5 transition-transform",
+                              active ? "text-white/80" : "text-slate-500",
+                              isOpen && "rotate-180"
                             )}
                           />
                         )}
                       </button>
 
-                      {!isCollapsed && openMenus[item.id] && (
-                        <ul className="mt-1 space-y-1 pl-12 text-xs font-medium tracking-wide text-slate-500">
+                      {!isCollapsed && isOpen && (
+                        <ul className="ml-6 mt-2 space-y-1 rounded-lg bg-[#dfe5ee] p-2">
                           {item.children.map((child) => (
                             <li key={child.label}>
-                              <NavLink
-                                to={child.to}
-                                className={({ isActive }) =>
-                                  cn(
-                                    "flex items-center gap-2 rounded-2xl px-3 py-1 hover:text-slate-900 hover:bg-slate-100",
-                                    isActive ? "text-slate-900 bg-slate-50" : ""
-                                  )
-                                }
-                              >
-                                {child.label}
-                                <span className="ml-auto text-[10px] uppercase tracking-[0.4em] text-slate-400">
-                                  →
-                                </span>
+                              <NavLink to={child.to} className="block">
+                                {({ isActive }) => (
+                                  <div
+                                    className={cn(
+                                      "flex h-[42px] items-center gap-3 rounded-xl px-3 text-sm transition",
+                                      "hover:bg-white/70",
+                                      isActive
+                                        ? "bg-[#516888] text-slate-900 font-semibold"
+                                        : "text-slate-600 font-medium"
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <span
+                                        className={cn(
+                                          "h-2.5 w-2.5 rounded-full",
+                                          isActive
+                                            ? "bg-[#2563EB]"
+                                            : "bg-slate-400"
+                                        )}
+                                      />
+                                      <span className="font-semibold">{child.label}</span>
+                                    </div>
+                                  </div>
+                                )}
                               </NavLink>
                             </li>
                           ))}
@@ -218,36 +235,41 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                       )}
                     </>
                   ) : (
-                    <NavLink
-                      to={item.to ?? "/"}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-3 rounded-2xl px-3 py-2.5 transition",
-                          isActive
-                            ? "bg-blue-400 text-white"
-                            : "text-slate-500 hover:text-slate-900"
-                        )
-                      }
-                    >
-                      <span
-                        className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-2xl",
-                          "bg-slate-50 text-slate-500"
-                        )}
-                      >
-                        <ItemIcon className="h-5 w-5" />
-                      </span>
-                      {!isCollapsed && (
-                        <>
-                          <span className="flex-1 text-sm font-semibold">
-                            {item.label}
-                          </span>
-                          {item.badge && (
+                    <NavLink to={item.to ?? "/"} className="block">
+                      {({ isActive }) => (
+                        <div
+                          className={cn(
+                            "flex h-[48px] w-full items-center rounded-lg px-4 transition",
+                            isCollapsed
+                              ? "justify-center"
+                              : "justify-start gap-3",
+                            isActive
+                              ? "bg-[#4F7DFF] text-white"
+                              : "text-slate-600 hover:bg-slate-100"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "flex items-center transition-[gap] duration-150",
+                              isCollapsed ? "gap-0" : "gap-3"
+                            )}
+                          >
+                            <ItemIcon
+                              className={cn(
+                                "h-5 w-5",
+                                isActive ? "text-white" : "text-slate-600"
+                              )}
+                            />
+                            <span className="sidebar-text text-sm font-semibold">
+                              {item.label}
+                            </span>
+                          </div>
+                          {!isCollapsed && item.badge && (
                             <span className="rounded-full bg-slate-200 px-3 py-0.5 text-xs font-semibold text-slate-500">
                               {item.badge}
                             </span>
                           )}
-                        </>
+                        </div>
                       )}
                     </NavLink>
                   )}

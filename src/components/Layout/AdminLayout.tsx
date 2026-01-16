@@ -23,7 +23,7 @@ export default function AdminLayout() {
       >
         <AdminHeader />
 
-        <main className="flex-1 p-2">
+        <main className="flex-1 p-6">
           <Outlet />
         </main>
 
