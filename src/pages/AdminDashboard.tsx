@@ -109,13 +109,13 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen  pb-12 text-slate-900">
-      <DashboardContainer className="space-y-10 pt-4">
+      <DashboardContainer className="space-y-6">
         <TitleBreadCrumbs
           title="Admin Dashboard"
           breadCrumbTitle="Admin / Dashboard"
         />
 
-        <DashboardSection title="Platform Snapshot">
+        <DashboardSection>
           <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {platformSnapshotMetrics.map((metric) => (
               <DashboardCol key={metric.title} span={1}>
@@ -133,7 +133,7 @@ const AdminDashboard: React.FC = () => {
           </DashboardGrid>
         </DashboardSection>
 
-        <DashboardSection title="Bookings, Revenue & Demand">
+        <DashboardSection>
           <DashboardGrid>
             <DashboardCol span={6}>
               <ChartCard
@@ -157,13 +157,13 @@ const AdminDashboard: React.FC = () => {
             <DashboardCol span={6}>
               <Mapcity />
             </DashboardCol>
-               <DashboardCol span={6}>
+            <DashboardCol span={6}>
               <VendorsOverview />
             </DashboardCol>
           </DashboardGrid>
         </DashboardSection>
 
-        <DashboardSection title="Recent Activity">
+        <DashboardSection>
           <DashboardGrid>
             <DashboardCol span={12}>
               <RecentActivities
@@ -174,7 +174,7 @@ const AdminDashboard: React.FC = () => {
           </DashboardGrid>
         </DashboardSection>
 
-        <DashboardSection title="Business Health">
+        <DashboardSection>
           <DashboardGrid>
             <DashboardCol span={6}>
               <GmvCard
@@ -194,7 +194,7 @@ const AdminDashboard: React.FC = () => {
           </DashboardGrid>
         </DashboardSection>
 
-        <DashboardSection title="Alerts & Insights">
+        <DashboardSection>
           <DashboardGrid>
             <DashboardCol span={12}>
               <AIAlertInsights />
@@ -203,7 +203,7 @@ const AdminDashboard: React.FC = () => {
           </DashboardGrid>
         </DashboardSection>
 
-        <DashboardSection title="Finance Queue">
+        <DashboardSection>
           <DashboardGrid>
             <DashboardCol span={6}>
               <PendingPayoutsCard />
@@ -214,7 +214,7 @@ const AdminDashboard: React.FC = () => {
           </DashboardGrid>
         </DashboardSection>
 
-        <DashboardSection title="Compliance & Trust">
+        <DashboardSection>
           <DashboardGrid>
             <DashboardCol span={6}>
               <KycPendingCard />

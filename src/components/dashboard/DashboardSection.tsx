@@ -14,7 +14,7 @@ export function DashboardSection({
   className,
 }: DashboardSectionProps) {
   return (
-    <section className={cn("space-y-4", className)}>
+    <section className={cn("space-y-6", className)}>
       {(title || actions) && (
         <div className="flex items-center justify-between gap-4">
           {title ? (
