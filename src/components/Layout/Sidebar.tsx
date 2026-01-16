@@ -158,6 +158,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
               const ItemIcon = item.icon;
               const active = isItemActive(item);
               const isOpen = openMenus[item.id];
+              const submenuOpen = !isCollapsed && isOpen;
               return (
                 <li key={item.id}>
                   {item.children ? (
@@ -200,10 +201,20 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                         )}
                       </button>
 
-                      {!isCollapsed && isOpen && (
-                        <ul className="ml-6 mt-2 space-y-1 rounded-lg bg-[#dfe5ee] p-2">
+                      {!isCollapsed && (
+                        <ul
+                          className={cn(
+                            "ml-6 rounded-lg bg-[#dfe5ee] overflow-hidden transition-all duration-200 ease-out origin-top",
+                            submenuOpen
+                              ? "mt-2 max-h-[320px] opacity-100 translate-y-0 p-2"
+                              : "max-h-0 opacity-0 -translate-y-2 p-0"
+                          )}
+                        >
                           {item.children.map((child) => (
-                            <li key={child.label}>
+                            <li
+                              key={child.label}
+                              className={submenuOpen ? "mt-1 first:mt-0" : ""}
+                            >
                               <NavLink to={child.to} className="block">
                                 {({ isActive }) => (
                                   <div
