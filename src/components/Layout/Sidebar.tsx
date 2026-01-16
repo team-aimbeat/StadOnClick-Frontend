@@ -42,9 +42,7 @@ type NavItem = {
 };
 
 const Sidebar = ({ basePath = "" }: SidebarProps) => {
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    income: false,
-  });
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isCollapsed = !themeConfig.sidebar;
 
@@ -68,99 +66,104 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
- const navItems: NavItem[] = [
-  // =========================
-  // OVERVIEW
-  // =========================
-  {
-    id: "overview",
-    label: t("Overview"),
-    icon: HiHome,
-    to: withBase("dashboard"),
-  },
+  const navItems: NavItem[] = [
+    // =========================
+    // OVERVIEW
+    // =========================
+    {
+      id: "overview",
+      label: t("Overview"),
+      icon: HiHome,
+      to: withBase("dashboard"),
+    },
 
-  // =========================
-  // VENDOR OPERATIONS
-  // =========================
-  {
-    id: "vendors",
-    label: t("Vendors"),
-    icon: HiUserGroup,
-    children: [
-      { label: t("All Vendors"), to: withBase("vendors") },
-      { label: t("Vendor Applications"), to: withBase("vendors/applications") },
-      { label: t("Vendor Staff (Coming Soon)"), to: withBase("vendors/staff") },
-    ],
-  },
+    // =========================
+    // VENDOR OPERATIONS
+    // =========================
+    {
+      id: "vendors",
+      label: t("Vendors"),
+      icon: HiUserGroup,
+      children: [
+        { label: t("All Vendors"), to: withBase("vendors") },
+        { label: t("Vendor Applications"), to: withBase("vendors/applications") },
+        { label: t("Vendor Staff (Coming Soon)"), to: withBase("vendors/staff") },
+      ],
+    },
 
-  // =========================
-  // COMPLIANCE (KYC + REVIEW)
-  // =========================
-  {
-    id: "compliance",
-    label: t("Compliance"),
-    icon: HiShieldCheck,
-    children: [
-      { label: t("KYC Review Queue"), to: withBase("compliance/kyc") },
-      { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
-    ],
-  },
+    // =========================
+    // COMPLIANCE (KYC + REVIEW)
+    // =========================
+    {
+      id: "compliance",
+      label: t("Compliance"),
+      icon: HiShieldCheck,
+      children: [
+        { label: t("KYC Review Queue"), to: withBase("compliance/kyc") },
+        { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
+      ],
+    },
 
-  // =========================
-  // LEADS & MONETIZATION
-  // =========================
-  {
-    id: "leads",
-    label: t("Leads & Monetization"),
-    icon: HiChartBar,
-    children: [
-      { label: t("Lead Plans"), to: withBase("leads/plans") },
-      { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
-      { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
-    ],
-  },
+    // =========================
+    // LEADS & MONETIZATION
+    // =========================
+    {
+      id: "leads",
+      label: t("Leads & Monetization"),
+      icon: HiChartBar,
+      children: [
+        { label: t("Lead Plans"), to: withBase("leads/plans") },
+        { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
+        { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
+      ],
+    },
 
-  // =========================
-  // PAYOUTS / FINANCE (future-ready)
-  // =========================
-  {
-    id: "finance",
-    label: t("Finance"),
-    icon: HiBanknotes,
-    children: [
-      { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
-      { label: t("Platform Wallet (Coming Soon)"), to: withBase("finance/platform-wallet") },
-    ],
-  },
+    // =========================
+    // PAYOUTS / FINANCE (future-ready)
+    // =========================
+    {
+      id: "finance",
+      label: t("Finance"),
+      icon: HiBanknotes,
+      children: [
+        { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
+        { label: t("Platform Wallet (Coming Soon)"), to: withBase("finance/platform-wallet") },
+      ],
+    },
 
-  // =========================
-  // CATALOG / CONFIGURATION
-  // =========================
-  {
-    id: "catalog",
-    label: t("Catalog"),
-    icon: HiCube,
-    children: [
-      { label: t("Interests"), to: withBase("catalog/interests") },
-      { label: t("Time Durations"), to: withBase("catalog/time-durations") },
-      { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
-    ],
-  },
+    // =========================
+    // CATALOG / CONFIGURATION
+    // =========================
+    {
+      id: "catalog",
+      label: t("Catalog"),
+      icon: HiCube,
+      children: [
+        { label: t("Interests"), to: withBase("catalog/interests") },
+        { label: t("Time Durations"), to: withBase("catalog/time-durations") },
+        { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
+      ],
+    },
 
-  // =========================
-  // SYSTEM
-  // =========================
-  {
-    id: "system",
-    label: t("System"),
-    icon: HiCog6Tooth,
-    children: [
-      { label: t("API Health"), to: withBase("system/health") },
-      { label: t("API Docs"), to: withBase("system/docs") },
-      { label: t("Admin Activity (Coming Soon)"), to: withBase("system/audit") },
-    ],
-  },
-];
+    // =========================
+    // SYSTEM
+    // =========================
+    {
+      id: "system",
+      label: t("System"),
+      icon: HiCog6Tooth,
+      children: [
+        { label: t("API Health"), to: withBase("system/health") },
+        { label: t("API Docs"), to: withBase("system/docs") },
+        { label: t("Admin Activity (Coming Soon)"), to: withBase("system/audit") },
+      ],
+    },
+  ];
+
+  const accentPalette = useMemo(
+    () => ["#F59E0B", "#22C55E", "#EC4899", "#A855F7", "#0EA5E9", "#F97316", "#10B981"],
+    []
+  );
 
   const isPathActive = (path?: string) => {
     if (!path) return false;
@@ -175,7 +178,11 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   };
 
   const toggleMenu = (value: string) => {
-    setOpenMenus((old) => ({ ...old, [value]: !old[value] }));
+    setOpenMenus((old) => {
+      const isAlreadyOpen = !!old[value];
+      if (isAlreadyOpen) return {};
+      return { [value]: true };
+    });
   };
 
   return (
@@ -254,7 +261,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                       {!isCollapsed && (
                         <ul
                           className={cn(
-                            "ml-6 rounded-lg bg-[#d7e1f1] overflow-hidden transform-gpu transition-[max-height,opacity,transform,padding] duration-200 ease-out origin-top",
+                            "ml-6 overflow-hidden transform-gpu transition-[max-height,opacity,transform,padding] duration-200 ease-out origin-top",
                             submenuOpen
                               ? "mt-2 max-h-[320px] opacity-100 translate-y-0 p-2"
                               : "max-h-0 opacity-0 -translate-y-2 p-0"
@@ -275,25 +282,24 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
                                   : "0ms",
                               }}
                             >
-                              <NavLink to={child.to} className="block">
+                              <NavLink to={child.to} className="block group">
                                 {({ isActive }) => (
                                   <div
                                     className={cn(
                                       "flex h-[42px] items-center gap-3 rounded-xl px-3 text-sm transition",
-                                      "hover:bg-white/70",
-                                      isActive
-                                        ? "bg-[#516888] text-slate-900 font-semibold"
-                                        : "text-slate-600 font-medium"
+                                      "text-slate-600 font-medium",
+                                      "group-hover:text-[#4F7DFF]",
+                                      isActive && "text-[#4F7DFF] font-semibold"
                                     )}
                                   >
                                     <div className="flex items-center gap-3">
                                       <span
-                                        className={cn(
-                                          "h-2.5 w-2.5 rounded-full",
-                                          isActive
-                                            ? "bg-[#2563EB]"
-                                            : "bg-slate-400"
-                                        )}
+                                        style={{
+                                          ["--dot-color" as string]:
+                                            accentPalette[idx % accentPalette.length],
+                                        }}
+                                        className="h-2.5 w-2.5 rounded-full transition-colors bg-[var(--dot-color)] group-hover:bg-[#4F7DFF] data-[active=true]:bg-[#4F7DFF]"
+                                        data-active={isActive}
                                       />
                                       <span className="font-semibold">{child.label}</span>
                                     </div>
