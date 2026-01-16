@@ -91,7 +91,7 @@ export default function StatsCard({
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-lg border border-slate-200 bg-gradient-to-r p-4 text-slate-700",
+        "flex h-full flex-col rounded-lg hover:scale-105 transition-all duration-200 border border-slate-200 bg-gradient-to-r p-4 text-slate-700",
         gradientMap[accentColor],
         className
       )}

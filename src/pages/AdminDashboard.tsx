@@ -114,7 +114,7 @@ const AdminDashboard: React.FC = () => {
         />
 
         <DashboardSection>
-          <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {platformSnapshotMetrics.map((metric) => (
               <DashboardCol key={metric.title} span={1}>
                 <StatsCard
