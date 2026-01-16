@@ -159,7 +159,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       children: [
         { label: t("API Health"), to: withBase("system/health") },
         { label: t("API Docs"), to: withBase("system/docs") },
-        { label: t("Admin Activity (Coming Soon)"), to: withBase("system/audit") },
+        { label: t("Admin Activity"), to: withBase("system/audit") },
       ],
     },
   ];
