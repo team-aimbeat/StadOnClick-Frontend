@@ -146,6 +146,7 @@ const AdminDashboard: React.FC = () => {
                 showLegend
                 showPeriodSelect={false}
                 className="h-full"
+                animate={false}
               />
             </DashboardCol>
             <DashboardCol span={3}>

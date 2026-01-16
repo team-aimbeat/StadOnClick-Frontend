@@ -4,15 +4,19 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
 
 import {
-  HiChevronDown,
   HiHome,
-  HiDocumentText,
   HiUserGroup,
-  HiCalendar,
   HiClipboardDocumentCheck,
+  HiDocumentText,
   HiChartBar,
   HiCube,
+  HiCog6Tooth,
+  HiShieldCheck,
+  HiBanknotes,
+  HiSparkles,
+  HiChevronDown,
 } from "react-icons/hi2";
+import PerfectScrollbar from "react-perfect-scrollbar";
 
 import { RootState } from "@/app/store";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
@@ -64,58 +68,99 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
-  const navItems: NavItem[] = useMemo(
-    () => [
-      {
-        id: "dashboard",
-        label: t("Dashboard"),
-        icon: HiHome,
-        to: homePath,
-      },
-      {
-        id: "chat",
-        label: t("Chat"),
-        icon: HiUserGroup,
-        to: withBase("chat"),
-      },
-      {
-        id: "kyc",
-        label: t("KYC"),
-        icon: HiDocumentText,
-        to: withBase("kyc"),
-      },
-      {
-        id: "schedules",
-        label: t("Schedules"),
-        icon: HiCalendar,
-        to: withBase("schedules"),
-      },
-      {
-        id: "income",
-        label: t("Income"),
-        icon: HiClipboardDocumentCheck,
-        children: [
-          { label: t("Earnings"), to: withBase("income/earnings") },
-          { label: t("Refunds"), to: withBase("income/refunds") },
-          { label: t("Declines"), to: withBase("income/declines") },
-          { label: t("Payouts"), to: withBase("income/payouts") },
-        ],
-      },
-      {
-        id: "promote",
-        label: t("Promote"),
-        icon: HiChartBar,
-        to: withBase("promote"),
-      },
-      {
-        id: "components",
-        label: t("Components"),
-        icon: HiCube,
-        to: withBase("components"),
-      },
+ const navItems: NavItem[] = [
+  // =========================
+  // OVERVIEW
+  // =========================
+  {
+    id: "overview",
+    label: t("Overview"),
+    icon: HiHome,
+    to: withBase("dashboard"),
+  },
+
+  // =========================
+  // VENDOR OPERATIONS
+  // =========================
+  {
+    id: "vendors",
+    label: t("Vendors"),
+    icon: HiUserGroup,
+    children: [
+      { label: t("All Vendors"), to: withBase("vendors") },
+      { label: t("Vendor Applications"), to: withBase("vendors/applications") },
+      { label: t("Vendor Staff (Coming Soon)"), to: withBase("vendors/staff") },
     ],
-    [homePath, t, withBase]
-  );
+  },
+
+  // =========================
+  // COMPLIANCE (KYC + REVIEW)
+  // =========================
+  {
+    id: "compliance",
+    label: t("Compliance"),
+    icon: HiShieldCheck,
+    children: [
+      { label: t("KYC Review Queue"), to: withBase("compliance/kyc") },
+      { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
+    ],
+  },
+
+  // =========================
+  // LEADS & MONETIZATION
+  // =========================
+  {
+    id: "leads",
+    label: t("Leads & Monetization"),
+    icon: HiChartBar,
+    children: [
+      { label: t("Lead Plans"), to: withBase("leads/plans") },
+      { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
+      { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
+    ],
+  },
+
+  // =========================
+  // PAYOUTS / FINANCE (future-ready)
+  // =========================
+  {
+    id: "finance",
+    label: t("Finance"),
+    icon: HiBanknotes,
+    children: [
+      { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
+      { label: t("Platform Wallet (Coming Soon)"), to: withBase("finance/platform-wallet") },
+    ],
+  },
+
+  // =========================
+  // CATALOG / CONFIGURATION
+  // =========================
+  {
+    id: "catalog",
+    label: t("Catalog"),
+    icon: HiCube,
+    children: [
+      { label: t("Interests"), to: withBase("catalog/interests") },
+      { label: t("Time Durations"), to: withBase("catalog/time-durations") },
+      { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
+    ],
+  },
+
+  // =========================
+  // SYSTEM
+  // =========================
+  {
+    id: "system",
+    label: t("System"),
+    icon: HiCog6Tooth,
+    children: [
+      { label: t("API Health"), to: withBase("system/health") },
+      { label: t("API Docs"), to: withBase("system/docs") },
+      { label: t("Admin Activity (Coming Soon)"), to: withBase("system/audit") },
+    ],
+  },
+];
 
   const isPathActive = (path?: string) => {
     if (!path) return false;
@@ -154,7 +199,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
           </h1>
         </div>
 
-        <div className="h-[calc(100vh-104px)] overflow-y-auto will-change-transform">
+        <PerfectScrollbar className="h-[calc(100vh-104px)] will-change-transform">
           <ul className="px-3 py-5 space-y-2 text-sm">
             {navItems.map((item) => {
               const ItemIcon = item.icon;
@@ -303,7 +348,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
               );
             })}
           </ul>
-        </div>
+        </PerfectScrollbar>
       </nav>
     </div>
   );
