@@ -1,21 +1,22 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 
-import IconArrowLeft from "@/components/icons/IconArrowLeft";
-import IconBellBing from "@/components/icons/IconBellBing";
-import IconChatNotification from "@/components/icons/IconChatNotification";
-import IconInfoCircle from "@/components/icons/IconInfoCircle";
-import IconLaptop from "@/components/icons/IconLaptop";
-import IconLockDots from "@/components/icons/IconLockDots";
-import IconLogout from "@/components/icons/IconLogout";
-import IconMailDot from "@/components/icons/IconMailDot";
-import IconMenu from "@/components/icons/IconMenu";
-import IconMoon from "@/components/icons/IconMoon";
-import IconSearch from "@/components/icons/IconSearch";
-import IconSun from "@/components/icons/IconSun";
-import IconUser from "@/components/icons/IconUser";
-import IconXCircle from "@/components/icons/IconXCircle";
+import {
+  ArrowRight,
+  Bell,
+  Info,
+  Laptop,
+  Lock,
+  LogOut,
+  Mail,
+  Menu,
+  Moon,
+  Search,
+  SunMedium,
+  User,
+  X,
+} from "lucide-react";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 
@@ -23,7 +24,6 @@ import menuHeader from "@/assets/images/banner.png";
 import profile7 from "@/assets/images/profile-7.jpeg";
 import profile8 from "@/assets/images/profile-8.jpeg";
 import profile9 from "@/assets/images/profile-9.jpeg";
-import logo from "@/assets/logo/logo.png";
 
 import { RootState } from "@/app/store";
 import {
@@ -34,490 +34,487 @@ import {
 import Dropdown from "../shared/dropdown";
 import SearchBar from "../shared/SearchBar";
 
+type MessageItem = {
+  id: number;
+  name: string;
+  message: string;
+  time: string;
+  count?: number;
+  profile: string;
+  status?: "online" | "away" | "offline";
+};
+
+type NotificationItem = {
+  id: number;
+  name: string;
+  action: string;
+  time: string;
+  profile: string;
+  status?: "online" | "away" | "offline";
+};
 
 const AdminHeader = () => {
   const location = useLocation();
+  const dispatch = useDispatch();
+  const themeConfig = useSelector((state: RootState) => state.themeConfig);
+  const isRtl = themeConfig.rtlClass === "rtl";
+  const { t } = useTranslation();
+
   useEffect(() => {
-    const selector = document.querySelector(
-      'ul.horizontal-menu a[href="' + window.location.pathname + '"]'
+    const selector = document.querySelector<HTMLAnchorElement>(
+      `ul.horizontal-menu a[href="${window.location.pathname}"]`
     );
+
     if (selector) {
       selector.classList.add("active");
-      const all: any = document.querySelectorAll(
+      const activeLinks = document.querySelectorAll<HTMLAnchorElement>(
         "ul.horizontal-menu .nav-link.active"
       );
-      for (let i = 0; i < all.length; i++) {
-        all[0]?.classList.remove("active");
-      }
-      const ul: any = selector.closest("ul.sub-menu");
-      if (ul) {
-        let ele: any = ul.closest("li.menu").querySelectorAll(".nav-link");
-        if (ele) {
-          ele = ele[0];
-          setTimeout(() => {
-            ele?.classList.add("active");
-          });
+      activeLinks.forEach((link, index) => {
+        if (index > 0) {
+          link.classList.remove("active");
+        }
+      });
+
+      const nestedMenu = selector.closest("ul.sub-menu");
+      if (nestedMenu) {
+        const parentMenu = nestedMenu.closest("li.menu");
+        const parentLink =
+          parentMenu?.querySelector<HTMLAnchorElement>(".nav-link");
+        if (parentLink) {
+          setTimeout(() => parentLink.classList.add("active"));
         }
       }
     }
-  }, [location]);
+  }, [location.pathname]);
 
-  const isRtl =
-    useSelector((state: RootState) => state.themeConfig.rtlClass) === "rtl"
-      ? true
-      : false;
-
-  const themeConfig = useSelector((state: RootState) => state.themeConfig);
-  const dispatch = useDispatch();
-  const getFlagUrl = (code: string) =>
-    new URL(`../../assets/flags/${code.toUpperCase()}.svg`, import.meta.url)
-      .href;
-
-  function createMarkup(messages: any) {
-    return { __html: messages };
-  }
-  const [messages, setMessages] = useState([
+  const [flag, setFlag] = useState(themeConfig.locale);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [messages, setMessages] = useState<MessageItem[]>([
     {
       id: 1,
-      image:
-        '<span className="grid place-content-center w-9 h-9 rounded-full bg-success-light dark:bg-success text-success dark:text-success-light"><svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>',
-      title: "Congratulations!",
-      message: "Your OS has been updated.",
-      time: "1hr",
+      name: "Kathryn Murphy",
+      message: "hey! there I'm reaching out about the report...",
+      time: "12:30 PM",
+      count: 8,
+      profile: profile8,
+      status: "online",
     },
     {
       id: 2,
-      image:
-        '<span className="grid place-content-center w-9 h-9 rounded-full bg-info-light dark:bg-info text-info dark:text-info-light"><svg g xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>',
-      title: "Did you know?",
-      message: "You can switch between artboards.",
-      time: "2hr",
+      name: "Leslie Alexander",
+      message: "The sprint board has been updated.",
+      time: "11:10 AM",
+      count: 3,
+      profile: profile9,
     },
     {
       id: 3,
-      image:
-        '<span className="grid place-content-center w-9 h-9 rounded-full bg-danger-light dark:bg-danger text-danger dark:text-danger-light"> <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>',
-      title: "Something went wrong!",
-      message: "Send Reposrt",
-      time: "2days",
+      name: "John Doe",
+      message: "Let's sync at 4 PM for the launch checklist.",
+      time: "09:45 AM",
+      profile: profile7,
     },
     {
       id: 4,
-      image:
-        '<span className="grid place-content-center w-9 h-9 rounded-full bg-warning-light dark:bg-warning text-warning dark:text-warning-light"><svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">    <circle cx="12" cy="12" r="10"></circle>    <line x1="12" y1="8" x2="12" y2="12"></line>    <line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>',
-      title: "Warning",
-      message: "Your password strength is low.",
-      time: "5days",
+      name: "Courtney Henry",
+      message: "Reminder: approvals needed on two items.",
+      time: "Yesterday",
+      profile: profile8,
     },
   ]);
 
-  const removeMessage = (value: number) => {
-    setMessages(messages.filter((user) => user.id !== value));
-  };
-
-  const [notifications, setNotifications] = useState([
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: 1,
       profile: profile7,
-      message:
-        '<strong className="text-sm mr-1">John Doe</strong>invite you to <strong>Prototyping</strong>',
+      name: "John Doe",
+      action: "invited you to Prototyping",
       time: "45 min ago",
+      status: "online",
     },
     {
       id: 2,
       profile: profile8,
-      message:
-        '<strong className="text-sm mr-1">Adam Nolan</strong>mentioned you to <strong>UX Basics</strong>',
-      time: "9h Ago",
+      name: "Adam Nolan",
+      action: "mentioned you in UX Basics",
+      time: "9h ago",
+      status: "online",
     },
     {
       id: 3,
       profile: profile9,
-      message:
-        '<strong className="text-sm mr-1">Anna Morgan</strong>Upload a file',
-      time: "9h Ago",
+      name: "Anna Morgan",
+      action: "uploaded a file",
+      time: "9h ago",
     },
   ]);
 
-  const removeNotification = (value: number) => {
-    setNotifications(notifications.filter((user) => user.id !== value));
-  };
+  const actionBtnClass =
+    "group grid h-10 w-10 place-content-center rounded-full border border-gray-200 bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800";
 
-  const [search, setSearch] = useState(false);
+  const getFlagUrl = (code: string) =>
+    new URL(`../../assets/flags/${code.toUpperCase()}.svg`, import.meta.url)
+      .href;
 
-  const setLocale = (flag: string) => {
-    setFlag(flag);
-    if (flag.toLowerCase() === "ae") {
+  const setLocale = (code: string) => {
+    setFlag(code);
+    if (code.toLowerCase() === "ae") {
       dispatch(toggleRTL("rtl"));
     } else {
       dispatch(toggleRTL("ltr"));
     }
   };
-  const [flag, setFlag] = useState(themeConfig.locale);
 
-  const { t } = useTranslation();
-  const actionBtnClass =
-    "group relative grid h-10 w-10 place-content-center rounded-full border  border-gray-200/70 bg-white/80 text-gray-600  transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary dark:border-gray-800 dark:bg-black/60 dark:text-gray-300 dark:hover:bg-primary/10";
+  const removeMessage = (value: number) => {
+    setMessages((prev) => prev.filter((message) => message.id !== value));
+  };
+
+  const removeNotification = (value: number) => {
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== value)
+    );
+  };
+
+  const renderThemeToggle = () => {
+    if (themeConfig.theme === "light") {
+      return (
+        <button
+          type="button"
+          className={actionBtnClass}
+          onClick={() => dispatch(toggleTheme("dark"))}
+          aria-label={t("Switch to dark mode") || "Switch to dark mode"}
+          title={t("Dark")}
+        >
+          <SunMedium className="h-5 w-5" strokeWidth={1.8} />
+        </button>
+      );
+    }
+
+    if (themeConfig.theme === "dark") {
+      return (
+        <button
+          type="button"
+          className={actionBtnClass}
+          onClick={() => dispatch(toggleTheme("system"))}
+          aria-label={t("Use system theme") || "Use system theme"}
+          title={t("System")}
+        >
+          <Moon className="h-5 w-5" strokeWidth={1.8} />
+        </button>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        className={actionBtnClass}
+        onClick={() => dispatch(toggleTheme("light"))}
+        aria-label={t("Switch to light mode") || "Switch to light mode"}
+        title={t("Light")}
+      >
+        <Laptop className="h-5 w-5" strokeWidth={1.8} />
+      </button>
+    );
+  };
 
   return (
     <header
-      className={`z-40 ${
+      className={`sticky top-0 z-40 ${
         themeConfig.semidark && themeConfig.menu === "horizontal" ? "dark" : ""
       }`}
     >
       <div
         className="
-    relative flex items-center gap-3
-    px-6 py-3 my-4
-    mx-4 md:mx-6 lg:mx-3
-    bg-white/90 dark:bg-black/70
-    rounded-2xl
-    border border-gray-200/70 dark:border-gray-800
-    backdrop-blur
-  "
+          relative flex items-center justify-between gap-3
+          px-5 py-3
+          bg-white dark:bg-gray-900
+          border-b border-gray-200/80 dark:border-gray-800
+          min-h-[60px]
+        "
       >
-        <div className="horizontal-logo flex lg:hidden justify-between items-center ltr:mr-2 rtl:ml-2">
-          <Link to="/" className="main-logo flex items-center shrink-0">
-            <img
-              className="w-8 ltr:-ml-1 rtl:-mr-1 inline"
-              src={logo}
-              alt="logo"
-            />
-            <span className="text-2xl ltr:ml-1.5 rtl:mr-1.5  font-semibold  align-middle hidden md:inline dark:text-white-light transition-all duration-300">
-              VRISTO
-            </span>
-          </Link>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
-            className={`${actionBtnClass} flex-none lg:hidden ltr:ml-2 rtl:mr-2`}
-            onClick={() => {
-              dispatch(toggleSidebar());
-            }}
+            className={actionBtnClass}
+            aria-label={t("Toggle sidebar") || "Toggle sidebar"}
+            onClick={() => dispatch(toggleSidebar())}
           >
-            <IconMenu className="w-5 h-5" />
+            <Menu className="h-[18px] w-[18px]" strokeWidth={1.8} />
           </button>
-        </div>
-
-        <div className="hidden lg:flex flex-col gap-0.5 ltr:mr-6 rtl:ml-6">
-          <p className="text-xs uppercase tracking-[0.4em] text-blue-400">Overview</p>
-          <h1 className="text-2xl font-semibold text-blue-900">Dashboard</h1>
-        </div>
-
-        <div className="ltr:mr-2 rtl:ml-2 hidden sm:block">
-          <ul className="flex items-center gap-2 dark:text-[#d0d2d6]">
-            <li>
-              <Link
-                to="/apps/chat"
-                className={actionBtnClass}
-                title={t("Chat")}
-              >
-                <IconChatNotification className=""  />
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div className="sm:flex-1 ltr:sm:ml-0 ltr:ml-auto sm:rtl:mr-0 rtl:mr-auto flex items-center space-x-2 lg:space-x-3 rtl:space-x-reverse dark:text-[#d0d2d6]">
-          <div className="sm:ltr:mr-auto sm:rtl:ml-auto w-full max-w-[520px]">
+          <div className="hidden w-full max-w-[520px] sm:block">
             <SearchBar />
+          </div>
+          <div className="sm:hidden">
             <button
               type="button"
-              onClick={() => setSearch(!search)}
-              className={`search_btn sm:hidden ${actionBtnClass}`}
+              onClick={() => setSearchOpen((prev) => !prev)}
+              aria-label={searchOpen ? "Close search" : "Open search"}
+              className={actionBtnClass}
             >
-              <IconSearch className="w-4.5 h-4.5 mx-auto dark:text-[#d0d2d6]" />
+              <Search className="h-5 w-5" strokeWidth={1.8} />
             </button>
           </div>
-          <div>
-            {themeConfig.theme === "light" ? (
-              <button
-                className={actionBtnClass}
-                onClick={() => {
-                  dispatch(toggleTheme("dark"));
-                }}
-                title={t("Dark")}
-              >
-                <IconSun />
-              </button>
-            ) : (
-              ""
-            )}
-            {themeConfig.theme === "dark" && (
-              <button
-                className={actionBtnClass}
-                onClick={() => {
-                  dispatch(toggleTheme("system"));
-                }}
-                title={t("System")}
-              >
-                <IconMoon />
-              </button>
-            )}
-            {themeConfig.theme === "system" && (
-              <button
-                className={actionBtnClass}
-                onClick={() => {
-                  dispatch(toggleTheme("light"));
-                }}
-                title={t("Light")}
-              >
-                <IconLaptop />
-              </button>
-            )}
-          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-2.5 text-gray-700 dark:text-[#d0d2d6]">
+          {renderThemeToggle()}
+
           <div className="dropdown shrink-0">
             <Dropdown
               offset={[0, 8]}
-              placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
+              placement={isRtl ? "bottom-start" : "bottom-end"}
               btnClassName={actionBtnClass}
               button={
                 <img
-                  className="w-5 h-5 object-cover rounded-full"
+                  className="h-5 w-5 rounded-full object-cover"
                   src={getFlagUrl(flag)}
-                  alt="flag"
+                  alt="language flag"
                 />
               }
             >
-              <ul className="!px-2 text-dark dark:text-white-dark grid grid-cols-2 gap-2 font-semibold dark:text-white-light/90 w-[280px]">
-                {themeConfig.languageList.map((item: any) => {
-                  return (
+              <ul className="grid w-[280px] grid-cols-2 gap-2 px-2 font-semibold text-dark dark:text-white-light/90">
+                {themeConfig.languageList.map(
+                  (item: { code: string; name: string }) => (
                     <li key={item.code}>
                       <button
                         type="button"
-                        className={`flex w-full hover:text-primary rounded-lg ${
+                        className={`flex w-full items-center rounded-lg px-2 py-2 hover:text-primary ${
                           i18next.language === item.code
                             ? "bg-primary/10 text-primary"
                             : ""
                         }`}
                         onClick={() => {
                           i18next.changeLanguage(item.code);
-                          // setFlag(item.code);
                           setLocale(item.code);
                         }}
                       >
                         <img
                           src={getFlagUrl(item.code)}
-                          alt="flag"
-                          className="w-5 h-5 object-cover rounded-full"
+                          alt={`${item.name} flag`}
+                          className="h-5 w-5 rounded-full object-cover"
                         />
                         <span className="ltr:ml-3 rtl:mr-3">{item.name}</span>
                       </button>
                     </li>
-                  );
-                })}
-              </ul>
-            </Dropdown>
-          </div>
-          <div className="dropdown shrink-0">
-            <Dropdown
-              offset={[0, 8]}
-              placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
-              btnClassName={actionBtnClass}
-              button={<IconMailDot />}
-            >
-              <ul className="py-0! text-dark dark:text-white-dark w-[300px] sm:w-[375px] text-xs">
-                <li className="mb-5" onClick={(e) => e.stopPropagation()}>
-                  <div className="hover:!bg-transparent overflow-hidden relative rounded-t-md p-5 text-white w-full !h-[68px]">
-                    <img
-                      src={menuHeader}
-                      alt="header message box banner image"
-                      aria-hidden
-                      className="absolute inset-0 h-full w-full object-cover object-center brightness-75"
-                    />
-                    <h4 className="font-semibold relative z-10 text-lg">
-                      Messages
-                    </h4>
-                  </div>
-                </li>
-                {messages.length > 0 ? (
-                  <>
-                    <li onClick={(e) => e.stopPropagation()}>
-                      {messages.map((message) => {
-                        return (
-                          <div
-                            key={message.id}
-                            className="flex items-center py-3 px-5"
-                          >
-                            <div
-                              dangerouslySetInnerHTML={createMarkup(
-                                message.image
-                              )}
-                            ></div>
-                            <span className="px-3 dark:text-gray-500">
-                              <div className="font-semibold text-sm dark:text-white-light/90">
-                                {message.title}
-                              </div>
-                              <div>{message.message}</div>
-                            </span>
-                            <span className="font-semibold bg-white-dark/20 rounded text-dark/60 px-1 ltr:ml-auto rtl:mr-auto whitespace-pre dark:text-white-dark ltr:mr-2 rtl:ml-2">
-                              {message.time}
-                            </span>
-                            <button
-                              type="button"
-                              className="text-neutral-300 hover:text-danger"
-                              onClick={() => removeMessage(message.id)}
-                            >
-                              <IconXCircle />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </li>
-                    <li className=" border-white-light text-center dark:border-white/10 mt-5">
-                      <button
-                        type="button"
-                        className="text-primary font-semibold group dark:text-gray-400 justify-center !py-4 !h-[48px]"
-                      >
-                        <span className="group-hover:underline ltr:mr-1 rtl:ml-1">
-                          VIEW ALL ACTIVITIES
-                        </span>
-                        <IconArrowLeft className="group-hover:translate-x-1 transition duration-300 ltr:ml-1 rtl:mr-1" />
-                      </button>
-                    </li>
-                  </>
-                ) : (
-                  <li className="mb-5" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      className="!grid place-content-center hover:!bg-transparent text-lg min-h-[200px]"
-                    >
-                      <div className="mx-auto ring-4 ring-primary/30 rounded-full mb-4 text-primary">
-                        <IconInfoCircle fill={true} className="w-10 h-10" />
-                      </div>
-                      No data available.
-                    </button>
-                  </li>
+                  )
                 )}
               </ul>
             </Dropdown>
           </div>
+
           <div className="dropdown shrink-0">
             <Dropdown
               offset={[0, 8]}
-              placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
-              btnClassName={`${actionBtnClass} relative`}
-              button={
-                <span>
-                  <IconBellBing />
-                  <span className="flex absolute w-3 h-3 ltr:right-0 rtl:left-0 top-0">
-                    <span className="animate-ping absolute ltr:-left-[3px] rtl:-right-[3px] -top-[3px] inline-flex h-full w-full rounded-full bg-success/50 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full w-[6px] h-[6px] bg-success"></span>
-                  </span>
-                </span>
-              }
+              placement={isRtl ? "bottom-start" : "bottom-end"}
+              btnClassName={actionBtnClass}
+              button={<Mail className="h-5 w-5" strokeWidth={1.8} />}
             >
-              <ul className="!py-0 text-dark dark:text-white-dark w-[300px] sm:w-[350px] divide-y dark:divide-white/10">
-                <li onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center px-4 py-2 justify-between font-semibold">
-                    <h4 className="text-lg">Notification</h4>
-                    {notifications.length ? (
-                      <span className="badge bg-primary/80">
-                        {notifications.length}New
-                      </span>
-                    ) : (
-                      ""
-                    )}
+              <ul className="w-[320px] text-dark dark:text-white-dark sm:w-[360px]">
+                <li
+                  className="relative h-[70px] overflow-hidden rounded-t-lg"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <img
+                    src={menuHeader}
+                    alt="Messages header"
+                    className="absolute inset-0 h-full w-full object-cover object-center brightness-75"
+                  />
+                  <div className="relative z-10 flex h-full items-center px-5 text-white">
+                    <h4 className="text-lg font-semibold">Messages</h4>
                   </div>
                 </li>
-                {notifications.length > 0 ? (
-                  <>
-                    {notifications.map((notification) => {
-                      return (
-                        <li
-                          key={notification.id}
-                          className="dark:text-white-light/90"
-                          onClick={(e) => e.stopPropagation()}
+                <li
+                  className="max-h-[320px] overflow-y-auto divide-y divide-gray-100/80 dark:divide-white/10"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {messages.length ? (
+                    messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className="group flex items-center gap-3 px-5 py-3"
+                      >
+                        <div className="relative h-11 w-11 flex-none">
+                          <img
+                            src={message.profile}
+                            alt={`${message.name} avatar`}
+                            className="h-11 w-11 rounded-full object-cover"
+                          />
+                          {message.status !== "offline" && (
+                            <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-success ring-2 ring-white dark:ring-gray-900"></span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold leading-5 dark:text-white-light/90">
+                            {message.name}
+                          </p>
+                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                            {message.message}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                            {message.time}
+                          </span>
+                          {message.count ? (
+                            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-white">
+                              {message.count}
+                            </span>
+                          ) : null}
+                        </div>
+                        <button
+                          type="button"
+                          className="text-neutral-400 opacity-0 transition hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+                          aria-label={t("Dismiss message") || "Dismiss message"}
+                          onClick={() => removeMessage(message.id)}
                         >
-                          <div className="group flex items-center px-4 py-2">
-                            <div className="grid place-content-center rounded">
-                              <div className="w-12 h-12 relative">
-                                <img
-                                  className="w-12 h-12 rounded-full object-cover"
-                                  alt="profile"
-                                  src={notification.profile}
-                                />
-                                <span className="bg-success w-2 h-2 rounded-full block absolute right-[6px] bottom-0"></span>
-                              </div>
-                            </div>
-                            <div className="ltr:pl-3 rtl:pr-3 flex flex-auto">
-                              <div className="ltr:pr-3 rtl:pl-3">
-                                <h6
-                                  dangerouslySetInnerHTML={{
-                                    __html: notification.message,
-                                  }}
-                                ></h6>
-                                <span className="text-xs block font-normal dark:text-gray-500">
-                                  {notification.time}
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                className="ltr:ml-auto rtl:mr-auto text-neutral-300 hover:text-danger opacity-0 group-hover:opacity-100"
-                                onClick={() =>
-                                  removeNotification(notification.id)
-                                }
-                              >
-                                <IconXCircle />
-                              </button>
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                    <li>
-                      <div className="p-4">
-                        <button className="btn-primary block w-full  bg-amber-400 btn-small">
-                          Read All Notifications
+                          <X className="h-4.5 w-4.5" strokeWidth={1.8} />
                         </button>
                       </div>
-                    </li>
-                  </>
-                ) : (
-                  <li onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      className="!grid place-content-center hover:!bg-transparent text-lg min-h-[200px]"
-                    >
-                      <div className="mx-auto ring-4 ring-primary/30 rounded-full mb-4 text-primary">
-                        <IconInfoCircle fill={true} className="w-10 h-10" />
-                      </div>
-                      No data available.
-                    </button>
-                  </li>
-                )}
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8 text-center text-sm">
+                      <span className="rounded-full p-3 text-primary ring-4 ring-primary/30">
+                        <Info className="h-10 w-10" strokeWidth={1.8} />
+                      </span>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No data available.
+                      </p>
+                    </div>
+                  )}
+                </li>
+                <li className="px-5 py-3 text-center">
+                  <button
+                    type="button"
+                    className="group inline-flex items-center justify-center text-sm font-semibold text-primary transition hover:underline"
+                  >
+                    <span className="ltr:mr-1 rtl:ml-1">
+                      View all activities
+                    </span>
+                    <ArrowRight
+                      className="h-4.5 w-4.5 transition group-hover:translate-x-1 ltr:ml-1 rtl:mr-1"
+                      strokeWidth={1.8}
+                    />
+                  </button>
+                </li>
               </ul>
             </Dropdown>
           </div>
-          <div className="dropdown shrink-0 flex">
+
+          <div className="dropdown shrink-0">
             <Dropdown
               offset={[0, 8]}
-              placement={`${isRtl ? "bottom-start" : "bottom-end"}`}
-              btnClassName="relative group rounded-full p-0.5 border border-gray-200/70 bg-white/80 shadow-sm transition hover:border-primary/30 dark:border-gray-800 dark:bg-black/60"
+              placement={isRtl ? "bottom-start" : "bottom-end"}
+              btnClassName={`${actionBtnClass} relative`}
+              button={
+                <Bell className="h-5 w-5" strokeWidth={1.8} />
+              }
+            >
+              <ul className="w-[320px] divide-y divide-gray-100/80 text-dark dark:divide-white/10 dark:text-white-dark sm:w-[360px]">
+                <li onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between px-5 py-3 font-semibold">
+                    <h4 className="text-lg">Notifications</h4>
+                    {notifications.length ? (
+                      <span className="rounded-full bg-primary/80 px-3 py-1 text-xs text-white">
+                        {notifications.length} New
+                      </span>
+                    ) : null}
+                  </div>
+                </li>
+                <li
+                  className="max-h-[320px] overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {notifications.length ? (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className="group flex items-center gap-3 px-5 py-3 transition"
+                      >
+                        <div className="relative h-12 w-12">
+                          <img
+                            className="h-12 w-12 rounded-full object-cover"
+                            alt={`${notification.name} avatar`}
+                            src={notification.profile}
+                          />
+                          {notification.status !== "offline" && (
+                            <span className="absolute bottom-0 right-1 block h-2 w-2 rounded-full bg-success"></span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold dark:text-white-light/90">
+                            {notification.name}
+                          </p>
+                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                            {notification.action}
+                          </p>
+                          <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">
+                            {notification.time}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="text-neutral-400 opacity-0 transition hover:text-danger group-hover:opacity-100"
+                          aria-label={
+                            t("Dismiss notification") || "Dismiss notification"
+                          }
+                          onClick={() => removeNotification(notification.id)}
+                        >
+                          <X className="h-4.5 w-4.5" strokeWidth={1.8} />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8 text-center text-sm">
+                      <span className="rounded-full p-3 text-primary ring-4 ring-primary/30">
+                        <Info className="h-10 w-10" strokeWidth={1.8} />
+                      </span>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No data available.
+                      </p>
+                    </div>
+                  )}
+                </li>
+                <li className="px-5 py-3">
+                  <button className="btn-primary w-full bg-amber-400 text-sm font-semibold">
+                    Read All Notifications
+                  </button>
+                </li>
+              </ul>
+            </Dropdown>
+          </div>
+
+          <div className="dropdown shrink-0">
+            <Dropdown
+              offset={[0, 8]}
+              placement={isRtl ? "bottom-start" : "bottom-end"}
+              btnClassName="group relative rounded-full border border-gray-200/80 bg-white p-0.5 shadow-sm transition hover:border-primary/40 dark:border-gray-700 dark:bg-gray-900/80"
               button={
                 <img
-                  className="w-9 h-9 rounded-full object-cover saturate-50 group-hover:saturate-100 transition"
+                  className="h-9 w-9 rounded-full object-cover saturate-50 transition group-hover:saturate-100"
                   src={profile7}
-                  alt="userProfile"
+                  alt="User avatar"
                 />
               }
             >
-              <ul className="text-dark dark:text-white-dark !py-0 w-[230px] font-semibold dark:text-white-light/90">
+              <ul className="w-[230px] font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img
-                      className="rounded-md w-10 h-10 object-cover"
+                      className="h-10 w-10 rounded-md object-cover"
                       src={profile7}
-                      alt="userProfile"
+                      alt="User avatar"
                     />
                     <div className="ltr:pl-4 rtl:pr-4 truncate">
                       <h4 className="text-base">
                         John Doe
-                        <span className="text-xs bg-success-light rounded text-success px-1 ltr:ml-2 rtl:ml-2">
+                        <span className="ltr:ml-2 rtl:ml-2 rounded bg-success-light px-1 text-xs text-success">
                           Pro
                         </span>
                       </h4>
                       <button
                         type="button"
-                        className="text-black/60 hover:text-primary dark:text-dark-light/60 dark:hover:text-white"
+                        className="text-sm text-black/60 transition hover:text-primary dark:text-dark-light/60 dark:hover:text-white"
                       >
                         johndoe@gmail.com
                       </button>
@@ -525,24 +522,38 @@ const AdminHeader = () => {
                   </div>
                 </li>
                 <li>
-                  <Link to="/users/profile" className="dark:hover:text-white">
-                    <IconUser className="w-4.5 h-4.5 ltr:mr-2 rtl:ml-2 shrink-0" />
+                  <Link
+                    to="/users/profile"
+                    className="flex items-center px-4 py-2 hover:text-primary dark:hover:text-white"
+                  >
+                    <User
+                      className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2"
+                      strokeWidth={1.8}
+                    />
                     Profile
                   </Link>
                 </li>
-
                 <li>
                   <Link
                     to="/auth/boxed-lockscreen"
-                    className="dark:hover:text-white"
+                    className="flex items-center px-4 py-2 hover:text-primary dark:hover:text-white"
                   >
-                    <IconLockDots className="w-4.5 h-4.5 ltr:mr-2 rtl:ml-2 shrink-0" />
+                    <Lock
+                      className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2"
+                      strokeWidth={1.8}
+                    />
                     Lock Screen
                   </Link>
                 </li>
                 <li className="border-t border-white-light dark:border-white-light/10">
-                  <Link to="/auth/boxed-signin" className="text-danger !py-3">
-                    <IconLogout className="w-4.5 h-4.5 ltr:mr-2 rtl:ml-2 rotate-90 shrink-0" />
+                  <Link
+                    to="/auth/boxed-signin"
+                    className="flex items-center px-4 py-3 text-danger hover:text-danger"
+                  >
+                    <LogOut
+                      className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2"
+                      strokeWidth={1.8}
+                    />
                     Sign Out
                   </Link>
                 </li>
@@ -551,8 +562,14 @@ const AdminHeader = () => {
           </div>
         </div>
       </div>
+      {searchOpen && (
+        <div className="sm:hidden border-b border-gray-200/80 bg-white/95 px-6 pb-3 dark:border-gray-800 dark:bg-black/80">
+          <SearchBar />
+        </div>
+      )}
     </header>
   );
 };
 
 export default AdminHeader;
+
