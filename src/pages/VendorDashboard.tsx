@@ -28,6 +28,7 @@ import QuickActionTile from "@/components/vendor-dashboard/QuickActionTile";
 import SectionHeader from "@/components/vendor-dashboard/SectionHeader";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import MyBusinessPanel from "@/components/vendor-dashboard/MyBusinessPanel";
+import { DashboardContainer, DashboardGrid, DashboardCol } from "@/components/dashboard";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
 
@@ -364,7 +365,7 @@ const VendorDashboard = () => {
   ).length;
 
   return (
-    <div className={`max-w-[1400px] mx-auto px-6 ${sectionSpacing}`}>
+    <DashboardContainer className={`max-w-[1400px] ${sectionSpacing}`}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
@@ -377,7 +378,7 @@ const VendorDashboard = () => {
             {vendorProfile.city.name} | {vendorProfile.contactPhone}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={vendorProfile.status} />
           <StatusPill status={vendorProfile.kycStatus} />
           <button
@@ -391,7 +392,7 @@ const VendorDashboard = () => {
       </div>
 
       {alerts.length > 0 && (
-        <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800">
+        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800">
           <div className="flex items-center gap-2">
             <HiOutlineExclamationTriangle className="h-4 w-4" />
             <span>{alerts[0].message}</span>
@@ -419,9 +420,9 @@ const VendorDashboard = () => {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-8 space-y-4">
-          <div className={`rounded-xl border border-slate-200 bg-white ${cardPadding}`}>
+      <DashboardGrid columns="grid-cols-1 lg:grid-cols-12">
+        <DashboardCol span={8} className="space-y-3">
+          <div className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
@@ -438,7 +439,7 @@ const VendorDashboard = () => {
                 View reports 
               </NavLink>
             </div>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 min-h-38 xl:grid-cols-3">
               <VendorStatCard
                 title="Leads today"
                 value={leadSubscription?.leadsToday ?? 0}
@@ -526,9 +527,9 @@ const VendorDashboard = () => {
               </div>
             </div>
           </div>
-        </div>
+        </DashboardCol>
 
-        <div className="lg:col-span-4 space-y-3">
+        <DashboardCol span={4} className="space-y-2.5">
           <ProfileScoreCard
             variant="compact"
             score={profileScore.score}
@@ -537,7 +538,7 @@ const VendorDashboard = () => {
             ctaLabel="Increase Score"
             ctaTo="/vendor/profile"
           />
-          <div className="rounded-xl border border-slate-200 bg-white px-3 py-3 space-y-2">
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-900">Subscription Status</p>
               <StatusPill
@@ -562,7 +563,7 @@ const VendorDashboard = () => {
               </NavLink>
             </div>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white px-3 py-3 space-y-2">
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-900">Critical Alerts</p>
               <span className="text-[11px] text-slate-500">{alerts.length} open</span>
@@ -591,14 +592,14 @@ const VendorDashboard = () => {
               )}
             </div>
           </div>
-        </div>
-      </div>
+        </DashboardCol>
+      </DashboardGrid>
 
       <MyBusinessPanel className={cardPadding} />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-8 space-y-4">
-          <div className={`rounded-xl border border-slate-200 bg-white ${cardPadding}`}>
+      <DashboardGrid columns="grid-cols-1 lg:grid-cols-12">
+        <DashboardCol span={8} className="space-y-3">
+          <div className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}>
             <div className="flex items-center justify-between">
               <SectionHeader title="Quick actions" />
               <NavLink
@@ -651,7 +652,7 @@ const VendorDashboard = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white px-3 py-3 space-y-2.5">
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-3 space-y-2.5">
             <SectionHeader title="Today's Focus" />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {[
@@ -662,7 +663,7 @@ const VendorDashboard = () => {
                 <NavLink
                   key={task.label}
                   to={task.to}
-                  className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
                 >
                   <span className="flex items-center gap-2">
                     <span className="grid h-4 w-4 place-items-center rounded-[4px] border border-slate-300 bg-white" />
@@ -673,51 +674,110 @@ const VendorDashboard = () => {
               ))}
             </div>
           </div>
-        </div>
+        </DashboardCol>
 
-        <div className="lg:col-span-4 space-y-3">
-          <div className={`rounded-xl border border-slate-200 bg-white ${cardPadding} space-y-2.5`}>
+        <DashboardCol span={4} className="space-y-2.5">
+          <div className={`rounded-lg border border-slate-200 bg-white ${cardPadding} space-y-2.5`}>
             <SectionHeader title="Performance Pulse" />
+            <p className="text-xs text-slate-500">Live health of leads, conversion, and cash.</p>
+            <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
+                Leads remaining: {leadsRemaining}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+                Conversion: {conversionRate}%
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
+                Wallet: {currencyFormatter(wallet.balance, wallet.currency)}
+              </span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 ${planExpired ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
+                Plan {planExpired ? "expired" : "active"}
+              </span>
+            </div>
+            <div className="h-px w-full bg-slate-100" />
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
                 <p className="text-sm font-semibold text-slate-900">Pipeline & quota</p>
-                <ul className="space-y-1.5 text-sm text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <HiOutlineEnvelopeOpen className="mt-0.5 h-4 w-4 text-blue-500" />
-                    <span>Leads today: {leadSubscription.leadsToday} / {leadSubscription.plan.leadsPerDay}</span>
+                <ul className="space-y-1 text-sm text-slate-700">
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineEnvelopeOpen className="mt-0.5 h-4 w-4 text-blue-500" />
+                      Leads today
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {leadSubscription.leadsToday}/{leadSubscription.plan.leadsPerDay}
+                    </span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <HiOutlineCheckCircle className="mt-0.5 h-4 w-4 text-emerald-500" />
-                    <span>Conversion last 7 days: {conversionRate}%</span>
+                  <li>
+                    <div className="flex items-center justify-between text-[11px] text-slate-600">
+                      <span>Usage</span>
+                      <span>{Math.round((leadSubscription.leadsToday / leadSubscription.plan.leadsPerDay) * 100)}%</span>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white">
+                      <div
+                        className="h-1.5 rounded-full bg-blue-500"
+                        style={{
+                          width: `${Math.min(
+                            (leadSubscription.leadsToday / leadSubscription.plan.leadsPerDay) * 100,
+                            100
+                          )}%`,
+                        }}
+                      />
+                    </div>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <HiOutlineCalendarDays className="mt-0.5 h-4 w-4 text-amber-500" />
-                    <span>Next reset: 00:00 daily</span>
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineCheckCircle className="mt-0.5 h-4 w-4 text-emerald-500" />
+                      Conversion (7d)
+                    </span>
+                    <span className="font-semibold text-slate-900">{conversionRate}%</span>
+                  </li>
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineCalendarDays className="mt-0.5 h-4 w-4 text-amber-500" />
+                      Next reset
+                    </span>
+                    <span className="text-xs text-slate-600">00:00 daily</span>
                   </li>
                 </ul>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
                 <p className="text-sm font-semibold text-slate-900">Money & payouts</p>
-                <ul className="space-y-1.5 text-sm text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <HiOutlineBanknotes className="mt-0.5 h-4 w-4 text-emerald-500" />
-                    <span>Revenue (MTD): {currencyFormatter(revenueThisMonth, wallet.currency)}</span>
+                <ul className="space-y-1 text-sm text-slate-700">
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineBanknotes className="mt-0.5 h-4 w-4 text-emerald-500" />
+                      Revenue (MTD)
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {currencyFormatter(revenueThisMonth, wallet.currency)}
+                    </span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <HiOutlineWallet className="mt-0.5 h-4 w-4 text-blue-500" />
-                    <span>Wallet balance: {currencyFormatter(wallet.balance, wallet.currency)}</span>
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineWallet className="mt-0.5 h-4 w-4 text-blue-500" />
+                      Wallet balance
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {currencyFormatter(wallet.balance, wallet.currency)}
+                    </span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <HiOutlineCurrencyRupee className="mt-0.5 h-4 w-4 text-amber-500" />
-                    <span>Pending payout requests: {payoutsMeta.pendingRequests}</span>
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineCurrencyRupee className="mt-0.5 h-4 w-4 text-amber-500" />
+                      Pending payouts
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {payoutsMeta.pendingRequests}
+                    </span>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </DashboardCol>
+      </DashboardGrid>
+    </DashboardContainer>
   );
 };
 
