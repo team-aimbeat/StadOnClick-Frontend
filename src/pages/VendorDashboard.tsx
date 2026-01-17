@@ -2,24 +2,28 @@
 import { NavLink } from "react-router-dom";
 import {
   HiOutlineBanknotes,
-  HiOutlineBolt,
   HiOutlineCalendarDays,
-  HiOutlineChatBubbleBottomCenterText,
   HiOutlineCheckCircle,
   HiOutlineChevronRight,
-  HiOutlineClipboardDocumentList,
-  HiOutlineCog6Tooth,
   HiOutlineCurrencyRupee,
   HiOutlineEnvelopeOpen,
   HiOutlineExclamationTriangle,
-  HiOutlineMegaphone,
-  HiOutlinePhoto,
-  HiOutlineRocketLaunch,
-  HiOutlineShieldCheck,
-  HiOutlineSparkles,
-  HiOutlineTicket,
   HiOutlineWallet,
 } from "react-icons/hi2";
+import {
+  Sparkles,
+  Mail,
+  MessageCircleMore,
+  Image as LucideImage,
+  TicketPercent,
+  ClipboardList,
+  Wallet2,
+  CreditCard,
+  ShieldCheck,
+  Megaphone,
+  Rocket,
+  Settings,
+} from "lucide-react";
 
 import DashboardBanner from "@/components/vendor-dashboard/DashboardBanner";
 import VendorStatCard from "@/components/vendor-dashboard/VendorStatCard";
@@ -682,67 +686,79 @@ const VendorDashboard = () => {
               {[
                 {
                   label: "Add Service",
-                  icon: HiOutlineSparkles,
+                  icon: Sparkles,
                   to: "/vendor/services",
+                  tone: "violet" as const,
                 },
                 {
                   label: "View Leads",
-                  icon: HiOutlineEnvelopeOpen,
+                  icon: Mail,
                   to: "/vendor/leads",
+                  tone: "blue" as const,
                 },
                 {
                   label: "Reply Leads",
-                  icon: HiOutlineChatBubbleBottomCenterText,
+                  icon: MessageCircleMore,
                   to: "/vendor/leads/new",
+                  tone: "emerald" as const,
                 },
                 {
                   label: "Upload Photos",
-                  icon: HiOutlinePhoto,
+                  icon: LucideImage,
                   to: "/vendor/media",
+                  tone: "rose" as const,
                 },
                 {
                   label: "Create Coupon",
-                  icon: HiOutlineTicket,
+                  icon: TicketPercent,
                   to: "/vendor/coupons",
+                  tone: "amber" as const,
                 },
                 {
                   label: "Bookings",
-                  icon: HiOutlineClipboardDocumentList,
+                  icon: ClipboardList,
                   to: "/vendor/bookings/upcoming",
+                  tone: "slate" as const,
                 },
                 {
                   label: "Request Payout",
-                  icon: HiOutlineWallet,
+                  icon: Wallet2,
                   to: "/vendor/payouts",
+                  tone: "emerald" as const,
                 },
                 {
                   label: "Connect Stripe",
-                  icon: HiOutlineCurrencyRupee,
+                  icon: CreditCard,
                   to: "/vendor/stripe",
                   showDot: !vendorProfile.stripeAccountId,
+                  tone: "violet" as const,
                 },
                 {
                   label: "KYC",
-                  icon: HiOutlineShieldCheck,
+                  icon: ShieldCheck,
                   to: "/vendor/kyc",
                   showDot: vendorProfile.kycStatus !== "VERIFIED",
+                  tone: "amber" as const,
                 },
                 {
                   label: planExpired ? "Buy Plan" : "Upgrade Plan",
-                  icon: HiOutlineMegaphone,
+                  icon: Megaphone,
                   to: "/vendor/subscription",
                   badge: planExpired ? "Expired" : undefined,
                   showDot: planExpired,
+                  tone: "blue" as const,
                 },
                 {
                   label: "Promote",
-                  icon: HiOutlineRocketLaunch,
+                  icon: Rocket,
                   to: "/vendor/promote",
+                  tone: "rose" as const,
                 },
                 {
                   label: "Profile Settings",
-                  icon: HiOutlineCog6Tooth,
+                  icon: Settings,
                   to: "/vendor/profile",
+                  tone: "slate" as const,
                 },
               ].map((action) => (
                 <QuickActionTile
@@ -750,6 +766,7 @@ const VendorDashboard = () => {
                   icon={action.icon}
                   label={action.label}
                   to={action.to}
+                  tone={action.tone}
                   badge={
                     "badge" in action
                       ? (action as { badge?: string }).badge
@@ -792,26 +809,29 @@ const VendorDashboard = () => {
           </div>
         </DashboardCol>
 
-        <DashboardCol span={4} className="space-y-2.5">
+     <DashboardCol span={4} className="flex h-full flex-col justify-center">
+
           <div
-            className={`rounded-lg border min-h-82 border-slate-200 bg-white ${cardPadding} space-y-2.5`}
+            className={`rounded-lg border border-slate-200 bg-white ${cardPadding} space-y-2.5`}
           >
             <SectionHeader title="Performance Pulse" />
             <p className="text-xs text-slate-500">
               Live health of leads, conversion, and cash.
             </p>
-            <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
+
+            {/* Pills */}
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold sm:grid-cols-4">
+              <span className="inline-flex items-center justify-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
                 Leads remaining: {leadsRemaining}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+              <span className="inline-flex items-center justify-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
                 Conversion: {conversionRate}%
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
+              <span className="inline-flex items-center justify-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
                 Wallet: {currencyFormatter(wallet.balance, wallet.currency)}
               </span>
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 ${
+                className={`inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-1 ${
                   planExpired
                     ? "bg-rose-50 text-rose-700"
                     : "bg-emerald-50 text-emerald-700"
@@ -820,12 +840,16 @@ const VendorDashboard = () => {
                 Plan {planExpired ? "expired" : "active"}
               </span>
             </div>
+
             <div className="h-px w-full bg-slate-100" />
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+
+            {/* Panels */}
+            <div className="grid gap-3 md:grid-cols-2 items-stretch">
+              <div className="h-full space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
                 <p className="text-sm font-semibold text-slate-900">
                   Pipeline & quota
                 </p>
+
                 <ul className="space-y-1 text-sm text-slate-700">
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
@@ -837,6 +861,7 @@ const VendorDashboard = () => {
                       {leadSubscription.plan.leadsPerDay}
                     </span>
                   </li>
+
                   <li>
                     <div className="flex items-center justify-between text-[11px] text-slate-600">
                       <span>Usage</span>
@@ -863,6 +888,7 @@ const VendorDashboard = () => {
                       />
                     </div>
                   </li>
+
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <HiOutlineCheckCircle className="mt-0.5 h-4 w-4 text-emerald-500" />
@@ -872,6 +898,7 @@ const VendorDashboard = () => {
                       {conversionRate}%
                     </span>
                   </li>
+
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <HiOutlineCalendarDays className="mt-0.5 h-4 w-4 text-amber-500" />
@@ -881,10 +908,12 @@ const VendorDashboard = () => {
                   </li>
                 </ul>
               </div>
-              <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+
+              <div className="h-full space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
                 <p className="text-sm font-semibold text-slate-900">
                   Money & payouts
                 </p>
+
                 <ul className="space-y-1 text-sm text-slate-700">
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
@@ -895,6 +924,7 @@ const VendorDashboard = () => {
                       {currencyFormatter(revenueThisMonth, wallet.currency)}
                     </span>
                   </li>
+
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <HiOutlineWallet className="mt-0.5 h-4 w-4 text-blue-500" />
@@ -904,6 +934,7 @@ const VendorDashboard = () => {
                       {currencyFormatter(wallet.balance, wallet.currency)}
                     </span>
                   </li>
+
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <HiOutlineCurrencyRupee className="mt-0.5 h-4 w-4 text-amber-500" />
@@ -915,6 +946,23 @@ const VendorDashboard = () => {
                   </li>
                 </ul>
               </div>
+            </div>
+
+            {/* Footer actions */}
+            <div className="flex items-center justify-between pt-1">
+              <NavLink
+                to="/vendor/leads"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+              >
+                View leads →
+              </NavLink>
+
+              <NavLink
+                to="/vendor/subscription"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-800"
+              >
+                Manage subscription →
+              </NavLink>
             </div>
           </div>
         </DashboardCol>
