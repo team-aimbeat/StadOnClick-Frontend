@@ -58,7 +58,7 @@ export default function VendorSidebar() {
     <aside
       className={cn(
         "sidebar fixed inset-y-0 z-40 bg-white shadow-sm transition-[width] duration-300 ease-out",
-        isCollapsed ? "w-[78px]" : "w-[280px]"
+        isCollapsed ? "w-[72px]" : "w-[260px]"
       )}
       data-collapsed={isCollapsed}
     >
@@ -80,7 +80,7 @@ export default function VendorSidebar() {
         </div>
       </div>
       <PerfectScrollbar className="h-[calc(100vh-76px)]">
-        <div className="space-y-6 px-3 pb-6">
+        <div className="space-y-6 px-3 mt-4 pb-6">
           {navGroups.map((group) => (
             <div key={group.label} className="space-y-2">
               {!isCollapsed && (
