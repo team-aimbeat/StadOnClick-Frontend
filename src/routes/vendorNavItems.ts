@@ -70,12 +70,12 @@ export const getVendorNavGroups = ({
           { label: "All Leads", to: "/vendor/leads" },
           {
             label: "New Leads",
-            to: "/vendor/leads/new",
+            to: "/vendor/leads?status=NEW",
             badge: newLeads > 0 ? `${newLeads}` : undefined,
           },
-          { label: "Contacted Leads", to: "/vendor/leads/contacted" },
-          { label: "Converted Leads", to: "/vendor/leads/converted" },
-          { label: "Lost Leads", to: "/vendor/leads/lost" },
+          { label: "Contacted Leads", to: "/vendor/leads?status=CONTACTED" },
+          { label: "Converted Leads", to: "/vendor/leads?status=CONVERTED" },
+          { label: "Lost Leads", to: "/vendor/leads?status=LOST" },
         ],
       },
       {

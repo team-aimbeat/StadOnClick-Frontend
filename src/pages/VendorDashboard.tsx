@@ -402,7 +402,7 @@ const VendorDashboard = () => {
   ).length;
 
   return (
-    <DashboardContainer className={`max-w-[1500px] ${sectionSpacing}`}>
+    <DashboardContainer className={`${sectionSpacing}`}>
       <TitleBreadCrumbs
         title="Vendor Dashboard"
         breadCrumbTitle="Vendor / Dashboard"

@@ -38,9 +38,10 @@ export default function VendorSidebar() {
     navGroups.forEach((group) => {
       group.items.forEach((item) => {
         if (!item.children) return;
-        const childActive = item.children.some((child) =>
-          location.pathname.startsWith(child.to)
-        );
+        const childActive = item.children.some((child) => {
+          const childPath = child.to.split("?")[0];
+          return location.pathname.startsWith(childPath);
+        });
         if (childActive) {
           nextOpen[item.label] = true;
         }
@@ -155,31 +156,58 @@ export default function VendorSidebar() {
                                         dispatch(toggleSidebar());
                                       }
                                     }}
-                                    className={({ isActive }) =>
-                                      cn(
+                                    className={({ isActive }) => {
+                                      const target = new URL(child.to, window.location.origin);
+                                      const hasSearch = !!target.search;
+                                      const matchesSearch =
+                                        location.pathname === target.pathname &&
+                                        location.search === target.search;
+                                      const matchesNoSearch =
+                                        !hasSearch &&
+                                        location.pathname === target.pathname &&
+                                        location.search === "";
+                                      const displayActive = hasSearch
+                                        ? matchesSearch
+                                        : matchesNoSearch && isActive;
+                                      return cn(
                                         "flex items-center justify-between rounded-md px-2.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50",
-                                        isActive && "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
-                                      )
-                                    }
+                                        displayActive &&
+                                          "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+                                      );
+                                    }}
                                   >
-                                    {({ isActive }) => (
-                                      <>
-                                        <div className="flex items-center gap-2">
-                                          <span
-                                            className={cn(
-                                              "h-1.5 w-1.5 rounded-full",
-                                              isActive ? "bg-blue-600" : "bg-slate-300"
-                                            )}
-                                          />
-                                          <span>{child.label}</span>
-                                        </div>
-                                        {child.badge ? (
-                                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                                            {child.badge}
-                                          </span>
-                                        ) : null}
-                                      </>
-                                    )}
+                                    {({ isActive }) => {
+                                      const target = new URL(child.to, window.location.origin);
+                                      const hasSearch = !!target.search;
+                                      const matchesSearch =
+                                        location.pathname === target.pathname &&
+                                        location.search === target.search;
+                                      const matchesNoSearch =
+                                        !hasSearch &&
+                                        location.pathname === target.pathname &&
+                                        location.search === "";
+                                      const displayActive = hasSearch
+                                        ? matchesSearch
+                                        : matchesNoSearch && isActive;
+                                      return (
+                                        <>
+                                          <div className="flex items-center gap-2">
+                                            <span
+                                              className={cn(
+                                                "h-1.5 w-1.5 rounded-full",
+                                                displayActive ? "bg-blue-600" : "bg-slate-300"
+                                              )}
+                                            />
+                                            <span>{child.label}</span>
+                                          </div>
+                                          {child.badge ? (
+                                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                              {child.badge}
+                                            </span>
+                                          ) : null}
+                                        </>
+                                      );
+                                    }}
                                   </NavLink>
                                 ))}
                               </div>

@@ -1,9 +1,10 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
 import VendorDashboard from "@/pages/VendorDashboard";
+import VendorLeads from "@/pages/VendorLeads";
 import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
@@ -104,17 +105,17 @@ const appRouter = createBrowserRouter([
       { path: "dashboard", element: <VendorDashboard /> },
       {
         path: "leads",
-        element: vendorPlaceholder("All Leads", "Track and respond to every incoming lead."),
+        element: <VendorLeads />,
       },
       {
         path: "leads/new",
-        element: vendorPlaceholder("New Leads", "Reply fast to improve conversion."),
+        element: <Navigate to="/vendor/leads?status=NEW" replace />,
       },
-      { path: "leads/contacted", element: vendorPlaceholder("Contacted Leads") },
-      { path: "leads/converted", element: vendorPlaceholder("Converted Leads") },
+      { path: "leads/contacted", element: <Navigate to="/vendor/leads?status=CONTACTED" replace /> },
+      { path: "leads/converted", element: <Navigate to="/vendor/leads?status=CONVERTED" replace /> },
       {
         path: "leads/lost",
-        element: vendorPlaceholder("Lost Leads", "Diagnose why leads are dropping."),
+        element: <Navigate to="/vendor/leads?status=LOST" replace />,
       },
       {
         path: "leads/sources",
