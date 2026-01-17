@@ -28,14 +28,25 @@ import QuickActionTile from "@/components/vendor-dashboard/QuickActionTile";
 import SectionHeader from "@/components/vendor-dashboard/SectionHeader";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import MyBusinessPanel from "@/components/vendor-dashboard/MyBusinessPanel";
-import { DashboardContainer, DashboardGrid, DashboardCol } from "@/components/dashboard";
+import {
+  DashboardContainer,
+  DashboardGrid,
+  DashboardCol,
+} from "@/components/dashboard";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
+import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 
 type VendorStatus = "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
 type KycStatus = "NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED";
 type LeadStatus = "NEW" | "CONTACTED" | "CONVERTED" | "LOST";
-type LeadSource = "PROFILE" | "SERVICE" | "MAP" | "SEARCH" | "WHATSAPP" | "CALL";
+type LeadSource =
+  | "PROFILE"
+  | "SERVICE"
+  | "MAP"
+  | "SEARCH"
+  | "WHATSAPP"
+  | "CALL";
 type BookingStatus =
   | "PENDING"
   | "CONFIRMED"
@@ -229,15 +240,31 @@ const calculateProfileScore = (
 ): { score: number; missing: string[] } => {
   const checks = [
     { label: "Add business name", score: 10, passed: !!profile.businessName },
-    { label: "Add business description", score: 8, passed: !!profile.description },
+    {
+      label: "Add business description",
+      score: 8,
+      passed: !!profile.description,
+    },
     { label: "Add contact email", score: 8, passed: !!profile.contactEmail },
     { label: "Add contact phone", score: 8, passed: !!profile.contactPhone },
     { label: "Add city", score: 6, passed: !!profile.cityId },
-    { label: "Upload KYC documents", score: 20, passed: profile.kycStatus === "VERIFIED" },
-    { label: "Connect Stripe payouts", score: 10, passed: !!profile.stripeAccountId },
+    {
+      label: "Upload KYC documents",
+      score: 20,
+      passed: profile.kycStatus === "VERIFIED",
+    },
+    {
+      label: "Connect Stripe payouts",
+      score: 10,
+      passed: !!profile.stripeAccountId,
+    },
     { label: "Enable payouts", score: 10, passed: profile.payoutsEnabled },
     { label: "Enable charges", score: 5, passed: profile.chargesEnabled },
-    { label: "Add at least 1 service", score: 10, passed: profile.activeServices > 0 },
+    {
+      label: "Add at least 1 service",
+      score: 10,
+      passed: profile.activeServices > 0,
+    },
     { label: "Get first review", score: 5, passed: profile.ratingCount > 0 },
   ];
 
@@ -246,7 +273,9 @@ const calculateProfileScore = (
     .reduce((sum, check) => sum + check.score, 0);
 
   const score = Math.min(achieved, 100);
-  const missing = checks.filter((check) => !check.passed).map((check) => check.label);
+  const missing = checks
+    .filter((check) => !check.passed)
+    .map((check) => check.label);
 
   return { score, missing };
 };
@@ -254,7 +283,9 @@ const calculateProfileScore = (
 const VendorDashboard = () => {
   const dispatch = useAppDispatch();
   const [compact, setCompact] = useState(true);
-  const sectionSpacing = compact ? "space-y-4 sm:space-y-5 lg:space-y-6" : "space-y-6 sm:space-y-7 lg:space-y-8";
+  const sectionSpacing = compact
+    ? "space-y-4 sm:space-y-5 lg:space-y-6"
+    : "space-y-6 sm:space-y-7 lg:space-y-8";
   const cardPadding = compact ? "p-4" : "p-5";
   const densePadding = compact ? "p-3" : "p-4";
 
@@ -268,7 +299,8 @@ const VendorDashboard = () => {
     new Date(leadSubscription.endsAt) < today;
 
   const leadsRemaining = Math.max(
-    (leadSubscription?.plan.leadsPerDay || 0) - (leadSubscription?.leadsToday || 0),
+    (leadSubscription?.plan.leadsPerDay || 0) -
+      (leadSubscription?.leadsToday || 0),
     0
   );
 
@@ -276,12 +308,15 @@ const VendorDashboard = () => {
     isSameDay(new Date(booking.createdAt), today)
   ).length;
 
-  const pendingBookings = bookings.filter((booking) => booking.status === "PENDING").length;
+  const pendingBookings = bookings.filter(
+    (booking) => booking.status === "PENDING"
+  ).length;
 
   const revenueThisMonth = bookings
     .filter((booking) => {
       const created = new Date(booking.createdAt);
-      const validStatus = booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
+      const validStatus =
+        booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
       return validStatus && isSameMonth(created, today);
     })
     .reduce((sum, booking) => sum + booking.priceFinal, 0);
@@ -289,22 +324,23 @@ const VendorDashboard = () => {
   const revenueLastMonth = 42000;
   const revenueVsLast =
     revenueLastMonth > 0
-      ? Math.round(((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100)
+      ? Math.round(
+          ((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100
+        )
       : 0;
 
   const leadsLast7 = vendorLeads.filter((lead) => {
     const created = new Date(lead.createdAt);
     return (today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24) <= 7;
   });
-  const convertedLast7 = leadsLast7.filter((lead) => lead.status === "CONVERTED").length;
+  const convertedLast7 = leadsLast7.filter(
+    (lead) => lead.status === "CONVERTED"
+  ).length;
   const conversionRate = leadsLast7.length
     ? Math.round((convertedLast7 / leadsLast7.length) * 100)
     : 0;
 
-  const profileScore = useMemo(
-    () => calculateProfileScore(vendorProfile),
-    []
-  );
+  const profileScore = useMemo(() => calculateProfileScore(vendorProfile), []);
 
   const pipelineCounts = vendorLeads.reduce<Record<LeadStatus, number>>(
     (acc, lead) => {
@@ -319,7 +355,8 @@ const VendorDashboard = () => {
       pending: bookings.filter((b) => b.status === "PENDING").length,
       confirmed: bookings.filter((b) => b.status === "CONFIRMED").length,
       completed: bookings.filter((b) => b.status === "COMPLETED").length,
-      refundRequested: bookings.filter((b) => b.status === "REFUND_REQUESTED").length,
+      refundRequested: bookings.filter((b) => b.status === "REFUND_REQUESTED")
+        .length,
     }),
     []
   );
@@ -365,12 +402,14 @@ const VendorDashboard = () => {
   ).length;
 
   return (
-    <DashboardContainer className={`max-w-[1400px] ${sectionSpacing}`}>
+    <DashboardContainer className={`max-w-[1500px] ${sectionSpacing}`}>
+      <TitleBreadCrumbs
+        title="Vendor Dashboard"
+        breadCrumbTitle="Vendor / Dashboard"
+      />
+
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-            Vendor dashboard
-          </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
             Welcome back, {vendorProfile.businessName}
           </h1>
@@ -422,7 +461,9 @@ const VendorDashboard = () => {
 
       <DashboardGrid columns="grid-cols-1 lg:grid-cols-12">
         <DashboardCol span={8} className="space-y-3">
-          <div className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}>
+          <div
+            className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}
+          >
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
@@ -436,7 +477,7 @@ const VendorDashboard = () => {
                 to="/vendor/insights"
                 className="text-xs font-semibold text-blue-600 hover:text-blue-500"
               >
-                View reports 
+                View reports
               </NavLink>
             </div>
             <div className="mt-3 grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 min-h-38 xl:grid-cols-3">
@@ -463,7 +504,9 @@ const VendorDashboard = () => {
               <VendorStatCard
                 title="Revenue (MTD)"
                 value={currencyFormatter(revenueThisMonth, wallet.currency)}
-                subtitle={`vs last month ${revenueVsLast > 0 ? "+" : ""}${revenueVsLast}%`}
+                subtitle={`vs last month ${
+                  revenueVsLast > 0 ? "+" : ""
+                }${revenueVsLast}%`}
                 trend={revenueVsLast >= 0 ? "up" : "down"}
                 percentage={Math.abs(revenueVsLast)}
                 icon={HiOutlineBanknotes}
@@ -473,49 +516,55 @@ const VendorDashboard = () => {
             </div>
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-                <p className="text-sm font-semibold text-slate-800">Lead pipeline</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  Lead pipeline
+                </p>
                 <p className="text-[11px] text-slate-500">Last 7 days</p>
                 <div className="mt-2 space-y-1.5">
-                  {(["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]).map(
-                    (status) => {
-                      const count = pipelineCounts[status];
-                      const total = vendorLeads.length || 1;
-                      const width = Math.max((count / total) * 100, 8);
-                      const colorMap: Record<LeadStatus, string> = {
-                        NEW: "bg-blue-500",
-                        CONTACTED: "bg-amber-500",
-                        CONVERTED: "bg-emerald-500",
-                        LOST: "bg-slate-400",
-                      };
-                      return (
-                        <div key={status} className="space-y-1">
-                          <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                            <span>{status}</span>
-                            <span>{count}</span>
-                          </div>
-                          <div className="h-1.5 w-full rounded-full bg-white">
-                            <div
-                              className={`h-1.5 rounded-full ${colorMap[status]}`}
-                              style={{ width: `${width}%` }}
-                            />
-                          </div>
+                  {(
+                    ["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]
+                  ).map((status) => {
+                    const count = pipelineCounts[status];
+                    const total = vendorLeads.length || 1;
+                    const width = Math.max((count / total) * 100, 8);
+                    const colorMap: Record<LeadStatus, string> = {
+                      NEW: "bg-blue-500",
+                      CONTACTED: "bg-amber-500",
+                      CONVERTED: "bg-emerald-500",
+                      LOST: "bg-slate-400",
+                    };
+                    return (
+                      <div key={status} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                          <span>{status}</span>
+                          <span>{count}</span>
                         </div>
-                      );
-                    }
-                  )}
+                        <div className="h-1.5 w-full rounded-full bg-white">
+                          <div
+                            className={`h-1.5 rounded-full ${colorMap[status]}`}
+                            style={{ width: `${width}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-                <p className="text-sm font-semibold text-slate-800">Operations</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  Operations
+                </p>
                 <p className="text-[11px] text-slate-500">
-                  Conversion: {conversionRate}% | Refund risk: {bookingCounts.refundRequested}
+                  Conversion: {conversionRate}% | Refund risk:{" "}
+                  {bookingCounts.refundRequested}
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
                   <span className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                     Upcoming today: {upcomingToday}
                   </span>
                   <span className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                    Avg review: {vendorProfile.ratingAvg} ({vendorProfile.ratingCount})
+                    Avg review: {vendorProfile.ratingAvg} (
+                    {vendorProfile.ratingCount})
                   </span>
                   <span className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                     Active services: {services.active}
@@ -540,7 +589,9 @@ const VendorDashboard = () => {
           />
           <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Subscription Status</p>
+              <p className="text-sm font-semibold text-slate-900">
+                Subscription Status
+              </p>
               <StatusPill
                 status={planExpired ? "Expired" : "Active"}
                 tone={planExpired ? "danger" : "success"}
@@ -548,13 +599,17 @@ const VendorDashboard = () => {
               />
             </div>
             <p className="text-xs text-slate-500">
-              Plan: {leadSubscription.plan.name} | Expires: {formatDate(leadSubscription.endsAt)}
+              Plan: {leadSubscription.plan.name} | Expires:{" "}
+              {formatDate(leadSubscription.endsAt)}
             </p>
             <p className="text-xs text-slate-500">
-              Leads today: {leadSubscription.leadsToday} / {leadSubscription.plan.leadsPerDay}
+              Leads today: {leadSubscription.leadsToday} /{" "}
+              {leadSubscription.plan.leadsPerDay}
             </p>
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-slate-500">Resets: 00:00 daily</span>
+              <span className="text-xs text-slate-500">
+                Resets: 00:00 daily
+              </span>
               <NavLink
                 to="/vendor/subscription"
                 className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
@@ -565,31 +620,43 @@ const VendorDashboard = () => {
           </div>
           <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Critical Alerts</p>
-              <span className="text-[11px] text-slate-500">{alerts.length} open</span>
+              <p className="text-sm font-semibold text-slate-900">
+                Critical Alerts
+              </p>
+              <span className="text-[11px] text-slate-500">
+                {alerts.length} open
+              </span>
             </div>
             <div className="space-y-1">
-              {(alerts.length ? alerts : [{ message: "No critical alerts", tone: "info", actionLabel: "", to: "#" }]).map(
-                (alert) => (
-                  <div
-                    key={alert.message}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800"
-                  >
-                    <span className="flex items-center gap-2">
-                      <HiOutlineExclamationTriangle className="h-4 w-4 text-amber-500" />
-                      {alert.message}
-                    </span>
-                    {alert.actionLabel ? (
-                      <NavLink
-                        to={alert.to}
-                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-500"
-                      >
-                        {alert.actionLabel}
-                      </NavLink>
-                    ) : null}
-                  </div>
-                )
-              )}
+              {(alerts.length
+                ? alerts
+                : [
+                    {
+                      message: "No critical alerts",
+                      tone: "info",
+                      actionLabel: "",
+                      to: "#",
+                    },
+                  ]
+              ).map((alert) => (
+                <div
+                  key={alert.message}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800"
+                >
+                  <span className="flex items-center gap-2">
+                    <HiOutlineExclamationTriangle className="h-4 w-4 text-amber-500" />
+                    {alert.message}
+                  </span>
+                  {alert.actionLabel ? (
+                    <NavLink
+                      to={alert.to}
+                      className="text-[11px] font-semibold text-blue-600 hover:text-blue-500"
+                    >
+                      {alert.actionLabel}
+                    </NavLink>
+                  ) : null}
+                </div>
+              ))}
             </div>
           </div>
         </DashboardCol>
@@ -599,7 +666,9 @@ const VendorDashboard = () => {
 
       <DashboardGrid columns="grid-cols-1 lg:grid-cols-12">
         <DashboardCol span={8} className="space-y-3">
-          <div className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}>
+          <div
+            className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}
+          >
             <div className="flex items-center justify-between">
               <SectionHeader title="Quick actions" />
               <NavLink
@@ -611,13 +680,41 @@ const VendorDashboard = () => {
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 lg:grid-cols-6">
               {[
-                { label: "Add Service", icon: HiOutlineSparkles, to: "/vendor/services" },
-                { label: "View Leads", icon: HiOutlineEnvelopeOpen, to: "/vendor/leads" },
-                { label: "Reply Leads", icon: HiOutlineChatBubbleBottomCenterText, to: "/vendor/leads/new" },
-                { label: "Upload Photos", icon: HiOutlinePhoto, to: "/vendor/media" },
-                { label: "Create Coupon", icon: HiOutlineTicket, to: "/vendor/coupons" },
-                { label: "Bookings", icon: HiOutlineClipboardDocumentList, to: "/vendor/bookings/upcoming" },
-                { label: "Request Payout", icon: HiOutlineWallet, to: "/vendor/payouts" },
+                {
+                  label: "Add Service",
+                  icon: HiOutlineSparkles,
+                  to: "/vendor/services",
+                },
+                {
+                  label: "View Leads",
+                  icon: HiOutlineEnvelopeOpen,
+                  to: "/vendor/leads",
+                },
+                {
+                  label: "Reply Leads",
+                  icon: HiOutlineChatBubbleBottomCenterText,
+                  to: "/vendor/leads/new",
+                },
+                {
+                  label: "Upload Photos",
+                  icon: HiOutlinePhoto,
+                  to: "/vendor/media",
+                },
+                {
+                  label: "Create Coupon",
+                  icon: HiOutlineTicket,
+                  to: "/vendor/coupons",
+                },
+                {
+                  label: "Bookings",
+                  icon: HiOutlineClipboardDocumentList,
+                  to: "/vendor/bookings/upcoming",
+                },
+                {
+                  label: "Request Payout",
+                  icon: HiOutlineWallet,
+                  to: "/vendor/payouts",
+                },
                 {
                   label: "Connect Stripe",
                   icon: HiOutlineCurrencyRupee,
@@ -637,16 +734,32 @@ const VendorDashboard = () => {
                   badge: planExpired ? "Expired" : undefined,
                   showDot: planExpired,
                 },
-                { label: "Promote", icon: HiOutlineRocketLaunch, to: "/vendor/promote" },
-                { label: "Profile Settings", icon: HiOutlineCog6Tooth, to: "/vendor/profile" },
+                {
+                  label: "Promote",
+                  icon: HiOutlineRocketLaunch,
+                  to: "/vendor/promote",
+                },
+                {
+                  label: "Profile Settings",
+                  icon: HiOutlineCog6Tooth,
+                  to: "/vendor/profile",
+                },
               ].map((action) => (
                 <QuickActionTile
                   key={action.label}
                   icon={action.icon}
                   label={action.label}
                   to={action.to}
-                  badge={"badge" in action ? (action as { badge?: string }).badge : undefined}
-                  showDot={"showDot" in action ? (action as { showDot?: boolean }).showDot : undefined}
+                  badge={
+                    "badge" in action
+                      ? (action as { badge?: string }).badge
+                      : undefined
+                  }
+                  showDot={
+                    "showDot" in action
+                      ? (action as { showDot?: boolean }).showDot
+                      : undefined
+                  }
                 />
               ))}
             </div>
@@ -657,7 +770,10 @@ const VendorDashboard = () => {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {[
                 { label: "Reply to new leads", to: "/vendor/leads/new" },
-                { label: "Confirm upcoming bookings", to: "/vendor/bookings/upcoming" },
+                {
+                  label: "Confirm upcoming bookings",
+                  to: "/vendor/bookings/upcoming",
+                },
                 { label: "Complete KYC", to: "/vendor/kyc" },
               ].map((task) => (
                 <NavLink
@@ -677,9 +793,13 @@ const VendorDashboard = () => {
         </DashboardCol>
 
         <DashboardCol span={4} className="space-y-2.5">
-          <div className={`rounded-lg border border-slate-200 bg-white ${cardPadding} space-y-2.5`}>
+          <div
+            className={`rounded-lg border min-h-36 border-slate-200 bg-white ${cardPadding} space-y-2.5`}
+          >
             <SectionHeader title="Performance Pulse" />
-            <p className="text-xs text-slate-500">Live health of leads, conversion, and cash.</p>
+            <p className="text-xs text-slate-500">
+              Live health of leads, conversion, and cash.
+            </p>
             <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
                 Leads remaining: {leadsRemaining}
@@ -690,14 +810,22 @@ const VendorDashboard = () => {
               <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
                 Wallet: {currencyFormatter(wallet.balance, wallet.currency)}
               </span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 ${planExpired ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 ${
+                  planExpired
+                    ? "bg-rose-50 text-rose-700"
+                    : "bg-emerald-50 text-emerald-700"
+                }`}
+              >
                 Plan {planExpired ? "expired" : "active"}
               </span>
             </div>
             <div className="h-px w-full bg-slate-100" />
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
-                <p className="text-sm font-semibold text-slate-900">Pipeline & quota</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  Pipeline & quota
+                </p>
                 <ul className="space-y-1 text-sm text-slate-700">
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
@@ -705,20 +833,30 @@ const VendorDashboard = () => {
                       Leads today
                     </span>
                     <span className="font-semibold text-slate-900">
-                      {leadSubscription.leadsToday}/{leadSubscription.plan.leadsPerDay}
+                      {leadSubscription.leadsToday}/
+                      {leadSubscription.plan.leadsPerDay}
                     </span>
                   </li>
                   <li>
                     <div className="flex items-center justify-between text-[11px] text-slate-600">
                       <span>Usage</span>
-                      <span>{Math.round((leadSubscription.leadsToday / leadSubscription.plan.leadsPerDay) * 100)}%</span>
+                      <span>
+                        {Math.round(
+                          (leadSubscription.leadsToday /
+                            leadSubscription.plan.leadsPerDay) *
+                            100
+                        )}
+                        %
+                      </span>
                     </div>
                     <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white">
                       <div
                         className="h-1.5 rounded-full bg-blue-500"
                         style={{
                           width: `${Math.min(
-                            (leadSubscription.leadsToday / leadSubscription.plan.leadsPerDay) * 100,
+                            (leadSubscription.leadsToday /
+                              leadSubscription.plan.leadsPerDay) *
+                              100,
                             100
                           )}%`,
                         }}
@@ -730,7 +868,9 @@ const VendorDashboard = () => {
                       <HiOutlineCheckCircle className="mt-0.5 h-4 w-4 text-emerald-500" />
                       Conversion (7d)
                     </span>
-                    <span className="font-semibold text-slate-900">{conversionRate}%</span>
+                    <span className="font-semibold text-slate-900">
+                      {conversionRate}%
+                    </span>
                   </li>
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
@@ -742,7 +882,9 @@ const VendorDashboard = () => {
                 </ul>
               </div>
               <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
-                <p className="text-sm font-semibold text-slate-900">Money & payouts</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  Money & payouts
+                </p>
                 <ul className="space-y-1 text-sm text-slate-700">
                   <li className="flex items-start justify-between gap-2">
                     <span className="flex items-center gap-2">
@@ -782,6 +924,3 @@ const VendorDashboard = () => {
 };
 
 export default VendorDashboard;
-
-
-
