@@ -410,10 +410,10 @@ const VendorDashboard = () => {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-700">
             Welcome back, {vendorProfile.businessName}
           </h1>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm  text-slate-600 ">
             {vendorProfile.city.name} | {vendorProfile.contactPhone}
           </p>
         </div>
@@ -794,7 +794,7 @@ const VendorDashboard = () => {
 
         <DashboardCol span={4} className="space-y-2.5">
           <div
-            className={`rounded-lg border min-h-36 border-slate-200 bg-white ${cardPadding} space-y-2.5`}
+            className={`rounded-lg border min-h-82 border-slate-200 bg-white ${cardPadding} space-y-2.5`}
           >
             <SectionHeader title="Performance Pulse" />
             <p className="text-xs text-slate-500">
