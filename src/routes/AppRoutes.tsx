@@ -21,6 +21,7 @@ import VendorPlaceholder from "@/pages/VendorPlaceholder";
 import AppLayout from "@/components/layout/AppLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import VendorLayout from "@/components/layout/VendorLayout";
+import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -103,6 +104,7 @@ const appRouter = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { path: "dashboard", element: <VendorDashboard /> },
+      
       {
         path: "leads",
         element: <VendorLeads />,
@@ -111,6 +113,7 @@ const appRouter = createBrowserRouter([
         path: "leads/new",
         element: <Navigate to="/vendor/leads?status=NEW" replace />,
       },
+      { path: "analytics", element: <VendorAnalyticsDashboard /> },
       { path: "leads/contacted", element: <Navigate to="/vendor/leads?status=CONTACTED" replace /> },
       { path: "leads/converted", element: <Navigate to="/vendor/leads?status=CONVERTED" replace /> },
       {

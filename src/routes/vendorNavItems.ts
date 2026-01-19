@@ -57,6 +57,11 @@ export const getVendorNavGroups = ({
         icon: HiOutlineHome,
         to: "/vendor/dashboard",
       },
+      {
+        label: "Analytics",
+        icon: HiOutlinePresentationChartLine,
+        to: "/vendor/analytics",
+      },
     ],
   },
   {

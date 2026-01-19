@@ -245,7 +245,7 @@ const VendorHeader = () => {
           <div className="hidden w-full max-w-[520px] sm:block">
             <SearchBar />
           </div>
-          <div className="sm:hidden">
+          <div className="sm:hidden">  
             <button
               type="button"
               onClick={() => setSearchOpen((prev) => !prev)}
