@@ -137,6 +137,21 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     },
 
     // =========================
+    // BOOKINGS (vendor)
+    // =========================
+    {
+      id: "bookings",
+      label: t("Bookings"),
+      icon: HiClipboardDocumentCheck,
+      children: [
+        { label: t("All Bookings"), to: withBase("bookings") },
+        { label: t("Upcoming"), to: withBase("bookings/upcoming") },
+        { label: t("Completed"), to: withBase("bookings/completed") },
+        { label: t("Refunds"), to: withBase("bookings/refunds") },
+      ],
+    },
+
+    // =========================
     // PAYOUTS / FINANCE (future-ready)
     // =========================
     {
