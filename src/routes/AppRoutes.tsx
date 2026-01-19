@@ -13,6 +13,8 @@ import Kyc from "@/pages/Kyc";
 import ChatBox from "@/pages/ChatBox";
 import NotFound from "@/pages/NotFound";
 import About from "@/pages/About";
+import BookingsPage from "@/pages/BookingsPage";
+import VendorTableShowcase from "@/pages/VendorTableShowcase";
 import Teams from "@/pages/Teams";
 import Support from "@/pages/Support";
 import UserAccount from "@/pages/UserAccount";
@@ -114,6 +116,8 @@ const appRouter = createBrowserRouter([
         element: <Navigate to="/vendor/leads?status=NEW" replace />,
       },
       { path: "analytics", element: <VendorAnalyticsDashboard /> },
+      { path: "jobs", element: <VendorTableShowcase /> },
+      { path: "bookings", element: <BookingsPage /> },
       { path: "leads/contacted", element: <Navigate to="/vendor/leads?status=CONTACTED" replace /> },
       { path: "leads/converted", element: <Navigate to="/vendor/leads?status=CONVERTED" replace /> },
       {
@@ -126,11 +130,38 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "bookings",
-        element: vendorPlaceholder("Bookings", "Manage upcoming and past jobs."),
+        element: <BookingsPage />,
       },
-      { path: "bookings/upcoming", element: vendorPlaceholder("Upcoming Bookings") },
-      { path: "bookings/completed", element: vendorPlaceholder("Completed Bookings") },
-      { path: "bookings/refunds", element: vendorPlaceholder("Refund Requests") },
+      {
+        path: "bookings/upcoming",
+        element: (
+          <BookingsPage
+            defaultStatusFilter="confirmed"
+            titleOverride="Upcoming Bookings"
+            breadcrumbOverride="Vendor / Bookings / Upcoming"
+          />
+        ),
+      },
+      {
+        path: "bookings/completed",
+        element: (
+          <BookingsPage
+            defaultStatusFilter="completed"
+            titleOverride="Completed Bookings"
+            breadcrumbOverride="Vendor / Bookings / Completed"
+          />
+        ),
+      },
+      {
+        path: "bookings/refunds",
+        element: (
+          <BookingsPage
+            defaultStatusFilter="refund"
+            titleOverride="Refund Requests"
+            breadcrumbOverride="Vendor / Bookings / Refunds"
+          />
+        ),
+      },
       { path: "profile", element: vendorPlaceholder("Business Profile") },
       { path: "services", element: vendorPlaceholder("Services") },
       { path: "media", element: vendorPlaceholder("Photos & Media") },
