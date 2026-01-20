@@ -1,49 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "@/app/services/baseApi";
+import { RejectVendorRequest, Vendor, VendorApplication } from "../types/vendor.types";
 
-/**
- * Types (adjust as per your backend response)
- */
-export type VendorApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
-
-export type VendorApplication = {
-  id: string;
-  userId: string;
-  vendorProfileId?: string | null;
-  status: VendorApplicationStatus;
-  createdAt: string;
-  updatedAt: string;
-
-  // optional extras if your backend sends them
-  user?: {
-    id: string;
-    firstName: string;
-    lastName?: string | null;
-    email: string;
-    phone?: string | null;
-  };
-};
-
-export type Vendor = {
-  id: string;
-  userId: string;
-  businessName?: string | null;
-  createdAt: string;
-  updatedAt: string;
-
-  // optional extras
-  user?: {
-    id: string;
-    firstName: string;
-    lastName?: string | null;
-    email: string;
-    phone?: string | null;
-  };
-};
-
-export type RejectVendorRequest = {
-  reason: string;
-};
 
 export const adminVendorApi = createApi({
   reducerPath: "adminVendorApi",
