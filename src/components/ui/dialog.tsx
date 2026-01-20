@@ -23,14 +23,12 @@ const DialogOverlay = React.forwardRef<
     ref={ref}
     {...props}
     className={cn(
-      "fixed inset-0 z-50 bg-black/50",
-      "data-[state=open]:animate-in data-[state=open]:fade-in-0",
-      "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
-      "duration-200 ease-out",
+      "modal-overlay fixed inset-0 z-50 bg-black/50",
       className
     )}
   />
 ))
+
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 /* -------------------------------------------------------------------------- */
@@ -47,24 +45,11 @@ const DialogContent = React.forwardRef<
       ref={ref}
       {...props}
       className={cn(
-        // positioning
-        "fixed left-1/2 top-1/2 z-50 w-full max-w-[640px]",
+        "modal-content fixed  top-1/2 left-1/2 z-50 w-full max-w-[640px]",
         "-translate-x-1/2 -translate-y-1/2",
-
-        // visuals
         "rounded-3xl border border-slate-200 bg-white px-6 py-6",
         "shadow-[0_25px_45px_rgba(15,15,15,0.15)]",
-
-        // performance
         "will-change-[transform,opacity]",
-
-        // animation
-        "data-[state=open]:animate-in data-[state=open]:fade-in-0",
-        "data-[state=open]:slide-in-from-top-4 data-[state=open]:zoom-in-95",
-        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
-        "data-[state=closed]:slide-out-to-top-4 data-[state=closed]:zoom-out-95",
-        "duration-200 ease-out",
-
         className
       )}
     >
@@ -72,6 +57,7 @@ const DialogContent = React.forwardRef<
     </DialogPrimitive.Content>
   </DialogPortal>
 ))
+
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 /* -------------------------------------------------------------------------- */

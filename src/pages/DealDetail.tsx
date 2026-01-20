@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { Link, useParams } from "react-router-dom"
 import yogaImage from "@/assets/images/yoga.png"
 import eventImage from "@/assets/images/event.jpg"
@@ -72,6 +73,11 @@ export default function DealDetail() {
   const suggestions = serviceCategories.filter((item) =>
     suggestionSlugs.includes(item.slug),
   )
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle(deal ? deal.title : "Deal details"))
+  }, [dispatch, deal])
 
   if (!deal) {
     return (

@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 import {
   LineChart,
@@ -52,9 +52,13 @@ const GmvCard: React.FC<GmvCardProps> = ({
 
   const formattedValue = formatValue(value);
   const isPositive = trend === "up";
-  const percentageLabel = Number.isFinite(percentage)
-    ? `${percentage.toFixed(0)}%`
-    : `${percentage}%`;
+  const percentageLabel =
+    typeof percentage === "number"
+      ? `${Math.abs(percentage).toFixed(0)}%`
+      : percentage;
+  const percentDisplay = percentageLabel
+    ? `${isPositive ? "+" : "-"}${percentageLabel.replace(/^[+-]/, "")}`
+    : "";
 
   const maxValue = Math.max(...chartData.map((d) => d.value));
   const yAxisDomain = [0, maxValue * 1.2];
@@ -62,15 +66,18 @@ const GmvCard: React.FC<GmvCardProps> = ({
   return (
     <div
       className={cn(
-        "rounded-3xl  bg-white p-6 ",
-        "flex h-full flex-col gap-4",
+        "flex h-full flex-col gap-4 rounded-lg border border-slate-200 bg-white p-6",
         className
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{title}</p>
-          <p className="text-[32px] font-semibold text-slate-900">{formattedValue}</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            {title}
+          </p>
+          <p className="text-[32px] font-semibold text-slate-900">
+            {formattedValue}
+          </p>
         </div>
         <select
           value="Yearly"
@@ -84,29 +91,36 @@ const GmvCard: React.FC<GmvCardProps> = ({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-semibold",
-            isPositive
-              ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-              : "border-rose-100 bg-rose-50 text-rose-600"
-          )}
-        >
-          {isPositive ? "▲" : "▼"} {percentageLabel}
+        {percentDisplay && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-semibold",
+              isPositive
+                ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                : "border-rose-100 bg-rose-50 text-rose-600"
+            )}
+          >
+            {percentDisplay}
+          </span>
+        )}
+        <span className="text-sm font-semibold text-slate-500">
+          + $1,500 per day
         </span>
-        <span className="text-sm font-semibold text-slate-500">+ $1,500 per day</span>
       </div>
 
-      <div className="flex text-xs uppercase tracking-[0.3em] text-slate-400">
+      <div className="flex items-center text-xs uppercase tracking-[0.2em] text-slate-600">
         <span className="mr-2">{periodLabel}</span>
-        <span className="text-slate-300">•</span>
-        <span className="ml-2">Customers</span>
+        <span className="px-2 text-slate-300">/</span>
+        <span>Customers</span>
       </div>
 
       {showChart && (
         <div className="mt-2 h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+            >
               <CartesianGrid
                 stroke="#e5e7eb"
                 strokeDasharray="4 4"
@@ -162,4 +176,4 @@ const GmvCard: React.FC<GmvCardProps> = ({
   );
 };
 
-export default GmvCard;
+export default memo(GmvCard);

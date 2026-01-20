@@ -1,9 +1,11 @@
 ﻿import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
-import Sidebar from "./Sidebar";
+import VendorSidebar from "./VendorSidebar";
 import VendorHeader from "./VendorHeader";
 import Footer from "./Footer";
+import StatusPill from "../vendor-dashboard/StatusPill";
+import { HiOutlineBell, HiOutlineChevronDown } from "react-icons/hi2";
 
 export default function VendorLayout() {
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
@@ -11,17 +13,19 @@ export default function VendorLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar basePath="/vendor" />
+      <VendorSidebar />
 
       <div
         className={`
         flex flex-col flex-1
-        transition-[margin] duration-500 ease-in-out
+        transition-[margin] duration-300 ease-out
         lg:ml-[70px]
         ${!isSidebarCollapsed ? "lg:ml-[260px]" : ""}
       `}
       >
         <VendorHeader />
+
+        
 
         <main className="flex-1 p-6">
           <Outlet />

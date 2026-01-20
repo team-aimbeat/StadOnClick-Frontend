@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
@@ -30,6 +30,10 @@ interface ChartCardProps {
   activePeriod?: string;
   periodOptions?: string[];
   onPeriodChange?: (period: string) => void;
+  className?: string;
+  animate?: boolean;
+  animationDuration?: number;
+  animationEasing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear";
 }
 
 export const bookingsData = [
@@ -58,54 +62,78 @@ const ChartCard: React.FC<ChartCardProps> = ({
   secondaryLabel = "Last Week",
   showLegend = true,
   showPeriodSelect = true,
-  activePeriod = "Today",
-  periodOptions = ["Today", "Week", "Month"],
+  activePeriod = "Week",
+  periodOptions = ["Week", "Month", "Year"],
   onPeriodChange,
+  className,
+  animate = false,
+  animationDuration = 0,
+  animationEasing = "ease-out",
 }) => {
+  const showGrowthPlaceholder = true;
+
   return (
     <div
       className={cn(
-        "rounded-[32px]  bg-white p-6 ",
+        "flex h-full flex-col rounded-lg border border-slate-200 bg-white p-6",
+        className
       )}
     >
-      <div className="flex items-start justify-between">
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
-            {title}
-          </p>
-          
-          <p className="text-3xl font-bold text-slate-900">{value}</p>
+          <p className="text-sm font-semibold text-slate-900">{title}</p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-3xl font-semibold text-slate-900">{value}</span>
+            <span className="text-sm font-medium text-slate-500">SEK</span>
+          </div>
+          <p className="text-xs text-slate-500">Total booking value</p>
         </div>
-        {showPeriodSelect && (
-          <select
-            value={activePeriod}
-            onChange={(e) => onPeriodChange?.(e.target.value)}
-            className="rounded-full  bg-white px-3 py-1 text-xs font-semibold text-slate-600"
-          >
-            {periodOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        )}
+        <div className="flex items-start justify-end gap-4">
+          {showGrowthPlaceholder && (
+            <div className="text-right">
+              <div className="flex items-center justify-end gap-1 text-sm font-semibold text-emerald-700">
+                ↑ 4.2%
+              </div>
+              <p className="text-xs text-slate-500">vs last period</p>
+            </div>
+          )}
+          {showPeriodSelect && (
+            <select
+              value={activePeriod}
+              onChange={(e) => onPeriodChange?.(e.target.value)}
+              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600"
+            >
+              {periodOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       </div>
 
-      <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
+      <div className="mt-3 flex items-center gap-4 text-xs font-medium text-slate-600">
         <span className="inline-flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
-          {primaryLabel}: 500
+          {primaryLabel}
         </span>
         <span className="inline-flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#F97316]" />
-          {secondaryLabel}: 300
+          {secondaryLabel}
         </span>
       </div>
 
-      <div className="mt-6 h-[230px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+      <div
+        className="mt-6 flex-1"
+        style={{ minHeight: height }}
+      >
+        <ResponsiveContainer width="100%" height="100%" debounce={120}>
+          <BarChart
+            data={data}
+            margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
+            barCategoryGap="28%"
+          >
             <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
             <XAxis
               dataKey="day"
@@ -115,31 +143,52 @@ const ChartCard: React.FC<ChartCardProps> = ({
             />
             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#6B7280" }} />
             <Tooltip
+              cursor={{ fill: "rgba(15, 23, 42, 0.04)" }}
               contentStyle={{
-                borderRadius: 10,
+                borderRadius: 8,
+                border: "1px solid #E5E7EB",
                 fontSize: 12,
               }}
+              formatter={(
+                value: number | string | undefined,
+                name: string | number | undefined
+              ): [string, string] => {
+                const labelMap: Record<string, string> = {
+                  value1: "Current week",
+                  value2: "Last week",
+                };
+                const numeric = Number(value ?? 0);
+                const labelKey = name !== undefined ? String(name) : "";
+                const formattedValue = Number.isFinite(numeric)
+                  ? `SEK ${numeric.toLocaleString()}`
+                  : `SEK ${value ?? 0}`;
+                return [formattedValue, labelMap[labelKey] ?? ""];
+              }}
+              labelFormatter={(label) => `Month: ${label}`}
             />
-            <Bar dataKey="value1" fill={primaryColor} radius={[6, 6, 0, 0]} barSize={10} />
-            <Bar dataKey="value2" fill={secondaryColor} radius={[6, 6, 0, 0]} barSize={10} />
+            <Bar
+              dataKey="value1"
+              fill={primaryColor}
+              radius={[6, 6, 0, 0]}
+              barSize={14}
+              isAnimationActive={animate}
+              animationDuration={animationDuration}
+              animationEasing={animationEasing}
+            />
+            <Bar
+              dataKey="value2"
+              fill={secondaryColor}
+              radius={[6, 6, 0, 0]}
+              barSize={14}
+              isAnimationActive={animate}
+              animationDuration={animationDuration}
+              animationEasing={animationEasing}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      {showLegend && (
-        <div className="mt-4 flex items-center gap-4 text-xs font-semibold text-slate-500">
-          <span className="inline-flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#2563EB]" />
-            {primaryLabel}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#F97316]" />
-            {secondaryLabel}
-          </span>
-        </div>
-      )}
     </div>
   );
 };
 
-export default ChartCard;
+export default memo(ChartCard);

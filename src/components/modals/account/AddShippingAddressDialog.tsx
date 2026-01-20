@@ -42,7 +42,7 @@ export function AddShippingAddressDialog({ open, onOpenChange }: Props) {
   const [state, setState] = React.useState("");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open}  onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <div className="flex items-center justify-between">

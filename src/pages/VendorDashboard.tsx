@@ -1,494 +1,973 @@
-﻿
-import BusinessDetailsForm, { BusinessDetails } from '@/components/BusinessDetailsForm';
-import VendorInfoForm, { VendorInfo } from '@/components/VendorInfoForm';
-import SeoAdvancedSection from '@/components/SeoAdvancedSection';
-import VendorSetupSummary from '@/components/VendorSetupSummary';
-import React, { useEffect, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from "react";
+import { NavLink } from "react-router-dom";
 import {
-  HiOutlineShoppingBag,
-  HiOutlineChartBar,
-  HiOutlineUserGroup,
-  HiOutlineUser,
-  HiShieldCheck,
-  HiInformationCircle,
-  HiOutlineArrowRight,
-  HiCheck,
-} from 'react-icons/hi2';
+  HiOutlineBanknotes,
+  HiOutlineCalendarDays,
+  HiOutlineCheckCircle,
+  HiOutlineChevronRight,
+  HiOutlineCurrencyRupee,
+  HiOutlineEnvelopeOpen,
+  HiOutlineExclamationTriangle,
+  HiOutlineWallet,
+} from "react-icons/hi2";
+import {
+  Sparkles,
+  Mail,
+  MessageCircleMore,
+  Image as LucideImage,
+  TicketPercent,
+  ClipboardList,
+  Wallet2,
+  CreditCard,
+  ShieldCheck,
+  Megaphone,
+  Rocket,
+  Settings,
+} from "lucide-react";
 
-import profile7 from '@/assets/Images/profile-7.jpeg';
-import verify from '@/assets/Images/right.png';
-import crown from '@/assets/Images/crown.png';
-import KycStatusCard from '@/components/KycStatusCard';
-import CategorySelectionCard from '@/components/CategorySelectionCard';
-import AdminDashboardSkeleton from '@/components/skeletons/AdminDashboardSkeleton';
-import Breadcrumb from '@/components/shared/Breadcrumb';
-import StatCard from '@/components/shared/StatCard';
+import DashboardBanner from "@/components/vendor-dashboard/DashboardBanner";
+import VendorStatCard from "@/components/vendor-dashboard/VendorStatCard";
+import ProfileScoreCard from "@/components/vendor-dashboard/ProfileScoreCard";
+import QuickActionTile from "@/components/vendor-dashboard/QuickActionTile";
+import SectionHeader from "@/components/vendor-dashboard/SectionHeader";
+import StatusPill from "@/components/vendor-dashboard/StatusPill";
+import MyBusinessPanel from "@/components/vendor-dashboard/MyBusinessPanel";
+import {
+  DashboardContainer,
+  DashboardGrid,
+  DashboardCol,
+} from "@/components/dashboard";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
+import { useAppDispatch } from "@/app/hooks";
+import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 
-const workflowSteps = [
-  { id: 1, title: 'Vendor information', subtitle: 'Add personal & business contact info' },
-  { id: 2, title: 'KYC verification', subtitle: 'Submit ID, registration & tax docs' },
-  { id: 3, title: 'Business services', subtitle: 'Select services & categories' },
-  { id: 4, title: 'Business details', subtitle: 'Provide pricing, availability & policies' },
-  { id: 5, title: 'SEO', subtitle: 'Add discovery-friendly descriptions & media' },
-  { id: 6, title: 'Preview & confirm', subtitle: 'Review everything before publishing' },
-];
+type VendorStatus = "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
+type KycStatus = "NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED";
+type LeadStatus = "NEW" | "CONTACTED" | "CONVERTED" | "LOST";
+type LeadSource =
+  | "PROFILE"
+  | "SERVICE"
+  | "MAP"
+  | "SEARCH"
+  | "WHATSAPP"
+  | "CALL";
+type BookingStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "REFUND_REQUESTED"
+  | "REFUNDED";
 
-const BUSINESS_FIELD_LABELS: Record<keyof BusinessDetails, string> = {
-  businessName: 'Business name',
-  businessType: 'Business type',
-  location: 'Location',
-  phone: 'Phone',
-  description: 'Description',
+type VendorProfile = {
+  businessName: string;
+  description: string;
+  contactEmail: string;
+  contactPhone: string;
+  cityId: string;
+  city: { name: string };
+  status: VendorStatus;
+  kycStatus: KycStatus;
+  totalBookings: number;
+  totalRevenue: number;
+  ratingAvg: number;
+  ratingCount: number;
+  stripeAccountId: string | null;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  activeServices: number;
+  serviceCategories: number;
 };
 
-const VendorDashboard: React.FC = () => {
-  const [vendorInfo, setVendorInfo] = useState<VendorInfo>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    location: '',
+type VendorLeadSubscription = {
+  plan: { name: string; leadsPerDay: number };
+  startsAt: string;
+  endsAt: string;
+  status: "ACTIVE" | "EXPIRED" | "PENDING";
+  leadsToday: number;
+  lastLeadReset: string;
+  receiptNumber: string;
+};
 
-    website: '',
+type VendorLead = {
+  createdAt: string;
+  status: LeadStatus;
+  source: LeadSource;
+};
+
+type Booking = {
+  status: BookingStatus;
+  priceFinal: number;
+  createdAt: string;
+  startTime: string;
+};
+
+type VendorWallet = {
+  balance: number;
+  currency: string;
+};
+
+type Alert = {
+  tone: "info" | "warning" | "danger";
+  message: string;
+  actionLabel: string;
+  to: string;
+};
+
+const today = new Date();
+const daysAgo = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
+};
+
+const vendorProfile: VendorProfile = {
+  businessName: "UrbanFix Plumbing & Heating",
+  description: "Full-service plumbing & heating specialists with 24/7 support.",
+  contactEmail: "hello@urbanfix.co",
+  contactPhone: "+91 99230 44519",
+  cityId: "mumbai",
+  city: { name: "Mumbai" },
+  status: "PENDING_REVIEW",
+  kycStatus: "NOT_SUBMITTED",
+  totalBookings: 284,
+  totalRevenue: 812000,
+  ratingAvg: 4.6,
+  ratingCount: 188,
+  stripeAccountId: null,
+  chargesEnabled: false,
+  payoutsEnabled: false,
+  activeServices: 5,
+  serviceCategories: 3,
+};
+
+const leadSubscription: VendorLeadSubscription = {
+  plan: { name: "PRO", leadsPerDay: 25 },
+  startsAt: daysAgo(22),
+  endsAt: daysAgo(1),
+  status: "EXPIRED",
+  leadsToday: 18,
+  lastLeadReset: daysAgo(1),
+  receiptNumber: "JD-4823",
+};
+
+const vendorLeads: VendorLead[] = [
+  { createdAt: today.toISOString(), status: "NEW", source: "SEARCH" },
+  { createdAt: today.toISOString(), status: "CONTACTED", source: "WHATSAPP" },
+  { createdAt: daysAgo(1), status: "CONVERTED", source: "PROFILE" },
+  { createdAt: daysAgo(2), status: "NEW", source: "MAP" },
+  { createdAt: daysAgo(3), status: "CONTACTED", source: "SERVICE" },
+  { createdAt: daysAgo(5), status: "LOST", source: "CALL" },
+  { createdAt: daysAgo(6), status: "CONVERTED", source: "SEARCH" },
+  { createdAt: daysAgo(8), status: "CONTACTED", source: "PROFILE" },
+];
+
+const bookings: Booking[] = [
+  {
+    status: "PENDING",
+    priceFinal: 3200,
+    createdAt: today.toISOString(),
+    startTime: today.toISOString(),
+  },
+  {
+    status: "CONFIRMED",
+    priceFinal: 5800,
+    createdAt: daysAgo(1),
+    startTime: daysAgo(1),
+  },
+  {
+    status: "COMPLETED",
+    priceFinal: 12400,
+    createdAt: daysAgo(3),
+    startTime: daysAgo(2),
+  },
+  {
+    status: "COMPLETED",
+    priceFinal: 9300,
+    createdAt: daysAgo(7),
+    startTime: daysAgo(6),
+  },
+  {
+    status: "REFUND_REQUESTED",
+    priceFinal: 6100,
+    createdAt: daysAgo(10),
+    startTime: daysAgo(8),
+  },
+  {
+    status: "REFUNDED",
+    priceFinal: 4400,
+    createdAt: daysAgo(25),
+    startTime: daysAgo(24),
+  },
+];
+
+const wallet: VendorWallet = {
+  balance: 48200,
+  currency: "INR",
+};
+
+const services = {
+  active: 5,
+  categories: 3,
+};
+
+const payoutsMeta = {
+  pendingRequests: 1,
+  lastPayoutDaysAgo: 12,
+};
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [formErrors, setFormErrors] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [categoryError, setCategoryError] = useState("");
-  const [businessDetails, setBusinessDetails] = useState<BusinessDetails>({
-    businessName: '',
-    businessType: '',
-    location: '',
-    phone: '',
-    description: '',
+
+const isSameDay = (dateA: Date, dateB: Date) =>
+  dateA.getFullYear() === dateB.getFullYear() &&
+  dateA.getMonth() === dateB.getMonth() &&
+  dateA.getDate() === dateB.getDate();
+
+const isSameMonth = (dateA: Date, dateB: Date) =>
+  dateA.getFullYear() === dateB.getFullYear() &&
+  dateA.getMonth() === dateB.getMonth();
+
+const currencyFormatter = (value: number, currency: string) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(value);
+
+const calculateProfileScore = (
+  profile: VendorProfile
+): { score: number; missing: string[] } => {
+  const checks = [
+    { label: "Add business name", score: 10, passed: !!profile.businessName },
+    {
+      label: "Add business description",
+      score: 8,
+      passed: !!profile.description,
+    },
+    { label: "Add contact email", score: 8, passed: !!profile.contactEmail },
+    { label: "Add contact phone", score: 8, passed: !!profile.contactPhone },
+    { label: "Add city", score: 6, passed: !!profile.cityId },
+    {
+      label: "Upload KYC documents",
+      score: 20,
+      passed: profile.kycStatus === "VERIFIED",
+    },
+    {
+      label: "Connect Stripe payouts",
+      score: 10,
+      passed: !!profile.stripeAccountId,
+    },
+    { label: "Enable payouts", score: 10, passed: profile.payoutsEnabled },
+    { label: "Enable charges", score: 5, passed: profile.chargesEnabled },
+    {
+      label: "Add at least 1 service",
+      score: 10,
+      passed: profile.activeServices > 0,
+    },
+    { label: "Get first review", score: 5, passed: profile.ratingCount > 0 },
+  ];
+
+  const achieved = checks
+    .filter((check) => check.passed)
+    .reduce((sum, check) => sum + check.score, 0);
+
+  const score = Math.min(achieved, 100);
+  const missing = checks
+    .filter((check) => !check.passed)
+    .map((check) => check.label);
+
+  return { score, missing };
+};
+
+const VendorDashboard = () => {
+  const dispatch = useAppDispatch();
+  const [compact, setCompact] = useState(true);
+  const sectionSpacing = compact
+    ? "space-y-4 sm:space-y-5 lg:space-y-6"
+    : "space-y-6 sm:space-y-7 lg:space-y-8";
+  const cardPadding = compact ? "p-4" : "p-5";
+  const densePadding = compact ? "p-3" : "p-4";
+
+  useEffect(() => {
+    dispatch(setPageTitle("Vendor Dashboard"));
+  }, [dispatch]);
+
+  const planExpired =
+    !leadSubscription ||
+    leadSubscription.status === "EXPIRED" ||
+    new Date(leadSubscription.endsAt) < today;
+
+  const leadsRemaining = Math.max(
+    (leadSubscription?.plan.leadsPerDay || 0) -
+      (leadSubscription?.leadsToday || 0),
+    0
+  );
+
+  const bookingsToday = bookings.filter((booking) =>
+    isSameDay(new Date(booking.createdAt), today)
+  ).length;
+
+  const pendingBookings = bookings.filter(
+    (booking) => booking.status === "PENDING"
+  ).length;
+
+  const revenueThisMonth = bookings
+    .filter((booking) => {
+      const created = new Date(booking.createdAt);
+      const validStatus =
+        booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
+      return validStatus && isSameMonth(created, today);
+    })
+    .reduce((sum, booking) => sum + booking.priceFinal, 0);
+
+  const revenueLastMonth = 42000;
+  const revenueVsLast =
+    revenueLastMonth > 0
+      ? Math.round(
+          ((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100
+        )
+      : 0;
+
+  const leadsLast7 = vendorLeads.filter((lead) => {
+    const created = new Date(lead.createdAt);
+    return (today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24) <= 7;
   });
-  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
-  const [businessErrors, setBusinessErrors] = useState<string[]>([]);
-  const [businessFacilityError, setBusinessFacilityError] = useState('');
-  const [businessUploadName, setBusinessUploadName] = useState('');
-  const [seoSectionOpen, setSeoSectionOpen] = useState(false);
-  const [seoTitle, setSeoTitle] = useState('');
-  const [seoDescription, setSeoDescription] = useState('');
-  const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
-  const [seoKeywordInput, setSeoKeywordInput] = useState('');
-  const [seoKeywordError, setSeoKeywordError] = useState('');
-  const [allowIndexing, setAllowIndexing] = useState(true);
-  const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = workflowSteps.length;
-  const isSetupComplete = currentStep > totalSteps;
+  const convertedLast7 = leadsLast7.filter(
+    (lead) => lead.status === "CONVERTED"
+  ).length;
+  const conversionRate = leadsLast7.length
+    ? Math.round((convertedLast7 / leadsLast7.length) * 100)
+    : 0;
 
-  const validateVendorInfo = () => {
-    const missing: string[] = [];
-    if (!vendorInfo.firstName.trim()) missing.push('First name');
-    if (!vendorInfo.lastName.trim()) missing.push('Last name');
-    if (!vendorInfo.email.trim()) missing.push('Email');
-    if (!vendorInfo.phone.trim()) missing.push('Phone number');
-    if (!vendorInfo.location.trim()) missing.push('Location');
-    return missing;
-  };
+  const profileScore = useMemo(() => calculateProfileScore(vendorProfile), []);
 
-  const handleContinueSetup = () => {
-    if (currentStep === 1) {
-      const missing = validateVendorInfo();
-      if (missing.length) {
-        setFormErrors(missing);
-        return;
-      }
-      setFormErrors([]);
-    }
+  const pipelineCounts = vendorLeads.reduce<Record<LeadStatus, number>>(
+    (acc, lead) => {
+      acc[lead.status] += 1;
+      return acc;
+    },
+    { NEW: 0, CONTACTED: 0, CONVERTED: 0, LOST: 0 }
+  );
 
-    if (currentStep === 3) {
-      if (selectedCategories.length === 0) {
-        setCategoryError("Select at least one category.");
-        return;
-      }
-      setCategoryError("");
-    }
+  const bookingCounts = useMemo(
+    () => ({
+      pending: bookings.filter((b) => b.status === "PENDING").length,
+      confirmed: bookings.filter((b) => b.status === "CONFIRMED").length,
+      completed: bookings.filter((b) => b.status === "COMPLETED").length,
+      refundRequested: bookings.filter((b) => b.status === "REFUND_REQUESTED")
+        .length,
+    }),
+    []
+  );
 
-    if (currentStep === 4) {
-      const missingFields: string[] = [];
-      if (!businessDetails.businessName.trim()) missingFields.push("Business name");
-      if (!businessDetails.businessType.trim()) missingFields.push("Business type");
-      if (!businessDetails.location.trim()) missingFields.push("Location");
-      if (!businessDetails.phone.trim()) missingFields.push("Phone");
-      if (!businessDetails.description.trim()) missingFields.push("Description");
-
-      setBusinessErrors(missingFields);
-      if (missingFields.length) {
-        return;
-      }
-
-      if (selectedFacilities.length === 0) {
-        setBusinessFacilityError("Select at least one facility.");
-        return;
-      }
-      setBusinessFacilityError("");
-    }
-
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps + 1));
-  };
-
-  const handleVendorChange = (field: keyof VendorInfo, value: string) => {
-    setVendorInfo((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      setPhotoPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPhotoPreview(url);
-  };
-
-  const handleBusinessDetailChange = (field: keyof BusinessDetails, value: string) => {
-    setBusinessDetails((prev) => ({ ...prev, [field]: value }));
-    const label = BUSINESS_FIELD_LABELS[field];
-    setBusinessErrors((prev) => prev.filter((error) => error !== label));
-  };
-
-  const handleFacilityToggle = (facility: string) => {
-    setBusinessFacilityError('');
-    setSelectedFacilities((prev) =>
-      prev.includes(facility) ? prev.filter((item) => item !== facility) : [...prev, facility]
-    );
-  };
-
-  const handleBusinessUploadChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setBusinessUploadName(file.name);
-      return;
-    }
-    setBusinessUploadName('');
-  };
-
-  const toggleSeoSection = () => {
-    setSeoSectionOpen((prev) => !prev);
-  };
-
-  const resetSeoKeywordError = () => {
-    setSeoKeywordError("");
-  };
-
-  const addSeoKeyword = () => {
-    const value = seoKeywordInput.trim();
-    if (!value) {
-      return;
-    }
-    if (seoKeywords.length >= 20) {
-      setSeoKeywordError("You can add up to 20 keywords.");
-      return;
-    }
-    if (value.length < 2 || value.length > 40) {
-      setSeoKeywordError("Each keyword must be between 2 and 40 characters.");
-      return;
-    }
-    if (seoKeywords.some((item) => item.toLowerCase() === value.toLowerCase())) {
-      setSeoKeywordError("Keyword already added.");
-      return;
-    }
-    setSeoKeywords((prev) => [...prev, value]);
-    setSeoKeywordInput('');
-    resetSeoKeywordError();
-  };
-
-  const onSeoKeywordKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      addSeoKeyword();
-    }
-  };
-
-  const removeSeoKeyword = (keyword: string) => {
-    setSeoKeywords((prev) => prev.filter((item) => item !== keyword));
-  };
-
-  const toggleIndexing = () => {
-    setAllowIndexing((prev) => !prev);
-  };
-
-  const handleCategoryToggle = (category: string) => {
-    setCategoryError("");
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((item) => item !== category) : [...prev, category]
-    );
-  };
-
-  useEffect(() => {
-    return () => {
-      if (photoPreview) {
-        URL.revokeObjectURL(photoPreview);
-      }
-    };
-  }, [photoPreview]);
-
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const sidebar = document.querySelector(".sidebar");
-    if (!sidebar) return;
-    if (!isSetupComplete) {
-      sidebar.classList.add("vendor-sidebar-locked");
-    } else {
-      sidebar.classList.remove("vendor-sidebar-locked");
-    }
-    return () => {
-      sidebar.classList.remove("vendor-sidebar-locked");
-    };
-  }, [isSetupComplete]);
-
-  if (loading) {
-    return <AdminDashboardSkeleton />;
+  const alerts: Alert[] = [];
+  if (vendorProfile.status === "PENDING_REVIEW") {
+    alerts.push({
+      tone: "warning",
+      message: "Your profile is under review",
+      actionLabel: "View status",
+      to: "/vendor/profile",
+    });
+  }
+  if (vendorProfile.kycStatus === "NOT_SUBMITTED") {
+    alerts.push({
+      tone: "danger",
+      message: "Submit KYC to activate payouts",
+      actionLabel: "Upload KYC",
+      to: "/vendor/kyc",
+    });
+  }
+  if (!vendorProfile.stripeAccountId || !vendorProfile.payoutsEnabled) {
+    alerts.push({
+      tone: "info",
+      message: "Connect Stripe to receive payouts",
+      actionLabel: "Connect Stripe",
+      to: "/vendor/stripe",
+    });
+  }
+  if (planExpired) {
+    alerts.push({
+      tone: "danger",
+      message: "Lead plan expired. Renew to receive leads",
+      actionLabel: "Renew plan",
+      to: "/vendor/subscription",
+    });
   }
 
+  const upcomingToday = bookings.filter(
+    (booking) =>
+      isSameDay(new Date(booking.startTime), today) &&
+      (booking.status === "PENDING" || booking.status === "CONFIRMED")
+  ).length;
+
   return (
-    <div className="p-6 space-y-6 bg-white min-h-screen text-slate-900">
-      <Breadcrumb />
+    <DashboardContainer className={`${sectionSpacing}`}>
+      <TitleBreadCrumbs
+        title="Vendor Dashboard"
+        breadCrumbTitle="Vendor / Dashboard"
+      />
 
-      {!isSetupComplete ? (
-        <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg w-full">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Vendor Onboarding</p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Complete your business setup</h2>
-              <p className="text-sm text-slate-500">
-                Finish all six required steps and unlock the vendor dashboard features.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-700">
-              <HiShieldCheck className="h-4 w-4 text-emerald-500" />
-              Secure flow
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 overflow-x-auto py-4">
-            {workflowSteps.map((step, index) => {
-              const isComplete = step.id < currentStep;
-              const isActive = step.id === currentStep;
-              return (
-                <React.Fragment key={`workflow-${step.id}`}>
-                  <div className="flex flex-col items-center gap-1 min-w-[120px] text-center">
-                    <span
-                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                        isComplete
-                          ? 'border-blue-900 bg-blue-500 text-white'
-                          : isActive
-                            ? 'border-blue-500 bg-white text-blue-500'
-                            : 'border-slate-200 bg-white text-slate-400'
-                      }`}
-                    >
-                      {isComplete ? <HiCheck className="h-4 w-4" /> : <span className="text-sm font-semibold">{step.id}</span>}
-                    </span>
-                    <p className="text-xs font-semibold text-slate-700">{step.title}</p>
-                    <p className="text-[11px] text-slate-400">{step.subtitle}</p>
-                  </div>
-                  {index < workflowSteps.length - 1 && (
-                    <div
-                      className={`h-[2px] w-10 ${step.id < currentStep ? 'bg-blue-500' : 'bg-slate-200'}`}
-                    />
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
-
-          {currentStep === 1 && (
-            <div className="mx-auto w-full max-w-2xl">
-              <VendorInfoForm
-                vendorInfo={vendorInfo}
-                onVendorChange={handleVendorChange}
-                photoPreview={photoPreview}
-                onPhotoChange={handlePhotoChange}
-                formErrors={formErrors}
-              />
-            </div>
-          )}
-
-
-          {currentStep === 2 && (
-            <div className="mx-auto w-full max-w-2xl">
-              <KycStatusCard
-                status="pending"
-                onBack={() => setCurrentStep(1)}
-                onAction={handleContinueSetup}
-              />
-            </div>
-          )}
-          {currentStep === 3 && (
-            <div className="mx-auto w-full max-w-2xl">
-              <CategorySelectionCard
-                selected={selectedCategories}
-                onToggle={handleCategoryToggle}
-                error={categoryError}
-              />
-            </div>
-          )}
-          {currentStep === 4 && (
-            <div className="mx-auto w-full max-w-3xl">
-              <BusinessDetailsForm
-                details={businessDetails}
-                onDetailChange={handleBusinessDetailChange}
-                selectedFacilities={selectedFacilities}
-                onFacilityToggle={handleFacilityToggle}
-                facilityError={businessFacilityError}
-                errors={businessErrors}
-                uploadFileName={businessUploadName}
-                onUpload={handleBusinessUploadChange}
-              />
-            </div>
-          )}
-          {currentStep === 5 && (
-            <div className="mx-auto w-full max-w-3xl">
-              <SeoAdvancedSection
-                isOpen={seoSectionOpen}
-                onToggle={toggleSeoSection}
-                title={seoTitle}
-                description={seoDescription}
-                keywords={seoKeywords}
-                keywordInput={seoKeywordInput}
-                keywordError={seoKeywordError}
-                allowIndexing={allowIndexing}
-                onTitleChange={setSeoTitle}
-                onDescriptionChange={setSeoDescription}
-                onKeywordInputChange={(value) => {
-                  setSeoKeywordInput(value);
-                  resetSeoKeywordError();
-                }}
-                onAddKeyword={addSeoKeyword}
-                onKeywordKeyDown={onSeoKeywordKeyDown}
-                onRemoveKeyword={removeSeoKeyword}
-                onToggleIndexing={toggleIndexing}
-              />
-            </div>
-          )}
-          {currentStep === 6 && (
-            <div className="mx-auto w-full max-w-4xl">
-              <VendorSetupSummary
-                vendorInfo={vendorInfo}
-                categories={selectedCategories}
-                businessDetails={businessDetails}
-                facilities={selectedFacilities}
-                seoTitle={seoTitle}
-                seoDescription={seoDescription}
-                seoKeywords={seoKeywords}
-                allowIndexing={allowIndexing}
-              />
-            </div>
-          )}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 pt-4 text-sm text-slate-500">
-            <div className="flex items-center gap-2">
-              <HiInformationCircle className="h-4 w-4 text-blue-500" />
-              <span>
-                Current step: {currentStep <= totalSteps ? workflowSteps[currentStep - 1].title : 'Review & confirm'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleContinueSetup}
-              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {currentStep <= totalSteps ? 'Continue setup' : 'Finish onboarding'}
-              <HiOutlineArrowRight className="h-3 w-3" />
-            </button>
-          </div>
-
-          <p className="text-xs text-slate-500">All dashboard widgets remain locked until the setup is complete.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-700">
+            Welcome back, {vendorProfile.businessName}
+          </h1>
+          <p className="text-sm  text-slate-600 ">
+            {vendorProfile.city.name} | {vendorProfile.contactPhone}
+          </p>
         </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <img
-                src={profile7}
-                alt="Vendor profile"
-                className="h-15 w-15 rounded-full object-cover"
-              />
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill status={vendorProfile.status} />
+          <StatusPill status={vendorProfile.kycStatus} />
+          <button
+            type="button"
+            onClick={() => setCompact((prev) => !prev)}
+            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            {compact ? "Compact" : "Comfortable"}
+          </button>
+        </div>
+      </div>
+
+      {alerts.length > 0 && (
+        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm font-semibold text-amber-800">
+          <div className="flex items-center gap-2">
+            <HiOutlineExclamationTriangle className="h-4 w-4" />
+            <span>{alerts[0].message}</span>
+          </div>
+          <NavLink
+            to={alerts[0].to}
+            className="rounded-full border border-amber-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-700 hover:bg-amber-100"
+          >
+            Fix now
+          </NavLink>
+        </div>
+      )}
+
+      <DashboardBanner
+        title="Showcase your services to get more customers"
+        subtitle="Improve your profile score and respond faster to leads"
+        primaryAction={{
+          label: planExpired ? "Buy Leads Plan" : "Upgrade Plan",
+          to: "/vendor/subscription",
+        }}
+        pills={
+          planExpired
+            ? [{ label: "Your lead plan is inactive", tone: "danger" }]
+            : []
+        }
+      />
+
+      <DashboardGrid columns="grid-cols-1 lg:grid-cols-12">
+        <DashboardCol span={8} className="space-y-3">
+          <div
+            className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}
+          >
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-slate-900">Saalim Shaikh</p>
-                  <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-green">
-                    <img src={verify} className="h-5 w-5 inline-block mr-2" />
-                    Verified
+                <p className="text-xs uppercase tracking-[0.15em] text-slate-500">
+                  Business Overview
+                </p>
+                <p className="text-sm font-semibold text-slate-900">
+                  Today + month-to-date
+                </p>
+              </div>
+              <NavLink
+                to="/vendor/insights"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+              >
+                View reports
+              </NavLink>
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 min-h-38 xl:grid-cols-3">
+              <VendorStatCard
+                title="Leads today"
+                value={leadSubscription?.leadsToday ?? 0}
+                subtitle={`Remaining today: ${leadsRemaining}`}
+                trend={leadsRemaining > 0 ? "up" : "down"}
+                percentage={leadsRemaining > 0 ? 12 : -5}
+                icon={HiOutlineEnvelopeOpen}
+                accentColor="blue"
+                meta="Resets at 00:00"
+              />
+              <VendorStatCard
+                title="Bookings today"
+                value={bookingsToday}
+                subtitle={`Pending: ${pendingBookings}`}
+                trend="neutral"
+                percentage={0}
+                icon={HiOutlineCalendarDays}
+                accentColor="yellow"
+                meta={`Upcoming today: ${upcomingToday}`}
+              />
+              <VendorStatCard
+                title="Revenue (MTD)"
+                value={currencyFormatter(revenueThisMonth, wallet.currency)}
+                subtitle={`vs last month ${
+                  revenueVsLast > 0 ? "+" : ""
+                }${revenueVsLast}%`}
+                trend={revenueVsLast >= 0 ? "up" : "down"}
+                percentage={Math.abs(revenueVsLast)}
+                icon={HiOutlineBanknotes}
+                accentColor="green"
+                meta="Updated 2 min ago"
+              />
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+                <p className="text-sm font-semibold text-slate-800">
+                  Lead pipeline
+                </p>
+                <p className="text-[11px] text-slate-500">Last 7 days</p>
+                <div className="mt-2 space-y-1.5">
+                  {(
+                    ["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]
+                  ).map((status) => {
+                    const count = pipelineCounts[status];
+                    const total = vendorLeads.length || 1;
+                    const width = Math.max((count / total) * 100, 8);
+                    const colorMap: Record<LeadStatus, string> = {
+                      NEW: "bg-blue-500",
+                      CONTACTED: "bg-amber-500",
+                      CONVERTED: "bg-emerald-500",
+                      LOST: "bg-slate-400",
+                    };
+                    return (
+                      <div key={status} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                          <span>{status}</span>
+                          <span>{count}</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white">
+                          <div
+                            className={`h-1.5 rounded-full ${colorMap[status]}`}
+                            style={{ width: `${width}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+                <p className="text-sm font-semibold text-slate-800">
+                  Operations
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Conversion: {conversionRate}% | Refund risk:{" "}
+                  {bookingCounts.refundRequested}
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
+                  <span className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    Upcoming today: {upcomingToday}
+                  </span>
+                  <span className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    Avg review: {vendorProfile.ratingAvg} (
+                    {vendorProfile.ratingCount})
+                  </span>
+                  <span className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    Active services: {services.active}
+                  </span>
+                  <span className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    Pending payout: {payoutsMeta.pendingRequests}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">Plumbing services Aú Malmo</p>
               </div>
             </div>
-            <button className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold shadow-sm transition text-amber-700 hover:bg-amber-300 hover:text-amber-900">
-              <img src={crown} className="h-5 w-7 inline-block mr-2" />
-              Buy plan
-            </button>
+          </div>
+        </DashboardCol>
+
+        <DashboardCol span={4} className="space-y-2.5">
+          <ProfileScoreCard
+            variant="compact"
+            score={profileScore.score}
+            missingTasks={profileScore.missing}
+            supportingText=""
+            ctaLabel="Increase Score"
+            ctaTo="/vendor/profile"
+          />
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">
+                Subscription Status
+              </p>
+              <StatusPill
+                status={planExpired ? "Expired" : "Active"}
+                tone={planExpired ? "danger" : "success"}
+                size="sm"
+              />
+            </div>
+            <p className="text-xs text-slate-500">
+              Plan: {leadSubscription.plan.name} | Expires:{" "}
+              {formatDate(leadSubscription.endsAt)}
+            </p>
+            <p className="text-xs text-slate-500">
+              Leads today: {leadSubscription.leadsToday} /{" "}
+              {leadSubscription.plan.leadsPerDay}
+            </p>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-slate-500">
+                Resets: 00:00 daily
+              </span>
+              <NavLink
+                to="/vendor/subscription"
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+              >
+                Manage
+              </NavLink>
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">
+                Critical Alerts
+              </p>
+              <span className="text-[11px] text-slate-500">
+                {alerts.length} open
+              </span>
+            </div>
+            <div className="space-y-1">
+              {(alerts.length
+                ? alerts
+                : [
+                    {
+                      message: "No critical alerts",
+                      tone: "info",
+                      actionLabel: "",
+                      to: "#",
+                    },
+                  ]
+              ).map((alert) => (
+                <div
+                  key={alert.message}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800"
+                >
+                  <span className="flex items-center gap-2">
+                    <HiOutlineExclamationTriangle className="h-4 w-4 text-amber-500" />
+                    {alert.message}
+                  </span>
+                  {alert.actionLabel ? (
+                    <NavLink
+                      to={alert.to}
+                      className="text-[11px] font-semibold text-blue-600 hover:text-blue-500"
+                    >
+                      {alert.actionLabel}
+                    </NavLink>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </DashboardCol>
+      </DashboardGrid>
+
+      <MyBusinessPanel className={cardPadding} />
+
+      <DashboardGrid columns="grid-cols-1 lg:grid-cols-12">
+        <DashboardCol span={8} className="space-y-3">
+          <div
+            className={`rounded-lg border border-slate-200 bg-white ${cardPadding}`}
+          >
+            <div className="flex items-center justify-between">
+              <SectionHeader title="Quick actions" />
+              <NavLink
+                to="/vendor/dashboard"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-800"
+              >
+                Customize
+              </NavLink>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              {[
+                {
+                  label: "Add Service",
+                  icon: Sparkles,
+                  to: "/vendor/services",
+                  tone: "violet" as const,
+                },
+                {
+                  label: "View Leads",
+                  icon: Mail,
+                  to: "/vendor/leads",
+                  tone: "blue" as const,
+                },
+                {
+                  label: "Reply Leads",
+                  icon: MessageCircleMore,
+                  to: "/vendor/leads/new",
+                  tone: "emerald" as const,
+                },
+                {
+                  label: "Upload Photos",
+                  icon: LucideImage,
+                  to: "/vendor/media",
+                  tone: "rose" as const,
+                },
+                {
+                  label: "Create Coupon",
+                  icon: TicketPercent,
+                  to: "/vendor/coupons",
+                  tone: "amber" as const,
+                },
+                {
+                  label: "Bookings",
+                  icon: ClipboardList,
+                  to: "/vendor/bookings/upcoming",
+                  tone: "slate" as const,
+                },
+                {
+                  label: "Request Payout",
+                  icon: Wallet2,
+                  to: "/vendor/payouts",
+                  tone: "emerald" as const,
+                },
+                {
+                  label: "Connect Stripe",
+                  icon: CreditCard,
+                  to: "/vendor/stripe",
+                  showDot: !vendorProfile.stripeAccountId,
+                  tone: "violet" as const,
+                },
+                {
+                  label: "KYC",
+                  icon: ShieldCheck,
+                  to: "/vendor/kyc",
+                  showDot: vendorProfile.kycStatus !== "VERIFIED",
+                  tone: "amber" as const,
+                },
+                {
+                  label: planExpired ? "Buy Plan" : "Upgrade Plan",
+                  icon: Megaphone,
+                  to: "/vendor/subscription",
+                  badge: planExpired ? "Expired" : undefined,
+                  showDot: planExpired,
+                  tone: "blue" as const,
+                },
+                {
+                  label: "Promote",
+                  icon: Rocket,
+                  to: "/vendor/promote",
+                  tone: "rose" as const,
+                },
+                {
+                  label: "Profile Settings",
+                  icon: Settings,
+                  to: "/vendor/profile",
+                  tone: "slate" as const,
+                },
+              ].map((action) => (
+                <QuickActionTile
+                  key={action.label}
+                  icon={action.icon}
+                  label={action.label}
+                  to={action.to}
+                  tone={action.tone}
+                  badge={
+                    "badge" in action
+                      ? (action as { badge?: string }).badge
+                      : undefined
+                  }
+                  showDot={
+                    "showDot" in action
+                      ? (action as { showDot?: boolean }).showDot
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-5 gap-4">
-            <StatCard
-              title="Today's orders"
-              value={9934}
-              percentage={6.3}
-              trend="up"
-              icon={HiOutlineShoppingBag}
-              accentColor="blue"
-              subtitle="Today's Orders"
-            />
-
-            <StatCard
-              title="Active vel today"
-              value={3812}
-              percentage={50}
-              trend="down"
-              icon={HiOutlineChartBar}
-              accentColor="purple"
-              subtitle="Active visit Today"
-            />
-
-            <StatCard
-              title="Active customer today"
-              value={132}
-              percentage={132}
-              trend="up"
-              icon={HiOutlineUserGroup}
-              accentColor="green"
-              subtitle="Active Customer Today"
-            />
-
-            <StatCard
-              title="Active customer today"
-              value={132}
-              percentage={132}
-              trend="down"
-              icon={HiOutlineUserGroup}
-              accentColor="yellow"
-              subtitle="Active User Today"
-            />
-
-            <StatCard
-              title="Active user today"
-              value={132}
-              percentage={120}
-              trend="up"
-              icon={HiOutlineUser}
-              accentColor="red"
-              subtitle="New User Today"
-            />
-              <StatCard
-              title="Active user today"
-              value={132}
-              percentage={120}
-              trend="up"
-              icon={HiOutlineUser}
-              accentColor="red"
-              subtitle="New User Today"
-            />
+          <div className="rounded-lg border border-slate-200 bg-white px-3 py-3 space-y-2.5">
+            <SectionHeader title="Today's Focus" />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {[
+                { label: "Reply to new leads", to: "/vendor/leads/new" },
+                {
+                  label: "Confirm upcoming bookings",
+                  to: "/vendor/bookings/upcoming",
+                },
+                { label: "Complete KYC", to: "/vendor/kyc" },
+              ].map((task) => (
+                <NavLink
+                  key={task.label}
+                  to={task.to}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="grid h-4 w-4 place-items-center rounded-[4px] border border-slate-300 bg-white" />
+                    {task.label}
+                  </span>
+                  <HiOutlineChevronRight className="h-4 w-4 text-slate-400" />
+                </NavLink>
+              ))}
+            </div>
           </div>
-        </>
-      )}
-    </div>
+        </DashboardCol>
+
+     <DashboardCol span={4} className="flex h-full flex-col justify-center">
+
+          <div
+            className={`rounded-lg border border-slate-200 bg-white ${cardPadding} space-y-2.5`}
+          >
+            <SectionHeader title="Performance Pulse" />
+            <p className="text-xs text-slate-500">
+              Live health of leads, conversion, and cash.
+            </p>
+
+            {/* Pills */}
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold sm:grid-cols-4">
+              <span className="inline-flex items-center justify-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
+                Leads remaining: {leadsRemaining}
+              </span>
+              <span className="inline-flex items-center justify-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+                Conversion: {conversionRate}%
+              </span>
+              <span className="inline-flex items-center justify-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
+                Wallet: {currencyFormatter(wallet.balance, wallet.currency)}
+              </span>
+              <span
+                className={`inline-flex items-center justify-center gap-1 rounded-full px-2.5 py-1 ${
+                  planExpired
+                    ? "bg-rose-50 text-rose-700"
+                    : "bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                Plan {planExpired ? "expired" : "active"}
+              </span>
+            </div>
+
+            <div className="h-px w-full bg-slate-100" />
+
+            {/* Panels */}
+            <div className="grid gap-3 md:grid-cols-2 items-stretch">
+              <div className="h-full space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+                <p className="text-sm font-semibold text-slate-900">
+                  Pipeline & quota
+                </p>
+
+                <ul className="space-y-1 text-sm text-slate-700">
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineEnvelopeOpen className="mt-0.5 h-4 w-4 text-blue-500" />
+                      Leads today
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {leadSubscription.leadsToday}/
+                      {leadSubscription.plan.leadsPerDay}
+                    </span>
+                  </li>
+
+                  <li>
+                    <div className="flex items-center justify-between text-[11px] text-slate-600">
+                      <span>Usage</span>
+                      <span>
+                        {Math.round(
+                          (leadSubscription.leadsToday /
+                            leadSubscription.plan.leadsPerDay) *
+                            100
+                        )}
+                        %
+                      </span>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white">
+                      <div
+                        className="h-1.5 rounded-full bg-blue-500"
+                        style={{
+                          width: `${Math.min(
+                            (leadSubscription.leadsToday /
+                              leadSubscription.plan.leadsPerDay) *
+                              100,
+                            100
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineCheckCircle className="mt-0.5 h-4 w-4 text-emerald-500" />
+                      Conversion (7d)
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {conversionRate}%
+                    </span>
+                  </li>
+
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineCalendarDays className="mt-0.5 h-4 w-4 text-amber-500" />
+                      Next reset
+                    </span>
+                    <span className="text-xs text-slate-600">00:00 daily</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="h-full space-y-1.5 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+                <p className="text-sm font-semibold text-slate-900">
+                  Money & payouts
+                </p>
+
+                <ul className="space-y-1 text-sm text-slate-700">
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineBanknotes className="mt-0.5 h-4 w-4 text-emerald-500" />
+                      Revenue (MTD)
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {currencyFormatter(revenueThisMonth, wallet.currency)}
+                    </span>
+                  </li>
+
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineWallet className="mt-0.5 h-4 w-4 text-blue-500" />
+                      Wallet balance
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {currencyFormatter(wallet.balance, wallet.currency)}
+                    </span>
+                  </li>
+
+                  <li className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <HiOutlineCurrencyRupee className="mt-0.5 h-4 w-4 text-amber-500" />
+                      Pending payouts
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {payoutsMeta.pendingRequests}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Footer actions */}
+            <div className="flex items-center justify-between pt-1">
+              <NavLink
+                to="/vendor/leads"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+              >
+                View leads →
+              </NavLink>
+
+              <NavLink
+                to="/vendor/subscription"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-800"
+              >
+                Manage subscription →
+              </NavLink>
+            </div>
+          </div>
+        </DashboardCol>
+      </DashboardGrid>
+    </DashboardContainer>
   );
 };
 

@@ -1,23 +1,34 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import AdminDashboard from "@/pages/AdminDashboard";
 import VendorDashboard from "@/pages/VendorDashboard";
+import VendorLeads from "@/pages/VendorLeads";
 import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
-import Kyc from "@/pages/Kyc"
-import ChatVendor from "@/pages/ChatVendor"
-import NotFound from "@/pages/NotFound"
-import About from "@/pages/About"
-import Teams from "@/pages/Teams"
-import Support from "@/pages/Support"
+import Kyc from "@/pages/Kyc";
+import ChatBox from "@/pages/ChatBox";
+import NotFound from "@/pages/NotFound";
+import About from "@/pages/About";
+import BookingsPage from "@/pages/BookingsPage";
+import VendorTableShowcase from "@/pages/VendorTableShowcase";
+import Teams from "@/pages/Teams";
+import Support from "@/pages/Support";
 import UserAccount from "@/pages/UserAccount";
-import AppLayout from "@/components/Layout/AppLayout";
-import AdminLayout from "@/components/Layout/AdminLayout";
-import VendorLayout from "@/components/Layout/VendorLayout";
+import Wishlist from "@/pages/Wishlist";
+import VendorPlaceholder from "@/pages/VendorPlaceholder";
+import AppLayout from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import VendorLayout from "@/components/layout/VendorLayout";
+import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
+
+const vendorPlaceholder = (title: string, description?: string) => (
+  <VendorPlaceholder title={title} description={description} />
+);
+
 
 const appRouter = createBrowserRouter([
   {
@@ -33,7 +44,7 @@ const appRouter = createBrowserRouter([
         element: <UserAccount />,
       },
       {
-        path: "/signup",
+        path: "/sign-up",
         element: <Signup />,
         errorElement: <ErrorPage />,
       },
@@ -46,6 +57,10 @@ const appRouter = createBrowserRouter([
         path: "/marketplace",
         element: <Marketplace />,
         errorElement: <ErrorPage />,
+      },
+      {
+        path: "/wishlist",
+        element: <Wishlist />,
       },
       {
         path: "/about",
@@ -81,7 +96,7 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "chat",
-        element: <ChatVendor />,
+        element: <ChatBox />,
       },
     ],
   },
@@ -90,10 +105,76 @@ const appRouter = createBrowserRouter([
     element: <VendorLayout />,
     errorElement: <ErrorPage />,
     children: [
+      { path: "dashboard", element: <VendorDashboard /> },
+      
       {
-        path: "dashboard",
-        element: <VendorDashboard />,
+        path: "leads",
+        element: <VendorLeads />,
       },
+      {
+        path: "leads/new",
+        element: <Navigate to="/vendor/leads?status=NEW" replace />,
+      },
+      { path: "analytics", element: <VendorAnalyticsDashboard /> },
+      { path: "jobs", element: <VendorTableShowcase /> },
+      { path: "bookings", element: <BookingsPage /> },
+      { path: "leads/contacted", element: <Navigate to="/vendor/leads?status=CONTACTED" replace /> },
+      { path: "leads/converted", element: <Navigate to="/vendor/leads?status=CONVERTED" replace /> },
+      {
+        path: "leads/lost",
+        element: <Navigate to="/vendor/leads?status=LOST" replace />,
+      },
+      {
+        path: "leads/sources",
+        element: vendorPlaceholder("Lead Sources", "See which channels drive volume."),
+      },
+      {
+        path: "bookings",
+        element: <BookingsPage />,
+      },
+      {
+        path: "bookings/upcoming",
+        element: (
+          <BookingsPage
+            defaultStatusFilter="confirmed"
+            titleOverride="Upcoming Bookings"
+            breadcrumbOverride="Vendor / Bookings / Upcoming"
+          />
+        ),
+      },
+      {
+        path: "bookings/completed",
+        element: (
+          <BookingsPage
+            defaultStatusFilter="completed"
+            titleOverride="Completed Bookings"
+            breadcrumbOverride="Vendor / Bookings / Completed"
+          />
+        ),
+      },
+      {
+        path: "bookings/refunds",
+        element: (
+          <BookingsPage
+            defaultStatusFilter="refund"
+            titleOverride="Refund Requests"
+            breadcrumbOverride="Vendor / Bookings / Refunds"
+          />
+        ),
+      },
+      { path: "profile", element: vendorPlaceholder("Business Profile") },
+      { path: "services", element: vendorPlaceholder("Services") },
+      { path: "media", element: vendorPlaceholder("Photos & Media") },
+      { path: "coupons", element: vendorPlaceholder("Coupons") },
+      { path: "wallet", element: vendorPlaceholder("Wallet") },
+      { path: "payouts", element: vendorPlaceholder("Payouts") },
+      { path: "subscription", element: vendorPlaceholder("Lead Plan Subscription") },
+      { path: "promote", element: vendorPlaceholder("Promote / Sponsorships") },
+      { path: "kyc", element: vendorPlaceholder("KYC Documents") },
+      { path: "stripe", element: vendorPlaceholder("Stripe Connect") },
+      { path: "support", element: vendorPlaceholder("Support Chat") },
+      { path: "help", element: vendorPlaceholder("Help Center") },
+      { path: "insights", element: vendorPlaceholder("Customer Insights") },
     ],
   },
   {

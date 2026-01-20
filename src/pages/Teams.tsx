@@ -1,7 +1,9 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import profile7 from "@/assets/images/profile-7.jpeg"
 import profile8 from "@/assets/images/profile-8.jpeg"
 import profile9 from "@/assets/images/profile-9.jpeg"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 
 const team = [
   {
@@ -49,6 +51,12 @@ const values = [
 ]
 
 export default function Teams() {
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle("Teams"))
+  }, [dispatch])
+
   const [activeDept, setActiveDept] = useState("All")
   const [expanded, setExpanded] = useState<string | null>(null)
   const departments = ["All", "Leadership", "Partnerships", "Design"]

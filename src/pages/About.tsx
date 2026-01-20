@@ -1,3 +1,6 @@
+import { useEffect } from "react"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 import eventImage from "@/assets/images/event.jpg"
 import vacationImage from "@/assets/images/vacation.jpeg"
 import hotel1 from "@/assets/images/hotel1.jpg"
@@ -34,6 +37,12 @@ const timeline = [
 ]
 
 export default function About() {
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setPageTitle("About"))
+  }, [dispatch])
+
   return (
     <main className="mx-auto w-full max-w-[92rem] px-4 sm:px-6 lg:px-8 text-slate-900">
    <header
@@ -104,7 +113,7 @@ export default function About() {
       {/* STATS */}
       <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div key={item.label} className="rounded border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-2xl font-semibold">{item.value}</p>
             <p className="mt-1 text-xs text-slate-500">{item.label}</p>
           </div>

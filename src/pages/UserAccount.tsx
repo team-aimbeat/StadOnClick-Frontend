@@ -14,10 +14,13 @@ import {
 } from "@/components/ui/select";
 import { AddShippingAddressDialog } from "@/components/modals/account/AddShippingAddressDialog";
 import { cn } from "@/lib/utils";
-import { Eye, Lock, MapPin, User, Wallet } from "lucide-react";
+import { Eye, Lock, MapPin, Sparkles, User, Wallet } from "lucide-react";
 import React from "react";
+import { StepPersonalize } from "@/components/shared/user-onboarding/StepPersonalize";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 
-type SectionKey = "personal" | "password" | "shipping" | "payment";
+type SectionKey = "personal" | "password" | "shipping" | "payment" | "personalization";
 
 type NavigationItem = {
   label: string;
@@ -30,6 +33,7 @@ const navigation: NavigationItem[] = [
   { label: "Change password", icon: Lock, section: "password" },
   { label: "Shipping addresses", icon: MapPin, section: "shipping" },
   { label: "Payment method", icon: Wallet, section: "payment" },
+  { label: "Personalization", icon: Sparkles, section: "personalization" },
 ];
 
 const sectionDescriptions: Record<SectionKey, string> = {
@@ -37,6 +41,7 @@ const sectionDescriptions: Record<SectionKey, string> = {
   password: "Update your password to keep your account secure.",
   shipping: "Manage the addresses you typically ship to.",
   payment: "Review or edit your saved payment options.",
+  personalization: "Manage your personalization preferences.",
 };
 
 const genderOptions = [
@@ -48,15 +53,18 @@ const genderOptions = [
 
 const UserAccount = () => {
   const [gender, setGender] = React.useState("");
-  const [activeSection, setActiveSection] = React.useState<
-    "personal" | "password" | "shipping" | "payment"
-  >("personal");
+  const [activeSection, setActiveSection] = React.useState<SectionKey>("personal");
   const activeNavItem = navigation.find(
     (item) => item.section === activeSection
   );
   const [avatarPreview, setAvatarPreview] = React.useState<string>("");
   const avatarUrlRef = React.useRef<string | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const dispatch = useAppDispatch();
+
+  React.useEffect(() => {
+    dispatch(setPageTitle("My Account"));
+  }, [dispatch]);
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -286,6 +294,10 @@ const UserAccount = () => {
                     open={isDialogOpen}
                     onOpenChange={setIsDialogOpen}
                   />
+                </div>
+              ) : activeSection === "personalization" ? (
+                <div className="mt-6">
+                  <StepPersonalize onNext={() => {}} onSkip={() => {}} />
                 </div>
               ) : (
                 <div className="mt-6 text-sm text-slate-500">

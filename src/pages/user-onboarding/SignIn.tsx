@@ -10,7 +10,7 @@ import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 import { toast } from "react-hot-toast"
 import { useForm, useFormState } from "react-hook-form"
 import { normalizeApiError } from "@/shared/utils/normalizeApiError"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 type FormValues = {
   email: string
@@ -73,7 +73,7 @@ export default function SignIn() {
         step={1}
         total={4}
         title="Welcome to StadonClick"
-        subtitle="Create an account to manage services, bookings, and vendors in one place."
+        subtitle="Login to manage services, bookings, and vendors in one place."
         showStepper={false}
       >
         <StepLogin
@@ -84,6 +84,17 @@ export default function SignIn() {
           errorMessage={formError}
           isValid={canSubmit}
         />
+        <div className="space-y-2 rounded-xl border border-dashed border-slate-200 p-4 text-center">
+          <p className="text-sm text-slate-500">Don't have an account yet?</p>
+          <p className="text-sm text-[#0b59a2]">
+            <a href="/sign-up" className="font-semibold underline transition hover:text-[#094374]">
+              Create your StadonClick account
+            </a>
+          </p>
+          <p className="text-xs text-slate-400">
+            It&apos;s quick, secure, and lets you manage bookings and vendors in one place.
+          </p>
+        </div>
       </OnboardingFormCard>
     </OnboardingLayout>
   )

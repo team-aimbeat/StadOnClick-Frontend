@@ -10,13 +10,13 @@ export default function AdminLayout() {
   const isSidebarCollapsed = !themeConfig.sidebar;
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-[#f1f2f8]">
       <Sidebar basePath="/admin" />
 
       <div
         className={`
         flex flex-col flex-1
-        transition-[margin] duration-500 ease-in-out
+        transition-[margin] duration-300 ease-out
         lg:ml-[70px]
         ${!isSidebarCollapsed ? "lg:ml-[260px]" : ""}
       `}

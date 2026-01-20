@@ -1,5 +1,13 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import {
+  AdminTable,
+  AdminTableCell,
+  AdminTableRow,
+} from "@/components/AdminDashboard/table/AdminTable";
+import AdminPill, {
+  AdminPillTone,
+} from "@/components/AdminDashboard/table/AdminPill";
 import profile7 from "@/assets/images/profile-7.jpeg";
 import profile8 from "@/assets/images/profile-8.jpeg";
 import profile9 from "@/assets/images/profile-9.jpeg";
@@ -60,22 +68,15 @@ export const recentActivities: Activity[] = [
   },
 ];
 
-const statusBadge = (status: string) => {
+const statusTone = (status: string): AdminPillTone => {
   const s = status.toLowerCase();
 
-  if (s.includes("delivered"))
-    return "bg-emerald-100 text-emerald-800";
+  if (s.includes("delivered")) return "success";
+  if (s.includes("pending")) return "warning";
+  if (s.includes("cancel")) return "danger";
+  if (s.includes("transit")) return "info";
 
-  if (s.includes("pending"))
-    return "bg-amber-100 text-amber-700";
-
-  if (s.includes("cancel"))
-    return "bg-rose-100 text-rose-700";
-
-  if (s.includes("transit"))
-    return "bg-sky-100 text-sky-700";
-
-  return "bg-slate-100 text-slate-600";
+  return "neutral";
 };
 
 const RecentActivities: React.FC<RecentActivitiesProps> = ({
@@ -83,34 +84,37 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   activities = recentActivities,
   className,
 }) => {
+  const hasActivities = activities.length > 0;
+
   return (
     <div
       className={cn(
-        "rounded-[32px] bg-white p-0",
+        "flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5",
         className
       )}
     >
-      <div className="flex items-center justify-between px-6 pt-6">
-        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-        <button className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-base font-semibold text-slate-900">
+          {title}
+        </h3>
+        <button className="text-xs font-semibold text-slate-500 transition hover:text-slate-700">
           View All &rarr;
         </button>
       </div>
-      <div className="mt-4 px-4 pb-4">
-        <div className="overflow-hidden rounded-[26px] border border-slate-100 bg-white">
-          <div className="grid grid-cols-[minmax(220px,1.5fr)_auto_auto_auto_minmax(120px,0.8fr)] items-center border-b border-slate-100 bg-slate-50 px-5 py-3 text-[11px] font-semibold tracking-[0.25em] uppercase text-slate-400">
-            <span>Customer</span>
-            <span>ID</span>
-            <span>Retained</span>
-            <span>Amount</span>
-            <span>Status</span>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {activities.map((activity) => (
-              <div
-                key={activity.id}
-                className="grid grid-cols-[minmax(220px,1.5fr)_auto_auto_auto_minmax(120px,0.8fr)] items-center gap-0 px-5 py-4 transition hover:bg-slate-50"
-              >
+      <AdminTable
+        className="mt-4 flex-1"
+        columns={[
+          { key: "customer", label: "Customer", width: "minmax(220px,1.6fr)" },
+          { key: "id", label: "ID", width: "minmax(120px,0.9fr)" },
+          { key: "retained", label: "Retained", width: "minmax(140px,0.9fr)" },
+          { key: "amount", label: "Amount", width: "minmax(120px,0.8fr)", align: "right" },
+          { key: "status", label: "Status", width: "minmax(140px,1fr)" },
+        ]}
+      >
+        {hasActivities ? (
+          activities.map((activity) => (
+            <AdminTableRow key={activity.id}>
+              <AdminTableCell>
                 <div className="flex items-center gap-3">
                   <img
                     src={activity.avatar || profile7}
@@ -118,28 +122,40 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
                     className="h-10 w-10 rounded-full border border-slate-100 object-cover"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{activity.name}</p>
-                    <p className="text-xs text-slate-500">{activity.category}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {activity.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {activity.category}
+                    </p>
                   </div>
                 </div>
-                <div className="text-sm font-semibold text-slate-800">#{activity.id}</div>
-                <div className="text-sm text-slate-500">{activity.retained}</div>
-                <div className="text-sm font-semibold text-slate-900">{activity.price}</div>
-                <div>
-                  <span
-                    className={cn(
-                      "rounded-full px-3 py-1 text-xs font-semibold",
-                      statusBadge(activity.status)
-                    )}
-                  >
-                    {activity.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+              </AdminTableCell>
+              <AdminTableCell className="text-sm font-semibold text-slate-900">
+                #{activity.id}
+              </AdminTableCell>
+              <AdminTableCell className="text-sm text-slate-500">
+                {activity.retained}
+              </AdminTableCell>
+              <AdminTableCell
+                align="right"
+                className="text-sm font-semibold text-slate-900"
+              >
+                {activity.price}
+              </AdminTableCell>
+              <AdminTableCell>
+                <AdminPill tone={statusTone(activity.status)}>
+                  {activity.status}
+                </AdminPill>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))
+        ) : (
+          <div className="px-5 py-10 text-center text-sm text-slate-500">
+            No records found
           </div>
-        </div>
-      </div>
+        )}
+      </AdminTable>
     </div>
   );
 };
