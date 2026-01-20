@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { IconType } from "react-icons";
 import {
@@ -382,9 +382,10 @@ type LeadCardProps = {
   expanded: boolean;
   onToggle: () => void;
   onStatusChange: (status: LeadStatus) => void;
+  isSaving?: boolean;
 };
 
-const LeadCard = ({ lead, expanded, onToggle, onStatusChange }: LeadCardProps) => {
+const LeadCard = ({ lead, expanded, onToggle, onStatusChange, isSaving }: LeadCardProps) => {
   const tags: TagPillProps[] = [];
   if (lead.read) tags.push({ label: "Read", tone: "muted" });
   if (lead.followUp) tags.push({ label: "Follow Up", tone: "warning" });
@@ -396,65 +397,7 @@ const LeadCard = ({ lead, expanded, onToggle, onStatusChange }: LeadCardProps) =
     CONVERTED: "info",
     LOST: "danger",
   };
-  const statusButtonClass =
-    "text-xs font-semibold rounded-lg border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-50 transition";
-
-  const renderStatusActions = () => {
-    if (lead.status === "NEW") {
-      return (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className={statusButtonClass}
-            onClick={() => onStatusChange("CONTACTED")}
-          >
-            Mark Contacted
-          </button>
-          <button
-            type="button"
-            className={statusButtonClass}
-            onClick={() => onStatusChange("CONVERTED")}
-          >
-            Mark Converted
-          </button>
-          <button
-            type="button"
-            className={statusButtonClass}
-            onClick={() => onStatusChange("LOST")}
-          >
-            Mark Lost
-          </button>
-        </div>
-      );
-    }
-
-    if (lead.status === "CONTACTED") {
-      return (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className={statusButtonClass}
-            onClick={() => onStatusChange("CONVERTED")}
-          >
-            Mark Converted
-          </button>
-          <button
-            type="button"
-            className={statusButtonClass}
-            onClick={() => onStatusChange("LOST")}
-          >
-            Mark Lost
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-        Final status
-      </span>
-    );
-  };
+  const statusOptions: LeadStatus[] = ["NEW", "CONTACTED", "CONVERTED", "LOST"];
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 md:p-5">
@@ -537,7 +480,23 @@ const LeadCard = ({ lead, expanded, onToggle, onStatusChange }: LeadCardProps) =
           >
             {expanded ? "Hide details" : "View details"}
           </button>
-          {renderStatusActions()}
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+            <span>Status</span>
+            <select
+              value={lead.status}
+              onChange={(event) => onStatusChange(event.target.value as LeadStatus)}
+              className="rounded-full border-none bg-transparent px-1 text-xs font-semibold focus:outline-none"
+            >
+              {statusOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            {isSaving && (
+              <span className="text-[11px] text-emerald-600">Saved</span>
+            )}
+          </div>
         </div>
         <button
           type="button"
@@ -566,6 +525,8 @@ const VendorLeads = () => {
       {} as Record<string, boolean>
     )
   );
+  const [statusSaving, setStatusSaving] = useState<Record<string, boolean>>({});
+  const statusTimers = useRef<Record<string, number>>({});
 
   useEffect(() => {
     const statusParam = searchParams.get("status");
@@ -574,6 +535,12 @@ const VendorLeads = () => {
       prev.status === nextStatus ? prev : { ...prev, status: nextStatus }
     );
   }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(statusTimers.current).forEach((timer) => window.clearTimeout(timer));
+    };
+  }, []);
 
   useEffect(() => {
     dispatch(setPageTitle(getLeadSectionTitle(filters.status)));
@@ -625,6 +592,14 @@ const VendorLeads = () => {
 
   const handleLeadStatusChange = (id: string, status: LeadStatus) => {
     setLeads((prev) => prev.map((lead) => (lead.id === id ? { ...lead, status } : lead)));
+    setStatusSaving((prev) => ({ ...prev, [id]: true }));
+    if (statusTimers.current[id]) {
+      window.clearTimeout(statusTimers.current[id]);
+    }
+    statusTimers.current[id] = window.setTimeout(() => {
+      setStatusSaving((prev) => ({ ...prev, [id]: false }));
+      delete statusTimers.current[id];
+    }, 1400);
   };
 
   const sectionTitle = getLeadSectionTitle(filters.status);
@@ -747,6 +722,7 @@ const VendorLeads = () => {
             expanded={expanded[lead.id]}
             onToggle={() => toggleExpanded(lead.id)}
             onStatusChange={(status) => handleLeadStatusChange(lead.id, status)}
+            isSaving={statusSaving[lead.id]}
           />
         ))}
         {!filteredLeads.length ? (

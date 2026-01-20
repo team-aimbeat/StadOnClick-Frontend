@@ -1,4 +1,5 @@
-  import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { Eye, Phone, CalendarClock } from "lucide-react";
 import {
   HiOutlineCheckCircle,
@@ -19,7 +20,7 @@ type BookingsPageProps = {
   breadcrumbOverride?: string;
 };
 
-type BookingRow = RowData & {
+export type BookingRow = RowData & {
   id: string;
   customer: string;
   service: string;
@@ -37,7 +38,7 @@ const currency = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
-const bookingsSeed: BookingRow[] = [
+export const bookingsSeed: BookingRow[] = [
   {
     id: "BK-2401",
     customer: "Aarav Kulkarni",
@@ -176,10 +177,17 @@ export default function BookingsPage({
   });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
+  const [bookingRows, setBookingRows] = useState<BookingRow[]>(bookingsSeed);
   const defaultFilters = useMemo(
     () => (defaultStatusFilter ? { status: defaultStatusFilter } : undefined),
     [defaultStatusFilter]
   );
+
+  const updateBookingStatus = (id: string, nextStatus: BookingRow["status"]) => {
+    setBookingRows((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, status: nextStatus } : row))
+    );
+  };
 
   const listingTitle = titleOverride ?? "Bookings";
   const breadcrumb = breadcrumbOverride ?? "Vendor / Bookings";
@@ -189,14 +197,14 @@ export default function BookingsPage({
   }, [dispatch, listingTitle]);
 
   const totals = useMemo(() => {
-    const confirmed = bookingsSeed.filter((b) => b.status === "CONFIRMED").length;
-    const pending = bookingsSeed.filter((b) => b.status === "PENDING").length;
-    const refundRequested = bookingsSeed.filter((b) => b.status === "REFUND_REQUESTED").length;
-    const completed = bookingsSeed.filter((b) => b.status === "COMPLETED").length;
-    const gross = bookingsSeed.reduce((sum, b) => sum + b.amount, 0);
+    const confirmed = bookingRows.filter((b) => b.status === "CONFIRMED").length;
+    const pending = bookingRows.filter((b) => b.status === "PENDING").length;
+    const refundRequested = bookingRows.filter((b) => b.status === "REFUND_REQUESTED").length;
+    const completed = bookingRows.filter((b) => b.status === "COMPLETED").length;
+    const gross = bookingRows.reduce((sum, b) => sum + b.amount, 0);
 
     return { confirmed, pending, refundRequested, completed, gross };
-  }, []);
+  }, [bookingRows]);
 
   const columns = useMemo<ColumnConfig[]>(() => [
     {
@@ -267,6 +275,44 @@ export default function BookingsPage({
             hour: "2-digit",
             minute: "2-digit",
           })}
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Actions",
+      render: (_: string, row: BookingRow) => (
+        <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+          <button
+            type="button"
+            onClick={() => updateBookingStatus(row.id, "CONFIRMED")}
+            disabled={row.status === "CONFIRMED" || row.status === "COMPLETED"}
+            className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
+          >
+            Confirm
+          </button>
+          <button
+            type="button"
+            onClick={() => updateBookingStatus(row.id, "CANCELLED")}
+            disabled={row.status === "CANCELLED"}
+            className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => updateBookingStatus(row.id, "COMPLETED")}
+            disabled={row.status === "COMPLETED"}
+            className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
+          >
+            Mark completed
+          </button>
+          <NavLink
+            to={`/vendor/bookings/${row.id}`}
+            className="text-blue-600 hover:text-blue-500"
+          >
+            Details
+          </NavLink>
         </div>
       ),
     },
@@ -363,10 +409,10 @@ export default function BookingsPage({
         left: dateRangeLabel ? `Range: ${dateRangeLabel}` : "Use the quick date selector in the table header.",
         right: `Selected bookings: ${selectedRows.length}`,
       }}
-      tableProps={{
-        title: "Bookings",
-        breadCrumbTitle: "Operations / Bookings Table",
-        data: bookingsSeed,
+        tableProps={{
+          title: "Bookings",
+          breadCrumbTitle: "Operations / Bookings Table",
+          data: bookingRows,
         columns,
         filters,
         sortOptions,
