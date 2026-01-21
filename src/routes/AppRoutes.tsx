@@ -39,11 +39,12 @@ import AppLayout from "@/components/layout/AppLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import VendorLayout from "@/components/layout/VendorLayout";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
+import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
+import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
 );
-
 
 const appRouter = createBrowserRouter([
   {
@@ -101,6 +102,16 @@ const appRouter = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
+        path: "vendors",
+        element: <VendorsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "vendors/applications",
+        element: <VendorApplicationsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: "dashboard",
         element: <AdminDashboard />,
         errorElement: <ErrorPage />,
@@ -128,15 +139,24 @@ const appRouter = createBrowserRouter([
       },
       { path: "analytics", element: <VendorAnalyticsDashboard /> },
       { path: "jobs", element: <VendorTableShowcase /> },
-      { path: "leads/contacted", element: <Navigate to="/vendor/leads?status=CONTACTED" replace /> },
-      { path: "leads/converted", element: <Navigate to="/vendor/leads?status=CONVERTED" replace /> },
+      {
+        path: "leads/contacted",
+        element: <Navigate to="/vendor/leads?status=CONTACTED" replace />,
+      },
+      {
+        path: "leads/converted",
+        element: <Navigate to="/vendor/leads?status=CONVERTED" replace />,
+      },
       {
         path: "leads/lost",
         element: <Navigate to="/vendor/leads?status=LOST" replace />,
       },
       {
         path: "leads/sources",
-        element: vendorPlaceholder("Lead Sources", "See which channels drive volume."),
+        element: vendorPlaceholder(
+          "Lead Sources",
+          "See which channels drive volume.",
+        ),
       },
       {
         path: "bookings",
