@@ -531,7 +531,7 @@ export default function UserHeader() {
         </div>
       </div>
 
-      <div className="border-t border-sky-200 bg-sky-50">
+      <div className="border-t border-sky-200 bg-white shadow-lg">
         <div className="relative" onMouseLeave={() => setHovered(null)}>
           <div className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 overflow-x-auto px-4 py-3 sm:px-6">
             {categories.map((item) => (

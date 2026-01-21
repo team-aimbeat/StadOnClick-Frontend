@@ -9,6 +9,7 @@ import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
+import PlaceDetail from "@/pages/PlaceDetail";
 import Kyc from "@/pages/Kyc";
 import ChatBox from "@/pages/ChatBox";
 import NotFound from "@/pages/NotFound";
@@ -41,6 +42,11 @@ import VendorLayout from "@/components/layout/VendorLayout";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
+import AdminSignIn from "@/pages/Admin/AdminSignIn";
+import AdminProtectedRoute from "./AdminProtectedRoute";
+import VendorSignIn from "@/pages/vendor/VendorSignIn";
+import VendorProtectedRoute from "./VendorProtectedRoute";
+import AccessDenied from "@/components/shared/AccessDenied";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -94,18 +100,38 @@ const appRouter = createBrowserRouter([
         path: "/deals/:slug",
         element: <DealDetail />,
       },
+      {
+        path: "/place/:slug",
+        element: <PlaceDetail />,
+      },
+      {
+        path: "/access-denied",
+        element: <AccessDenied />,
+      },
     ],
   },
   {
-    path: "/admin",
-    element: <AdminLayout />,
+    path: "/admin/sign-in",
+    element: <AdminSignIn />,
     errorElement: <ErrorPage />,
+  },
+
+  {
+    path: "/admin",
+    element: (
+      <AdminProtectedRoute>
+        <AdminLayout />
+      </AdminProtectedRoute>
+    ),
+    errorElement: <ErrorPage />,
+    
     children: [
       {
         path: "vendors",
         element: <VendorsPage />,
         errorElement: <ErrorPage />,
       },
+
       {
         path: "vendors/applications",
         element: <VendorApplicationsPage />,
@@ -127,8 +153,15 @@ const appRouter = createBrowserRouter([
     ],
   },
   {
+  path: "/vendor/sign-in",
+  element: <VendorSignIn />,
+  errorElement: <ErrorPage />,
+},
+  {
     path: "/vendor",
-    element: <VendorLayout />,
+    element:   <VendorProtectedRoute>
+      <VendorLayout />
+    </VendorProtectedRoute>,
     errorElement: <ErrorPage />,
     children: [
       { path: "dashboard", element: <VendorDashboard /> },
