@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import bgImage5 from "@/assets/user-onboarding/user-onboarding-5.png";
+import bgImage5 from "@/assets/user-onboarding/user-onboarding-1.png";
 import { OnboardingLayout } from "@/components/shared/user-onboarding/OnboardingLayout";
 import { OnboardingFormCard } from "@/components/shared/user-onboarding/OnboardingFormCard";
 import { useLoginMutation } from "@/features/auth/api/authApi";
