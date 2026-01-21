@@ -33,6 +33,7 @@ import {
 } from "@/features/Layout/themeConfigSlice";
 import Dropdown from "../shared/dropdown";
 import SearchBar from "../shared/SearchBar";
+import { logout } from "@/features/auth/authSlice";
 
 type MessageItem = {
   id: number;
@@ -534,14 +535,16 @@ const AdminHeader = () => {
                     Lock Screen
                   </Link>
                 </li>
-                <li className="border-t border-white-light dark:border-white-light/10">
+                <li className="border-t border-white-light dark:border-white-light/10" >
                   <Link
-                    to="/auth/boxed-signin"
+                    to="/admin/sign-in"
                     className="flex items-center px-4 py-3 text-danger hover:text-danger"
+                    onClick={()=> {logout();}}
                   >
                     <LogOut
                       className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2"
                       strokeWidth={1.8}
+                      
                     />
                     Sign Out
                   </Link>

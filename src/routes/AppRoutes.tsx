@@ -41,6 +41,8 @@ import VendorLayout from "@/components/layout/VendorLayout";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
+import AdminSignIn from "@/pages/Admin/AdminSignIn";
+import AdminProtectedRoute from "./AdminProtectedRoute";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -96,9 +98,18 @@ const appRouter = createBrowserRouter([
       },
     ],
   },
+    {
+        path: "/admin/sign-in",
+        element: <AdminSignIn />,
+        errorElement: <ErrorPage />,
+      },
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: (
+      <AdminProtectedRoute>
+        <AdminLayout />
+      </AdminProtectedRoute>
+    ),
     errorElement: <ErrorPage />,
     children: [
       {
@@ -106,6 +117,7 @@ const appRouter = createBrowserRouter([
         element: <VendorsPage />,
         errorElement: <ErrorPage />,
       },
+    
       {
         path: "vendors/applications",
         element: <VendorApplicationsPage />,

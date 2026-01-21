@@ -1,21 +1,31 @@
 import { PropsWithChildren, useEffect } from "react";
 import { useGetMeQuery } from "@/features/auth/api/authApi";
 import { useAppDispatch } from "@/app/hooks";
-import { setUser } from "@/features/auth/authSlice";
+import { setBootstrapping, setUser } from "@/features/auth/authSlice";
 import ScreenLoader from "@/assets/animations/loader";
 
 export function AuthBootstrap({ children }: PropsWithChildren) {
   const dispatch = useAppDispatch();
 
-  const { data, isLoading } = useGetMeQuery();
+  const { data, isLoading, isFetching, isSuccess, isError } = useGetMeQuery();
 
   useEffect(() => {
-    if (data?.user) {
-      dispatch(setUser(data.user));
-    }
-  }, [data, dispatch]);
+    dispatch(setBootstrapping(true));
+  }, [dispatch]);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch(setUser(data?.user ?? null));
+      dispatch(setBootstrapping(false));
+    }
+
+    if (isError) {
+      dispatch(setUser(null));
+      dispatch(setBootstrapping(false));
+    }
+  }, [data?.user, dispatch, isError, isSuccess]);
+
+  if (isLoading || isFetching) {
     return <ScreenLoader />;
   }
 
