@@ -18,8 +18,7 @@ import IconUser from "@/components/icons/IconUser";
 import IconXCircle from "@/components/icons/IconXCircle";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
-
-import menuHeader from "@/assets/images/banner.png";
+import menuHeader from "@/assets/images/banner1.png";
 import profile7 from "@/assets/images/profile-7.jpeg";
 import profile8 from "@/assets/images/profile-8.jpeg";
 import profile9 from "@/assets/images/profile-9.jpeg";

@@ -8,6 +8,7 @@ import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
+import PlaceDetail from "@/pages/PlaceDetail";
 import Kyc from "@/pages/Kyc"
 import ChatVendor from "@/pages/ChatVendor"
 import NotFound from "@/pages/NotFound"
@@ -62,6 +63,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/deals/:slug",
         element: <DealDetail />,
+      },
+      {
+        path: "/place/:slug",
+        element: <PlaceDetail />,
       },
     ],
   },

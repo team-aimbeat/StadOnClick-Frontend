@@ -1,13 +1,19 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import bannerImage from "@/assets/images/banner.png"
+
+import banner1 from "@/assets/images/banner1.png"
+import banner2 from "@/assets/images/banner2.png"
+import banner3 from "@/assets/images/banner3.png"
+
+const banners = [banner1, banner2, banner3]
+
 const searchCategories = [
   { label: "Beauty", slug: "salon-deals" },
-  { label: "Sports", slug: "games-outings" },
-  { label: "Events", slug: "new-deals" },
-  { label: "Hotels", slug: "restaurant-deals" },
-  { label: "Vacation", slug: "gift-cards" },
-  { label: "Dining", slug: "buffet-deals" },
+  { label: "Sports", slug: "games-outings"},
+  { label: "Events", slug: "new-deals"},
+  { label: "Hotels", slug: "restaurant-deals"},
+  { label: "Vacation", slug: "gift-cards"},
+  { label: "Dining", slug: "buffet-deals"},
 ]
 
 const popularChips = [
@@ -23,117 +29,112 @@ export default function HomeHero() {
   const navigate = useNavigate()
   const [location, setLocation] = useState(locations[0])
   const [query, setQuery] = useState("")
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % banners.length)
+    }, 4000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const categoryLookup = useMemo(() => {
     const lookup = new Map<string, string>()
-    searchCategories.forEach((category) => {
-      lookup.set(category.label.toLowerCase(), category.slug)
-    })
+    searchCategories.forEach((c) =>
+      lookup.set(c.label.toLowerCase(), c.slug),
+    )
     return lookup
   }, [])
 
   const handleSearch = () => {
     const normalized = query.trim().toLowerCase()
     const directMatch = categoryLookup.get(normalized)
-    const partialMatch = searchCategories.find((category) =>
-      category.label.toLowerCase().includes(normalized),
-    )
+    const partialMatch = searchCategories.find((c) =>
+      c.label.toLowerCase().includes(normalized),
+    )  
     const target = directMatch ?? partialMatch?.slug ?? "new-deals"
     navigate(`/services/${target}`, { state: { location, query } })
   }
 
   return (
-<section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-16 w-screen overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover"
-        style={{
-          backgroundImage: `url(${bannerImage})`,
-          backgroundPosition: "center center",
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/10" />
+    <section className="relative min-h-[600px] left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-14 w-screen overflow-hidden">
+      {banners.map((image, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+            index === activeIndex ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ backgroundImage: `url(${image})` }}
+        />
+      ))}
 
-      <div className="relative mx-auto flex min-h-[420px] max-w-5xl flex-col items-center justify-center px-4 pb-12 pt-0 text-center text-white sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold drop-shadow sm:text-3xl lg:text-4xl">
+      {/* DARK OVERLAY */}
+      {/* <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/10" /> */}
+      {/* CONTENT */}
+      <div className="relative mx-auto flex min-h-[420px] max-w-5xl flex-col items-center justify-center px-6 pb-12 text-center text-white ">
+        <h1 className="text-2xl font-semibold sm:text-3xl lg:text-4xl mt-60">
           Discover Services. Book Instantly.
         </h1>
+
         <p className="mt-2 text-sm text-white/80 sm:text-base">
-          Beauty - Sports - Events - Hotels - Vacation
+          Beauty • Sports • Events • Hotels • Vacation
         </p>
-
-        <div className="mt-6 w-full rounded-[28px] border border-emerald-200/80 bg-white/95 p-3 shadow-[0_16px_50px_-25px_rgba(15,23,42,0.45)] backdrop-blur">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <label className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-emerald-600">
-                <path d="M12 2.5c-3.6 0-6.5 2.9-6.5 6.5 0 4.8 6.5 12.5 6.5 12.5S18.5 13.8 18.5 9c0-3.6-2.9-6.5-6.5-6.5zm0 9a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
-              </svg>
-              <select
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                className="bg-transparent text-sm font-semibold text-slate-700 outline-none"
-              >
-                {locations.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2">
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-slate-400">
-                <path d="M10.5 3a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zm9.5 14.6-3.6-3.6 1.4-1.4 3.6 3.6-1.4 1.4z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search services, venues, hotels, events..."
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") handleSearch()
-                }}
-                className="w-full border-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              />
-            </div>
+  
+        {/* SEARCH BOX */}
+        <div className="mt-6 w-full max-w-3xl rounded-full border border-white/70 bg-white/95 p-2 shadow-md backdrop-blur">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search salons, gyms, restaurants, events..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="flex-1 rounded-full bg-transparent px-4 py-2 text-sm text-slate-700 outline-none placeholder:text-slate-500"
+            />
 
             <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2 text-sm font-semibold text-white shadow-[0_12px_26px_-18px_rgba(16,185,129,0.9)]"
               onClick={handleSearch}
+              className="inline-flex items-center gap-2 rounded-full bg-blue-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600"
             >
-              Search <span className="text-base">&gt;</span>
+              Search
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-4 w-4 fill-current"
+              >
+                <path d="M21 20.3l-4.35-4.35a7.5 7.5 0 10-1.4 1.4L19.6 22 21 20.3zM10.5 16a5.5 5.5 0 110-11 5.5 5.5 0 010 11z" />
+              </svg>
             </button>
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs text-white/80">
-          <span className="font-semibold text-white/90">Popular:</span>
+        {/* POPULAR */}
+        <div className="mt-5 flex flex-wrap justify-center gap-2 text-xs">
+          <span className="font-semibold">Popular:</span>
           {popularChips.map((chip) => (
             <button
               key={chip.label}
-              type="button"
               onClick={() => navigate(`/services/${chip.slug}`)}
-              className="rounded-full bg-black/60 px-3 py-1 text-white transition hover:bg-black/80"
+              className="rounded-full bg-black/60 px-3 py-1 hover:bg-black/80"
             >
               {chip.label}
             </button>
           ))}
         </div>
 
-        {/* <div className="mt-5 flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-white/90">
-          <span className="inline-flex items-center gap-2">
-            <img src={iconVerified} alt="" className="h-4 w-4" />
-            Verified Services
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <img src={iconLock} alt="" className="h-4 w-4" />
-            Secure Payments
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <img src={iconTrust} alt="" className="h-4 w-4" />
-            Trusted by Customers
-          </span>
-        </div> */}
+        {/* DOTS */}
+        <div className="mt-6 flex gap-2">
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveIndex(i)}
+              className={`h-2 w-2 rounded-full ${
+                i === activeIndex ? "bg-white" : "bg-white/40"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   )
