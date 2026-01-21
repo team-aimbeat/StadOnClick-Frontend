@@ -1,4 +1,4 @@
-import { baseQueryWithReauth } from '@/app/services/baseApi';
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export interface ServiceMedia {
