@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   ArrowRight,
@@ -25,6 +25,7 @@ import profile7 from "@/assets/images/profile-7.jpeg";
 import profile8 from "@/assets/images/profile-8.jpeg";
 import profile9 from "@/assets/images/profile-9.jpeg";
 
+import { useLogoutMutation } from "@/features/auth/api/authApi";
 import { RootState } from "@/app/store";
 import {
   toggleRTL,
@@ -33,7 +34,8 @@ import {
 } from "@/features/Layout/themeConfigSlice";
 import Dropdown from "../shared/dropdown";
 import SearchBar from "../shared/SearchBar";
-import { logout } from "@/features/auth/authSlice";
+import { clearAuth, logout } from "@/features/auth/authSlice";
+import { toast } from "react-hot-toast";
 
 type MessageItem = {
   id: number;
@@ -60,16 +62,18 @@ const AdminHeader = () => {
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isRtl = themeConfig.rtlClass === "rtl";
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
 
   useEffect(() => {
     const selector = document.querySelector<HTMLAnchorElement>(
-      `ul.horizontal-menu a[href="${window.location.pathname}"]`
+      `ul.horizontal-menu a[href="${window.location.pathname}"]`,
     );
 
     if (selector) {
       selector.classList.add("active");
       const activeLinks = document.querySelectorAll<HTMLAnchorElement>(
-        "ul.horizontal-menu .nav-link.active"
+        "ul.horizontal-menu .nav-link.active",
       );
       activeLinks.forEach((link, index) => {
         if (index > 0) {
@@ -173,7 +177,7 @@ const AdminHeader = () => {
 
   const removeNotification = (value: number) => {
     setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== value)
+      prev.filter((notification) => notification.id !== value),
     );
   };
 
@@ -298,7 +302,7 @@ const AdminHeader = () => {
                         <span className="ltr:ml-3 rtl:mr-3">{item.name}</span>
                       </button>
                     </li>
-                  )
+                  ),
                 )}
               </ul>
             </Dropdown>
@@ -407,9 +411,7 @@ const AdminHeader = () => {
               offset={[0, 8]}
               placement={isRtl ? "bottom-start" : "bottom-end"}
               btnClassName={`${actionBtnClass} relative`}
-              button={
-                <Bell className="h-5 w-5" strokeWidth={1.8} />
-              }
+              button={<Bell className="h-5 w-5" strokeWidth={1.8} />}
             >
               <ul className="w-[320px] divide-y divide-gray-100/80 text-dark dark:divide-white/10 dark:text-white-dark sm:w-[360px]">
                 <li onClick={(e) => e.stopPropagation()}>
@@ -522,7 +524,7 @@ const AdminHeader = () => {
                     </div>
                   </div>
                 </li>
-               
+
                 <li>
                   <Link
                     to="/auth/boxed-lockscreen"
@@ -535,20 +537,41 @@ const AdminHeader = () => {
                     Lock Screen
                   </Link>
                 </li>
-                <li className="border-t border-white-light dark:border-white-light/10" >
-                  <Link
-                    to="/admin/sign-in"
-                    className="flex items-center px-4 py-3 text-danger hover:text-danger"
-                    onClick={()=> {logout();}}
-                  >
-                    <LogOut
-                      className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2"
-                      strokeWidth={1.8}
-                      
-                    />
-                    Sign Out
-                  </Link>
-                </li>
+               <li className="border-t border-white-light dark:border-white-light/10">
+  <button
+    type="button"
+    className="flex w-full items-center px-4 py-3 text-danger hover:text-danger"
+    disabled={isLoggingOut}
+    onClick={async () => {
+      try {
+        // 1) hit backend to clear cookies
+        await logoutApi().unwrap();
+
+        // 2) clear frontend auth state
+        dispatch(clearAuth());
+
+        toast.success("Logged out", { id: "admin-logout-success" });
+
+        // 3) go to admin sign-in
+        navigate("/admin/sign-in", { replace: true });
+      } catch (e) {
+        // even if backend fails, clear local state
+        dispatch(clearAuth());
+        navigate("/admin/sign-in", { replace: true });
+
+        toast.error("Logout failed, cleared local session.", {
+          id: "admin-logout-failed",
+        });
+
+        console.error("Logout failed", e);
+      }
+    }}
+  >
+    <LogOut className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2" strokeWidth={1.8} />
+    {isLoggingOut ? "Signing out..." : "Sign Out"}
+  </button>
+</li>
+
               </ul>
             </Dropdown>
           </div>
@@ -564,4 +587,3 @@ const AdminHeader = () => {
 };
 
 export default AdminHeader;
-
