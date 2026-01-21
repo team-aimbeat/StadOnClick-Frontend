@@ -5,6 +5,7 @@ import themeConfigSlice from "@/features/Layout/themeConfigSlice";
 
 import { authApi } from "@/features/auth/api/authApi";
 import { preferencesApi } from "@/features/preferences/api/preferencesApi";
+import { serviceMediaApi } from "@/services/serviceMediaApi";
 
 export const store = configureStore({
   reducer: {
@@ -13,11 +14,13 @@ export const store = configureStore({
     themeConfig: themeConfigSlice,
     [authApi.reducerPath]: authApi.reducer,
     [preferencesApi.reducerPath]: preferencesApi.reducer,
+    [serviceMediaApi.reducerPath]: serviceMediaApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(authApi.middleware)
-      .concat(preferencesApi.middleware),
+      .concat(preferencesApi.middleware)
+      .concat(serviceMediaApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
