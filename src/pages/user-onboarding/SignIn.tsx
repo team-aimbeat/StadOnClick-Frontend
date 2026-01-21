@@ -15,7 +15,6 @@ import { Link, useNavigate } from "react-router-dom"
 type FormValues = {
   email: string
   password: string
-  acceptTerms: boolean
 }
 
 export default function SignIn() {
@@ -26,16 +25,15 @@ export default function SignIn() {
 
   const { register, handleSubmit, control, setError, clearErrors, watch, setValue } = useForm<FormValues>({
     mode: "onChange",
-    defaultValues: { email: "", password: "", acceptTerms: false },
+    defaultValues: { email: "", password: "" },
   })
   const { errors, isSubmitting, isValid } = useFormState({ control })
   const values = watch()
-  const canSubmit = Boolean(values.email && values.password && values.acceptTerms && isValid)
+  const canSubmit = Boolean(values.email && values.password  && isValid)
 
   useEffect(() => {
     dispatch(setPageTitle("Sign in"))
-    register("acceptTerms")
-  }, [dispatch, register])
+  }, [dispatch])
 
   const onSubmit = useCallback(async (data: FormValues) => {
     setFormError(undefined)
