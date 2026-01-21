@@ -28,7 +28,7 @@ export interface FilterConfig {
     options: FilterOption[];
 }
 
-interface SortOption {
+export interface SortOption {
     key: string;
     label: string;
 }
