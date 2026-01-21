@@ -12,7 +12,6 @@ import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
 import Kyc from "@/pages/Kyc";
 import ChatBox from "@/pages/ChatBox";
-import NotFound from "@/pages/NotFoundUser";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
 import VendorTableShowcase from "@/pages/VendorTableShowcase";
