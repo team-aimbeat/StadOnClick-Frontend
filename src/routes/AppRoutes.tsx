@@ -40,6 +40,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import VendorLayout from "@/components/layout/VendorLayout";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
+import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -103,6 +104,11 @@ const appRouter = createBrowserRouter([
       {
         path: "vendors",
         element: <VendorsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "vendors/applications",
+        element: <VendorApplicationsPage />,
         errorElement: <ErrorPage />,
       },
       {
