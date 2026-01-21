@@ -12,7 +12,6 @@ import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
 import Kyc from "@/pages/Kyc";
 import ChatBox from "@/pages/ChatBox";
-import NotFound from "@/pages/NotFound";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
 import VendorTableShowcase from "@/pages/VendorTableShowcase";
@@ -47,6 +46,8 @@ import AdminProtectedRoute from "./AdminProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
+import AdminNotFound from "@/pages/Admin/AdminNotFound";
+import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -124,14 +125,17 @@ const appRouter = createBrowserRouter([
       </AdminProtectedRoute>
     ),
     errorElement: <ErrorPage />,
-    
+
     children: [
       {
         path: "vendors",
         element: <VendorsPage />,
         errorElement: <ErrorPage />,
       },
-
+      {
+        path: "*",
+        element: <AdminNotFound />,
+      },
       {
         path: "vendors/applications",
         element: <VendorApplicationsPage />,
@@ -153,15 +157,18 @@ const appRouter = createBrowserRouter([
     ],
   },
   {
-  path: "/vendor/sign-in",
-  element: <VendorSignIn />,
-  errorElement: <ErrorPage />,
-},
+    path: "/vendor/sign-in",
+    element: <VendorSignIn />,
+    errorElement: <ErrorPage />,
+  },
   {
     path: "/vendor",
-    element:   <VendorProtectedRoute>
-      <VendorLayout />
-    </VendorProtectedRoute>,
+    element: (
+      <VendorProtectedRoute>
+        <VendorLayout />
+      </VendorProtectedRoute>
+    ),
+    
     errorElement: <ErrorPage />,
     children: [
       { path: "dashboard", element: <VendorDashboard /> },
@@ -184,6 +191,10 @@ const appRouter = createBrowserRouter([
         path: "leads/lost",
         element: <Navigate to="/vendor/leads?status=LOST" replace />,
       },
+        {
+    path: "*",
+    element: <VendorNotFound  />,
+  },
       {
         path: "leads/sources",
         element: vendorPlaceholder(
@@ -244,10 +255,6 @@ const appRouter = createBrowserRouter([
       { path: "help", element: <VendorHelp /> },
       { path: "insights", element: <VendorInsights /> },
     ],
-  },
-  {
-    path: "*",
-    element: <NotFound />,
   },
 ]);
 

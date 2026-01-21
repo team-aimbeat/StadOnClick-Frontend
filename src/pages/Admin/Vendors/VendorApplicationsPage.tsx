@@ -20,14 +20,12 @@ import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { ListingPage } from "@/components/shared/ListingPage";
 
-// ✅ IMPORTANT: import from your RTK query file
 import {
   useApproveVendorApplicationMutation,
   useListVendorApplicationsQuery,
   useRejectVendorApplicationMutation,
 } from "@/features/admin/vendors/api/vendorsApi";
 
-// If you have types file (recommended)
 import type { VendorApplication } from "@/features/admin/vendors/types/vendor.types";
 
 type VendorApplicationsPageProps = {
@@ -38,24 +36,17 @@ type VendorApplicationsPageProps = {
 
 export type VendorApplicationRow = RowData & {
   id: string;
-
   vendorId: string;
   businessName: string;
   slug: string;
-
   vendorStatus: "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
   kycStatus: "NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED";
-
   city?: string;
-
   contactEmail?: string;
   contactPhone?: string;
-
   status: "PENDING" | "APPROVED" | "REJECTED" | "MORE_INFO_REQUIRED";
-
   submittedAt: string;
   reviewedAt?: string | null;
-
   adminComment?: string | null;
   reviewedBy?: string | null;
 };
@@ -95,29 +86,21 @@ function toVendorApplicationRow(app: VendorApplication): VendorApplicationRow {
 
   return {
     id: app.id,
-
     vendorId: vendor?.id ?? app.vendorId,
     businessName: vendor?.businessName ?? "—",
     slug: vendor?.slug ?? "—",
-
     vendorStatus: vendor?.status ?? "PENDING_REVIEW",
     kycStatus: vendor?.kycStatus ?? "NOT_SUBMITTED",
-
     city: vendor?.city?.name ?? undefined,
-
     contactEmail: vendor?.contactEmail ?? undefined,
     contactPhone: vendor?.contactPhone ?? undefined,
-
     status: app.status,
-
     submittedAt: app.submittedAt,
     reviewedAt: app.reviewedAt ?? null,
-
     adminComment: app.adminComment ?? null,
     reviewedBy: app.reviewedBy ?? null,
   };
 }
-
 
 export default function VendorApplicationsPage({
   defaultStatusFilter,
@@ -161,10 +144,8 @@ export default function VendorApplicationsPage({
   const [rejectVendor, { isLoading: isRejecting }] =
     useRejectVendorApplicationMutation();
 
-  // ✅ REAL dynamic rows (no seed fallback)
-  const applicationRows: VendorApplicationRow[] = useMemo(() => {
-    const apiRows = data?.data ?? [];
-    return apiRows.map(toVendorApplicationRow);
+  const applicationRows = useMemo<VendorApplicationRow[]>(() => {
+    return (data?.data ?? []).map(toVendorApplicationRow);
   }, [data]);
 
   const totals = useMemo(() => {
@@ -179,9 +160,8 @@ export default function VendorApplicationsPage({
   const handleApprove = async (id: string) => {
     try {
       await approveVendor({ id }).unwrap();
-      // auto refresh happens due to invalidatesTags
-    } catch (e) {
-      console.error("Approve failed", e);
+    } catch (err) {
+      console.error("Approve failed:", err);
     }
   };
 
@@ -191,8 +171,8 @@ export default function VendorApplicationsPage({
         id,
         body: { reason: "Not enough documentation." },
       }).unwrap();
-    } catch (e) {
-      console.error("Reject failed", e);
+    } catch (err) {
+      console.error("Reject failed:", err);
     }
   };
 
@@ -204,12 +184,11 @@ export default function VendorApplicationsPage({
         sortable: true,
         render: (_value: any, row: RowData) => {
           const r = row as VendorApplicationRow;
-
           return (
-            <div className="flex flex-col">
-              <span className="font-semibold text-slate-900">{r.businessName}</span>
-              <span className="text-xs font-medium text-slate-500">
-                {(r.city ?? "Unknown city") + " • " + r.slug}
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium text-slate-900">{r.businessName}</span>
+              <span className="text-xs text-slate-500">
+                {r.city ?? "Unknown city"} • {r.slug}
               </span>
             </div>
           );
@@ -217,7 +196,7 @@ export default function VendorApplicationsPage({
       },
       {
         key: "status",
-        title: "Application",
+        title: "Application Status",
         sortable: true,
         render: (_: any, row: RowData) => {
           const r = row as VendorApplicationRow;
@@ -225,9 +204,9 @@ export default function VendorApplicationsPage({
 
           return (
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}
             >
-              <span className="h-2 w-2 rounded-full bg-current" />
+              <span className="size-2 rounded-full bg-current" />
               {tone.label}
             </span>
           );
@@ -238,14 +217,16 @@ export default function VendorApplicationsPage({
         title: "Submitted",
         sortable: true,
         render: (value: any) => (
-          <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+          <div className="flex items-center gap-1.5 text-sm text-slate-700">
             <CalendarClock className="h-4 w-4 text-slate-500" />
             {value
-              ? new Date(String(value)).toLocaleString("en-SE", {
+              ? new Date(String(value)).toLocaleString("en-IN", {
                   day: "2-digit",
                   month: "short",
+                  year: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
+                  hour12: true,
                 })
               : "—"}
           </div>
@@ -256,13 +237,15 @@ export default function VendorApplicationsPage({
         title: "Reviewed",
         sortable: true,
         render: (value: any) => (
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm text-slate-700">
             {value
-              ? new Date(String(value)).toLocaleString("en-SE", {
+              ? new Date(String(value)).toLocaleString("en-IN", {
                   day: "2-digit",
                   month: "short",
+                  year: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
+                  hour12: true,
                 })
               : "—"}
           </span>
@@ -273,14 +256,13 @@ export default function VendorApplicationsPage({
         title: "Admin Note",
         sortable: false,
         render: (value: any) => (
-          <span className="text-sm text-slate-700">
+          <span className="line-clamp-2 max-w-xs text-sm text-slate-600">
             {value ? String(value) : "—"}
           </span>
         ),
       },
-      
     ],
-    [isApproving, isRejecting]
+    []
   );
 
   const filters = useMemo<FilterConfig[]>(
@@ -290,10 +272,10 @@ export default function VendorApplicationsPage({
         label: "Application Status",
         options: [
           { label: "All", value: "all" },
-          { label: "Pending", value: "pending" },
-          { label: "Approved", value: "approved" },
-          { label: "Rejected", value: "rejected" },
-          { label: "More Info Required", value: "more_info_required" },
+          { label: "Pending", value: "PENDING" },
+          { label: "Approved", value: "APPROVED" },
+          { label: "Rejected", value: "REJECTED" },
+          { label: "More Info Required", value: "MORE_INFO_REQUIRED" },
         ],
       },
     ],
@@ -302,67 +284,87 @@ export default function VendorApplicationsPage({
 
   const sortOptions = useMemo(
     () => [
-      { key: "submittedAt", label: "Submitted (Newest first desc)" },
-      { key: "reviewedAt", label: "Reviewed (Newest first desc)" },
-      { key: "businessName", label: "Business name (A-Z)" },
+      { key: "submittedAt", label: "Submitted Date (Newest first)" },
+      { key: "reviewedAt", label: "Reviewed Date (Newest first)" },
+      { key: "businessName", label: "Business Name (A-Z)" },
     ],
     []
   );
 
-  const actions = useMemo<ActionConfig<VendorApplicationRow>[]>(
+  const actions = useMemo<ActionConfig[]>(
     () => [
       {
-        title: "View",
+        title: "View Details",
         icon: Eye,
-        onClick: (row) => console.log("View application", row.id),
+        onClick: (row) => {
+          // TODO: implement proper navigation or modal
+          console.log("View application:", (row as VendorApplicationRow).id);
+          // Example: navigate(`/admin/applications/${row.id}`);
+        },
       },
       {
-        title: "Call",
-        icon: Phone,
-        onClick: (row) => console.log("Call vendor", row.contactPhone ?? "N/A"),
+        title: "Approve",
+        icon: HiOutlineCheckCircle,
+        onClick: (row) => {
+          const r = row as VendorApplicationRow;
+          if (window.confirm(`Approve application from ${r.businessName}?`)) {
+            handleApprove(r.id);
+          }
+        },
       },
       {
-        title: "Email",
+        title: "Reject",
+        icon: HiOutlineExclamationTriangle,
+        onClick: (row) => {
+          const r = row as VendorApplicationRow;
+          const reason = prompt(
+            `Reject reason for ${r.businessName}:`,
+            "Insufficient documentation / incomplete KYC"
+          );
+          if (reason) {
+            rejectVendor({ id: r.id, body: { reason } }).unwrap();
+          }
+        },
+      },
+      {
+        title: "Email Vendor",
         icon: Mail,
-        onClick: (row) =>
-          console.log("Email vendor", row.contactEmail ?? "N/A"),
+        onClick: (row) => {
+          const r = row as VendorApplicationRow;
+          if (r.contactEmail) {
+            window.location.href = `mailto:${r.contactEmail}?subject=Regarding your vendor application on StadonClick`;
+          } else {
+            alert("No contact email available for this vendor");
+          }
+        },
       },
     ],
-    []
+    [handleApprove, rejectVendor]
   );
 
   const summaryLeft = useMemo(() => {
-    if (isLoading) return "Loading applications...";
-    if (isFetching) return "Refreshing applications...";
-    if (isError) return "Failed to load applications. Please refresh.";
-    if (dateRangeLabel) return `Range: ${dateRangeLabel}`;
-    return "Use the quick date selector in the table header.";
+    if (isLoading) return "Loading vendor applications...";
+    if (isFetching) return "Refreshing data...";
+    if (isError) return "Failed to load applications — please try again";
+    if (dateRangeLabel) return `Filtered: ${dateRangeLabel}`;
+    return "Quick date filter available in header";
   }, [isLoading, isFetching, isError, dateRangeLabel]);
 
-  // Optional: show error details in console
   useEffect(() => {
-    if (isError) console.error("Vendor applications error:", error);
+    if (isError) {
+      console.error("Vendor Applications Query Error:", error);
+    }
   }, [isError, error]);
 
   return (
     <ListingPage
       title={listingTitle}
       breadCrumbTitle={breadcrumb}
-      description="Approve strong vendors fast, reject low-quality submissions, and request more info when needed."
-      headerSlot={
-        isError ? (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              <RefreshCcw className="h-4 w-4" />
-              Retry
-            </button>
-          </div>
-        ) : null
-      }
+      description="Review, approve, reject or request more information from vendor applications."
+      
+      // ──── Actions are now passed directly (assuming ListingPage supports it) ────
+      actions={actions}
+      
       stats={[
         {
           title: "Pending",
@@ -395,28 +397,41 @@ export default function VendorApplicationsPage({
       ]}
       summary={{
         left: summaryLeft,
-        right: `Selected applications: ${selectedRows.length}`,
+        right: selectedRows.length > 0 
+          ? `Selected: ${selectedRows.length} application${selectedRows.length !== 1 ? 's' : ''}`
+          : undefined,
       }}
+      headerSlot={
+        isError ? (
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#4F7DFF]/40"
+          >
+            <RefreshCcw className="h-4 w-4" />
+            Retry
+          </button>
+        ) : null
+      }
       tableProps={{
-        title: "Vendor Applications",
-        breadCrumbTitle: "Admin / Vendor Applications Table",
         data: applicationRows,
         columns,
         filters,
         sortOptions,
         searchable: true,
         showSerialNumber: true,
-        initialHiddenColumns: [],
+        selectable: true,
+        initialHiddenColumns: ["adminComment"],
         defaultActiveFilters: defaultFilters,
-        rowsPerPageOptions: [5, 8, 15],
+        rowsPerPageOptions: [5, 8, 10, 15, 25],
         defaultRowsPerPage: 8,
-        defaultSortColumn: "submittedAt",
         sortStatus,
         onSort: setSortStatus,
-        
-        onRowSelect: (ids) => setSelectedRows(ids),
-        onDateRangeSelect: (range) => setDateRangeLabel(range),
-        className: "border border-slate-200",
+        onRowSelect: setSelectedRows,
+        onDateRangeSelect: setDateRangeLabel,
+        loading: isLoading || isFetching,
+        error: isError ? "Failed to load vendor applications" : null,
+        className: "border border-slate-200 rounded-xl shadow-sm",
       }}
     />
   );

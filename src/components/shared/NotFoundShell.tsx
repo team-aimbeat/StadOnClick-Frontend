@@ -1,14 +1,31 @@
-import { useEffect } from "react"
-import { Link } from "react-router-dom"
-import { useAppDispatch } from "@/app/hooks"
-import { setPageTitle } from "@/features/Layout/themeConfigSlice"
+import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 
-const NotFound: React.FC = () => {
-  const dispatch = useAppDispatch()
+type NotFoundShellProps = {
+  title: string;
+  subtitle: string;
+  description: string;
+  primaryCta: { label: string; to: string };
+  secondaryCta?: { label: string; to: string };
+  pageTitle?: string;
+};
+
+export default function NotFoundShell({
+  title,
+  subtitle,
+  description,
+  primaryCta,
+  secondaryCta,
+  pageTitle = "Page not found",
+}: NotFoundShellProps) {
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(setPageTitle("Page not found"))
-  }, [dispatch])
+    dispatch(setPageTitle(pageTitle));
+  }, [dispatch, pageTitle]);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-white text-slate-100">
       <div className="absolute inset-0">
@@ -26,31 +43,33 @@ const NotFound: React.FC = () => {
 
           <div className="space-y-3">
             <p className="text-sm uppercase tracking-[0.4em] text-black">
-              404 - Sidan saknas
+              {subtitle}
             </p>
             <h1 className="text-4xl font-semibold text-black sm:text-5xl">
-              Vi har tappat bort den har sidan.
+              {title}
             </h1>
             <p className="mx-auto max-w-xl text-base text-black sm:text-lg">
-              Det ser ut som att vagen tog slut. Ladda om kartan eller hitta
-              tillbaka till start.
+              {description}
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link
-            to="/"
+            to={primaryCta.to}
             className="rounded-full bg-[#FECB00] px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-yellow-400/20 transition hover:-translate-y-0.5 hover:bg-yellow-300"
           >
-            Tillbaka till start
+            {primaryCta.label}
           </Link>
-          <Link
-            to="/admin/dashboard"
-            className="rounded-full border bg-[#005293]  border-slate-700 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-100"
-          >
-            Ga till dashboard
-          </Link>
+
+          {secondaryCta ? (
+            <Link
+              to={secondaryCta.to}
+              className="rounded-full border bg-[#005293] border-slate-700 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-100"
+            >
+              {secondaryCta.label}
+            </Link>
+          ) : null}
         </div>
 
         <div className="grid w-full max-w-3xl grid-cols-1 gap-4 text-left text-sm text-slate-300 sm:grid-cols-3">
@@ -58,24 +77,22 @@ const NotFound: React.FC = () => {
             <p className="text-xs uppercase tracking-[0.3em] text-white">
               Tips
             </p>
-            <p className="mt-2">Kontrollera stavningen i URL:en.</p>
+            <p className="mt-2">Check the URL spelling and try again.</p>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
             <p className="text-xs uppercase tracking-[0.3em] text-white">
               Status
             </p>
-            <p className="mt-2">Inga problem pa servern just nu.</p>
+            <p className="mt-2">No server issues detected right now.</p>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
             <p className="text-xs uppercase tracking-[0.3em] text-white">
-              Kontakt
+              Support
             </p>
-            <p className="mt-2">Behov av hjalp? Kontakta support.</p>
+            <p className="mt-2">Need help? Contact our support team.</p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-export default NotFound

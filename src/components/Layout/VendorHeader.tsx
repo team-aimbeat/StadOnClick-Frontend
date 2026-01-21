@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   ArrowRight,
@@ -33,6 +33,9 @@ import {
 } from "@/features/Layout/themeConfigSlice";
 import Dropdown from "../shared/dropdown";
 import SearchBar from "../shared/SearchBar";
+import { clearAuth } from "@/features/auth/authSlice";
+import toast from "react-hot-toast";
+import { useLogoutMutation } from "@/features/auth/api/authApi";
 
 type MessageItem = {
   id: number;
@@ -59,6 +62,8 @@ const VendorHeader = () => {
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isRtl = themeConfig.rtlClass === "rtl";
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
 
   useEffect(() => {
     const selector = document.querySelector<HTMLAnchorElement>(
@@ -497,7 +502,7 @@ const VendorHeader = () => {
                 />
               }
             >
-              <ul className="w-[230px] font-semibold text-dark dark:text-white-light/90">
+               <ul className="w-[230px] font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img
@@ -521,7 +526,7 @@ const VendorHeader = () => {
                     </div>
                   </div>
                 </li>
-               
+
                 <li>
                   <Link
                     to="/auth/boxed-lockscreen"
@@ -534,18 +539,41 @@ const VendorHeader = () => {
                     Lock Screen
                   </Link>
                 </li>
-                <li className="border-t border-white-light dark:border-white-light/10">
-                  <Link
-                    to="/auth/boxed-signin"
-                    className="flex items-center px-4 py-3 text-danger hover:text-danger"
-                  >
-                    <LogOut
-                      className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2"
-                      strokeWidth={1.8}
-                    />
-                    Sign Out
-                  </Link>
-                </li>
+               <li className="border-t border-white-light dark:border-white-light/10">
+  <button
+    type="button"
+    className="flex w-full items-center px-4 py-3 text-danger hover:text-danger"
+    disabled={isLoggingOut}
+    onClick={async () => {
+      try {
+        // 1) hit backend to clear cookies
+        await logoutApi().unwrap();
+
+        // 2) clear frontend auth state
+        dispatch(clearAuth());
+
+        toast.success("Logged out", { id: "admin-logout-success" });
+
+        // 3) go to admin sign-in
+        navigate("/vendor/sign-in", { replace: true });
+      } catch (e) {
+        // even if backend fails, clear local state
+        dispatch(clearAuth());
+        navigate("/vendor/sign-in", { replace: true });
+
+        toast.error("Logout failed, cleared local session.", {
+          id: "admin-logout-failed",
+        });
+
+        console.error("Logout failed", e);
+      }
+    }}
+  >
+    <LogOut className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2" strokeWidth={1.8} />
+    {isLoggingOut ? "Signing out..." : "Sign Out"}
+  </button>
+</li>
+
               </ul>
             </Dropdown>
           </div>

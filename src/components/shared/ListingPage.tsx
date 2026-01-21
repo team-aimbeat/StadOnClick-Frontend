@@ -1,28 +1,20 @@
 import { ReactNode } from "react";
-import { IconType } from "react-icons";
 
+// ─── Import component dependencies ──────────────────────────────────────────
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import StatsCard from "@/components/shared/StatsCard";
-import { DataTable, DataTableProps } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
+
+// ─── Import type dependencies ────────────────────────────────────────
+import type { DataTableProps } from "@/components/shared/DataTable";
+import type { ActionConfig } from "@/types/Table/action";           // if you use actions
+// import type { FilterConfig, SortOption } from ...                   // optional
 
 type AccentColor = "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
 type Trend = "up" | "down" | "neutral";
 
-export type StatsCardConfig = {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  percentage?: number;
-  changeValue?: string | number;
-  trend?: Trend;
-  icon?: IconType;
-  accentColor?: AccentColor;
-  className?: string;
-  showTrendIcon?: boolean;
-};
-
-export type ListingSummary = {
+type ListingSummary = {
   left?: string;
   right?: string;
 };
@@ -31,12 +23,20 @@ type ListingPageProps = {
   title: string;
   breadCrumbTitle: string;
   description?: string;
-  stats?: StatsCardConfig[];
+  stats?: any[];
   summary?: ListingSummary;
   tableProps: DataTableProps;
   className?: string;
   headerSlot?: ReactNode;
   summarySlot?: ReactNode;
+
+  // Optional: convenience props (as discussed earlier)
+  actions?: ActionConfig[];
+  searchable?: boolean;
+  selectable?: boolean;
+  showSerialNumber?: boolean;
+  // filters?: FilterConfig[];              // uncomment if you want
+  // sortOptions?: SortOption[];
 };
 
 export function ListingPage({
@@ -49,7 +49,22 @@ export function ListingPage({
   className = "",
   headerSlot,
   summarySlot,
+
+  // Convenience props (optional)
+  actions,
+  searchable = true,
+  selectable = true,
+  showSerialNumber = true,
 }: ListingPageProps) {
+  // Merge props safely
+  const mergedTableProps: DataTableProps = {
+    ...tableProps,
+    ...(actions !== undefined && { actions }),
+    ...(searchable !== undefined && { searchable }),
+    ...(selectable !== undefined && { selectable }),
+    ...(showSerialNumber !== undefined && { showSerialNumber }),
+  };
+
   return (
     <DashboardContainer className={`space-y-6 pb-10 ${className}`}>
       <div className="space-y-2">
@@ -78,7 +93,7 @@ export function ListingPage({
           </div>
         ) : null)}
 
-      <DataTable {...tableProps} />
+      <DataTable {...mergedTableProps} />
     </DashboardContainer>
   );
 }
