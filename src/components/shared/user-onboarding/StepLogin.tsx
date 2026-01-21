@@ -25,8 +25,6 @@ type Props = {
   loading?: boolean
   errorMessage?: string
   isValid?: boolean
-  acceptTermsChecked?: boolean
-  setAcceptTerms?: (v: boolean) => void
 }
 
 export function StepLogin({

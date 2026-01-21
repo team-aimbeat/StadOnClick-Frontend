@@ -1,42 +1,73 @@
 import { useNavigate } from "react-router-dom"
-import iconBeauty from "@/assets/icons/s4.png"
-import iconSports from "@/assets/icons/s5.png"
-import iconEvents from "@/assets/icons/s1.png"
-import iconHotels from "@/assets/icons/s2.png"
-import iconVacation from "@/assets/icons/s8.png"
-import iconDining from "@/assets/icons/s3.png"
+import cricketImage from "@/assets/Images/cricket.jpg"
+import footballImage from "@/assets/Images/football.jpg"
+import badmintonImage from "@/assets/Images/batminton.jpg"
 
-const quickCategories = [
-  { label: "Beauty", icon: iconBeauty, slug: "salon-deals" },
-  { label: "Sports", icon: iconSports, slug: "games-outings" },
-  { label: "Events", icon: iconEvents, slug: "new-deals" },
-  { label: "Hotels", icon: iconHotels, slug: "restaurant-deals" },
-  { label: "Vacation", icon: iconVacation, slug: "gift-cards" },
-  { label: "Dining", icon: iconDining, slug: "buffet-deals" },
+const categoryCards = [
+  {
+    title: "Sports & Games",
+    description: "Book courts, teams, and tournaments",
+    image: cricketImage,
+    slug: "games-outings",
+  },
+  {
+    title: "Art & Culture",
+    description: "Shows, museums, and live events",
+    image: footballImage,
+    slug: "new-deals",
+  },
+  {
+    title: "Daily Trips",
+    description: "Quick escapes and day adventures",
+    image: badmintonImage,
+    slug: "gift-cards",
+  },
 ]
 
 export default function HomeCategoryStrip() {
   const navigate = useNavigate()
 
   return (
-    <section className="mt-6 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-[0_10px_30px_-25px_rgba(15,23,42,0.35)]">
-      <div className="grid grid-cols-2 divide-x divide-slate-200/70 text-xs text-slate-700 sm:grid-cols-3 lg:grid-cols-6">
-        {quickCategories.map((category) => (
+    <section className="mt-8 w-full rounded-3xl bg-[#f2f6fb] px-6 py-10 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)]">
+      <div className="text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+          Categories
+        </p>
+        <h3 className="mt-2 text-xl font-semibold text-slate-800 sm:text-2xl">
+          Browse by Interest
+        </h3>
+      </div>
+
+      <div className="mt-8 grid gap-6 sm:grid-cols-3">
+        {categoryCards.map((category) => (
           <button
-            key={category.label}
+            key={category.title}
             type="button"
             onClick={() => navigate(`/services/${category.slug}`)}
-            className="flex items-center justify-center gap-2 px-4 py-4 transition hover:bg-slate-50"
+            className="group rounded-2xl bg-white px-6 pb-6 pt-10 text-center shadow-[0_18px_40px_-30px_rgba(15,23,42,0.5)] transition hover:-translate-y-1"
           >
-            <img
-              src={category.icon}
-              alt=""
-              className="h-6 w-6 object-contain"
-            />
-            <span className="font-semibold">{category.label}</span>
+            <div className="mx-auto -mt-16 h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-md">
+              <img
+                src={category.image}
+                alt={category.title}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <h4 className="mt-5 text-sm font-semibold text-slate-800">
+              {category.title}
+            </h4>
+            <p className="mt-2 text-xs text-slate-500">
+              {category.description}
+            </p>
+            <div className="mx-auto mt-4 h-3 w-10 rounded-t-full bg-[#0f2f4f]" />
           </button>
         ))}
       </div>
+
+
+      <p className="mt-6 text-center text-xs text-slate-400">
+        100+ categories available for you to explore today.
+      </p>
     </section>
   )
 }

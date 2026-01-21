@@ -1,4 +1,4 @@
-import bookIcon from "@/assets/icons/book.svg"
+﻿import bookIcon from "@/assets/icons/book.svg"
 import earthIcon from "@/assets/icons/earth.svg"
 import flagIcon from "@/assets/icons/flag-sweden.svg"
 import groupIcon from "@/assets/icons/group.svg"
