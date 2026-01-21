@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import bgImage5 from "@/assets/user-onboarding/user-onboarding-1.png";
+import bgImage5 from "@/assets/user-onboarding/user-onboarding-5.png";
 import { OnboardingLayout } from "@/components/shared/user-onboarding/OnboardingLayout";
 import { OnboardingFormCard } from "@/components/shared/user-onboarding/OnboardingFormCard";
 import { useLoginMutation } from "@/features/auth/api/authApi";
@@ -11,24 +11,25 @@ import { toast } from "react-hot-toast";
 import { useForm, useFormState } from "react-hook-form";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import { AdminStepLogin } from "../components/admin-auth/AdminStepLogin";
+// You can rename this to VendorStepLogin later, but reuse for now.
 
 type FormValues = {
   email: string;
   password: string;
 };
 
-const ADMIN_ROLES = ["ADMIN", "MODERATOR"] as const;
+const VENDOR_ROLES = ["VENDOR"] as const;
 
-function hasAdminAccess(roles?: string[]) {
+function hasVendorAccess(roles?: string[]) {
   if (!roles?.length) return false;
-  return roles.some((r) => ADMIN_ROLES.includes(r as any));
+  return roles.some((r) => VENDOR_ROLES.includes(r as any));
 }
 
-export default function AdminSignIn() {
+export default function VendorSignIn() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const authUser = useAppSelector(authslice => authslice.auth.user);
+  const authUser = useAppSelector((s) => s.auth.user);
 
   const [login, { isLoading }] = useLoginMutation();
   const [formError, setFormError] = useState<string | undefined>(undefined);
@@ -47,74 +48,69 @@ export default function AdminSignIn() {
   }, [values.email, values.password, isValid]);
 
   useEffect(() => {
-    dispatch(setPageTitle("Admin Sign in"));
+    dispatch(setPageTitle("Vendor Sign in"));
   }, [dispatch]);
 
+  // If already vendor, skip login screen
   useEffect(() => {
-    if (authUser?.roles?.length && hasAdminAccess(authUser.roles)) {
-      navigate("/admin/dashboard", { replace: true });
+    if (authUser?.roles?.length && hasVendorAccess(authUser.roles)) {
+      navigate("/vendor/dashboard", { replace: true });
     }
   }, [authUser?.roles, navigate]);
 
- const onSubmit = useCallback(
-  async (data: FormValues) => {
-    setFormError(undefined);
-    clearErrors();
+  const onSubmit = useCallback(
+    async (data: FormValues) => {
+      setFormError(undefined);
+      clearErrors();
 
-    try {
-      const response = await login({
-        email: data.email,
-        password: data.password,
-      }).unwrap();
+      try {
+        const response = await login({
+          email: data.email,
+          password: data.password,
+        }).unwrap();
 
-      const user = response?.user ?? response;
+        const user = response?.user ?? response;
 
-      // 🔐 Frontend guard (still keep backend guard too)
-      if (!hasAdminAccess(user?.roles)) {
-        toast.error("Access denied. Admin role required.", {
-          id: "admin-login-denied",
+        // IMPORTANT: backend MUST include roles in /auth/me
+        // If login response doesn't include roles, it will be filled by /auth/me bootstrap.
+        dispatch(setUser(user));
+
+        toast.success("Signed in successfully", { id: "vendor-login-success" });
+
+        navigate("/vendor/dashboard", { replace: true });
+      } catch (err) {
+        const { fieldErrors, formError: normalizedFormError, toastMessage } =
+          normalizeApiError(err, "Unable to sign in. Please try again.");
+
+        Object.entries(fieldErrors).forEach(([field, message]) => {
+          setError(field as keyof FormValues, { type: "server", message });
         });
-        return navigate("/access-denied", { replace: true });
+
+        setFormError(normalizedFormError);
+        toast.error(toastMessage, { id: "vendor-login-error" });
+        console.error("Vendor login failed", err);
       }
-
-      dispatch(setUser(user));
-      toast.success("Signed in successfully", { id: "admin-login-success" });
-
-      navigate("/admin/vendors", { replace: true });
-    } catch (err) {
-      const { fieldErrors, formError: normalizedFormError, toastMessage } =
-        normalizeApiError(err, "Unable to sign in. Please try again.");
-
-      Object.entries(fieldErrors).forEach(([field, message]) => {
-        setError(field as keyof FormValues, { type: "server", message });
-      });
-
-      setFormError(normalizedFormError);
-      toast.error(toastMessage, { id: "admin-login-error" });
-      console.error("Admin login failed", err);
-    }
-  },
-  [clearErrors, dispatch, login, navigate, setError]
-);
-
+    },
+    [clearErrors, dispatch, login, navigate, setError]
+  );
 
   return (
     <OnboardingLayout
       image={bgImage5}
-      imageTitle={"Admin Console\nStadonClick"}
-      imageSubtitle={"Secure access for platform operations"}
+      imageTitle={"Vendor Console\nStadonClick"}
+      imageSubtitle={"Manage services, bookings, leads, and payouts"}
     >
       <OnboardingFormCard
         step={1}
         total={1}
-        title="Admin Sign in"
-        subtitle="Login to manage vendors, approvals, KYC, lead plans, and platform settings."
+        title="Vendor Sign in"
+        subtitle="Login to manage your business operations in one place."
         showStepper={false}
       >
-        <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-          <p className="font-semibold">Restricted access</p>
-          <p className="mt-0.5 text-xs text-rose-700">
-            This portal is for Admins and Moderators only. All activity is audited.
+        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <p className="font-semibold">Vendor portal</p>
+          <p className="mt-0.5 text-xs text-blue-800">
+            This area is for Vendors only. User accounts cannot access the vendor dashboard.
           </p>
         </div>
 
@@ -128,9 +124,7 @@ export default function AdminSignIn() {
         />
 
         <div className="mt-4 space-y-2 rounded-xl border border-dashed border-slate-200 p-4 text-center">
-          <p className="text-xs text-slate-500">
-            Looking for the user sign in instead?
-          </p>
+          <p className="text-xs text-slate-500">Looking for user sign in instead?</p>
           <p className="text-sm text-[#0b59a2]">
             <a
               href="/sign-in"

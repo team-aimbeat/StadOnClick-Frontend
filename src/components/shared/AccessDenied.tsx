@@ -49,7 +49,7 @@ export default function AccessDenied({
             </p>
             <p className="mt-1 text-xs text-amber-700">
               Your account is authenticated, but your roles do not include access
-              to the Admin Portal (ADMIN / MODERATOR).
+              to the Admin Portal (ADMIN / MODERATOR / SUPPORT / VENDOR).
             </p>
           </div>
         </div>

@@ -43,6 +43,9 @@ import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
+import VendorSignIn from "@/pages/vendor/VendorSignIn";
+import VendorProtectedRoute from "./VendorProtectedRoute";
+import AccessDenied from "@/components/shared/AccessDenied";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -96,13 +99,18 @@ const appRouter = createBrowserRouter([
         path: "/deals/:slug",
         element: <DealDetail />,
       },
+      {
+        path: "/access-denied",
+        element: <AccessDenied />,
+      },
     ],
   },
-    {
-        path: "/admin/sign-in",
-        element: <AdminSignIn />,
-        errorElement: <ErrorPage />,
-      },
+  {
+    path: "/admin/sign-in",
+    element: <AdminSignIn />,
+    errorElement: <ErrorPage />,
+  },
+
   {
     path: "/admin",
     element: (
@@ -111,13 +119,14 @@ const appRouter = createBrowserRouter([
       </AdminProtectedRoute>
     ),
     errorElement: <ErrorPage />,
+    
     children: [
       {
         path: "vendors",
         element: <VendorsPage />,
         errorElement: <ErrorPage />,
       },
-    
+
       {
         path: "vendors/applications",
         element: <VendorApplicationsPage />,
@@ -139,8 +148,15 @@ const appRouter = createBrowserRouter([
     ],
   },
   {
+  path: "/vendor/sign-in",
+  element: <VendorSignIn />,
+  errorElement: <ErrorPage />,
+},
+  {
     path: "/vendor",
-    element: <VendorLayout />,
+    element:   <VendorProtectedRoute>
+      <VendorLayout />
+    </VendorProtectedRoute>,
     errorElement: <ErrorPage />,
     children: [
       { path: "dashboard", element: <VendorDashboard /> },

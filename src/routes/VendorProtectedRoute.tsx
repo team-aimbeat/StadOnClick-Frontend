@@ -1,21 +1,21 @@
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAppSelector } from "@/app/hooks";
 import ScreenLoader from "@/assets/animations/loader";
+import { useAppSelector } from "@/app/hooks";
 
-const ADMIN_ROLES = ["ADMIN", "MODERATOR"] as const;
+const VENDOR_ROLES = ["VENDOR"] as const;
 
-function hasAdminAccess(roles?: string[]) {
+function hasVendorAccess(roles?: string[]) {
   if (!roles?.length) return false;
-  return roles.some((r) => ADMIN_ROLES.includes(r as any));
+  return roles.some((r) => VENDOR_ROLES.includes(r as any));
 }
 
-export default function AdminProtectedRoute({ children }: PropsWithChildren) {
+export default function VendorProtectedRoute({ children }: PropsWithChildren) {
   const location = useLocation();
   const user = useAppSelector((s) => s.auth.user);
   const isBootstrapping = useAppSelector((s) => s.auth.isBootstrapping);
 
-  // 🔥 This prevents the "sign-in flicker"
+  // Prevent flicker
   if (isBootstrapping) {
     return <ScreenLoader />;
   }
@@ -24,15 +24,15 @@ export default function AdminProtectedRoute({ children }: PropsWithChildren) {
   if (!user) {
     return (
       <Navigate
-        to="/admin/sign-in"
+        to="/vendor/sign-in"
         replace
         state={{ from: location.pathname }}
       />
     );
   }
 
-  // Logged in but not admin
-  if (!hasAdminAccess(user.roles)) {
+  // Logged in but not vendor
+  if (!hasVendorAccess(user.roles)) {
     return <Navigate to="/access-denied" replace />;
   }
 
