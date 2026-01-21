@@ -278,52 +278,7 @@ export default function VendorApplicationsPage({
           </span>
         ),
       },
-      {
-        key: "actions",
-        title: "Actions",
-        render: (_: any, row: RowData) => {
-          const r = row as VendorApplicationRow;
-
-          const disabledApprove = r.status !== "PENDING" || isApproving;
-          const disabledReject = r.status !== "PENDING" || isRejecting;
-
-          return (
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
-              <button
-                type="button"
-                onClick={() => handleApprove(r.id)}
-                disabled={disabledApprove}
-                className="rounded-full border border-slate-200 px-2 py-1 text-slate-700 disabled:opacity-50"
-              >
-                Approve
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleReject(r.id)}
-                disabled={disabledReject}
-                className="rounded-full border border-slate-200 px-2 py-1 text-slate-700 disabled:opacity-50"
-              >
-                Reject
-              </button>
-
-              <NavLink
-                to={`/admin/vendors/${r.vendorId}`}
-                className="text-blue-600 hover:text-blue-500"
-              >
-                Vendor
-              </NavLink>
-
-              <NavLink
-                to={`/admin/vendor-applications/${r.id}`}
-                className="text-slate-700 hover:text-slate-900"
-              >
-                Details
-              </NavLink>
-            </div>
-          );
-        },
-      },
+      
     ],
     [isApproving, isRejecting]
   );
@@ -458,7 +413,7 @@ export default function VendorApplicationsPage({
         defaultSortColumn: "submittedAt",
         sortStatus,
         onSort: setSortStatus,
-        actions,
+        
         onRowSelect: (ids) => setSelectedRows(ids),
         onDateRangeSelect: (range) => setDateRangeLabel(range),
         className: "border border-slate-200",
