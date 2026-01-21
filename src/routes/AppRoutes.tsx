@@ -9,6 +9,7 @@ import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
+import PlaceDetail from "@/pages/PlaceDetail";
 import Kyc from "@/pages/Kyc";
 import ChatBox from "@/pages/ChatBox";
 import NotFound from "@/pages/NotFound";
@@ -98,6 +99,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/deals/:slug",
         element: <DealDetail />,
+      },
+      {
+        path: "/place/:slug",
+        element: <PlaceDetail />,
       },
       {
         path: "/access-denied",
