@@ -1,23 +1,43 @@
 /**
  * Types
  */
-export type VendorApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type VendorApplicationStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "MORE_INFO_REQUIRED";
+
+export type VendorStatus = "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
+export type KycStatus = "NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED";
 
 export type VendorApplication = {
   id: string;
-  userId: string;
-  vendorProfileId?: string | null;
-  status: VendorApplicationStatus;
-  createdAt: string;
-  updatedAt: string;
 
-  // optional extras if your backend sends them
-  user?: {
+  vendorId: string;
+
+  // Prisma: applicationData Json
+  applicationData: unknown;
+
+  // ✅ Prisma fields (missing before)
+  submittedAt: string; // API should return ISO string
+  reviewedAt?: string | null;
+
+  status: VendorApplicationStatus;
+
+  // ✅ Prisma fields (missing before)
+  adminComment?: string | null;
+  reviewedBy?: string | null;
+
+  // Optional relation (if backend includes it)
+  vendor?: {
     id: string;
-    firstName: string;
-    lastName?: string | null;
-    email: string;
-    phone?: string | null;
+    businessName: string;
+    slug: string;
+    status: VendorStatus;
+    kycStatus: KycStatus;
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+    city?: { name: string } | null;
   };
 };
 

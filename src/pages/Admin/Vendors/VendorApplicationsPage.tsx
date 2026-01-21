@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Eye, Phone, Mail, CalendarClock } from "lucide-react";
+import { Eye, Phone, Mail, CalendarClock, RefreshCcw } from "lucide-react";
 import {
   HiOutlineCheckCircle,
   HiOutlineClock,
@@ -8,21 +8,27 @@ import {
   HiOutlineSparkles,
 } from "react-icons/hi2";
 
-import {
+import type {
   ColumnConfig,
   DataTableSortStatus,
   FilterConfig,
   RowData,
 } from "@/components/shared/DataTable";
-import { ActionConfig } from "@/types/Table/action";
+import type { ActionConfig } from "@/types/Table/action";
+
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { ListingPage } from "@/components/shared/ListingPage";
+
+// ✅ IMPORTANT: import from your RTK query file
 import {
   useApproveVendorApplicationMutation,
   useListVendorApplicationsQuery,
   useRejectVendorApplicationMutation,
 } from "@/features/admin/vendors/api/vendorsApi";
+
+// If you have types file (recommended)
+import type { VendorApplication } from "@/features/admin/vendors/types/vendor.types";
 
 type VendorApplicationsPageProps = {
   defaultStatusFilter?: string;
@@ -54,57 +60,6 @@ export type VendorApplicationRow = RowData & {
   reviewedBy?: string | null;
 };
 
-const applicationSeed: VendorApplicationRow[] = [
-  {
-    id: "app_01",
-    vendorId: "vd_02",
-    businessName: "Gothenburg Repairs",
-    slug: "gothenburg-repairs",
-    vendorStatus: "PENDING_REVIEW",
-    kycStatus: "PENDING",
-    city: "Gothenburg",
-    contactEmail: "owner@gorepairs.se",
-    contactPhone: "+46 73 888 90 12",
-    status: "PENDING",
-    submittedAt: "2025-01-18T12:30:00Z",
-    reviewedAt: null,
-    adminComment: null,
-    reviewedBy: null,
-  },
-  {
-    id: "app_02",
-    vendorId: "vd_04",
-    businessName: "Uppsala Home Painting",
-    slug: "uppsala-home-painting",
-    vendorStatus: "REJECTED",
-    kycStatus: "REJECTED",
-    city: "Uppsala",
-    contactEmail: "admin@uppsalapaint.se",
-    contactPhone: "+46 76 110 20 30",
-    status: "REJECTED",
-    submittedAt: "2025-01-14T09:20:00Z",
-    reviewedAt: "2025-01-15T10:00:00Z",
-    adminComment: "Business license was missing and VAT number invalid.",
-    reviewedBy: "admin_user_01",
-  },
-  {
-    id: "app_03",
-    vendorId: "vd_01",
-    businessName: "Nordic Clean Co.",
-    slug: "nordic-clean-co",
-    vendorStatus: "ACTIVE",
-    kycStatus: "VERIFIED",
-    city: "Stockholm",
-    contactEmail: "support@nordicclean.se",
-    contactPhone: "+46 70 123 45 67",
-    status: "APPROVED",
-    submittedAt: "2025-01-10T08:00:00Z",
-    reviewedAt: "2025-01-11T09:00:00Z",
-    adminComment: "Looks good. Approved.",
-    reviewedBy: "admin_user_02",
-  },
-];
-
 const appStatusTone: Record<
   VendorApplicationRow["status"],
   { bg: string; text: string; ring: string; label: string }
@@ -135,12 +90,48 @@ const appStatusTone: Record<
   },
 };
 
+function toVendorApplicationRow(app: VendorApplication): VendorApplicationRow {
+  const vendor = app.vendor;
+
+  return {
+    id: app.id,
+
+    vendorId: vendor?.id ?? app.vendorId,
+    businessName: vendor?.businessName ?? "—",
+    slug: vendor?.slug ?? "—",
+
+    vendorStatus: vendor?.status ?? "PENDING_REVIEW",
+    kycStatus: vendor?.kycStatus ?? "NOT_SUBMITTED",
+
+    city: vendor?.city?.name ?? undefined,
+
+    contactEmail: vendor?.contactEmail ?? undefined,
+    contactPhone: vendor?.contactPhone ?? undefined,
+
+    status: app.status,
+
+    submittedAt: app.submittedAt,
+    reviewedAt: app.reviewedAt ?? null,
+
+    adminComment: app.adminComment ?? null,
+    reviewedBy: app.reviewedBy ?? null,
+  };
+}
+
+
 export default function VendorApplicationsPage({
   defaultStatusFilter,
   titleOverride,
   breadcrumbOverride,
 }: VendorApplicationsPageProps = {}) {
   const dispatch = useAppDispatch();
+
+  const listingTitle = titleOverride ?? "Vendor Applications";
+  const breadcrumb = breadcrumbOverride ?? "Admin / Vendor Applications";
+
+  useEffect(() => {
+    dispatch(setPageTitle(listingTitle));
+  }, [dispatch, listingTitle]);
 
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: "submittedAt",
@@ -150,66 +141,37 @@ export default function VendorApplicationsPage({
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
 
-  // Live API
-  const { data, isLoading } = useListVendorApplicationsQuery();
+  const defaultFilters = useMemo(
+    () => (defaultStatusFilter ? { status: defaultStatusFilter } : undefined),
+    [defaultStatusFilter]
+  );
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useListVendorApplicationsQuery();
 
   const [approveVendor, { isLoading: isApproving }] =
     useApproveVendorApplicationMutation();
+
   const [rejectVendor, { isLoading: isRejecting }] =
     useRejectVendorApplicationMutation();
 
-  // Use API data if available, else fallback seed
+  // ✅ REAL dynamic rows (no seed fallback)
   const applicationRows: VendorApplicationRow[] = useMemo(() => {
-    // If your backend response shape differs, adjust mapping here
-    const apiRows = data?.data;
-    if (!apiRows?.length) return applicationSeed;
-
-    return apiRows.map((app: any) => {
-      const vendor = app.vendor ?? {};
-      return {
-        id: app.id,
-        vendorId: vendor.id ?? app.vendorId,
-        businessName: vendor.businessName ?? "—",
-        slug: vendor.slug ?? "—",
-        vendorStatus: vendor.status ?? "PENDING_REVIEW",
-        kycStatus: vendor.kycStatus ?? "NOT_SUBMITTED",
-        city: vendor.city?.name ?? undefined,
-        contactEmail: vendor.contactEmail ?? undefined,
-        contactPhone: vendor.contactPhone ?? undefined,
-        status: app.status,
-        submittedAt: app.submittedAt,
-        reviewedAt: app.reviewedAt ?? null,
-        adminComment: app.adminComment ?? null,
-        reviewedBy: app.reviewedBy ?? null,
-      } as VendorApplicationRow;
-    });
+    const apiRows = data?.data ?? [];
+    return apiRows.map(toVendorApplicationRow);
   }, [data]);
 
-  const defaultFilters = useMemo(
-    () => (defaultStatusFilter ? { status: defaultStatusFilter } : undefined),
-    [defaultStatusFilter],
-  );
-
-  const listingTitle = titleOverride ?? "Vendor Applications";
-  const breadcrumb = breadcrumbOverride ?? "Admin / Vendor Applications";
-
-  useEffect(() => {
-    dispatch(setPageTitle(listingTitle));
-  }, [dispatch, listingTitle]);
-
   const totals = useMemo(() => {
-    const pending = applicationRows.filter(
-      (a) => a.status === "PENDING",
-    ).length;
-    const approved = applicationRows.filter(
-      (a) => a.status === "APPROVED",
-    ).length;
-    const rejected = applicationRows.filter(
-      (a) => a.status === "REJECTED",
-    ).length;
-    const moreInfo = applicationRows.filter(
-      (a) => a.status === "MORE_INFO_REQUIRED",
-    ).length;
+    const pending = applicationRows.filter((a) => a.status === "PENDING").length;
+    const approved = applicationRows.filter((a) => a.status === "APPROVED").length;
+    const rejected = applicationRows.filter((a) => a.status === "REJECTED").length;
+    const moreInfo = applicationRows.filter((a) => a.status === "MORE_INFO_REQUIRED").length;
 
     return { pending, approved, rejected, moreInfo };
   }, [applicationRows]);
@@ -217,20 +179,20 @@ export default function VendorApplicationsPage({
   const handleApprove = async (id: string) => {
     try {
       await approveVendor({ id }).unwrap();
-    } catch (err) {
-      console.error("Approve failed", err);
+      // auto refresh happens due to invalidatesTags
+    } catch (e) {
+      console.error("Approve failed", e);
     }
   };
 
   const handleReject = async (id: string) => {
     try {
-      // Your backend requires body { reason }
       await rejectVendor({
         id,
         body: { reason: "Not enough documentation." },
       }).unwrap();
-    } catch (err) {
-      console.error("Reject failed", err);
+    } catch (e) {
+      console.error("Reject failed", e);
     }
   };
 
@@ -240,16 +202,14 @@ export default function VendorApplicationsPage({
         key: "businessName",
         title: "Vendor",
         sortable: true,
-        render: (value: any, row: RowData) => {
+        render: (_value: any, row: RowData) => {
           const r = row as VendorApplicationRow;
 
           return (
             <div className="flex flex-col">
-              <span className="font-semibold text-slate-900">
-                {String(value ?? r.businessName ?? "—")}
-              </span>
+              <span className="font-semibold text-slate-900">{r.businessName}</span>
               <span className="text-xs font-medium text-slate-500">
-                {(r.city ?? "Unknown city") + " • " + (r.slug ?? "—")}
+                {(r.city ?? "Unknown city") + " • " + r.slug}
               </span>
             </div>
           );
@@ -365,7 +325,7 @@ export default function VendorApplicationsPage({
         },
       },
     ],
-    [isApproving, isRejecting],
+    [isApproving, isRejecting]
   );
 
   const filters = useMemo<FilterConfig[]>(
@@ -382,7 +342,7 @@ export default function VendorApplicationsPage({
         ],
       },
     ],
-    [],
+    []
   );
 
   const sortOptions = useMemo(
@@ -391,7 +351,7 @@ export default function VendorApplicationsPage({
       { key: "reviewedAt", label: "Reviewed (Newest first desc)" },
       { key: "businessName", label: "Business name (A-Z)" },
     ],
-    [],
+    []
   );
 
   const actions = useMemo<ActionConfig<VendorApplicationRow>[]>(
@@ -413,14 +373,41 @@ export default function VendorApplicationsPage({
           console.log("Email vendor", row.contactEmail ?? "N/A"),
       },
     ],
-    [],
+    []
   );
+
+  const summaryLeft = useMemo(() => {
+    if (isLoading) return "Loading applications...";
+    if (isFetching) return "Refreshing applications...";
+    if (isError) return "Failed to load applications. Please refresh.";
+    if (dateRangeLabel) return `Range: ${dateRangeLabel}`;
+    return "Use the quick date selector in the table header.";
+  }, [isLoading, isFetching, isError, dateRangeLabel]);
+
+  // Optional: show error details in console
+  useEffect(() => {
+    if (isError) console.error("Vendor applications error:", error);
+  }, [isError, error]);
 
   return (
     <ListingPage
       title={listingTitle}
       breadCrumbTitle={breadcrumb}
       description="Approve strong vendors fast, reject low-quality submissions, and request more info when needed."
+      headerSlot={
+        isError ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Retry
+            </button>
+          </div>
+        ) : null
+      }
       stats={[
         {
           title: "Pending",
@@ -452,11 +439,7 @@ export default function VendorApplicationsPage({
         },
       ]}
       summary={{
-        left: isLoading
-          ? "Loading applications..."
-          : dateRangeLabel
-            ? `Range: ${dateRangeLabel}`
-            : "Use the quick date selector in the table header.",
+        left: summaryLeft,
         right: `Selected applications: ${selectedRows.length}`,
       }}
       tableProps={{
