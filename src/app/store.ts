@@ -6,6 +6,7 @@ import themeConfigSlice from "@/features/Layout/themeConfigSlice";
 import { authApi } from "@/features/auth/api/authApi";
 import { preferencesApi } from "@/features/preferences/api/preferencesApi";
 import { adminVendorApi } from "@/features/admin/vendors/api/vendorsApi";
+import { adminLeadPlansApi } from "@/features/adminLeads/api/adminLeadPlans.api";
 
 export const store = configureStore({
   reducer: {
@@ -15,12 +16,14 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [preferencesApi.reducerPath]: preferencesApi.reducer,
     [adminVendorApi.reducerPath]: adminVendorApi.reducer,
+    [adminLeadPlansApi.reducerPath]: adminLeadPlansApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(authApi.middleware)
       .concat(preferencesApi.middleware)
-      .concat(adminVendorApi.middleware),
+      .concat(adminVendorApi.middleware)
+      .concat(adminLeadPlansApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
