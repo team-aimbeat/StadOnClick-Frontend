@@ -414,6 +414,7 @@ export default function VendorApplicationsPage({
         ) : null
       }
       tableProps={{
+        title: "Vendor Applications",
         data: applicationRows,
         columns,
         filters,
