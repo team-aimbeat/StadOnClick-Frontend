@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, NavLink } from "react-router-dom";
 import { HiOutlineArrowLeft, HiOutlineCalendar, HiOutlineUser, HiOutlineSparkles } from "react-icons/hi2";
 
@@ -6,17 +6,21 @@ import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
-import { bookingsSeed } from "@/pages/BookingsPage";
+import { useGetBookingsQuery } from "@/services/bookingsApi";
 
 const VendorBookingDetail = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const dispatch = useAppDispatch();
+  const { data: bookings } = useGetBookingsQuery();
 
   useEffect(() => {
     dispatch(setPageTitle(`Booking ${bookingId ?? ""}`));
   }, [dispatch, bookingId]);
 
-  const booking = bookingsSeed.find((row) => row.id === bookingId);
+  const booking = useMemo(
+    () => bookings?.find((row) => row.id === bookingId),
+    [bookings, bookingId],
+  );
 
   if (!booking) {
     return (
