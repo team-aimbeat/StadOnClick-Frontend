@@ -19,6 +19,13 @@ type Coupon = {
   preview: string;
 };
 
+const gradientClasses = [
+  "from-slate-900 to-red-600",
+  "from-slate-900 to-fuchsia-600",
+  "from-sky-900 to-emerald-600",
+  "from-red-900 to-amber-500",
+];
+
 const VendorCoupons = () => {
   const dispatch = useAppDispatch();
 
@@ -26,6 +33,21 @@ const VendorCoupons = () => {
     useGetCouponsQuery();
 
   const [createCoupon] = useCreateCouponMutation();
+  const [previewCouponCode, setPreviewCouponCode] = useState<string>();
+  const [previewGradient, setPreviewGradient] = useState(gradientClasses[0]);
+  const handlePreview = (couponCode: string, index: number) => {
+    setPreviewCouponCode(couponCode);
+    setPreviewGradient(gradientClasses[index % gradientClasses.length]);
+  };
+
+  const activeCoupon = useMemo(() => {
+    const target =
+      previewCouponCode
+        ? coupons.find((c) => c.code === previewCouponCode)
+        : coupons.find((c) => c.status === "ACTIVE");
+
+    return target ?? coupons[0];
+  }, [coupons, previewCouponCode]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [form, setForm] = useState({
@@ -41,10 +63,23 @@ const VendorCoupons = () => {
     dispatch(setPageTitle("Coupons"));
   }, [dispatch]);
 
-  const activeCoupon = useMemo(
-    () => coupons.find((c) => c.status === "ACTIVE") ?? coupons[0],
-    [coupons]
-  );
+  useEffect(() => {
+    if (!activeCoupon) {
+      setPreviewGradient(gradientClasses[0]);
+      return;
+    }
+
+    const index = coupons.findIndex((coupon) => coupon.code === activeCoupon.code);
+    const gradient = gradientClasses[index % gradientClasses.length] ?? gradientClasses[0];
+    setPreviewGradient(gradient);
+  }, [activeCoupon, coupons]);
+
+  useEffect(() => {
+    if (!previewCouponCode && coupons.length) {
+      const fallback = coupons.find((coupon) => coupon.status === "ACTIVE") ?? coupons[0];
+      setPreviewCouponCode(fallback?.code);
+    }
+  }, [coupons, previewCouponCode]);
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -127,9 +162,11 @@ const VendorCoupons = () => {
             Preview
           </p>
           <div className="mt-4 flex items-center justify-center">
-            <div className="relative flex w-full max-w-md items-stretch gap-3 rounded-[26px]  bg-gradient-to-r from-slate-900 to-red-600 text-white ">
-              <div className="pointer-events-none absolute left-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  border-white bg-white" />
-              <div className="pointer-events-none absolute right-[-14px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border-2 border-white bg-white" />
+            <div
+              className={`relative flex w-full max-w-md items-stretch gap-3 rounded-[26px] bg-gradient-to-r ${previewGradient} text-white`}
+            >
+              <div className="pointer-events-none absolute left-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  bg-white" />
+              <div className="pointer-events-none absolute right-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  bg-white" />
               <div className="flex w-35 flex-col items-center justify-between  bg-slate-100 px-3 py-4 text-center font-black text-slate-900">
                 <span className="text-[10px] uppercase tracking-[0.4em]">SHOPPING COUPON</span>
                 <span className="text-4xl leading-none">{activeCoupon?.discount ?? 0}%</span>
@@ -137,13 +174,13 @@ const VendorCoupons = () => {
               </div>
               <div className="flex w-3/4 flex-col justify-center gap-2 px-5 py-4 text-left">
                 <p className="text-xs uppercase tracking-[0.4em] text-white/70">
-                  REALLYGREATSITE.COM
+                  STADONCLICK.COM
                 </p>
                 <p className="text-3xl font-black uppercase tracking-[0.3em]">COUPON</p>
                 <p className="text-[12px] uppercase tracking-[0.35em] text-white/80">
                   Valid until <span className="font-semibold">{activeCoupon?.expiry ?? "DECEMBER 2023"}</span>
                 </p>
-                <p className="text-[14px] tracking-[0.2em] text-white/80">
+                <p className="text-[14px]  tracking-[0.2em] text-white/80">
                   Code: {activeCoupon?.code ?? "CODE"}
                 </p>
               </div>
@@ -160,18 +197,19 @@ const VendorCoupons = () => {
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Code</th>
-                    <th className="px-4 py-3 text-left">Title</th>
-                    <th className="px-4 py-3 text-left">Discount</th>
-                    <th className="px-4 py-3 text-left">Min order</th>
-                    <th className="px-4 py-3 text-left">Uses</th>
-                    <th className="px-4 py-3 text-left">Expiry</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                  </tr>
+                    <tr>
+                      <th className="px-4 py-3 text-left">Code</th>
+                      <th className="px-4 py-3 text-left">Title</th>
+                      <th className="px-4 py-3 text-left">Discount</th>
+                      <th className="px-4 py-3 text-left">Min order</th>
+                      <th className="px-4 py-3 text-left">Uses</th>
+                      <th className="px-4 py-3 text-left">Expiry</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Actions</th>
+                    </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {coupons.map((coupon) => (
+                  {coupons.map((coupon, index) => (
                     <tr key={coupon.code}>
                       <td className="px-4 py-3 font-semibold text-slate-900">
                         {coupon.code}
@@ -193,6 +231,19 @@ const VendorCoupons = () => {
                         >
                           {coupon.status}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => handlePreview(coupon.code, index)}
+                          className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                            previewCouponCode === coupon.code
+                              ? "border-white bg-white text-slate-900"
+                              : "border-transparent bg-white/10 text-white hover:border-white hover:bg-white/20"
+                          }`}
+                        >
+                          Preview
+                        </button>
                       </td>
                     </tr>
                   ))}
