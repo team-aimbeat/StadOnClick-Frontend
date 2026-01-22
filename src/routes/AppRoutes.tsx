@@ -41,6 +41,7 @@ import VendorLayout from "@/components/layout/VendorLayout";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
+
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
@@ -48,6 +49,7 @@ import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
 import AdminNotFound from "@/pages/Admin/AdminNotFound";
 import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
+import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -130,6 +132,11 @@ const appRouter = createBrowserRouter([
       {
         path: "vendors",
         element: <VendorsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "leads/plans",
+        element: <LeadPlansPage />,
         errorElement: <ErrorPage />,
       },
       {
