@@ -1,6 +1,23 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { HiOutlineChevronRight, HiOutlinePlus, HiOutlineXMark } from "react-icons/hi2";
+import {
+  HiOutlineCalendarDays,
+  HiOutlineChartBar,
+  HiOutlineChevronRight,
+  HiOutlineClock,
+  HiOutlineGlobeAlt,
+  HiOutlineIdentification,
+  HiOutlineMap,
+  HiOutlinePlus,
+  HiOutlineShare,
+  HiOutlineSparkles,
+  HiOutlineTag,
+  HiOutlineUsers,
+  HiOutlineXMark,
+  HiOutlinePhone,
+  HiOutlineDocumentText,
+} from "react-icons/hi2";
+import type { IconType } from "react-icons";
 
 import { DashboardContainer } from "@/components/dashboard";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
@@ -32,6 +49,13 @@ type Service = {
   pricingModel: PricingModel;
   hasMedia: boolean;
   offerings: Offering[];
+};
+type BusinessSection = {
+  id: string;
+  title: string;
+  value: string;
+  helper?: string;
+    icon: IconType;
 };
 
 const serviceSeeds: Service[] = [
@@ -112,11 +136,31 @@ const VendorServices = () => {
   const dispatch = useAppDispatch();
   const loading = useMockLoader();
   const [services, setServices] = useState(serviceSeeds);
-  const [expanded, setExpanded] = useState<string[]>(serviceSeeds.map((svc) => svc.id));
-  const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", category: "", price: "" });
   const [notification, setNotification] = useState("");
   const notifyRef = useRef<number>();
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState(
+    serviceSeeds[0]?.category ?? "General"
+  );
+  const [serviceDraft, setServiceDraft] = useState({
+    name: "",
+    story: "",
+    basePrice: "",
+    salePrice: "",
+    usesSlots: true,
+  });
+  const [slotDraft, setSlotDraft] = useState({
+    label: "",
+    startTime: "",
+    capacity: 2,
+  });
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [ruleDraft, setRuleDraft] = useState({
+    type: "",
+    value: "",
+  });
+  const [rules, setRules] = useState<{ id: string; type: string; value: string }[]>([]);
 
   useEffect(() => {
     dispatch(setPageTitle("Services"));
@@ -134,10 +178,89 @@ const VendorServices = () => {
     notifyRef.current = window.setTimeout(() => setNotification(""), 2000);
   };
 
-  const toggleExpansion = (id: string) => {
-    setExpanded((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+  const categoryOptions = useMemo(
+    () => Array.from(new Set(serviceSeeds.map((svc) => svc.category))),
+    []
+  );
+
+  const wizardSteps = [
+    { id: 1, label: "Category", helper: "Pick a category that describes your service" },
+    { id: 2, label: "Offer", helper: "Describe the experience you'd like to list" },
+    { id: 3, label: "Slot", helper: "Schedule when the offering is available" },
+    { id: 4, label: "Rules", helper: "Add booking or eligibility rules" },
+  ];
+
+  const resetWizard = () => {
+    setWizardStep(1);
+    setSelectedCategory(categoryOptions[0] ?? "General");
+    setServiceDraft({ name: "", story: "", basePrice: "", salePrice: "", usesSlots: true });
+    setSlotDraft({ label: "", startTime: "", capacity: 2 });
+    setSlots([]);
+    setRuleDraft({ type: "", value: "" });
+    setRules([]);
+  };
+
+  const handleAddSlotDraft = () => {
+    if (!slotDraft.label.trim() || !slotDraft.startTime) return;
+    const nextSlot: Slot = {
+      id: `wizard-slot-${Date.now()}-${slots.length}`,
+      label: `${slotDraft.label} · ${new Date(slotDraft.startTime).toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+      })}`,
+      capacity: slotDraft.capacity,
+    };
+    setSlots((prev) => [...prev, nextSlot]);
+    setSlotDraft({ label: "", startTime: "", capacity: 2 });
+  };
+
+  const handleRemoveSlotDraft = (id: string) => {
+    setSlots((prev) => prev.filter((slot) => slot.id !== id));
+  };
+
+  const handleAddRuleDraft = () => {
+    if (!ruleDraft.type.trim() || !ruleDraft.value.trim()) return;
+    setRules((prev) => [
+      ...prev,
+      { id: `wizard-rule-${Date.now()}-${prev.length}`, type: ruleDraft.type.trim(), value: ruleDraft.value.trim() },
+    ]);
+    setRuleDraft({ type: "", value: "" });
+  };
+
+  const handleNextStep = () => {
+    setWizardStep((prev) => Math.min(prev + 1, wizardSteps.length));
+  };
+
+  const handlePrevStep = () => {
+    setWizardStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmitWizard = () => {
+    if (!serviceDraft.name.trim()) return;
+    const newOfferingId = `offering-${Date.now()}`;
+    const newService: Service = {
+      id: `svc-${Date.now()}`,
+      name: serviceDraft.name.trim(),
+      story: serviceDraft.story.trim() || "New service listing",
+      category: selectedCategory,
+      status: "DRAFT",
+      pricingModel: "fixed",
+      hasMedia: false,
+      offerings: [
+        {
+          id: newOfferingId,
+          name: serviceDraft.name.trim(),
+          price: Number(serviceDraft.salePrice || serviceDraft.basePrice || 0),
+          status: "ACTIVE",
+          pricingModel: "fixed",
+          slots: slots.length ? slots : [],
+        },
+      ],
+    };
+    setServices((prev) => [...prev, newService]);
+    addNotification("Service created (draft)");
+    setWizardOpen(false);
+    resetWizard();
   };
 
   const handleToggleServiceStatus = (id: string) => {
@@ -190,7 +313,11 @@ const VendorServices = () => {
             for (let i = 0; i < count; i += 1) {
               nextSlots.push({
                 id: `${offeringId}-slot-${nextSlots.length + 1}`,
-                label: `Slot ${nextSlots.length + 1} · ${["09:00 AM", "12:00 PM", "03:00 PM"][i % 3]}`,
+                label: `Slot ${nextSlots.length + 1} · ${[
+                  "09:00 AM",
+                  "12:00 PM",
+                  "03:00 PM",
+                ][i % 3]}`,
                 capacity: 2,
               });
             }
@@ -223,11 +350,6 @@ const VendorServices = () => {
     addNotification("Slot removed");
   };
 
-  const handleCreateService = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    addNotification("Service draft created");
-  };
-
   const hasLiveWarning = (service: Service) =>
     service.status === "LIVE" && service.offerings.every((offering) => offering.slots.length === 0);
 
@@ -235,6 +357,178 @@ const VendorServices = () => {
     () => services.filter((svc) => !svc.hasMedia),
     [services]
   );
+
+  const businessProfile = useMemo(() => {
+    const categories = Array.from(new Set(services.map((svc) => svc.category)));
+    return {
+      businessName: "Aimbeat",
+      description: "Strategic growth studio for ambitious founders.",
+      contactPhone: "+(91)-9870066177, 9820790117",
+      contactEmail: "hello@aimbeat.com",
+      address: "706 / A HDIL Premier Residency, Kohinoor City Phase 1 Rd, Kurla West-400070",
+      city: "Mumbai, Maharashtra",
+      mapLocation: "Andheri East · 19.11°N, 72.87°E",
+      timings: "Open Now · Mon – Sat",
+      yearEstablished: "Nov 2009",
+      categories: categories.length ? categories.join(", ") : "Multiple categories",
+      categoryCount: categories.length,
+      turnover: "26 - 50 Lakhs",
+      employees: "10 - 100",
+      website: "www.aimbeat.com",
+      socialMedia: "facebook.com/aimbeatcom",
+      businessTools: "Manage Offers, Reviews and more",
+      kyc: "Update KYC Details",
+      additionalInfo: "Update Services, Amenities, Shopping & Delivery Options",
+    };
+  }, [services]);
+
+  const businessSections: BusinessSection[] = useMemo(
+    () => [
+      {
+        id: "business-name",
+        title: "Business Name",
+        value: businessProfile.businessName,
+        helper: businessProfile.description,
+        icon: HiOutlineIdentification,
+      },
+      {
+        id: "contact-details",
+        title: "Contact Details",
+        value: businessProfile.contactPhone,
+        helper: businessProfile.contactEmail,
+        icon: HiOutlinePhone,
+      },
+      {
+        id: "business-address",
+        title: "Business Address",
+        value: businessProfile.address,
+        helper: businessProfile.city,
+        icon: HiOutlinePhone,
+      },
+      {
+        id: "map-location",
+        title: "Map Location",
+        value: businessProfile.mapLocation,
+        helper: "Pin coordinates updated from services",
+        icon: HiOutlineMap,
+      },
+      {
+        id: "business-timings",
+        title: "Business Timings",
+        value: businessProfile.timings,
+        helper: "Operational hours for bookings",
+        icon: HiOutlineClock,
+      },
+      {
+        id: "year-established",
+        title: "Year of Establishment",
+        value: businessProfile.yearEstablished,
+        helper: "Serving customers since 2009",
+        icon: HiOutlineCalendarDays,
+      },
+      {
+        id: "business-categories",
+        title: "Business Categories",
+        value: businessProfile.categories,
+        helper: `${businessProfile.categoryCount} categories selected`,
+        icon: HiOutlineTag,
+      },
+      {
+        id: "yearly-turnover",
+        title: "Yearly Turnover",
+        value: businessProfile.turnover,
+        helper: "Auto calculated from leads",
+        icon: HiOutlineChartBar,
+      },
+      {
+        id: "number-of-employees",
+        title: "Number of Employees",
+        value: businessProfile.employees,
+        helper: "Core operations & field teams",
+        icon: HiOutlineUsers,
+      },
+      {
+        id: "website",
+        title: "Business Website",
+        value: businessProfile.website,
+        helper: "Public storefront",
+        icon: HiOutlineGlobeAlt,
+      },
+      {
+        id: "social-media",
+        title: "Social Media",
+        value: businessProfile.socialMedia,
+        helper: "Engagement links",
+        icon: HiOutlineShare,
+      },
+      {
+        id: "business-tools",
+        title: "Business Tools",
+        value: businessProfile.businessTools,
+        helper: "Bundles for offers, reviews, leads",
+        icon: HiOutlineSparkles,
+      },
+      {
+        id: "kyc",
+        title: "KYC, Payments & Invoices",
+        value: businessProfile.kyc,
+        helper: "Stripe / tax checks",
+        icon: HiOutlineDocumentText,
+      },
+      {
+        id: "additional-info",
+        title: "Additional Business Info",
+        value: businessProfile.additionalInfo,
+        helper: "Enable amenities, shipping & delivery options",
+        icon: HiOutlineSparkles,
+      },
+    ],
+    [businessProfile]
+  );
+
+  const serviceInsights = useMemo(() => {
+    const totalOfferings = services.reduce((sum, svc) => sum + svc.offerings.length, 0);
+    const totalSlots = services.reduce(
+      (sum, svc) =>
+        sum +
+        svc.offerings.reduce((slotCount, offering) => slotCount + offering.slots.length, 0),
+      0
+    );
+
+    const insights = [
+      { label: "Services", value: services.length, tone: "emerald" },
+      { label: "Offerings", value: totalOfferings },
+      { label: "Slots", value: totalSlots },
+    ];
+
+    if (servicesWithoutMedia.length) {
+      insights.push({
+        label: "Media reminders",
+        value: `${servicesWithoutMedia.length} service${servicesWithoutMedia.length > 1 ? "s" : ""}`,
+        tone: "amber",
+      });
+    }
+
+    return insights;
+  }, [services, servicesWithoutMedia]);
+
+  const mediaPreview = [
+    { label: "Service teaser", tone: "from-rose-500 to-amber-500" },
+    { label: "Team stories", tone: "from-sky-500 to-indigo-600" },
+    { label: "Workspace", tone: "from-emerald-500 to-lime-500" },
+  ];
+
+  const stepReady =
+    wizardStep === 1
+      ? Boolean(selectedCategory)
+      : wizardStep === 2
+      ? Boolean(serviceDraft.name.trim())
+      : wizardStep === 3
+      ? !serviceDraft.usesSlots || slots.length > 0
+      : true;
+  const isWizardActionEnabled =
+    wizardStep === wizardSteps.length ? Boolean(serviceDraft.name.trim()) : stepReady;
+  const wizardActionLabel = wizardStep === wizardSteps.length ? "Create service" : "Next";
 
   if (loading) {
     return (
@@ -258,7 +552,10 @@ const VendorServices = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setCreateOpen((prev) => !prev)}
+            onClick={() => {
+              resetWizard();
+              setWizardOpen(true);
+            }}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300 hover:text-blue-600"
           >
             <HiOutlinePlus className="h-4 w-4" />
@@ -270,219 +567,292 @@ const VendorServices = () => {
           >
             View growth ideas
           </NavLink>
-        </div>
       </div>
-
+    </div>
+      {wizardOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+          <div className="w-full max-w-5xl rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex flex-col gap-6 lg:flex-row">
+              <div className="space-y-3 text-sm lg:w-1/3">
+                {wizardSteps.map((step) => {
+                  const isActive = wizardStep === step.id;
+                  return (
+                    <button
+                      key={step.id}
+                      type="button"
+                      onClick={() => setWizardStep(step.id)}
+                      className={`flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${
+                        isActive ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
+                          isActive ? "bg-blue-500 text-white" : "border border-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {step.id}
+                      </span>
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
+                          Step {step.id}
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900">{step.label}</p>
+                        <p className="text-xs text-slate-500">{step.helper}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="space-y-4 lg:w-2/3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Step {wizardStep}</p>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {wizardSteps[wizardStep - 1]?.label}
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    {wizardSteps[wizardStep - 1]?.helper}
+                  </p>
+                </div>
+                {wizardStep === 1 && (
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                      Choose category
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {categoryOptions.concat("General").map((category) => (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => setSelectedCategory(category)}
+                          className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                            selectedCategory === category
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                          }`}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {wizardStep === 2 && (
+                  <div className="space-y-3">
+                    <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                      Service name
+                      <input
+                        value={serviceDraft.name}
+                        onChange={(event) =>
+                          setServiceDraft((prev) => ({ ...prev, name: event.target.value }))
+                        }
+                        placeholder="Executive Cleaning"
+                        className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                      Story
+                      <textarea
+                        value={serviceDraft.story}
+                        onChange={(event) =>
+                          setServiceDraft((prev) => ({ ...prev, story: event.target.value }))
+                        }
+                        placeholder="What makes this experience special?"
+                        className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Base price
+                        <input
+                          type="number"
+                          value={serviceDraft.basePrice}
+                          onChange={(event) =>
+                            setServiceDraft((prev) => ({ ...prev, basePrice: event.target.value }))
+                          }
+                          className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Sale price
+                        <input
+                          type="number"
+                          value={serviceDraft.salePrice}
+                          onChange={(event) =>
+                            setServiceDraft((prev) => ({ ...prev, salePrice: event.target.value }))
+                          }
+                          className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                        />
+                      </label>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={serviceDraft.usesSlots}
+                        onChange={(event) =>
+                          setServiceDraft((prev) => ({ ...prev, usesSlots: event.target.checked }))
+                        }
+                      />
+                      Uses slots
+                    </label>
+                  </div>
+                )}
+                {wizardStep === 3 && (
+                  <div className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Slot name
+                        <input
+                          value={slotDraft.label}
+                          onChange={(event) => setSlotDraft((prev) => ({ ...prev, label: event.target.value }))}
+                          className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Start time
+                        <input
+                          type="datetime-local"
+                          value={slotDraft.startTime}
+                          onChange={(event) =>
+                            setSlotDraft((prev) => ({ ...prev, startTime: event.target.value }))
+                          }
+                          className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <div className="flex-1">
+                        <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                          Capacity
+                          <input
+                            type="number"
+                            min={1}
+                            value={slotDraft.capacity}
+                            onChange={(event) =>
+                              setSlotDraft((prev) => ({ ...prev, capacity: Number(event.target.value) || 1 }))
+                            }
+                            className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                          />
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddSlotDraft}
+                        className="rounded-2xl border border-blue-500 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700"
+                      >
+                        Add slot
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {slots.length ? (
+                        slots.map((slot) => (
+                          <div
+                            key={slot.id}
+                            className="flex items-center justify-between rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                          >
+                            <div>
+                              <p className="font-semibold text-slate-900">{slot.label}</p>
+                              <p className="text-xs text-slate-500">Capacity {slot.capacity}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSlotDraft(slot.id)}
+                              className="text-xs font-semibold text-rose-500"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-slate-500">No slots yet</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {wizardStep === 4 && (
+                  <div className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Rule type
+                        <input
+                          value={ruleDraft.type}
+                          onChange={(event) => setRuleDraft((prev) => ({ ...prev, type: event.target.value }))}
+                          className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label className="block text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">
+                        Rule value
+                        <input
+                          value={ruleDraft.value}
+                          onChange={(event) => setRuleDraft((prev) => ({ ...prev, value: event.target.value }))}
+                          className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm"
+                        />
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddRuleDraft}
+                      className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700"
+                    >
+                      Add rule
+                    </button>
+                    <div className="space-y-2">
+                      {rules.length ? (
+                        rules.map((rule) => (
+                          <div key={rule.id} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                            <p className="font-semibold text-slate-900">{rule.type}</p>
+                            <p className="text-xs text-slate-500">{rule.value}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-slate-500">No rules yet</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setWizardOpen(false)}
+                    className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600"
+                  >
+                    Cancel
+                  </button>
+                  <div className="flex items-center gap-3">
+                    {wizardStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={handlePrevStep}
+                        className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600"
+                      >
+                        Back
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={!isWizardActionEnabled}
+                      onClick={wizardStep === wizardSteps.length ? handleSubmitWizard : handleNextStep}
+                      className={`rounded-2xl px-4 py-2 text-xs font-semibold transition ${
+                        isWizardActionEnabled
+                          ? "border border-blue-600 bg-blue-600 text-white hover:bg-blue-700"
+                          : "border border-transparent bg-slate-200 text-slate-400"
+                      }`}
+                    >
+                      {wizardActionLabel}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {notification && (
         <div className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700">
           {notification}
         </div>
       )}
 
-      {createOpen && (
-        <form
-          onSubmit={handleCreateService}
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-        >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <input
-              placeholder="Service name"
-              value={form.name}
-              onChange={(event) => setForm({ ...form, name: event.target.value })}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-300 focus:outline-none"
-            />
-            <input
-              placeholder="Category"
-              value={form.category}
-              onChange={(event) => setForm({ ...form, category: event.target.value })}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-300 focus:outline-none"
-            />
-            <input
-              placeholder="Base price"
-              value={form.price}
-              onChange={(event) => setForm({ ...form, price: event.target.value })}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-300 focus:outline-none"
-            />
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <p className="text-xs text-slate-500">Draft will be saved for review before publishing.</p>
-            <button
-              type="submit"
-              className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-            >
-              Create service
-            </button>
-          </div>
-        </form>
-      )}
 
-      {services.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-700">
-          No active services yet. Create a service so customers can place orders from StadonClick.
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={() => setCreateOpen(true)}
-              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:border-blue-300 hover:text-blue-600"
-            >
-              Start with a service
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {services.map((service) => (
-            <div
-              key={service.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-slate-900">{service.name}</p>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{service.category}</p>
-                  <p className="text-xs text-slate-500">{service.story}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusPill status={service.status} size="sm" />
-                  <StatusPill status={service.pricingModel.toUpperCase()} size="sm" tone="info" />
-                  <button
-                    type="button"
-                    onClick={() => handleToggleServiceStatus(service.id)}
-                    className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600 hover:border-slate-300"
-                  >
-                    {service.status === "LIVE" ? "Pause" : "Activate"}
-                  </button>
-                  <NavLink
-                    to={`/vendor/services/${service.id}/options`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-500"
-                  >
-                    Service Options
-                    <HiOutlineChevronRight className="h-4 w-4" />
-                  </NavLink>
-                </div>
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-500">
-                <span>Offerings: {service.offerings.length}</span>
-                <span>
-                  Slots:{" "}
-                  {service.offerings.reduce((total, curr) => total + curr.slots.length, 0) || "0"}
-                </span>
-                <span>Media: {service.hasMedia ? "Complete" : "Missing"}</span>
-                <span className="inline-flex items-center gap-1">
-                  Pricing model
-                  <select
-                    value={service.pricingModel}
-                    onChange={(event) =>
-                      handlePricingChange(service.id, event.target.value as PricingModel)
-                    }
-                    className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600"
-                  >
-                    <option value="fixed">Fixed</option>
-                    <option value="hourly">Hourly</option>
-                    <option value="package">Package</option>
-                  </select>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => addNotification("Create offering flow coming soon")}
-                  className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
-                >
-                  Create offering
-                </button>
-              </div>
-
-              {hasLiveWarning(service) && (
-                <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-                  Service is LIVE but no slots available.
-                </div>
-              )}
-
-              {!service.hasMedia && (
-                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-                  Service has no media, may rank lower.
-                </div>
-              )}
-
-              <div className="mt-4 space-y-3">
-                {service.offerings.map((offering) => (
-                  <div
-                    key={offering.id}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-3"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{offering.name}</p>
-                        <p className="text-xs text-slate-500">
-                          ₹{offering.price} · {offering.pricingModel}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <StatusPill status={offering.status} size="sm" />
-                        <button
-                          type="button"
-                          onClick={() => handleOfferingStatus(service.id, offering.id)}
-                          className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600"
-                        >
-                          {offering.status === "ACTIVE" ? "Pause" : "Activate"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAddSlot(service.id, offering.id)}
-                          className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600"
-                        >
-                          Add slot
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAddSlot(service.id, offering.id, true)}
-                          className="rounded-full border border-blue-200 px-3 py-1 text-[11px] font-semibold text-blue-600"
-                        >
-                          Bulk add
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold">
-                      {offering.slots.map((slot) => (
-                        <span
-                          key={slot.id}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700"
-                        >
-                          {slot.label} · Cap {slot.capacity}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSlot(service.id, offering.id, slot.id)}
-                            className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 text-[10px] text-slate-500 hover:bg-slate-200"
-                          >
-                            <HiOutlineXMark className="h-3 w-3" />
-                          </button>
-                        </span>
-                      ))}
-                      {!offering.slots.length && (
-                        <span className="rounded-full border border-dashed border-slate-300 px-3 py-1 text-[11px] text-slate-500">
-                          No slots yet
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {servicesWithoutMedia.length > 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-600">
-          <p className="font-semibold text-slate-900">Media reminder</p>
-          <p>
-            {servicesWithoutMedia.length} service
-            {servicesWithoutMedia.length > 1 ? "s" : ""} missing media. Upload photos or videos so the
-            listing ranks higher.
-          </p>
-        </div>
-      )}
     </DashboardContainer>
   );
 };

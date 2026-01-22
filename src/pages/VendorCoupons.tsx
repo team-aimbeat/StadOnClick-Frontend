@@ -1,12 +1,13 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { HiOutlinePlus, HiOutlineXMark } from "react-icons/hi2";
+import { HiEye, HiEyeSlash, HiOutlinePlus } from "react-icons/hi2";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useCreateCouponMutation, useGetCouponsQuery } from "@/services/vendoiCouponsApi";
+import { CouponDialog, CouponFormValues } from "@/components/modals/CouponDialog";
 
 type Coupon = {
   code: string;
@@ -49,15 +50,7 @@ const VendorCoupons = () => {
     return target ?? coupons[0];
   }, [coupons, previewCouponCode]);
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [form, setForm] = useState({
-    code: "",
-    title: "",
-    discount: 10,
-    minOrder: 0,
-    maxUses: 10,
-    expiry: "",
-  });
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     dispatch(setPageTitle("Coupons"));
@@ -81,33 +74,27 @@ const VendorCoupons = () => {
     }
   }, [coupons, previewCouponCode]);
 
-  const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleCreateCoupon = async (
+    values: CouponFormValues,
+  ): Promise<string | undefined> => {
     const payload: Partial<Coupon> = {
-      code: form.code.toUpperCase().replace(/\s+/g, ""),
-      title: form.title,
-      discount: form.discount,
-      minOrder: form.minOrder,
-      maxUses: form.maxUses,
-      expiry: form.expiry,
+      code: values.code.toUpperCase().replace(/\s+/g, ""),
+      title: values.title,
+      discount: values.discount,
+      minOrder: values.minOrder,
+      maxUses: values.maxUses,
+      expiry: values.expiry,
       status: "ACTIVE",
-      preview: `${form.title} · ${form.discount}% off`,
+      preview: `${values.title} � ${values.discount}% off`,
     };
 
     try {
-      await createCoupon(payload).unwrap();
-      setDrawerOpen(false);
-      setForm({
-        code: "",
-        title: "",
-        discount: 10,
-        minOrder: 0,
-        maxUses: 10,
-        expiry: "",
-      });
+      const newCoupon = await createCoupon(payload).unwrap();
+      setPreviewCouponCode(newCoupon.code);
+      return undefined;
     } catch (err) {
       console.error("Failed to create coupon", err);
+      return (err as any)?.data?.message || "Failed to create coupon";
     }
   };
 
@@ -141,7 +128,7 @@ const VendorCoupons = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => setDialogOpen(true)}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300"
           >
             <HiOutlinePlus className="h-4 w-4" />
@@ -242,7 +229,7 @@ const VendorCoupons = () => {
                               : "border-transparent bg-white/10 text-white hover:border-white hover:bg-white/20"
                           }`}
                         >
-                          Preview
+                         <HiEye className="h-5 w-5"/>
                         </button>
                       </td>
                     </tr>
@@ -254,97 +241,15 @@ const VendorCoupons = () => {
         </div>
       </div>
 
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40">
-          <div className="h-full w-full max-w-md overflow-auto rounded-l-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                New coupon
-              </p>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                className="text-slate-400 hover:text-slate-700"
-              >
-                <HiOutlineXMark className="h-5 w-5" />
-              </button>
-            </div>
 
-            <form className="mt-4 space-y-3" onSubmit={handleCreate}>
-              <input
-                placeholder="Code"
-                value={form.code}
-                onChange={(e) =>
-                  setForm({ ...form, code: e.target.value })
-                }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-              <input
-                placeholder="Title"
-                value={form.title}
-                onChange={(e) =>
-                  setForm({ ...form, title: e.target.value })
-                }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-              <div className="grid grid-cols-3 gap-2">
-                <input
-                  type="number"
-                  placeholder="Discount %"
-                  value={form.discount}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      discount: Number(e.target.value),
-                    })
-                  }
-                  className="rounded-xl border border-slate-200 px-3 py-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Min order"
-                  value={form.minOrder}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      minOrder: Number(e.target.value),
-                    })
-                  }
-                  className="rounded-xl border border-slate-200 px-3 py-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Max uses"
-                  value={form.maxUses}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      maxUses: Number(e.target.value),
-                    })
-                  }
-                  className="rounded-xl border border-slate-200 px-3 py-2"
-                />
-              </div>
-              <input
-                type="date"
-                value={form.expiry}
-                onChange={(e) =>
-                  setForm({ ...form, expiry: e.target.value })
-                }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-              >
-                Publish coupon
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      <CouponDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={handleCreateCoupon}
+      />
     </DashboardContainer>
   );
 };
 
 export default VendorCoupons;
+
