@@ -122,21 +122,33 @@ const VendorCoupons = () => {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="rounded-2xl  bg-white p-6">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
             Preview
           </p>
-          <p className="mt-2 text-lg font-semibold text-slate-900">
-            {activeCoupon?.title}
-          </p>
-          <p className="text-sm text-slate-600">
-            {activeCoupon?.preview}
-          </p>
-          <div className="mt-3 space-y-1 text-xs text-slate-500">
-            <p>Code: {activeCoupon?.code}</p>
-            <p>Discount: {activeCoupon?.discount}%</p>
-            <p>Min order: ₹{activeCoupon?.minOrder}</p>
-            <p>Expires: {activeCoupon?.expiry}</p>
+          <div className="mt-4 flex items-center justify-center">
+            <div className="relative flex w-full max-w-md items-stretch gap-3 rounded-[26px]  bg-gradient-to-r from-slate-900 to-red-600 text-white ">
+              <div className="pointer-events-none absolute left-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  border-white bg-white" />
+              <div className="pointer-events-none absolute right-[-14px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border-2 border-white bg-white" />
+              <div className="flex w-35 flex-col items-center justify-between  bg-slate-100 px-3 py-4 text-center font-black text-slate-900">
+                <span className="text-[10px] uppercase tracking-[0.4em]">SHOPPING COUPON</span>
+                <span className="text-4xl leading-none">{activeCoupon?.discount ?? 0}%</span>
+                <span className="text-[11px] uppercase tracking-[0.4em] text-slate-500">OFF</span>
+              </div>
+              <div className="flex w-3/4 flex-col justify-center gap-2 px-5 py-4 text-left">
+                <p className="text-xs uppercase tracking-[0.4em] text-white/70">
+                  REALLYGREATSITE.COM
+                </p>
+                <p className="text-3xl font-black uppercase tracking-[0.3em]">COUPON</p>
+                <p className="text-[12px] uppercase tracking-[0.35em] text-white/80">
+                  Valid until <span className="font-semibold">{activeCoupon?.expiry ?? "DECEMBER 2023"}</span>
+                </p>
+                <p className="text-[14px] tracking-[0.2em] text-white/80">
+                  Code: {activeCoupon?.code ?? "CODE"}
+                </p>
+              </div>
+          
+            </div>
           </div>
         </div>
 

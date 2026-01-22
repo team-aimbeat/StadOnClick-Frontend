@@ -38,7 +38,7 @@ const VendorMedia = () => {
     isLoading,
     isError,
     error,
-  } = useGetServiceMediaQuery('77136c08-af8b-4d2e-be61-c9bd88efb39f', {
+  } = useGetServiceMediaQuery('568fa4d3-ce94-4de7-b5fd-77150fa023bc', {
   });
 
   useEffect(() => {

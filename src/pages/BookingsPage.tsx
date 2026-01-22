@@ -132,7 +132,7 @@ export default function BookingsPage({
   const columns = useMemo<ColumnConfig[]>(() => [
     {
       key: "id",
-      title: "Booking ID",
+      title: "Order ID",
       sortable: true,
       render: (value: string) => <span className="font-semibold text-slate-900">{value}</span>,
     },

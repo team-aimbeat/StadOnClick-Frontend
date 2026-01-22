@@ -11,7 +11,7 @@ type VendorBooking = {
     title?: string;
     category?: { name?: string };
   };
-  orderItem?: { priceFinal?: string };
+  orderItem?: { priceFinal?: string,orderNumber?:any };
 };
 
 type VendorBookingsResponse = {
@@ -29,7 +29,7 @@ const toBookingRow = (booking: VendorBooking): BookingRow => {
   return {
     id: booking?.orderItem?.orderNumber,
     customer: customerName || "Guest",
-    service: booking.vendorService?.title ?? "Service",
+    service: booking.vendorService?.category?.name ?? "Service",
     status: booking.status,
     startTime: booking.slot?.startTime ?? booking.createdAt,
     city: booking.vendorService?.category?.name ?? "Unknown",
