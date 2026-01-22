@@ -53,6 +53,14 @@ export const adminLeadPlansApi = createApi({
       }),
       invalidatesTags: [{ type: "AdminLeadPlans", id: "LIST" }],
     }),
+
+    deleteLeadPlan: builder.mutation<void, { id: string }>({
+      query: ({ id }) => ({
+        url: `/admin/lead-plans/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: "AdminLeadPlans", id: "LIST" }],
+    }),
   }),
 });
 
@@ -60,4 +68,5 @@ export const {
   useListLeadPlansQuery,
   useCreateLeadPlanMutation,
   useUpdateLeadPlanMutation,
+  useDeleteLeadPlanMutation,
 } = adminLeadPlansApi;

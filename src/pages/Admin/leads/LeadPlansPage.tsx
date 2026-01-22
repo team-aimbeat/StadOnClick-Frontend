@@ -1,5 +1,5 @@
 ﻿import { useCallback, useMemo, useState } from "react";
-import { Copy, Pencil, Power } from "lucide-react";
+import { Copy, Pencil, Power, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { ColumnConfig, DataTableSortStatus, RowData } from "@/components/shared/DataTable";
 import { ListingPage } from "@/components/shared/ListingPage";
@@ -8,10 +8,12 @@ import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 import LeadPlanFormDialog, { LeadPlanFormValues } from "./components/LeadPlanFormDialog";
 import ConfirmToggleDialog from "./components/ConfirmToggleDialog";
+import ConfirmDeleteDialog from "./components/ConfirmDeleteDialog";
 import { 
   useCreateLeadPlanMutation,
   useListLeadPlansQuery,
   useUpdateLeadPlanMutation,
+  useDeleteLeadPlanMutation,
 } from "@/features/adminLeads/api/adminLeadPlans.api";
 import type { LeadPlan, LeadPlanTier } from "@/features/adminLeads/types/leadPlans.types";
 import { Button } from "@/components/ui/button";
@@ -85,12 +87,14 @@ export default function LeadPlansPage() {
   } = useListLeadPlansQuery();
   const [createLeadPlan, { isLoading: isCreating }] = useCreateLeadPlanMutation();
   const [updateLeadPlan, { isLoading: isUpdating }] = useUpdateLeadPlanMutation();
+  const [deleteLeadPlan, { isLoading: isDeleting }] = useDeleteLeadPlanMutation();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [activePlan, setActivePlan] = useState<LeadPlan | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [pendingDeactivatePlan, setPendingDeactivatePlan] = useState<LeadPlan | null>(null);
+  const [pendingDeletePlan, setPendingDeletePlan] = useState<LeadPlan | null>(null);
 
   const loading = isPlansLoading || isFetching;
   const planErrorMessage = listError ? getErrorMessage(listError) : null;
@@ -297,6 +301,20 @@ export default function LeadPlansPage() {
     void applyToggleState(pendingDeactivatePlan, false);
   }, [pendingDeactivatePlan, applyToggleState]);
 
+  const handleDeletePlan = useCallback(
+    async (plan: LeadPlan) => {
+      try {
+        await deleteLeadPlan({ id: plan.id }).unwrap();
+        toast.success("Lead plan deleted");
+        setPendingDeletePlan(null);
+      } catch (error) {
+        const message = getErrorMessage(error) ?? "Unable to delete plan.";
+        toast.error(message);
+      }
+    },
+    [deleteLeadPlan]
+  );
+
   const ToggleActionButton = useCallback(
     ({ row }: { row: LeadPlanRow }) => {
       const isActive = row.isActive;
@@ -473,6 +491,12 @@ export default function LeadPlansPage() {
         icon: Copy,
         onClick: (row) => void handleCopyPlanId(row),
       },
+      {
+        title: "Delete plan",
+        icon: Trash2,
+        tone: "danger",
+        onClick: (row) => setPendingDeletePlan(row),
+      },
     ],
     [handleOpenEdit, ToggleActionButton, handleCopyPlanId]
   );
@@ -553,6 +577,19 @@ export default function LeadPlansPage() {
         onClose={() => setPendingDeactivatePlan(null)}
         onConfirm={handleConfirmDeactivate}
       />
+      {pendingDeletePlan && (
+        <ConfirmDeleteDialog
+          isOpen={Boolean(pendingDeletePlan)}
+          planName={pendingDeletePlan.name}
+          loading={isDeleting && Boolean(pendingDeletePlan)}
+          onClose={() => setPendingDeletePlan(null)}
+          onConfirm={() => {
+            if (pendingDeletePlan) {
+              void handleDeletePlan(pendingDeletePlan);
+            }
+          }}
+        />
+      )}
     </>
   );
 }
