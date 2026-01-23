@@ -154,7 +154,17 @@ const VendorCoupons = () => {
             >
               <div className="pointer-events-none absolute left-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  bg-white" />
               <div className="pointer-events-none absolute right-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  bg-white" />
-              <div className="flex w-35 flex-col items-center justify-between  bg-slate-100 px-3 py-4 text-center font-black text-slate-900">
+                           <div
+  className="absolute right-0 top-1 bottom-1 w-[288px]"
+  style={{
+    backgroundImage: "radial-gradient(circle,  #facc15 4px, transparent 2px)",
+    backgroundSize: "15px 12px",
+    backgroundRepeat: "repeat-y",
+  }}
+/>
+              <div className="flex w-35 flex-col items-center  justify-between  bg-slate-100 px-3 py-4 text-center font-black text-slate-900">
+
+
                 <span className="text-[10px] uppercase tracking-[0.4em]">SHOPPING COUPON</span>
                 <span className="text-4xl leading-none">{activeCoupon?.discount ?? 0}%</span>
                 <span className="text-[11px] uppercase tracking-[0.4em] text-slate-500">OFF</span>
