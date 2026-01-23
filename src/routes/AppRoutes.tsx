@@ -51,6 +51,7 @@ import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
 import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
 import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
 import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
+import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -119,6 +120,11 @@ const appRouter = createBrowserRouter([
     element: <AdminSignIn />,
     errorElement: <ErrorPage />,
   },
+  {
+    path: "/admin/access-denied",
+    element: <AccessDenied />,
+    errorElement: <ErrorPage />,
+  },
 
   {
     path: "/admin",
@@ -133,6 +139,11 @@ const appRouter = createBrowserRouter([
       {
         path: "vendors",
         element: <VendorsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "staff",
+        element: <AdminStaffPage />,
         errorElement: <ErrorPage />,
       },
       {

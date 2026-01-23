@@ -33,7 +33,7 @@ export default function AdminProtectedRoute({ children }: PropsWithChildren) {
 
   // Logged in but not admin
   if (!hasAdminAccess(user.roles)) {
-    return <Navigate to="/access-denied" replace />;
+    return <Navigate to="/admin/access-denied" replace />;
   }
 
   return <>{children}</>;

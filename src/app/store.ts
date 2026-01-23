@@ -8,6 +8,7 @@ import { preferencesApi } from "@/features/preferences/api/preferencesApi";
 import { adminVendorApi } from "@/features/admin/vendors/api/vendorsApi";
 import { adminLeadPlansApi } from "@/features/adminLeads/api/adminLeadPlans.api";
 import { vendorLeadSubscriptionsApi } from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
+import { adminStaffApi } from "@/features/admin/staff/adminStaffApi";
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     [adminLeadPlansApi.reducerPath]: adminLeadPlansApi.reducer,
     [vendorLeadSubscriptionsApi.reducerPath]:
       vendorLeadSubscriptionsApi.reducer,
+    [adminStaffApi.reducerPath]: adminStaffApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -27,7 +29,8 @@ export const store = configureStore({
       .concat(preferencesApi.middleware)
       .concat(adminVendorApi.middleware)
       .concat(adminLeadPlansApi.middleware)
-      .concat(vendorLeadSubscriptionsApi.middleware),
+      .concat(vendorLeadSubscriptionsApi.middleware)
+      .concat(adminStaffApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

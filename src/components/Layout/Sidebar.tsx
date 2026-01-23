@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useMemo, useCallback, useRef } from "react";
+import type { ComponentType } from "react";
 
 import {
   HiHome,
@@ -15,6 +16,7 @@ import {
   HiChevronDown,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
+import { Users } from "lucide-react";
 
 import { RootState } from "@/app/store";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
@@ -33,7 +35,7 @@ type NavChild = {
 type NavItem = {
   id: string;
   label: string;
-  icon: IconType;
+  icon: ComponentType<{ className?: string }>;
   to?: string;
   badge?: string;
   children?: NavChild[];
@@ -133,6 +135,12 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         { label: t("API Docs"), to: withBase("system/docs") },
         { label: t("Admin Activity"), to: withBase("system/audit") },
       ],
+    },
+    {
+      id: "administration",
+      label: t("Administration"),
+      icon: Users,
+      children: [{ label: t("Staff"), to: withBase("staff") }],
     },
   ];
 

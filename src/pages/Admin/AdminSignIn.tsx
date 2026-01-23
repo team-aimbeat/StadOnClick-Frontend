@@ -74,7 +74,7 @@ export default function AdminSignIn() {
         toast.error("Access denied. Admin role required.", {
           id: "admin-login-denied",
         });
-        return navigate("/access-denied", { replace: true });
+        return navigate("/admin/access-denied", { replace: true });
       }
 
       dispatch(setUser(user));
