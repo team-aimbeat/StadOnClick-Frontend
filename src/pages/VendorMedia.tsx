@@ -11,7 +11,13 @@ import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
-import { useGetServiceMediaQuery } from "@/services/serviceMediaApi";
+import {
+  ServiceMedia,
+  useDeleteServiceMediaMutation,
+  useGetServiceMediaQuery,
+} from "@/services/serviceMediaApi";
+import { MediaUploadDialog } from "@/components/modals/MediaUploadDialog";
+import { ConfirmDeleteDialog } from "@/components/modals/ConfirmDeleteDialog";
 
 type MediaItem = {
   id: string;
@@ -22,12 +28,28 @@ type MediaItem = {
   url: string;
 };
 
+const mapToMediaItem = (media: ServiceMedia, fallbackIndex: number): MediaItem => ({
+  id: media.id,
+  title: media.type === "IMAGE" ? "Image" : "Video",
+  type: media.type === "IMAGE" ? "image" : "video",
+  status: media.isActive ? "enabled" : "disabled",
+  order: media.sortOrder ?? fallbackIndex + 1,
+  url: media.signedUrl,
+});
+
 const VendorMedia = () => {
   const dispatch = useAppDispatch();
   const { serviceId } = useParams<{ serviceId: string }>();
 
   const [items, setItems] = useState<MediaItem[]>([]);
   const [message, setMessage] = useState("");
+  const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [deletingMediaId, setDeletingMediaId] = useState<string | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmingMediaId, setConfirmingMediaId] = useState<string | null>(null);
+  const resolvedServiceId =
+    serviceId ?? "568fa4d3-ce94-4de7-b5fd-77150fa023bc";
+  const [deleteServiceMedia] = useDeleteServiceMediaMutation();
 
   useEffect(() => {
     dispatch(setPageTitle("Photos & Media"));
@@ -38,30 +60,35 @@ const VendorMedia = () => {
     isLoading,
     isError,
     error,
-  } = useGetServiceMediaQuery('568fa4d3-ce94-4de7-b5fd-77150fa023bc', {
-  });
+  } = useGetServiceMediaQuery(resolvedServiceId);
 
   useEffect(() => {
     if (!data) return;
 
     setItems(
-      data.map((m: any, index: number) => ({
-        id: m.id,
-        title: m.type === "IMAGE" ? "Image" : "Video",
-        type: m.type.toLowerCase(),
-        status: m.isActive ? "enabled" : "disabled",
-        order: m.sortOrder ?? index + 1,
-        url: m.signedUrl,
-      }))
+      data.map((m: ServiceMedia, index: number) =>
+        mapToMediaItem(m, index)
+      )
     );
   }, [data]);
 
-  const handleUpload = () => {
+  const handleUploadButton = () => {
     if (items.length >= 12) {
       setMessage("Maximum 12 items allowed");
       return;
     }
-    setMessage("Upload API not wired yet");
+
+    setMessage("");
+    setUploadDialogOpen(true);
+  };
+
+  const handleMediaUploaded = (media: ServiceMedia) => {
+    setItems((prev) => {
+      const next = [...prev, mapToMediaItem(media, prev.length)];
+      return next.sort((a, b) => a.order - b.order);
+    });
+
+    setMessage("Media uploaded (changes pending sync).");
   };
 
   const moveItem = (index: number, direction: "up" | "down") => {
@@ -95,9 +122,37 @@ const VendorMedia = () => {
     );
   };
 
-  const deleteItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    setMessage("Item deleted (not persisted)");
+  const deleteMedia = async (id: string) => {
+    setDeletingMediaId(id);
+    setMessage("");
+
+    try {
+      await deleteServiceMedia({
+        serviceId: resolvedServiceId,
+        mediaId: id,
+      }).unwrap();
+
+      setItems((prev) => prev.filter((item) => item.id !== id));
+      setMessage("Media removed.");
+    } catch (error: any) {
+      setMessage(
+        error?.data?.message || "Failed to delete media. Please try again."
+      );
+    } finally {
+      setDeletingMediaId(null);
+    }
+  };
+
+  const handleDeleteButtonClick = (id: string) => {
+    setConfirmingMediaId(id);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmingMediaId) return;
+    await deleteMedia(confirmingMediaId);
+    setConfirmDialogOpen(false);
+    setConfirmingMediaId(null);
   };
 
   if (isLoading) {
@@ -140,13 +195,35 @@ const VendorMedia = () => {
 
         <button
           type="button"
-          onClick={handleUpload}
+          onClick={handleUploadButton}
           className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-1 text-xs font-semibold text-slate-700 hover:border-blue-300"
         >
           <HiOutlineCloud className="h-6 w-6" />
           Upload media
         </button>
       </div>
+
+      <MediaUploadDialog
+        open={isUploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        serviceId={resolvedServiceId}
+        onUploaded={handleMediaUploaded}
+      />
+
+      <ConfirmDeleteDialog
+        open={confirmDialogOpen}
+        onOpenChange={(open) => {
+          setConfirmDialogOpen(open);
+          if (!open) {
+            setConfirmingMediaId(null);
+          }
+        }}
+        description="This cannot be undone."
+        confirmLoading={
+          confirmingMediaId !== null && deletingMediaId === confirmingMediaId
+        }
+        onConfirm={handleConfirmDelete}
+      />
 
       {message && (
         <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-700">
@@ -208,10 +285,20 @@ const VendorMedia = () => {
               </button>
 
               <button
-                onClick={() => deleteItem(item.id)}
+                onClick={() => handleDeleteButtonClick(item.id)}
+                disabled={
+                  deletingMediaId === item.id ||
+                  confirmingMediaId === item.id
+                }
                 className="flex-1 rounded-full border border-slate-200 px-2 py-1"
               >
-                <HiOutlineTrash className="mx-auto h-3 w-3" />
+                {deletingMediaId === item.id ? (
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    Deleting…
+                  </span>
+                ) : (
+                  <HiOutlineTrash className="mx-auto h-3 w-3" />
+                )}
               </button>
             </div>
           </div>

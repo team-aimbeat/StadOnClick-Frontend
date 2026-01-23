@@ -32,9 +32,47 @@ export const serviceMediaApi = createApi({
         { type: 'ServiceMedia', id: serviceId },
       ],
     }),
+
+    
+    uploadServiceMedia: builder.mutation<
+      ServiceMedia,
+      { serviceId: string; file: File; sortOrder?: number }
+    >({
+      query: ({ serviceId, file, sortOrder }) => {
+        const form = new FormData();
+        form.append('serviceId', serviceId);
+        if (typeof sortOrder === 'number') {
+          form.append('sortOrder', sortOrder.toString());
+        }
+        form.append('file', file);
+
+        return {
+          url: '/vendor/media',
+          method: 'POST',
+          body: form,
+        };
+      },
+      transformResponse: (response: any) => response.data as ServiceMedia,
+      invalidatesTags: (result, error, { serviceId }) =>
+        result ? [{ type: 'ServiceMedia', id: serviceId }] : [],
+    }),
+    deleteServiceMedia: builder.mutation<
+      void,
+      { serviceId: string; mediaId: string }
+    >({
+      query: ({ mediaId }) => ({
+        url: `/vendor/media/${mediaId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { serviceId }) => [
+        { type: 'ServiceMedia', id: serviceId },
+      ],
+    }),
   }),
 });
 
 export const {
   useGetServiceMediaQuery,
+  useUploadServiceMediaMutation,
+  useDeleteServiceMediaMutation,
 } = serviceMediaApi;
