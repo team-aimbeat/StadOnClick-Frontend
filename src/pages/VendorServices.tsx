@@ -28,6 +28,15 @@ import {
   HiOutlineTruck,
   HiOutlineQuestionMarkCircle,
 } from "react-icons/hi2";
+import well from '@/assets/Images/well.jpg'
+import family from '@/assets/Images/family.jpg'
+import learn from '@/assets/Images/learn.jpg'
+import wellness from '@/assets/Images/wellness.jpg'
+import travel from '@/assets/Images/travel.jpg'
+import home from '@/assets/Images/home.jpg'
+import food from '@/assets/Images/food.jpg'
+
+
 import type { IconType } from "react-icons";
 
 import { DashboardContainer } from "@/components/dashboard";
@@ -107,6 +116,146 @@ const categoryIcons: Record<string, IconType> = {
   General: HiOutlineHomeModern,
   Other: HiOutlineQuestionMarkCircle,
 };
+
+const plannedCategories: {
+  name: string;
+  icon: IconType;
+  image: string;
+  highlights: string[];
+  subcategories: string[];
+  accent?: string;
+}[] = [
+  {
+    name: "Experiences & Activities",
+    icon: HiOutlineSparkles,
+    image:well,
+    highlights: [
+      "Events around the city",
+      "Concerts & live shows",
+      "Movie bookings",
+      "Museums & exhibitions",
+    ],
+    subcategories: [
+      "City tours",
+      "Live shows",
+      "Museum passes",
+      "Food & culture walks",
+    ],
+  },
+  {
+    name: "Health & Wellness",
+    icon: HiOutlineHeart,
+    image:wellness,
+      highlights: [
+      "Gym & fitness studios",
+      "Yoga / meditation classes",
+      "Massage & spa services",
+      "Swimming lessons",
+    ],
+    subcategories: [
+      "Yoga & meditation",
+      "Rehab therapies",
+      "Spa packages",
+      "Fitness training",
+    ],
+  },
+  {
+    name: "Kids & Family",
+    icon: HiOutlineUsers,
+    image:family,
+     highlights: [
+      "Kids events and parties",
+      "Play areas + activities",
+      "Educational / hobby classes",
+      "Decorations & planning",
+    ],
+    subcategories: [
+      "Birthday parties",
+      "Play experiences",
+      "Edutainment camps",
+      "Decor planning",
+    ],
+  },
+  {
+    name: "Learning & Skill Development",
+    icon: HiOutlineAcademicCap,
+    image:learn,
+     highlights: [
+      "Driving schools",
+      "Workshops & short courses",
+      "Sports academies",
+      "Creative skill labs",
+    ],
+    subcategories: [
+      "Driving lessons",
+      "Short workshops",
+      "Sports coaching",
+      "Creative labs",
+    ],
+  },
+  {
+    name: "Home & Personal Services",
+    icon: HiOutlineHomeModern,
+    image:home,
+      highlights: [
+      "Cleaning & car wash",
+      "Movers & packers",
+      "Plumbers / electricians / handymen",
+      "Home-based businesses",
+    ],
+    subcategories: [
+      "Cleaning services",
+      "Handyman visits",
+      "Packers & movers",
+      "Home chefs",
+    ],
+  },
+  {
+    name: "Travel & Transportation",
+    icon: HiOutlineMap,
+    image:travel,
+       highlights: [
+      "Cab services",
+      "Ferry, bus & train information",
+      "Courier service (domestic / EU / international)",
+    ],
+    subcategories: [
+      "Cab bookings",
+      "Commuter info",
+      "Courier logistics",
+    ],
+  },
+  {
+    name: "Food & Leisure",
+    icon: HiOutlineGlobeAlt,
+    image:food,
+     highlights: [
+      "Eateries & hotspots",
+      "Cafes & restaurants",
+      "Weekend / weekday markets",
+    ],
+     subcategories: [
+      "Eatereis and Hotspots",
+      "Neighborhood consults",
+      "Local business support",
+    ],
+  },
+  {
+    name: "Real Estate & Local Support",
+    icon: HiOutlineBuildingOffice2,
+    image:home,
+       highlights: [
+      "Property brokers",
+      "Local business listings",
+      "Community / neighborhood services",
+    ],
+    subcategories: [
+      "Property tours",
+      "Neighborhood consults",
+      "Local business support",
+    ],
+  },
+];
 
 const VendorServices = () => {
   const dispatch = useAppDispatch();
@@ -584,51 +733,67 @@ function CategoryStep({
   options: string[];
   onSelect: (cat: string) => void;
 }) {
-  const allCategories = [...new Set([...options, "General", "Other"])];
+  const selectedPlannedCategory = plannedCategories.find((cat) => cat.name === selected);
 
   return (
     <div className="space-y-5">
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
         Choose Category
       </p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {allCategories.map((cat) => {
-          const Icon = categoryIcons[cat] || HiOutlineQuestionMarkCircle;
-          const isSelected = selected === cat;
 
-          return (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => onSelect(cat)}
-              className={`group flex items-center gap-4 rounded-xl border px-5 py-4 text-left transition-all duration-200 ${
-                isSelected
-                  ? "border-blue-500 bg-blue-50 ring-1 ring-blue-200/70 shadow-sm"
-                  : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm"
-              }`}
+
+      <div className="space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          All planned categories
+        </p>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+          {plannedCategories.map((cat) => (
+            <div
+              key={cat.name}
+              className="rounded-2xl border border-slate-200 bg-white shadow-sm"
             >
-              <div
-                className={`flex h-11 w-11 items-center justify-center rounded-xl text-xl transition-colors ${
-                  isSelected
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"
-                }`}
-              >
-                <Icon className="h-6 w-6" />
+              <div className="h-24 w-full overflow-hidden rounded-t-2xl">
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
               </div>
-              <div>
-                <p className="font-semibold text-slate-900">{cat}</p>
-                {cat === "General" && (
-                  <p className="mt-0.5 text-xs text-slate-500">Any type of service</p>
-                )}
-                {cat === "Other" && (
-                  <p className="mt-0.5 text-xs text-slate-500">Not listed above</p>
-                )}
+              <div className="space-y-2 px-3 pb-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                    <cat.icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {cat.name}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-600">
+                  {cat.highlights.slice(0, 2).join(" · ")}
+                </p>
               </div>
-            </button>
-          );
-        })}
+            </div>
+          ))}
+        </div>
       </div>
+      {selectedPlannedCategory && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Subcategories for {selectedPlannedCategory.name}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {selectedPlannedCategory.subcategories.map((sub) => (
+              <span
+                key={sub}
+                className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm"
+              >
+                {sub}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
