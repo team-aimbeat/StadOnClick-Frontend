@@ -45,7 +45,7 @@ const DialogContent = React.forwardRef<
       ref={ref}
       {...props}
       className={cn(
-        "modal-content fixed  top-1/2 left-1/2 z-50 w-full max-w-[640px]",
+        "modal-content fixed  top-1/2 left-1/2 z-50 w-100 max-w-[640px]",
         "-translate-x-1/2 -translate-y-1/2",
         "rounded-3xl border border-slate-200 bg-white px-6 py-6",
         "shadow-[0_25px_45px_rgba(15,15,15,0.15)]",
