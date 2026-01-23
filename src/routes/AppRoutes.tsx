@@ -22,7 +22,6 @@ import VendorMedia from "@/pages/VendorMedia";
 import VendorCoupons from "@/pages/VendorCoupons";
 import VendorWallet from "@/pages/VendorWallet";
 import VendorPayouts from "@/pages/VendorPayouts";
-import VendorSubscription from "@/pages/VendorSubscription";
 import VendorPromote from "@/pages/VendorPromote";
 import VendorKyc from "@/pages/VendorKyc";
 import VendorStripe from "@/pages/VendorStripe";
@@ -50,6 +49,8 @@ import AccessDenied from "@/components/shared/AccessDenied";
 import AdminNotFound from "@/pages/Admin/AdminNotFound";
 import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
 import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
+import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
+import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -172,14 +173,19 @@ const appRouter = createBrowserRouter([
     path: "/vendor",
     element: (
       <VendorProtectedRoute>
-        <VendorLayout />
-      </VendorProtectedRoute>
-    ),
-    
-    errorElement: <ErrorPage />,
-    children: [
-      { path: "dashboard", element: <VendorDashboard /> },
-      { path: "leads", element: <VendorLeads /> },
+      <VendorLayout />
+    </VendorProtectedRoute>
+  ),
+  
+  errorElement: <ErrorPage />,
+  children: [
+    { path: "dashboard", element: <VendorDashboard /> },
+    { path: "leads", element: <VendorLeads /> },
+    { path: "leads/subscription", element: <VendorLeadSubscriptionPage /> },
+    {
+      path: "lead-subscriptions/success",
+      element: <SubscriptionSuccessPage />,
+    },
       {
         path: "leads/new",
         element: <Navigate to="/vendor/leads?status=NEW" replace />,
@@ -254,7 +260,10 @@ const appRouter = createBrowserRouter([
       { path: "coupons", element: <VendorCoupons /> },
       { path: "wallet", element: <VendorWallet /> },
       { path: "payouts", element: <VendorPayouts /> },
-      { path: "subscription", element: <VendorSubscription /> },
+      {
+        path: "subscription",
+        element: <Navigate to="/vendor/leads/subscription" replace />,
+      },
       { path: "promote", element: <VendorPromote /> },
       { path: "kyc", element: <VendorKyc /> },
       { path: "stripe", element: <VendorStripe /> },
