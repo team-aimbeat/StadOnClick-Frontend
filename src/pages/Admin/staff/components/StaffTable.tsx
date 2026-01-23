@@ -138,7 +138,7 @@ export function StaffTable({
                           {[staff.firstName, staff.lastName].filter(Boolean).join(" ") ||
                             "Unnamed"}
                         </p>
-                        <p className="text-xs text-slate-500">ID: {staff.id}</p>
+                        <p className="text-xs text-slate-500">{staff.email}</p>
                       </div>
                     </td>
                     <td className="px-4 py-4 align-top">

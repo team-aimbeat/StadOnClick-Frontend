@@ -4,10 +4,30 @@ import type {
   CreateStaffRequest,
   GetStaffRequest,
   StaffListResponse,
+  StaffRole,
   StaffUser,
   UpdateStaffRolesRequest,
   UpdateStaffStatusRequest,
 } from "./adminStaff.types";
+
+const ROLE_MAP: Record<string, StaffRole> = {
+  SUPPORT_ADMIN: "SUPPORT_ADMIN",
+  "SUPPORT ADMIN": "SUPPORT_ADMIN",
+  SUPPORT: "SUPPORT_ADMIN",
+  ADMIN_SUPPORT: "SUPPORT_ADMIN",
+  MODERATOR: "MODERATOR",
+  MOD: "MODERATOR",
+};
+
+function normalizeRoleForApi(role: StaffRole) {
+  if (!role) return role;
+  const normalized = String(role).trim().replace(/[\s-]+/g, "_").toUpperCase();
+  return ROLE_MAP[normalized] ?? (normalized as StaffRole);
+}
+
+function normalizeRolesForApi(roles: StaffRole[]) {
+  return roles.map((r) => normalizeRoleForApi(r));
+}
 
 export const adminStaffApi = createApi({
   reducerPath: "adminStaffApi",
@@ -28,7 +48,10 @@ export const adminStaffApi = createApi({
       query: (body) => ({
         url: "/admin/staff",
         method: "POST",
-        body,
+        body: {
+          ...body,
+          role: normalizeRoleForApi(body.role),
+        },
       }),
       invalidatesTags: ["AdminStaff"],
     }),
@@ -46,7 +69,9 @@ export const adminStaffApi = createApi({
       query: ({ id, body }) => ({
         url: `/admin/staff/${id}/roles`,
         method: "PATCH",
-        body,
+        body: {
+          roles: normalizeRolesForApi(body.roles),
+        },
       }),
       invalidatesTags: ["AdminStaff"],
     }),

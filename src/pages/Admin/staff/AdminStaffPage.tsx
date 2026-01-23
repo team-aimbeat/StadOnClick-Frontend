@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, Shield, Users } from "lucide-react";
+import { Shield, Users, EllipsisVertical, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { useAppDispatch } from "@/app/hooks";
@@ -17,19 +17,18 @@ import type {
 } from "@/features/admin/staff/adminStaff.types";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
 import CreateStaffDialog, { CreateStaffFormValues } from "./components/CreateStaffDialog";
-import StaffTable from "./components/StaffTable";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +37,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ListingPage } from "@/components/shared/ListingPage";
+import type { ColumnConfig, RowData } from "@/components/shared/DataTable";
 
 const SEARCH_DEBOUNCE_MS = 400;
 const DEFAULT_PAGE_SIZE = 10;
@@ -56,7 +57,7 @@ export default function AdminStaffPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const limit = DEFAULT_PAGE_SIZE;
+  const [limit, setLimit] = useState(DEFAULT_PAGE_SIZE);
 
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const [roleUpdatingId, setRoleUpdatingId] = useState<string | null>(null);
@@ -162,24 +163,175 @@ export default function AdminStaffPage() {
     setPage(1);
   }, [debouncedSearch]);
 
-  const canGoPrev = page > 1;
-  const canGoNext = page < totalPages;
+  type StaffRow = RowData & {
+    id: string;
+    name: string;
+    email: string;
+    roles: StaffRole[];
+    status: StaffStatus;
+    createdAt: string;
+    raw: StaffUser;
+  };
+
+  const staffRows: StaffRow[] = useMemo(
+    () =>
+      staff.map((s) => ({
+        id: s.id,
+        name: [s.firstName, s.lastName].filter(Boolean).join(" ") || "Unnamed",
+        email: s.email,
+        roles: s.roles,
+        status: s.status,
+        createdAt: s.createdAt,
+        raw: s,
+      })),
+    [staff],
+  );
+
+  const columns: ColumnConfig[] = useMemo(
+    () => [
+      {
+        key: "name",
+        title: "Name",
+        render: (_value, row) => {
+          const r = row as StaffRow;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-900">{r.name}</span>
+              <span className="text-xs text-slate-500">{r.email}</span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "roles",
+        title: "Roles",
+        render: (_value, row) => {
+          const r = row as StaffRow;
+          return (
+            <div className="flex flex-wrap gap-2">
+              {r.roles.map((role) => (
+                <Badge
+                  key={role}
+                  variant="outline"
+                  className={`border ${role === "SUPPORT_ADMIN" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-indigo-50 text-indigo-700 border-indigo-200"}`}
+                >
+                  <ShieldCheck className="h-3 w-3" />
+                  {role === "SUPPORT_ADMIN" ? "Support Admin" : "Moderator"}
+                </Badge>
+              ))}
+            </div>
+          );
+        },
+      },
+      {
+        key: "status",
+        title: "Status",
+        render: (_value, row) => {
+          const r = row as StaffRow;
+          const isStatusLoading = statusUpdatingId === r.id;
+          const tone =
+            r.status === "ACTIVE"
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-rose-50 text-rose-700 border-rose-200";
+
+          return (
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className={`border px-3 py-1 ${tone}`}>
+                {r.status === "ACTIVE" ? "Active" : "Disabled"}
+              </Badge>
+              <Switch
+                checked={r.status === "ACTIVE"}
+                disabled={isStatusLoading}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    handleEnable(r.raw);
+                  } else {
+                    handleRequestDisable(r.raw);
+                  }
+                }}
+                aria-label={`Toggle status for ${r.email}`}
+              />
+            </div>
+          );
+        },
+      },
+      {
+        key: "createdAt",
+        title: "Created",
+        render: (value) => (
+          <span className="text-sm font-medium text-slate-800">
+            {value
+              ? new Date(String(value)).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "2-digit",
+                })
+              : "—"}
+          </span>
+        ),
+        sortable: true,
+      },
+      {
+        key: "actions",
+        title: "Actions",
+        render: (_value, row) => {
+          const r = row as StaffRow;
+          const isRoleLoading = roleUpdatingId === r.id;
+          const isStatusLoading = statusUpdatingId === r.id;
+          return (
+            <div className="flex justify-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-slate-600 hover:text-slate-900"
+                    aria-label="Open actions"
+                  >
+                    <EllipsisVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Quick actions</DropdownMenuLabel>
+                  <DropdownMenuItem
+                    disabled={isStatusLoading}
+                    onClick={() =>
+                      r.status === "ACTIVE" ? handleRequestDisable(r.raw) : handleEnable(r.raw)
+                    }
+                  >
+                    {r.status === "ACTIVE" ? "Disable account" : "Enable account"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={isRoleLoading}
+                    onClick={() => handleRoleChange(r.raw, "SUPPORT_ADMIN")}
+                  >
+                    Set role → Support Admin
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={isRoleLoading}
+                    onClick={() => handleRoleChange(r.raw, "MODERATOR")}
+                  >
+                    Set role → Moderator
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      },
+    ],
+    [handleEnable, handleRequestDisable, handleRoleChange, roleUpdatingId, statusUpdatingId],
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-          <Shield className="h-4 w-4 text-blue-500" />
-          Administration
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold text-slate-900">Staff Management</h1>
-            <p className="text-sm text-slate-600">
-              Create and manage support agents and moderators.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+      <ListingPage
+        title="Staff Management"
+        breadCrumbTitle="Admin / Staff"
+        description="Create and manage support agents and moderators."
+        headerSlot={
+          <div className="flex flex-wrap items-center gap-3">
             <Button variant="outline" onClick={() => refetch()}>
               Refresh
             </Button>
@@ -188,90 +340,36 @@ export default function AdminStaffPage() {
               Create staff
             </Button>
           </div>
-        </div>
-      </div>
-
-      <Card className="gap-4">
-        <CardHeader className="pb-0">
-          <CardTitle className="text-lg">Directory</CardTitle>
-          <CardDescription>
-            Use search to find staff by name or email. Status and role changes take effect
-            immediately.
-          </CardDescription>
-          <CardAction>
-            <div className="text-right text-xs text-slate-500">
-              {isFetching ? "Updating..." : `Total staff: ${total}`}
-            </div>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex w-full max-w-xl items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-within:ring-2 focus-within:ring-blue-100">
-              <Search className="h-4 w-4 text-slate-400" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name or email..."
-                className="border-0 p-0 shadow-none focus-visible:ring-0"
-              />
-            </div>
-
-            <div className="flex items-center gap-3 text-sm text-slate-600">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-wide text-slate-500">Page</p>
-                <p className="font-semibold text-slate-900">
-                  {page}/{totalPages || 1}
-                </p>
-              </div>
-              <Separator orientation="vertical" className="h-10" />
-              <div className="space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!canGoPrev}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  Prev
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!canGoNext}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <StaffTable
-            data={staff}
-            loading={isLoading}
-            isRefreshing={isFetching && !isLoading}
-            onEnable={handleEnable}
-            onRequestDisable={handleRequestDisable}
-            onChangeRole={handleRoleChange}
-            statusUpdatingId={statusUpdatingId}
-            roleUpdatingId={roleUpdatingId}
-          />
-
-          <div className="flex flex-col gap-2 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
-            <span>
-              Showing{" "}
-              <span className="font-semibold text-slate-900">
-                {pageStart} - {pageEnd}
-              </span>{" "}
-              of{" "}
-              <span className="font-semibold text-slate-900">{total}</span>
-            </span>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Real-time updates after every change.
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        }
+        summary={{
+          left: `Showing ${pageStart} - ${pageEnd} of ${total}`,
+          right: isFetching ? "Updating..." : `Total staff: ${total}`,
+        }}
+        tableProps={{
+          data: staffRows,
+          columns,
+          searchable: true,
+          searchValue: searchTerm,
+          onSearch: (term) => setSearchTerm(term),
+          loading: isLoading,
+          error: error ? "Unable to load staff" : null,
+          onDismissError: () => {},
+          controlledPagination: {
+            page,
+            pageSize: limit,
+            totalPages,
+            totalRecords: total,
+          },
+          onPaginationChange: ({ page: nextPage, pageSize }) => {
+            setPage(nextPage);
+            setLimit(pageSize);
+          },
+          defaultRowsPerPage: limit,
+          sortOptions: [{ key: "createdAt", label: "Created date" }],
+          defaultSortColumn: "createdAt",
+          minHeight: 400,
+        }}
+      />
 
       <CreateStaffDialog
         open={isCreateOpen}

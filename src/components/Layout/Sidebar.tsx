@@ -45,7 +45,11 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
+  const authUser = useSelector((state: RootState) => state.auth.user);
   const isCollapsed = !themeConfig.sidebar;
+  const isSupportOnly =
+    authUser?.roles?.includes("SUPPORT_ADMIN") &&
+    !authUser.roles.some((r) => ["ADMIN", "MODERATOR"].includes(r));
 
   const location = useLocation();
   const dispatch = useDispatch();
@@ -60,89 +64,122 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
     [normalizedBasePath]
   );
 
-  const navItems: NavItem[] = [
-    {
-      id: "overview",
-      label: t("Overview"),
-      icon: HiHome,
-      to: withBase("dashboard"),
-    },
-    {
-      id: "vendors",
-      label: t("Vendors"),
-      icon: HiUserGroup,
-      children: [
-        { label: t("All Vendors"), to: withBase("vendors") },
-        { label: t("Vendor Applications"), to: withBase("vendors/applications") },
-        { label: t("Vendor Staff (Coming Soon)"), to: withBase("vendors/staff") },
-      ],
-    },
-    {
-      id: "compliance",
-      label: t("Compliance"),
-      icon: HiShieldCheck,
-      children: [
-        { label: t("KYC Review Queue"), to: withBase("compliance/kyc") },
-        { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
-      ],
-    },
-    {
-      id: "leads",
-      label: t("Leads & Monetization"),
-      icon: HiChartBar,
-      children: [
-        { label: t("Lead Plans"), to: withBase("leads/plans") },
-        { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
-        { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
-      ],
-    },
-    {
-      id: "bookings",
-      label: t("Bookings"),
-      icon: HiClipboardDocumentCheck,
-      children: [
-        { label: t("All Bookings"), to: withBase("bookings") },
-        { label: t("Upcoming"), to: withBase("bookings/upcoming") },
-        { label: t("Completed"), to: withBase("bookings/completed") },
-        { label: t("Refunds"), to: withBase("bookings/refunds") },
-      ],
-    },
-    {
-      id: "finance",
-      label: t("Finance"),
-      icon: HiBanknotes,
-      children: [
-        { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
-        { label: t("Platform Wallet"), to: withBase("finance/platform-wallet") },
-      ],
-    },
-    {
-      id: "catalog",
-      label: t("Catalog"),
-      icon: HiCube,
-      children: [
-        { label: t("Interests"), to: withBase("catalog/interests") },
-        { label: t("Time Durations"), to: withBase("catalog/time-durations") },
-        { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
-      ],
-    },
-    {
-      id: "system",
-      label: t("System"),
-      icon: HiCog6Tooth,
-      children: [
-        { label: t("API Health"), to: withBase("system/health") },
-        { label: t("API Docs"), to: withBase("system/docs") },
-        { label: t("Admin Activity"), to: withBase("system/audit") },
-      ],
-    },
-    {
-      id: "administration",
-      label: t("Administration"),
-      icon: Users,
-      children: [{ label: t("Staff"), to: withBase("staff") }],
-    },
-  ];
+  const navItems: NavItem[] = useMemo(() => {
+    if (isSupportOnly) {
+      return [
+        {
+          id: "support-dashboard",
+          label: t("Support Dashboard"),
+          icon: HiHome,
+          to: withBase("support/dashboard"),
+        },
+        {
+          id: "support-inbox",
+          label: t("Support Inbox"),
+          icon: HiHome,
+          to: withBase("support/inbox"),
+        },
+        {
+          id: "support-chat",
+          label: t("Support Chat"),
+          icon: HiClipboardDocumentCheck,
+          to: withBase("chat"),
+        },
+      ];
+    }
+
+    return [
+      {
+        id: "overview",
+        label: t("Overview"),
+        icon: HiHome,
+        to: withBase("dashboard"),
+      },
+      {
+        id: "support-inbox",
+        label: t("Support Inbox"),
+        icon: HiClipboardDocumentCheck,
+        to: withBase("support/inbox"),
+      },
+      {
+        id: "support-dashboard",
+        label: t("Support Dashboard"),
+        icon: HiHome,
+        to: withBase("support/dashboard"),
+      },
+      {
+        id: "support-chat",
+        label: t("Support Chat"),
+        icon: HiClipboardDocumentCheck,
+        to: withBase("chat"),
+      },
+      {
+        id: "compliance",
+        label: t("Compliance"),
+        icon: HiShieldCheck,
+        children: [
+          { label: t("KYC Review Queue"), to: withBase("compliance/kyc") },
+          { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
+        ],
+      },
+      {
+        id: "leads",
+        label: t("Leads & Monetization"),
+        icon: HiChartBar,
+        children: [
+          { label: t("Lead Plans"), to: withBase("leads/plans") },
+          { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
+          { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
+        ],
+      },
+      {
+        id: "bookings",
+        label: t("Bookings"),
+        icon: HiClipboardDocumentCheck,
+        children: [
+          { label: t("All Bookings"), to: withBase("bookings") },
+          { label: t("Upcoming"), to: withBase("bookings/upcoming") },
+          { label: t("Completed"), to: withBase("bookings/completed") },
+          { label: t("Refunds"), to: withBase("bookings/refunds") },
+        ],
+      },
+      {
+        id: "finance",
+        label: t("Finance"),
+        icon: HiBanknotes,
+        children: [
+          { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
+          { label: t("Platform Wallet"), to: withBase("finance/platform-wallet") },
+        ],
+      },
+      {
+        id: "catalog",
+        label: t("Catalog"),
+        icon: HiCube,
+        children: [
+          { label: t("Interests"), to: withBase("catalog/interests") },
+          { label: t("Time Durations"), to: withBase("catalog/time-durations") },
+          { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
+        ],
+      },
+      {
+        id: "system",
+        label: t("System"),
+        icon: HiCog6Tooth,
+        children: [
+          { label: t("API Health"), to: withBase("system/health") },
+          { label: t("API Docs"), to: withBase("system/docs") },
+          { label: t("Admin Activity"), to: withBase("system/audit") },
+        ],
+      },
+      {
+        id: "administration",
+        label: t("Administration"),
+        icon: Users,
+        children: [{ label: t("Staff"), to: withBase("staff") }],
+      },
+    ];
+  }, [isSupportOnly, t, withBase]);
 
   const accentPalette = useMemo(
     () => ["#F59E0B", "#22C55E", "#EC4899", "#A855F7", "#0EA5E9", "#F97316", "#10B981"],

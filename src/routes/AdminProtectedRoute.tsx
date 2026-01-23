@@ -31,9 +31,21 @@ export default function AdminProtectedRoute({ children }: PropsWithChildren) {
     );
   }
 
-  // Logged in but not admin
-  if (!hasAdminAccess(user.roles)) {
+  const isElevatedAdmin = hasAdminAccess(user.roles);
+  const isSupportAdmin = user.roles?.includes("SUPPORT_ADMIN");
+  const isSupportOnly = Boolean(isSupportAdmin && !isElevatedAdmin);
+
+  // Logged in but not allowed
+  if (!isElevatedAdmin && !isSupportAdmin) {
     return <Navigate to="/admin/access-denied" replace />;
+  }
+
+  if (isSupportOnly) {
+    const allowedPrefixes = ["/admin/support/inbox", "/admin/support/dashboard", "/admin/chat"];
+    const canAccess = allowedPrefixes.some((prefix) => location.pathname.startsWith(prefix));
+    if (!canAccess) {
+      return <Navigate to="/admin/access-denied" replace />;
+    }
   }
 
   return <>{children}</>;

@@ -35,6 +35,8 @@ import Dropdown from "../shared/dropdown";
 import SearchBar from "../shared/SearchBar";
 import { clearAuth, logout } from "@/features/auth/authSlice";
 import { toast } from "react-hot-toast";
+import { initSupportSocket } from "@/lib/supportSocket";
+import { useAdminUnreadCountQuery } from "@/features/support/supportApi";
 
 type MessageItem = {
   id: number;
@@ -48,21 +50,21 @@ type MessageItem = {
 
 type NotificationItem = {
   id: number;
-  name: string;
-  action: string;
+  title: string;
+  body: string;
   time: string;
-  profile: string;
-  status?: "online" | "away" | "offline";
 };
 
 const AdminHeader = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
+  const unreadSupport = useSelector((state: RootState) => state.supportRealtime.unreadTotal);
   const isRtl = themeConfig.rtlClass === "rtl";
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
+  const { refetch: refetchUnread } = useAdminUnreadCountQuery();
 
   useEffect(() => {
     const selector = document.querySelector<HTMLAnchorElement>(
@@ -94,65 +96,8 @@ const AdminHeader = () => {
 
   const [flag, setFlag] = useState(themeConfig.locale);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [messages, setMessages] = useState<MessageItem[]>([
-    {
-      id: 1,
-      name: "Kathryn Murphy",
-      message: "hey! there I'm reaching out about the report...",
-      time: "12:30 PM",
-      count: 8,
-      profile: profile8,
-      status: "online",
-    },
-    {
-      id: 2,
-      name: "Leslie Alexander",
-      message: "The sprint board has been updated.",
-      time: "11:10 AM",
-      count: 3,
-      profile: profile9,
-    },
-    {
-      id: 3,
-      name: "John Doe",
-      message: "Let's sync at 4 PM for the launch checklist.",
-      time: "09:45 AM",
-      profile: profile7,
-    },
-    {
-      id: 4,
-      name: "Courtney Henry",
-      message: "Reminder: approvals needed on two items.",
-      time: "Yesterday",
-      profile: profile8,
-    },
-  ]);
-
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: 1,
-      profile: profile7,
-      name: "John Doe",
-      action: "invited you to Prototyping",
-      time: "45 min ago",
-      status: "online",
-    },
-    {
-      id: 2,
-      profile: profile8,
-      name: "Adam Nolan",
-      action: "mentioned you in UX Basics",
-      time: "9h ago",
-      status: "online",
-    },
-    {
-      id: 3,
-      profile: profile9,
-      name: "Anna Morgan",
-      action: "uploaded a file",
-      time: "9h ago",
-    },
-  ]);
+  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   const actionBtnClass =
     "group grid h-10 w-10 place-content-center rounded-md mx-2 cursor-pointer border border-gray-200 bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800";
@@ -179,6 +124,29 @@ const AdminHeader = () => {
       prev.filter((notification) => notification.id !== value),
     );
   };
+
+  
+  useEffect(() => {
+    const socket = initSupportSocket();
+    const handleMessage = (payload: { ticketId: string; message?: { body: string }; ticketNumber?: string }) => {
+      setNotifications((prev) => [
+        {
+          id: Date.now(),
+          title: payload.ticketNumber ? `New ticket ${payload.ticketNumber}` : "New message",
+          body: payload.message?.body?.slice(0, 120) || "New support activity",
+          time: "Just now",
+        },
+        ...prev,
+      ].slice(0, 10));
+      refetchUnread();
+    };
+    socket?.on("support:message.created", handleMessage);
+    socket?.on("support:ticket.created", handleMessage);
+    return () => {
+      socket?.off("support:message.created", handleMessage);
+      socket?.off("support:ticket.created", handleMessage);
+    };
+  }, [refetchUnread]);
 
   const renderThemeToggle = () => {
     if (themeConfig.theme === "light") {
@@ -410,17 +378,26 @@ const AdminHeader = () => {
               offset={[0, 8]}
               placement={isRtl ? "bottom-start" : "bottom-end"}
               btnClassName={`${actionBtnClass} relative`}
-              button={<Bell className="h-5 w-5" strokeWidth={1.8} />}
+              button={
+                <div className="relative">
+                  <Bell className="h-5 w-5" strokeWidth={1.8} />
+                  {(unreadSupport > 0 || notifications.length > 0) && (
+                    <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
+                      {unreadSupport || notifications.length}
+                    </span>
+                  )}
+                </div>
+              }
             >
               <ul className="w-[320px] divide-y divide-gray-100/80 text-dark dark:divide-white/10 dark:text-white-dark sm:w-[360px]">
                 <li onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-between px-5 py-3 font-semibold">
                     <h4 className="text-lg">Notifications</h4>
-                    {notifications.length ? (
+                    {(unreadSupport > 0 || notifications.length > 0) && (
                       <span className="rounded-full bg-primary/80 px-3 py-1 text-xs text-white">
-                        {notifications.length} New
+                        {unreadSupport || notifications.length} New
                       </span>
-                    ) : null}
+                    )}
                   </div>
                 </li>
                 <li
@@ -431,24 +408,17 @@ const AdminHeader = () => {
                     notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className="group flex items-center gap-3 px-5 py-3 transition"
+                        className="group flex items-start gap-3 px-5 py-3 transition hover:bg-gray-50 dark:hover:bg-gray-800/60"
                       >
-                        <div className="relative h-12 w-12">
-                          <img
-                            className="h-12 w-12 rounded-full object-cover"
-                            alt={`${notification.name} avatar`}
-                            src={notification.profile}
-                          />
-                          {notification.status !== "offline" && (
-                            <span className="absolute bottom-0 right-1 block h-2 w-2 rounded-full bg-success"></span>
-                          )}
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-700">
+                          {notification.title.slice(0, 2).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold dark:text-white-light/90">
-                            {notification.name}
+                            {notification.title}
                           </p>
                           <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                            {notification.action}
+                            {notification.body}
                           </p>
                           <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">
                             {notification.time}
@@ -478,7 +448,10 @@ const AdminHeader = () => {
                   )}
                 </li>
                 <li className="px-5 py-3">
-                  <button className="btn-primary w-full bg-amber-400 text-sm font-semibold">
+                  <button
+                    className="btn-primary w-full bg-amber-400 text-sm font-semibold"
+                    onClick={() => setNotifications([])}
+                  >
                     Read All Notifications
                   </button>
                 </li>

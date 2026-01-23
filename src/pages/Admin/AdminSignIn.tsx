@@ -51,8 +51,13 @@ export default function AdminSignIn() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (authUser?.roles?.length && hasAdminAccess(authUser.roles)) {
-      navigate("/admin/dashboard", { replace: true });
+    const isElevated = authUser?.roles?.some((r) => ["ADMIN", "MODERATOR"].includes(r));
+    const isSupportOnly =
+      authUser?.roles?.includes("SUPPORT_ADMIN") && !isElevated;
+    if (authUser?.roles?.length && (isElevated || isSupportOnly)) {
+      navigate(isSupportOnly ? "/admin/support/inbox" : "/admin/dashboard", {
+        replace: true,
+      });
     }
   }, [authUser?.roles, navigate]);
 
@@ -69,8 +74,12 @@ export default function AdminSignIn() {
 
       const user = response?.user ?? response;
 
+      const isElevated = hasAdminAccess(user?.roles);
+      const isSupportOnly =
+        user?.roles?.includes("SUPPORT_ADMIN") && !isElevated;
+
       // 🔐 Frontend guard (still keep backend guard too)
-      if (!hasAdminAccess(user?.roles)) {
+      if (!isElevated && !isSupportOnly) {
         toast.error("Access denied. Admin role required.", {
           id: "admin-login-denied",
         });
@@ -80,7 +89,9 @@ export default function AdminSignIn() {
       dispatch(setUser(user));
       toast.success("Signed in successfully", { id: "admin-login-success" });
 
-      navigate("/admin/vendors", { replace: true });
+      navigate(isSupportOnly ? "/admin/support/inbox" : "/admin/vendors", {
+        replace: true,
+      });
     } catch (err) {
       const { fieldErrors, formError: normalizedFormError, toastMessage } =
         normalizeApiError(err, "Unable to sign in. Please try again.");

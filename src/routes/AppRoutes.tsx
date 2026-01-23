@@ -11,7 +11,6 @@ import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
 import Kyc from "@/pages/Kyc";
-import ChatBox from "@/pages/ChatBox";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
 import VendorTableShowcase from "@/pages/VendorTableShowcase";
@@ -26,6 +25,7 @@ import VendorPromote from "@/pages/VendorPromote";
 import VendorKyc from "@/pages/VendorKyc";
 import VendorStripe from "@/pages/VendorStripe";
 import VendorSupport from "@/pages/VendorSupport";
+import VendorTicketDetails from "@/pages/VendorTicketDetails";
 import VendorHelp from "@/pages/VendorHelp";
 import VendorInsights from "@/pages/VendorInsights";
 import VendorBookingDetail from "@/pages/VendorBookingDetail";
@@ -52,6 +52,9 @@ import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
 import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
 import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
 import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
+import AdminSupportInbox from "@/pages/Admin/AdminSupportInbox";
+import AdminSupportChatbox from "@/pages/Admin/AdminSupportChatbox";
+import SupportAdminDashboard from "@/pages/Admin/SupportAdminDashboard";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -142,6 +145,25 @@ const appRouter = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: "support",
+        element: <Navigate to="/admin/support/inbox" replace />,
+      },
+      {
+        path: "support/dashboard",
+        element: <SupportAdminDashboard />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "support/inbox",
+        element: <AdminSupportInbox />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "chat",
+        element: <AdminSupportChatbox />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: "staff",
         element: <AdminStaffPage />,
         errorElement: <ErrorPage />,
@@ -171,7 +193,7 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "chat",
-        element: <ChatBox />,
+        element: <AdminSupportChatbox />,
       },
     ],
   },
@@ -279,6 +301,7 @@ const appRouter = createBrowserRouter([
       { path: "kyc", element: <VendorKyc /> },
       { path: "stripe", element: <VendorStripe /> },
       { path: "support", element: <VendorSupport /> },
+      { path: "support/tickets/:ticketId", element: <VendorTicketDetails /> },
       { path: "help", element: <VendorHelp /> },
       { path: "insights", element: <VendorInsights /> },
     ],

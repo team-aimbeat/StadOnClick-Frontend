@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Dialog,
@@ -43,6 +44,7 @@ export function CreateStaffDialog({
   onOpenChange,
   onSubmit,
 }: CreateStaffDialogProps) {
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -137,20 +139,40 @@ export function CreateStaffDialog({
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Minimum 8 characters"
-              autoComplete="new-password"
-              disabled={submitting}
-              {...register("password", {
-                required: "Password is required",
-                minLength: { value: 8, message: "Password must be at least 8 characters" },
-              })}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Minimum 8 characters"
+                autoComplete="new-password"
+                disabled={submitting}
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: { value: 8, message: "Password must be at least 8 characters" },
+                  validate: {
+                    hasUppercase: (value) =>
+                      /[A-Z]/.test(value) || "Password must contain an uppercase letter",
+                    hasNumber: (value) =>
+                      /\d/.test(value) || "Password must contain a number",
+                  },
+                })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-2 inline-flex items-center justify-center rounded-md px-2 text-slate-500 transition hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-200"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-xs text-destructive">{errors.password.message}</p>
             )}
+            <p className="text-xs text-slate-500">
+              Use at least 8 characters with 1 uppercase letter and 1 number.
+            </p>
           </div>
 
           <div className="space-y-2">
