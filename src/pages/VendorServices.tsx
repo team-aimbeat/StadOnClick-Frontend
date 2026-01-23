@@ -35,6 +35,7 @@ import wellness from '@/assets/Images/wellness.jpg'
 import travel from '@/assets/Images/travel.jpg'
 import home from '@/assets/Images/home.jpg'
 import food from '@/assets/Images/food.jpg'
+import wash from '@/assets/Images/wash.jpg'
 
 
 import type { IconType } from "react-icons";
@@ -196,7 +197,7 @@ const plannedCategories: {
   {
     name: "Home & Personal Services",
     icon: HiOutlineHomeModern,
-    image:home,
+    image:wash,
       highlights: [
       "Cleaning & car wash",
       "Movers & packers",
