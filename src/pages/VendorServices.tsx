@@ -1,44 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { NavLink } from "react-router-dom";
 import {
-  HiOutlineCalendarDays,
-  HiOutlineChartBar,
-  HiOutlineChevronRight,
-  HiOutlineClock,
-  HiOutlineGlobeAlt,
-  HiOutlineIdentification,
-  HiOutlineMap,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type KeyboardEvent,
+  type SetStateAction,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
   HiOutlinePlus,
-  HiOutlineShare,
   HiOutlineSparkles,
-  HiOutlineTag,
-  HiOutlineUsers,
   HiOutlineXMark,
-  HiOutlinePhone,
-  HiOutlineDocumentText,
-  HiOutlineWrenchScrewdriver,
-  HiOutlineHomeModern,
-  HiOutlineBuildingOffice2,
-  HiOutlinePaintBrush,
-  HiOutlineBolt,
-  HiOutlineScissors,
-  HiOutlineComputerDesktop,
-  HiOutlineHeart,
-  HiOutlineAcademicCap,
-  HiOutlineTruck,
-  HiOutlineQuestionMarkCircle,
 } from "react-icons/hi2";
-import well from '@/assets/Images/well.jpg'
-import family from '@/assets/Images/family.jpg'
-import learn from '@/assets/Images/learn.jpg'
-import wellness from '@/assets/Images/wellness.jpg'
-import travel from '@/assets/Images/travel.jpg'
-import home from '@/assets/Images/home.jpg'
-import food from '@/assets/Images/food.jpg'
-import wash from '@/assets/Images/wash.jpg'
-
-
-import type { IconType } from "react-icons";
 
 import { DashboardContainer } from "@/components/dashboard";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
@@ -46,6 +20,21 @@ import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
 import { useMockLoader } from "@/lib/useMockLoader";
+import {
+  plannedCategories,
+  plannedCategoryNames,
+  slugifyCategory,
+} from "@/data/vendorServiceCategories";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import VendorServiceStep3, {
+  VendorServiceStep3Handle,
+} from "./VendorServiceStep3";
 
 type PricingModel = "fixed" | "hourly" | "package";
 type Slot = { id: string; label: string; capacity: number };
@@ -66,6 +55,16 @@ type Service = {
   pricingModel: PricingModel;
   hasMedia: boolean;
   offerings: Offering[];
+  subcategory?: string;
+};
+
+type ServiceDraft = {
+  name: string;
+  story: string;
+  basePrice: string;
+  salePrice: string;
+  usesSlots: boolean;
+  subcategory: string;
 };
 
 const serviceSeeds: Service[] = [
@@ -102,164 +101,10 @@ const serviceSeeds: Service[] = [
   // ... your other seed services remain the same
 ];
 
-const categoryIcons: Record<string, IconType> = {
-  Plumbing: HiOutlineWrenchScrewdriver,
-  Cleaning: HiOutlineSparkles,
-  HVAC: HiOutlineBuildingOffice2,
-  Electrical: HiOutlineBolt,
-  Painting: HiOutlinePaintBrush,
-  "Home Maintenance": HiOutlineHomeModern,
-  "Beauty & Grooming": HiOutlineScissors,
-  "IT Support": HiOutlineComputerDesktop,
-  Wellness: HiOutlineHeart,
-  Tutoring: HiOutlineAcademicCap,
-  Delivery: HiOutlineTruck,
-  General: HiOutlineHomeModern,
-  Other: HiOutlineQuestionMarkCircle,
-};
-
-const plannedCategories: {
-  name: string;
-  icon: IconType;
-  image: string;
-  highlights: string[];
-  subcategories: string[];
-  accent?: string;
-}[] = [
-  {
-    name: "Experiences & Activities",
-    icon: HiOutlineSparkles,
-    image:well,
-    highlights: [
-      "Events around the city",
-      "Concerts & live shows",
-      "Movie bookings",
-      "Museums & exhibitions",
-    ],
-    subcategories: [
-      "City tours",
-      "Live shows",
-      "Museum passes",
-      "Food & culture walks",
-    ],
-  },
-  {
-    name: "Health & Wellness",
-    icon: HiOutlineHeart,
-    image:wellness,
-      highlights: [
-      "Gym & fitness studios",
-      "Yoga / meditation classes",
-      "Massage & spa services",
-      "Swimming lessons",
-    ],
-    subcategories: [
-      "Yoga & meditation",
-      "Rehab therapies",
-      "Spa packages",
-      "Fitness training",
-    ],
-  },
-  {
-    name: "Kids & Family",
-    icon: HiOutlineUsers,
-    image:family,
-     highlights: [
-      "Kids events and parties",
-      "Play areas + activities",
-      "Educational / hobby classes",
-      "Decorations & planning",
-    ],
-    subcategories: [
-      "Birthday parties",
-      "Play experiences",
-      "Edutainment camps",
-      "Decor planning",
-    ],
-  },
-  {
-    name: "Learning & Skill Development",
-    icon: HiOutlineAcademicCap,
-    image:learn,
-     highlights: [
-      "Driving schools",
-      "Workshops & short courses",
-      "Sports academies",
-      "Creative skill labs",
-    ],
-    subcategories: [
-      "Driving lessons",
-      "Short workshops",
-      "Sports coaching",
-      "Creative labs",
-    ],
-  },
-  {
-    name: "Home & Personal Services",
-    icon: HiOutlineHomeModern,
-    image:wash,
-      highlights: [
-      "Cleaning & car wash",
-      "Movers & packers",
-      "Plumbers / electricians / handymen",
-      "Home-based businesses",
-    ],
-    subcategories: [
-      "Cleaning services",
-      "Handyman visits",
-      "Packers & movers",
-      "Home chefs",
-    ],
-  },
-  {
-    name: "Travel & Transportation",
-    icon: HiOutlineMap,
-    image:travel,
-       highlights: [
-      "Cab services",
-      "Ferry, bus & train information",
-      "Courier service (domestic / EU / international)",
-    ],
-    subcategories: [
-      "Cab bookings",
-      "Commuter info",
-      "Courier logistics",
-    ],
-  },
-  {
-    name: "Food & Leisure",
-    icon: HiOutlineGlobeAlt,
-    image:food,
-     highlights: [
-      "Eateries & hotspots",
-      "Cafes & restaurants",
-      "Weekend / weekday markets",
-    ],
-     subcategories: [
-      "Eatereis and Hotspots",
-      "Neighborhood consults",
-      "Local business support",
-    ],
-  },
-  {
-    name: "Real Estate & Local Support",
-    icon: HiOutlineBuildingOffice2,
-    image:home,
-       highlights: [
-      "Property brokers",
-      "Local business listings",
-      "Community / neighborhood services",
-    ],
-    subcategories: [
-      "Property tours",
-      "Neighborhood consults",
-      "Local business support",
-    ],
-  },
-];
-
 const VendorServices = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const loading = useMockLoader();
   const [services, setServices] = useState<Service[]>(serviceSeeds);
   const [notification, setNotification] = useState("");
@@ -270,12 +115,13 @@ const VendorServices = () => {
   const [selectedCategory, setSelectedCategory] = useState(
     serviceSeeds[0]?.category ?? "General"
   );
-  const [serviceDraft, setServiceDraft] = useState({
+  const [serviceDraft, setServiceDraft] = useState<ServiceDraft>({
     name: "",
     story: "",
     basePrice: "",
     salePrice: "",
     usesSlots: true,
+    subcategory: "",
   });
   const [slotDraft, setSlotDraft] = useState({
     label: "",
@@ -285,10 +131,25 @@ const VendorServices = () => {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [ruleDraft, setRuleDraft] = useState({ type: "", value: "" });
   const [rules, setRules] = useState<{ id: string; type: string; value: string }[]>([]);
+  const step3Ref = useRef<VendorServiceStep3Handle>(null);
 
   useEffect(() => {
     dispatch(setPageTitle("Services"));
   }, [dispatch]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("openWizard") === "true" && params.get("category")) {
+      const slug = params.get("category")!;
+      const category = plannedCategories.find((cat) => cat.slug === slug);
+      if (category) {
+        setSelectedCategory(category.name);
+        setWizardStep(2);
+        setWizardOpen(true);
+      }
+      navigate("/vendor/services", { replace: true });
+    }
+  }, [location.search, navigate]);
 
   useEffect(() => {
     return () => window.clearTimeout(notifyRef.current);
@@ -304,22 +165,57 @@ const VendorServices = () => {
     () => Array.from(new Set(serviceSeeds.map((s) => s.category))),
     []
   );
+  const activePlannedCategory = plannedCategories.find(
+    (cat) => cat.name === selectedCategory,
+  );
 
   const wizardSteps = [
     { id: 1, label: "Category", helper: "Choose the best fit for your offering" },
     { id: 2, label: "Details", helper: "Tell customers what makes this special" },
-    { id: 3, label: "Availability", helper: "When can customers book this?" },
+    { id: 3, label: "Configure offerings", helper: "Each offering can have its own pricing, slots, and rules." },
     { id: 4, label: "Rules", helper: "Any booking requirements or restrictions?" },
   ];
+
+  const handleContinue = async () => {
+    if (wizardStep === 3) {
+      const valid = await step3Ref.current?.validate();
+      if (!valid) return;
+    }
+    setWizardStep((p) => Math.min(p + 1, wizardSteps.length));
+  };
+
+  const continueDisabled =
+    (wizardStep === 1 && !selectedCategory) ||
+    (wizardStep === 2 && !serviceDraft.name.trim());
 
   const resetWizard = () => {
     setWizardStep(1);
     setSelectedCategory(categoryOptions[0] ?? "General");
-    setServiceDraft({ name: "", story: "", basePrice: "", salePrice: "", usesSlots: true });
+    setServiceDraft({
+      name: "",
+      story: "",
+      basePrice: "",
+      salePrice: "",
+      usesSlots: true,
+      subcategory: "",
+    });
     setSlotDraft({ label: "", startTime: "", capacity: 2 });
     setSlots([]);
     setRuleDraft({ type: "", value: "" });
     setRules([]);
+  };
+
+  const handleCategorySelect = (categoryName: string) => {
+    setSelectedCategory(categoryName);
+    setWizardStep(1);
+    setWizardOpen(false);
+    const category = plannedCategories.find((cat) => cat.name === categoryName);
+    if (category) {
+      navigate(`/vendor/services/category/${category.slug}`);
+    } else {
+      const slug = slugifyCategory(categoryName);
+      navigate(`/vendor/services/category/${slug}`);
+    }
   };
 
   const handleAddSlotDraft = () => {
@@ -359,6 +255,7 @@ const VendorServices = () => {
       name: serviceDraft.name.trim(),
       story: serviceDraft.story.trim() || "New service experience",
       category: selectedCategory,
+      subcategory: serviceDraft.subcategory || undefined,
       status: "DRAFT",
       pricingModel: "fixed",
       hasMedia: false,
@@ -436,13 +333,7 @@ const VendorServices = () => {
             <HiOutlinePlus className="h-4.5 w-4.5" />
             Add New Service
           </button>
-          <NavLink
-            to="/vendor/promote"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-all"
-          >
-            <HiOutlineSparkles className="h-4 w-4" />
-            Growth Ideas
-          </NavLink>
+
         </div>
       </div>
 
@@ -489,8 +380,7 @@ const VendorServices = () => {
 
       {/* Wizard Modal */}
       {wizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm">
-          <div className="w-full max-w-4xl rounded-2xl bg-white shadow-2xl sm:rounded-3xl overflow-hidden">
+    <div className="fixed inset-0 z-50  overflow-y-auto  flex items-center justify-center bg-black/50 px-2 py-6 backdrop-blur-sm"> <div className="w-full max-w-7xl  rounded-2xl bg-white sm:rounded-3xl overflow-auto">
             {/* Progress */}
             <div className="flex gap-1 bg-slate-50 px-6 pt-4 pb-3">
               {wizardSteps.map((s) => (
@@ -521,26 +411,20 @@ const VendorServices = () => {
                   <CategoryStep
                     selected={selectedCategory}
                     options={categoryOptions}
-                    onSelect={setSelectedCategory}
+                    onSelect={handleCategorySelect}
                   />
                 )}
 
                 {wizardStep === 2 && (
-                  <DetailsStep draft={serviceDraft} setDraft={setServiceDraft} />
+                  <DetailsStep
+                    draft={serviceDraft}
+                    setDraft={setServiceDraft}
+                    subcategories={activePlannedCategory?.subcategories ?? []}
+                  />
                 )}
 
                 {wizardStep === 3 && (
-                  <AvailabilityStep
-                    usesSlots={serviceDraft.usesSlots}
-                    slots={slots}
-                    slotDraft={slotDraft}
-                    setSlotDraft={setSlotDraft}
-                    onAddSlot={handleAddSlotDraft}
-                    onRemoveSlot={handleRemoveSlotDraft}
-                    onToggleUsesSlots={(checked) =>
-                      setServiceDraft((p) => ({ ...p, usesSlots: checked }))
-                    }
-                  />
+                  <VendorServiceStep3 ref={step3Ref} hideFooter />
                 )}
 
                 {wizardStep === 4 && (
@@ -571,19 +455,13 @@ const VendorServices = () => {
                     </button>
                   )}
                   <button
-                    disabled={
-                      (wizardStep === 1 && !selectedCategory) ||
-                      (wizardStep === 2 && !serviceDraft.name.trim()) ||
-                      (wizardStep === 3 && serviceDraft.usesSlots && slots.length === 0)
-                    }
+                    disabled={continueDisabled}
                     onClick={
-                      wizardStep === wizardSteps.length
-                        ? handleSubmitWizard
-                        : () => setWizardStep((p) => Math.min(p + 1, wizardSteps.length))
+                      wizardStep === wizardSteps.length ? handleSubmitWizard : handleContinue
                     }
                     className="rounded-xl bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 transition-all"
                   >
-                    {wizardStep === wizardSteps.length ? "Create Service" : "Continue →"}
+                    {wizardStep === wizardSteps.length ? "Create Service" : "Continue ?"}
                   </button>
                 </div>
               </div>
@@ -735,11 +613,12 @@ function CategoryStep({
   onSelect: (cat: string) => void;
 }) {
   const selectedPlannedCategory = plannedCategories.find((cat) => cat.name === selected);
+  const extraOptions = options.filter((option) => !plannedCategoryNames.has(option));
 
   return (
     <div className="space-y-5">
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-        Choose Category
+        Choose Category Business
       </p>
 
 
@@ -751,7 +630,21 @@ function CategoryStep({
           {plannedCategories.map((cat) => (
             <div
               key={cat.name}
-              className="rounded-2xl border border-slate-200 bg-white shadow-sm"
+              role="button"
+              tabIndex={0}
+              aria-pressed={selected === cat.name}
+              onClick={() => onSelect(cat.name)}
+              onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect(cat.name);
+                }
+              }}
+              className={`rounded-2xl border bg-white shadow-sm outline-none transition ${
+                selected === cat.name
+                  ? "border-blue-500 ring-5 ring-blue-200 hover:ring-blue-300"
+                  : "border-slate-200 hover:border-slate-300 hover:shadow-lg"
+                    } cursor-pointer`}
             >
               <div className="h-24 w-full overflow-hidden rounded-t-2xl">
                 <img
@@ -778,29 +671,20 @@ function CategoryStep({
           ))}
         </div>
       </div>
-      {selectedPlannedCategory && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Subcategories for {selectedPlannedCategory.name}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {selectedPlannedCategory.subcategories.map((sub) => (
-              <span
-                key={sub}
-                className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm"
-              >
-                {sub}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 // Placeholder for other steps — implement similarly
-function DetailsStep({ draft, setDraft }: { draft: any; setDraft: any }) {
+function DetailsStep({
+  draft,
+  setDraft,
+  subcategories,
+}: {
+  draft: ServiceDraft;
+  setDraft: Dispatch<SetStateAction<ServiceDraft>>;
+  subcategories: string[];
+}) {
   return (
     <div className="space-y-6">
       {/* Service name, story, prices, etc. */}
@@ -810,16 +694,94 @@ function DetailsStep({ draft, setDraft }: { draft: any; setDraft: any }) {
         </span>
         <input
           value={draft.name}
-          onChange={(e) => setDraft((p: any) => ({ ...p, name: e.target.value }))}
+          onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
           className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200/50"
           placeholder="e.g. Premium Deep Cleaning"
         />
       </label>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          Subcategory
+        </p>
+        {subcategories.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">
+            This category does not yet have planned subcategories.
+          </p>
+        ) : (
+          <Select
+            value={draft.subcategory}
+            onValueChange={(value) => setDraft((p) => ({ ...p, subcategory: value }))}
+          >
+            <SelectTrigger className="mt-1.5 w-70 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200/50">
+              <SelectValue placeholder="Choose a subcategory" />
+            </SelectTrigger>
+            <SelectContent className=" w-full rounded-2xl border border-slate-100 bg-white shadow-lg">
+              {subcategories.map((sub) => (
+                <SelectItem key={sub} value={sub}>
+                  {sub}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
       {/* Add story, basePrice, salePrice similarly */}
     </div>
   );
 }
 
+function RulesStep({
+  ruleDraft,
+  setRuleDraft,
+  rules,
+  onAddRule,
+}: {
+  ruleDraft: { type: string; value: string }
+  setRuleDraft: (draft: { type: string; value: string }) => void
+  rules: { id: string; type: string; value: string }[]
+  onAddRule: () => void
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm font-semibold text-slate-700">Rules (optional)</p>
+      <div className="grid gap-3 md:grid-cols-2">
+        <input
+          value={ruleDraft.type}
+          placeholder="Rule type"
+          onChange={(e) => setRuleDraft({ ...ruleDraft, type: e.target.value })}
+          className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+        />
+        <input
+          value={ruleDraft.value}
+          placeholder="Value"
+          onChange={(e) => setRuleDraft({ ...ruleDraft, value: e.target.value })}
+          className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={onAddRule}
+        className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white"
+      >
+        + Add rule
+      </button>
+      <div className="space-y-2">
+        {rules.map((rule) => (
+          <div
+            key={rule.id}
+            className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-2 text-sm"
+          >
+            <span>
+              {rule.type}: {rule.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // You can continue implementing AvailabilityStep and RulesStep in the same style
 
 export default VendorServices;
+

@@ -17,6 +17,7 @@ import BookingsPage from "@/pages/BookingsPage";
 import VendorTableShowcase from "@/pages/VendorTableShowcase";
 import VendorProfile from "@/pages/VendorProfile";
 import VendorServices from "@/pages/VendorServices";
+import VendorCategoryDetail from "@/pages/VendorCategoryDetail";
 import VendorServiceOptions from "@/pages/VendorServiceOptions";
 import VendorMedia from "@/pages/VendorMedia";
 import VendorCoupons from "@/pages/VendorCoupons";
@@ -239,6 +240,7 @@ const appRouter = createBrowserRouter([
       { path: "bookings/:bookingId", element: <VendorBookingDetail /> },
       { path: "profile", element: <VendorProfile /> },
       { path: "services", element: <VendorServices /> },
+      { path: "services/category/:slug", element: <VendorCategoryDetail /> },
       {
         path: "services/:serviceId/options",
         element: <VendorServiceOptions />,
