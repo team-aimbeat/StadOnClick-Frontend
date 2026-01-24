@@ -11,6 +11,7 @@ import { vendorLeadSubscriptionsApi } from "@/features/vendorLeadSubscriptions/a
 import { adminStaffApi } from "@/features/admin/staff/adminStaffApi";
 import { supportApi } from "@/features/support/supportApi";
 import supportRealtimeReducer from "@/features/support/supportRealtimeSlice";
+import notificationsReducer from "@/features/notifications/notificationsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     preferences: preferencesReducer,
     themeConfig: themeConfigSlice,
     supportRealtime: supportRealtimeReducer,
+    notifications: notificationsReducer,
     [authApi.reducerPath]: authApi.reducer,
     [preferencesApi.reducerPath]: preferencesApi.reducer,
     [adminVendorApi.reducerPath]: adminVendorApi.reducer,

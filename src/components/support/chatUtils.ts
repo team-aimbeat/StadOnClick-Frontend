@@ -1,7 +1,7 @@
 import type { SupportTicketStatus } from "@/features/support/support.types";
 
 export function formatTime(dateInput?: string | Date | null) {
-  if (!dateInput) return "—";
+  if (!dateInput) return "-";
   const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }

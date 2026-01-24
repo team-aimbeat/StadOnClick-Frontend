@@ -1,6 +1,6 @@
-import AdminSupportChatbox from "./Admin/AdminSupportChatbox";
+import AdminSupportChatConsole from "./Admin/SupportChat/AdminSupportChatConsole";
 
-// Route alias: keep /admin/chat pointing to the new ticket-scoped support chatbox
+// Route alias: keep /admin/chat pointing to the new ticket-scoped support console
 export default function ChatBox() {
-  return <AdminSupportChatbox />;
+  return <AdminSupportChatConsole />;
 }

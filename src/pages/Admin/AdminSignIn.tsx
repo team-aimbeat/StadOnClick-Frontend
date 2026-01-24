@@ -89,7 +89,7 @@ export default function AdminSignIn() {
       dispatch(setUser(user));
       toast.success("Signed in successfully", { id: "admin-login-success" });
 
-      navigate(isSupportOnly ? "/admin/support/inbox" : "/admin/vendors", {
+      navigate(isSupportOnly ? "/admin/support/inbox" : "/admin/dashboard", {
         replace: true,
       });
     } catch (err) {

@@ -14,6 +14,8 @@ import {
   HiShieldCheck,
   HiBanknotes,
   HiChevronDown,
+  HiInboxStack,
+  HiChatBubbleLeftRight,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import { Users } from "lucide-react";
@@ -70,19 +72,19 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         {
           id: "support-dashboard",
           label: t("Support Dashboard"),
-          icon: HiHome,
+          icon: HiChartBar,
           to: withBase("support/dashboard"),
         },
         {
           id: "support-inbox",
           label: t("Support Inbox"),
-          icon: HiHome,
+          icon: HiInboxStack,
           to: withBase("support/inbox"),
         },
         {
           id: "support-chat",
           label: t("Support Chat"),
-          icon: HiClipboardDocumentCheck,
+          icon: HiChatBubbleLeftRight,
           to: withBase("chat"),
         },
       ];
@@ -98,19 +100,19 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       {
         id: "support-inbox",
         label: t("Support Inbox"),
-        icon: HiClipboardDocumentCheck,
+        icon: HiInboxStack,
         to: withBase("support/inbox"),
       },
       {
         id: "support-dashboard",
         label: t("Support Dashboard"),
-        icon: HiHome,
+        icon: HiChartBar,
         to: withBase("support/dashboard"),
       },
       {
         id: "support-chat",
         label: t("Support Chat"),
-        icon: HiClipboardDocumentCheck,
+        icon: HiChatBubbleLeftRight,
         to: withBase("chat"),
       },
       {

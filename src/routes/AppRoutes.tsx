@@ -53,7 +53,7 @@ import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLea
 import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
 import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
 import AdminSupportInbox from "@/pages/Admin/AdminSupportInbox";
-import AdminSupportChatbox from "@/pages/Admin/AdminSupportChatbox";
+import AdminSupportChatConsole from "@/pages/Admin/SupportChat/AdminSupportChatConsole";
 import SupportAdminDashboard from "@/pages/Admin/SupportAdminDashboard";
 
 const vendorPlaceholder = (title: string, description?: string) => (
@@ -160,7 +160,7 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "chat",
-        element: <AdminSupportChatbox />,
+        element: <AdminSupportChatConsole />,
         errorElement: <ErrorPage />,
       },
       {
@@ -191,10 +191,7 @@ const appRouter = createBrowserRouter([
         path: "kyc",
         element: <Kyc />,
       },
-      {
-        path: "chat",
-        element: <AdminSupportChatbox />,
-      },
+      
     ],
   },
   {
