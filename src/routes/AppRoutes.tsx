@@ -43,6 +43,7 @@ import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage
 
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
+import ModeratorProtectedRoute from "./ModeratorProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
@@ -55,6 +56,10 @@ import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
 import AdminSupportInbox from "@/pages/Admin/AdminSupportInbox";
 import AdminSupportChatConsole from "@/pages/Admin/SupportChat/AdminSupportChatConsole";
 import SupportAdminDashboard from "@/pages/Admin/SupportAdminDashboard";
+import ModeratorDashboard from "@/pages/Moderator/ModeratorDashboard";
+import ModeratorEscalationsInbox from "@/pages/Moderator/Escalations/ModeratorEscalationsInbox";
+import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorEscalationDetails";
+import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -133,7 +138,7 @@ const appRouter = createBrowserRouter([
     path: "/admin",
     element: (
       <AdminProtectedRoute>
-        <AdminLayout />
+        <AdminLayout basePath="/admin" />
       </AdminProtectedRoute>
     ),
     errorElement: <ErrorPage />,
@@ -192,6 +197,37 @@ const appRouter = createBrowserRouter([
         element: <Kyc />,
       },
       
+    ],
+  },
+  {
+    path: "/moderator",
+    element: (
+      <ModeratorProtectedRoute>
+        <AdminLayout basePath="/moderator" />
+      </ModeratorProtectedRoute>
+    ),
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "",
+        element: <Navigate to="/moderator/dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <ModeratorDashboard />,
+      },
+      {
+        path: "escalations",
+        element: <ModeratorEscalationsInbox />,
+      },
+      {
+        path: "escalations/:id",
+        element: <ModeratorEscalationDetails />,
+      },
+      {
+        path: "notifications",
+        element: <ModeratorNotifications />,
+      },
     ],
   },
   {

@@ -125,7 +125,7 @@ export function initSupportSocket() {
     }
   );
 
-  socket.on("support:ticket.created", (payload: { ticketNumber?: string; subject?: string }) => {
+  socket.on("support:ticket.created", (payload: { id?: string; ticketNumber?: string; subject?: string }) => {
     store.dispatch(
       supportApi.util.invalidateTags([
         { type: "SupportTickets", id: "LIST" },

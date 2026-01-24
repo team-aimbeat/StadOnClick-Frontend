@@ -51,13 +51,24 @@ export default function AdminSignIn() {
   }, [dispatch]);
 
   useEffect(() => {
-    const isElevated = authUser?.roles?.some((r) => ["ADMIN", "MODERATOR"].includes(r));
-    const isSupportOnly =
-      authUser?.roles?.includes("SUPPORT_ADMIN") && !isElevated;
-    if (authUser?.roles?.length && (isElevated || isSupportOnly)) {
-      navigate(isSupportOnly ? "/admin/support/inbox" : "/admin/dashboard", {
-        replace: true,
-      });
+    const roles = authUser?.roles ?? [];
+    const isAdmin = roles.includes("ADMIN");
+    const isModerator = roles.includes("MODERATOR");
+    const isSupportAdmin = roles.includes("SUPPORT_ADMIN");
+    const isSupportOnly = isSupportAdmin && !isAdmin && !isModerator;
+    const isModeratorOnly = isModerator && !isAdmin && !isSupportAdmin;
+
+    if (!roles.length) return;
+    if (isSupportOnly) {
+      navigate("/admin/support/inbox", { replace: true });
+      return;
+    }
+    if (isModeratorOnly) {
+      navigate("/moderator/dashboard", { replace: true });
+      return;
+    }
+    if (isAdmin || isModerator) {
+      navigate("/admin/dashboard", { replace: true });
     }
   }, [authUser?.roles, navigate]);
 
@@ -75,8 +86,11 @@ export default function AdminSignIn() {
       const user = response?.user ?? response;
 
       const isElevated = hasAdminAccess(user?.roles);
-      const isSupportOnly =
-        user?.roles?.includes("SUPPORT_ADMIN") && !isElevated;
+      const isAdmin = user?.roles?.includes("ADMIN");
+      const isModerator = user?.roles?.includes("MODERATOR");
+      const isSupportAdmin = user?.roles?.includes("SUPPORT_ADMIN");
+      const isSupportOnly = Boolean(isSupportAdmin && !isAdmin && !isModerator);
+      const isModeratorOnly = Boolean(isModerator && !isAdmin && !isSupportAdmin);
 
       // 🔐 Frontend guard (still keep backend guard too)
       if (!isElevated && !isSupportOnly) {
@@ -89,9 +103,13 @@ export default function AdminSignIn() {
       dispatch(setUser(user));
       toast.success("Signed in successfully", { id: "admin-login-success" });
 
-      navigate(isSupportOnly ? "/admin/support/inbox" : "/admin/dashboard", {
-        replace: true,
-      });
+      if (isSupportOnly) {
+        navigate("/admin/support/inbox", { replace: true });
+      } else if (isModeratorOnly) {
+        navigate("/moderator/dashboard", { replace: true });
+      } else {
+        navigate("/admin/dashboard", { replace: true });
+      }
     } catch (err) {
       const { fieldErrors, formError: normalizedFormError, toastMessage } =
         normalizeApiError(err, "Unable to sign in. Please try again.");

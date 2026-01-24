@@ -1,4 +1,4 @@
-import { CheckCircle2, Copy, MoreHorizontal, UserPlus, XCircle } from "lucide-react";
+import { CheckCircle2, Copy, MoreHorizontal, UserPlus, XCircle, ShieldAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { EscalationDetail } from "@/features/escalations/escalation.types";
 import type { SupportTicket, SupportTicketPriority, SupportTicketStatus } from "@/features/support/support.types";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/components/support/chatUtils";
@@ -32,22 +33,26 @@ const statusOptions: SupportTicketStatus[] = ["OPEN", "WAITING", "RESOLVED", "CL
 
 type Props = {
   ticket?: SupportTicket;
+  escalation?: EscalationDetail | null;
   authUserId?: string;
   isLoading?: boolean;
   isAssigning?: boolean;
   isUpdatingStatus?: boolean;
   onAssignToMe: () => void;
   onStatusChange: (value: SupportTicketStatus) => void;
+  onEscalate: () => void;
 };
 
 export default function ChatHeader({
   ticket,
+  escalation,
   authUserId,
   isLoading,
   isAssigning,
   isUpdatingStatus,
   onAssignToMe,
   onStatusChange,
+  onEscalate,
 }: Props) {
   const isAssignedToSelf = Boolean(ticket?.assignedTo?.id && ticket?.assignedTo?.id === authUserId);
   const assignedLabel = ticket?.assignedTo
@@ -110,6 +115,11 @@ export default function ChatHeader({
                   >
                     {ticket.priority}
                   </Badge>
+                  {escalation ? (
+                    <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700">
+                      Escalated: {escalation.category} - {escalation.severity} - {escalation.status}
+                    </span>
+                  ) : null}
                 </div>
                 <p className="truncate text-sm font-semibold text-slate-900">{ticket.subject}</p>
                 <p className="text-xs text-slate-500">
@@ -126,6 +136,11 @@ export default function ChatHeader({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onEscalate} disabled={!ticket} className="gap-2">
+            <ShieldAlert className="h-4 w-4" />
+            Escalate
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" disabled={!ticket || isUpdatingStatus}>

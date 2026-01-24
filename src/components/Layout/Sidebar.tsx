@@ -16,6 +16,7 @@ import {
   HiChevronDown,
   HiInboxStack,
   HiChatBubbleLeftRight,
+  HiBell,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import { Users } from "lucide-react";
@@ -49,15 +50,18 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const authUser = useSelector((state: RootState) => state.auth.user);
   const isCollapsed = !themeConfig.sidebar;
-  const isSupportOnly =
-    authUser?.roles?.includes("SUPPORT_ADMIN") &&
-    !authUser.roles.some((r) => ["ADMIN", "MODERATOR"].includes(r));
+  const isAdmin = authUser?.roles?.includes("ADMIN");
+  const isModerator = authUser?.roles?.includes("MODERATOR");
+  const isSupportAdmin = authUser?.roles?.includes("SUPPORT_ADMIN");
+  const isSupportOnly = Boolean(isSupportAdmin && !isAdmin && !isModerator);
+  const isModeratorOnly = Boolean(isModerator && !isAdmin && !isSupportAdmin);
 
   const location = useLocation();
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
   const normalizedBasePath = basePath.replace(/\/$/, "");
+  const isModeratorShell = normalizedBasePath.startsWith("/moderator");
   const withBase = useCallback(
     (path: string) => {
       if (!normalizedBasePath) return path.startsWith("/") ? path : `/${path}`;
@@ -86,6 +90,29 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
           label: t("Support Chat"),
           icon: HiChatBubbleLeftRight,
           to: withBase("chat"),
+        },
+      ];
+    }
+
+    if (isModeratorShell || isModeratorOnly) {
+      return [
+        {
+          id: "moderator-dashboard",
+          label: t("Moderator Dashboard"),
+          icon: HiChartBar,
+          to: withBase("dashboard"),
+        },
+        {
+          id: "moderator-escalations",
+          label: t("Escalations"),
+          icon: HiInboxStack,
+          to: withBase("escalations"),
+        },
+        {
+          id: "moderator-notifications",
+          label: t("Notifications"),
+          icon: HiBell,
+          to: withBase("notifications"),
         },
       ];
     }

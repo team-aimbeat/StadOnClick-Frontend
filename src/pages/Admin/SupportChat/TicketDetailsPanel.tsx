@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { EscalationDetail, EscalationSeverity, EscalationStatus } from "@/features/escalations/escalation.types";
 import type { SupportTicket, SupportTicketPriority, SupportTicketStatus } from "@/features/support/support.types";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,9 @@ const priorityTone: Record<SupportTicketPriority, string> = {
 
 type Props = {
   ticket?: SupportTicket;
+  escalations?: EscalationDetail[];
   isLoading?: boolean;
+  onSelectEscalation?: (escalation: EscalationDetail) => void;
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -33,7 +36,27 @@ const formatDateTime = (value?: string | null) => {
   return date.toLocaleString();
 };
 
-export default function TicketDetailsPanel({ ticket, isLoading }: Props) {
+const escalationStatusTone: Record<EscalationStatus, string> = {
+  OPEN: "bg-blue-50 text-blue-700 border-blue-200",
+  IN_PROGRESS: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  BLOCKED: "bg-amber-50 text-amber-700 border-amber-200",
+  RESOLVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  REJECTED: "bg-slate-100 text-slate-600 border-slate-200",
+};
+
+const escalationSeverityTone: Record<EscalationSeverity, string> = {
+  LOW: "bg-slate-100 text-slate-600 border-slate-200",
+  MEDIUM: "bg-blue-50 text-blue-700 border-blue-200",
+  HIGH: "bg-amber-50 text-amber-700 border-amber-200",
+  URGENT: "bg-rose-50 text-rose-700 border-rose-200",
+};
+
+export default function TicketDetailsPanel({
+  ticket,
+  escalations,
+  isLoading,
+  onSelectEscalation,
+}: Props) {
   return (
     <aside className="hidden w-[320px] flex-col border-l border-slate-200/80 bg-white/95 lg:flex">
       <div className="border-b border-slate-200/80 px-4 py-4">
@@ -110,6 +133,63 @@ export default function TicketDetailsPanel({ ticket, isLoading }: Props) {
                   <span>{ticket.vendor.contactPhone}</span>
                 </div>
               ) : null}
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Escalations
+                </p>
+                <span className="text-xs text-slate-500">{escalations?.length ?? 0}</span>
+              </div>
+              {escalations?.length ? (
+                <div className="space-y-2">
+                  {escalations.map((escalation) => (
+                    <button
+                      key={escalation.id}
+                      type="button"
+                      onClick={() => onSelectEscalation?.(escalation)}
+                      className="w-full rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-left transition hover:border-slate-300 hover:bg-slate-50"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "border text-[10px] font-semibold",
+                            escalationStatusTone[escalation.status]
+                          )}
+                        >
+                          {escalation.status}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "border text-[10px] font-semibold",
+                            escalationSeverityTone[escalation.severity]
+                          )}
+                        >
+                          {escalation.severity}
+                        </Badge>
+                        <span className="text-[11px] font-semibold text-slate-700">
+                          {escalation.category}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500 line-clamp-2">
+                        {escalation.reason}
+                      </p>
+                      {escalation.resolutionSummary ? (
+                        <p className="mt-1 text-[11px] text-emerald-700">
+                          Resolution: {escalation.resolutionSummary}
+                        </p>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">No escalations yet.</p>
+              )}
             </div>
           </>
         ) : (

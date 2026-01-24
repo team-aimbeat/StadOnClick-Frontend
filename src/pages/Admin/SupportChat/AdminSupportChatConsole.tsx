@@ -15,12 +15,24 @@ import {
   useAdminSendTicketMessageMutation,
   useAdminUpdateStatusMutation,
 } from "@/features/support/supportApi";
+import {
+  useAdminCommentEscalationMutation,
+  useAdminCreateEscalationMutation,
+  useAdminListTicketEscalationsQuery,
+} from "@/features/escalations/escalationApi";
+import type {
+  EscalationCategory,
+  EscalationDetail,
+  EscalationSeverity,
+} from "@/features/escalations/escalation.types";
 import type { SupportTicket, SupportTicketPriority, SupportTicketStatus } from "@/features/support/support.types";
 import { initSupportSocket } from "@/lib/supportSocket";
 
 import ChatComposer from "./ChatComposer";
 import ChatHeader from "./ChatHeader";
 import ChatThread from "./ChatThread";
+import EscalationDialog from "./EscalationDialog";
+import EscalationDetailsDialog from "./EscalationDetailsDialog";
 import TicketDetailsPanel from "./TicketDetailsPanel";
 import TicketListSidebar from "./TicketListSidebar";
 
@@ -50,6 +62,8 @@ export default function AdminSupportChatConsole() {
   const [status, setStatus] = useState<SupportTicketStatus | undefined>();
   const [priority, setPriority] = useState<SupportTicketPriority | undefined>();
   const [messageBody, setMessageBody] = useState("");
+  const [isEscalationDialogOpen, setEscalationDialogOpen] = useState(false);
+  const [activeEscalation, setActiveEscalation] = useState<EscalationDetail | null>(null);
 
   const {
     data: ticketsData,
@@ -83,6 +97,27 @@ export default function AdminSupportChatConsole() {
   });
 
   const {
+    data: escalations,
+    refetch: refetchEscalations,
+  } = useAdminListTicketEscalationsQuery(
+    { ticketId: selectedTicketId ?? "" },
+    { skip: !selectedTicketId }
+  );
+
+  const latestEscalation = useMemo(() => {
+    if (!escalations?.length) return null;
+    return escalations[0];
+  }, [escalations]);
+
+  useEffect(() => {
+    if (!activeEscalation || !escalations?.length) return;
+    const updated = escalations.find((item) => item.id === activeEscalation.id);
+    if (updated && updated !== activeEscalation) {
+      setActiveEscalation(updated);
+    }
+  }, [activeEscalation, escalations]);
+
+  const {
     data: messages,
     isLoading: isMessagesLoading,
     refetch: refetchMessages,
@@ -96,6 +131,10 @@ export default function AdminSupportChatConsole() {
   const [assignTo, { isLoading: isAssigning }] = useAdminAssignTicketMutation();
   const [updateStatus, { isLoading: isUpdatingStatus }] = useAdminUpdateStatusMutation();
   const [markRead] = useAdminMarkTicketReadMutation();
+  const [createEscalation, { isLoading: isCreatingEscalation }] =
+    useAdminCreateEscalationMutation();
+  const [commentEscalation, { isLoading: isCommentingEscalation }] =
+    useAdminCommentEscalationMutation();
 
   useEffect(() => {
     dispatch(setPageTitle("Support Chat"));
@@ -107,6 +146,10 @@ export default function AdminSupportChatConsole() {
       markRead({ id: selectedTicketId });
     }
   }, [selectedTicketId, markRead]);
+
+  useEffect(() => {
+    setActiveEscalation(null);
+  }, [selectedTicketId]);
 
   const handleSelectTicket = (id: string) => {
     setSearchParams({ ticketId: id });
@@ -144,8 +187,35 @@ export default function AdminSupportChatConsole() {
     }
   };
 
+  const handleEscalate = async (values: {
+    category: EscalationCategory;
+    severity: EscalationSeverity;
+    reason: string;
+    description: string;
+  }) => {
+    if (!selectedTicketId) return;
+    try {
+      await createEscalation({ ticketId: selectedTicketId, ...values }).unwrap();
+      toast.success("Escalation created");
+      setEscalationDialogOpen(false);
+      await Promise.all([refetchEscalations(), refetchTicket(), refetchList()]);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Unable to create escalation");
+    }
+  };
+
+  const handleEscalationComment = async (body: string) => {
+    if (!activeEscalation) return;
+    try {
+      await commentEscalation({ escalationId: activeEscalation.id, body }).unwrap();
+      await refetchEscalations();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Unable to add comment");
+    }
+  };
+
   const canSend =
-    Boolean(ticket) && ticket.status !== "CLOSED" && ticket.assignedTo?.id === authUser?.id;
+    !!ticket && ticket.status !== "CLOSED" && ticket.assignedTo?.id === authUser?.id;
 
   const helperText = !ticket
     ? "Select a ticket to start the conversation."
@@ -179,9 +249,11 @@ export default function AdminSupportChatConsole() {
         <div className="flex flex-1 flex-col border-slate-200/80 lg:border-l">
           <ChatHeader
             ticket={ticket}
+            escalation={latestEscalation}
             authUserId={authUser?.id}
             onAssignToMe={handleAssignToMe}
             onStatusChange={handleStatusChange}
+            onEscalate={() => setEscalationDialogOpen(true)}
             isAssigning={isAssigning}
             isUpdatingStatus={isUpdatingStatus}
             isLoading={isTicketFetching}
@@ -204,8 +276,32 @@ export default function AdminSupportChatConsole() {
           />
         </div>
 
-        <TicketDetailsPanel ticket={ticket} isLoading={isTicketFetching} />
+        <TicketDetailsPanel
+          ticket={ticket}
+          escalations={escalations}
+          isLoading={isTicketFetching}
+          onSelectEscalation={(escalation) => {
+            setActiveEscalation(escalation);
+          }}
+        />
       </div>
+
+      <EscalationDialog
+        open={isEscalationDialogOpen}
+        onOpenChange={setEscalationDialogOpen}
+        onSubmit={handleEscalate}
+        isSubmitting={isCreatingEscalation}
+      />
+
+      <EscalationDetailsDialog
+        escalation={activeEscalation}
+        open={Boolean(activeEscalation)}
+        onOpenChange={(open) => {
+          if (!open) setActiveEscalation(null);
+        }}
+        onAddComment={handleEscalationComment}
+        isCommenting={isCommentingEscalation}
+      />
     </div>
   );
 }
