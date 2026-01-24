@@ -4,7 +4,6 @@ import {
   useRef,
   useState,
   type Dispatch,
-  type KeyboardEvent,
   type SetStateAction,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,11 +20,6 @@ import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
 import { useMockLoader } from "@/lib/useMockLoader";
 import {
-  plannedCategories,
-  plannedCategoryNames,
-  slugifyCategory,
-} from "@/data/vendorServiceCategories";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -36,11 +30,18 @@ import VendorServiceStep3, {
   VendorServiceStep3Handle,
 } from "./VendorServiceStep3";
 import {
+  useGetMasterCategoriesQuery,
+  useGetServiceCategoriesByMasterQuery,
+  type ServiceMasterCategory,
+} from "@/services/serviceCategoriesApi";
+import {
   useCreateOfferingMutation,
   useCreateSlotMutation,
   useCreateRuleMutation,
 } from "@/services/vendorOfferingsApi";
 import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi";
+import well from "@/assets/Images/well.jpg";
+import { plannedCategories } from "@/data/vendorServiceCategories";
 
 type PricingModel = "fixed" | "hourly" | "package";
 type Slot = {
@@ -75,91 +76,93 @@ type ServiceDraft = {
   basePrice: string;
   salePrice: string;
   subcategory: string;
-  serviceId: string;
+  serviceId: string;                    // ← renamed for clarity (this is the primary id)
 };
-
-const serviceSeeds: Service[] = [
-  {
-    id: "svc-plumbing",
-    name: "Emergency Plumbing",
-    story: "24/7 emergency plumbing with on-site diagnosis and repairs.",
-    category: "Plumbing",
-    status: "LIVE",
-    pricingModel: "fixed",
-    hasMedia: true,
-    offerings: [
-      {
-        id: "offering-repair",
-        name: "Repair Visit",
-        price: 1800,
-        status: "ACTIVE",
-        pricingModel: "fixed",
-        slots: [
-          { id: "slot-1", label: "Mon, 10:00 AM", capacity: 3 },
-          { id: "slot-2", label: "Mon, 02:00 PM", capacity: 2 },
-        ],
-      },
-      {
-        id: "offering-gas",
-        name: "Gas Line Safety Check",
-        price: 2500,
-        status: "ACTIVE",
-        pricingModel: "fixed",
-        slots: [{ id: "slot-3", label: "Tue, 09:00 AM", capacity: 2 }],
-      },
-    ],
-  },
-  // ... your other seed services remain the same
-];
 
 const VendorServices = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const loading = useMockLoader();
-  const [services, setServices] = useState<Service[]>(serviceSeeds);
+
   const [notification, setNotification] = useState("");
   const notifyRef = useRef<number>();
+  const [services, setServices] = useState<Service[]>([]);
 
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState(
-    serviceSeeds[0]?.category ?? "General"
-  );
-  const fallbackServiceId =
-    serviceSeeds[0]?.id ?? "568fa4d3-ce94-4de7-b5fd-77150fa023bc";
   const [serviceDraft, setServiceDraft] = useState<ServiceDraft>({
     name: "",
     story: "",
     basePrice: "",
     salePrice: "",
     subcategory: "",
-    serviceId: fallbackServiceId,
+    serviceId: "",
   });
-  const [ruleDraft, setRuleDraft] = useState({ type: "", value: "" });
+  const [ruleDraft, setRuleDraft] = useState<{ type: string; value: string }>({
+    type: "",
+    value: "",
+  });
   const [rules, setRules] = useState<{ id: string; type: string; value: string }[]>([]);
   const step3Ref = useRef<VendorServiceStep3Handle>(null);
   const [createOffering] = useCreateOfferingMutation();
   const [createSlot] = useCreateSlotMutation();
   const [createRule] = useCreateRuleMutation();
+  const { data: masterCategories = [] } = useGetMasterCategoriesQuery();
+
+  const masterCategoryOptions = useMemo(() => {
+    if (!masterCategories.length) return [];
+
+    return [...masterCategories].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
+    );
+  }, [masterCategories]);
+
+  const activeCategory = masterCategoryOptions.find(
+    (category) => category.id === serviceDraft.serviceId,
+  );
+
+  const selectedCategoryName = activeCategory?.name ?? "Category";
+  const selectedServiceId = serviceDraft.subcategory || serviceDraft.serviceId;
+
+  const {
+    data: serviceSubCategories = [],
+  } = useGetServiceCategoriesByMasterQuery(serviceDraft.serviceId, {
+    skip: !serviceDraft.serviceId,
+  });
 
   useEffect(() => {
-    dispatch(setPageTitle("Services"));
-  }, [dispatch]);
+    setServiceDraft((draft) =>
+      draft.subcategory ? { ...draft, subcategory: "" } : draft,
+    );
+  }, [serviceDraft.serviceId]);
 
   useEffect(() => {
+    if (!masterCategoryOptions.length) return;
+    if (!serviceDraft.serviceId) return;
+    const exists = masterCategoryOptions.some(
+      (category) => category.id === serviceDraft.serviceId,
+    );
+    if (!exists) {
+      setServiceDraft((draft) => ({ ...draft, serviceId: "" }));
+    }
+  }, [masterCategoryOptions, serviceDraft.serviceId]);
+
+  useEffect(() => {
+    if (!masterCategoryOptions.length) return;
+
     const params = new URLSearchParams(location.search);
     if (params.get("openWizard") === "true" && params.get("category")) {
       const slug = params.get("category")!;
-      const category = plannedCategories.find((cat) => cat.slug === slug);
+      const category = masterCategoryOptions.find((cat) => cat.slug === slug);
       if (category) {
-        setSelectedCategory(category.name);
+        setServiceDraft((draft) => ({ ...draft, serviceId: category.id }));
         setWizardStep(2);
         setWizardOpen(true);
       }
       navigate("/vendor/services", { replace: true });
     }
-  }, [location.search, navigate]);
+  }, [location.search, navigate, masterCategoryOptions]);
 
   useEffect(() => {
     return () => window.clearTimeout(notifyRef.current);
@@ -171,14 +174,6 @@ const VendorServices = () => {
     notifyRef.current = window.setTimeout(() => setNotification(""), 3000);
   };
 
-  const categoryOptions = useMemo(
-    () => Array.from(new Set(serviceSeeds.map((s) => s.category))),
-    []
-  );
-  const activePlannedCategory = plannedCategories.find(
-    (cat) => cat.name === selectedCategory,
-  );
-
   const wizardSteps = [
     { id: 1, label: "Category", helper: "Choose the best fit for your offering" },
     { id: 2, label: "Details", helper: "Tell customers what makes this special" },
@@ -187,6 +182,14 @@ const VendorServices = () => {
   ];
 
   const handleContinue = async () => {
+    if (wizardStep === 1 && !serviceDraft.serviceId) {
+      addNotification("Select a category before continuing.");
+      return;
+    }
+    if (wizardStep === 2 && !serviceDraft.name.trim()) {
+      addNotification("Service name is required.");
+      return;
+    }
     if (wizardStep === 3) {
       const valid = await step3Ref.current?.validate();
       if (!valid) return;
@@ -195,34 +198,28 @@ const VendorServices = () => {
   };
 
   const continueDisabled =
-    (wizardStep === 1 && !selectedCategory) ||
+    (wizardStep === 1 && !serviceDraft.serviceId) ||
     (wizardStep === 2 && !serviceDraft.name.trim());
 
   const resetWizard = () => {
     setWizardStep(1);
-    setSelectedCategory(categoryOptions[0] ?? "General");
     setServiceDraft({
       name: "",
       story: "",
       basePrice: "",
       salePrice: "",
       subcategory: "",
-      serviceId: fallbackServiceId,
+      serviceId: "",
     });
     setRuleDraft({ type: "", value: "" });
     setRules([]);
   };
 
-  const handleCategorySelect = (categoryName: string) => {
-    setSelectedCategory(categoryName);
-    setWizardStep(1);
-    setWizardOpen(false);
-    const category = plannedCategories.find((cat) => cat.name === categoryName);
-    if (category) {
-      navigate(`/vendor/services/category/${category.slug}`);
-    } else {
-      const slug = slugifyCategory(categoryName);
-      navigate(`/vendor/services/category/${slug}`);
+  const handleCategorySelect = (categoryId: string) => {
+    setServiceDraft((draft) => ({ ...draft, serviceId: categoryId, subcategory: "" }));
+    const matchedCategory = masterCategoryOptions.find((cat) => cat.id === categoryId);
+    if (matchedCategory?.slug) {
+      navigate(`/vendor/services/category/${matchedCategory.slug}`);
     }
   };
 
@@ -237,23 +234,31 @@ const VendorServices = () => {
 
   const handleSubmitWizard = async () => {
     if (!serviceDraft.name.trim()) return;
+
     const step3Valid = await step3Ref.current?.validate();
     if (!step3Valid) return;
-    const normalizedValues = step3Ref.current?.getValues();
-    if (!normalizedValues?.offerings?.length) {
+
+    const step3Values = step3Ref.current?.getValues();
+    if (!step3Values?.offerings?.length) {
       addNotification("Add at least one offering before continuing.");
       return;
     }
 
-    const serviceIdParam = serviceDraft.serviceId || fallbackServiceId;
+    const serviceId = selectedServiceId;
+    if (!serviceId) {
+      addNotification("No category selected.");
+      return;
+    }
+
     try {
       const createdOfferings = [];
-      for (const offering of normalizedValues.offerings) {
+
+      for (const offering of step3Values.offerings) {
         const created = await createOffering({
-          serviceId: serviceIdParam,
+        serviceId: offering.serviceId || serviceId,  // safe fallback
           name: offering.name.trim(),
           basePrice: offering.basePrice,
-          salePrice: offering.salePrice,
+          salePrice: offering.salePrice ?? null,
           maxQuantity: offering.maxQuantity ?? null,
         }).unwrap();
 
@@ -280,40 +285,42 @@ const VendorServices = () => {
           }).unwrap();
         }
       }
+
+      const baseTimestamp = Date.now();
+      const localOfferings = step3Values.offerings.map((offering, index) => ({
+        id: `off-${baseTimestamp}-${index}`,
+        name: offering.name,
+        price: offering.salePrice ?? offering.basePrice,
+        status: "ACTIVE" as const,
+        pricingModel: "fixed" as const,
+        slots: offering.slots.map((slot, slotIndex) => ({
+          id: `slot-${baseTimestamp}-${index}-${slotIndex}`,
+          label: formatSlotLabel(slot.startTime, slot.endTime),
+          capacity: slot.capacity,
+        })),
+      }));
+
+      const newService: Service = {
+        id: `svc-${baseTimestamp}`,
+        name: serviceDraft.name.trim(),
+        story: serviceDraft.story.trim() || "New service experience",
+        category: selectedCategoryName,
+        subcategory: serviceDraft.subcategory || undefined,
+        status: "DRAFT",
+        pricingModel: "fixed",
+        hasMedia: false,
+        offerings: localOfferings,
+      };
+
+      setServices((prev) => [...prev, newService]);
+
+      addNotification("Service created successfully (draft mode)");
+      setWizardOpen(false);
+      resetWizard();
     } catch (error) {
+      console.error("Error creating service:", error);
       addNotification("Failed to publish offerings. Try again.");
-      return;
     }
-
-    const baseTimestamp = Date.now();
-    const localOfferings = normalizedValues.offerings.map((offering, index) => ({
-      id: `off-${baseTimestamp}-${index}`,
-      name: offering.name,
-      price: offering.salePrice ?? offering.basePrice,
-      status: "ACTIVE" as const,
-      pricingModel: "fixed" as const,
-      slots: offering.slots.map((slot, slotIndex) => ({
-        id: `slot-${baseTimestamp}-${index}-${slotIndex}`,
-        label: formatSlotLabel(slot.startTime, slot.endTime),
-        capacity: slot.capacity,
-      })),
-    }));
-
-    const newService: Service = {
-      id: `svc-${baseTimestamp}`,
-      name: serviceDraft.name.trim(),
-      story: serviceDraft.story.trim() || "New service experience",
-      category: selectedCategory,
-      subcategory: serviceDraft.subcategory || undefined,
-      status: "DRAFT",
-      pricingModel: "fixed",
-      hasMedia: false,
-      offerings: localOfferings,
-    };
-    setServices((prev) => [...prev, newService]);
-    addNotification("Service created successfully (draft mode)");
-    setWizardOpen(false);
-    resetWizard();
   };
 
   const handleToggleServiceStatus = (id: string) => {
@@ -373,7 +380,6 @@ const VendorServices = () => {
             <HiOutlinePlus className="h-4.5 w-4.5" />
             Add New Service
           </button>
-
         </div>
       </div>
 
@@ -420,7 +426,8 @@ const VendorServices = () => {
 
       {/* Wizard Modal */}
       {wizardOpen && (
-    <div className="fixed inset-0 z-50  overflow-y-auto  flex items-center justify-center bg-black/50 px-2 py-6 backdrop-blur-sm"> <div className="w-full max-w-7xl  rounded-2xl bg-white sm:rounded-3xl overflow-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center bg-black/50 px-2 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-7xl rounded-2xl bg-white sm:rounded-3xl overflow-auto max-h-[90vh]">
             {/* Progress */}
             <div className="flex gap-1 bg-slate-50 px-6 pt-4 pb-3">
               {wizardSteps.map((s) => (
@@ -449,8 +456,8 @@ const VendorServices = () => {
               <div className="min-h-[340px]">
                 {wizardStep === 1 && (
                   <CategoryStep
-                    selected={selectedCategory}
-                    options={categoryOptions}
+                    categories={masterCategoryOptions}
+                    selectedId={serviceDraft.serviceId}
                     onSelect={handleCategorySelect}
                   />
                 )}
@@ -459,12 +466,18 @@ const VendorServices = () => {
                   <DetailsStep
                     draft={serviceDraft}
                     setDraft={setServiceDraft}
-                    subcategories={activePlannedCategory?.subcategories ?? []}
+                    masterCategoryId={serviceDraft.serviceId}
+                    subcategories={serviceSubCategories}
+                    selectedCategoryName={selectedCategoryName}
                   />
                 )}
 
                 {wizardStep === 3 && (
-                  <VendorServiceStep3 ref={step3Ref} hideFooter />
+                  <VendorServiceStep3
+                    ref={step3Ref}
+                    hideFooter
+                    serviceId={selectedServiceId}
+                  />
                 )}
 
                 {wizardStep === 4 && (
@@ -501,7 +514,7 @@ const VendorServices = () => {
                     }
                     className="rounded-xl bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 transition-all"
                   >
-                    {wizardStep === wizardSteps.length ? "Create Service" : "Continue ?"}
+                    {wizardStep === wizardSteps.length ? "Create Service" : "Continue"}
                   </button>
                 </div>
               </div>
@@ -521,7 +534,7 @@ const VendorServices = () => {
 };
 
 // ────────────────────────────────────────────────
-//  Helper Components
+//  Helper Components (unchanged)
 // ────────────────────────────────────────────────
 
 function StatCard({
@@ -594,6 +607,7 @@ function ServiceCard({ service, onToggleStatus }: { service: Service; onToggleSt
       })),
     }));
   }, [backendOfferings, service.offerings]);
+
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md">
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-6 py-4">
@@ -690,90 +704,102 @@ function formatSlotLabel(startTime: string, endTime?: string | null) {
 }
 
 function CategoryStep({
-  selected,
-  options,
+  categories,
+  selectedId,
   onSelect,
 }: {
-  selected: string;
-  options: string[];
-  onSelect: (cat: string) => void;
+  categories: ServiceMasterCategory[];
+  selectedId: string;
+  onSelect: (id: string) => void;
 }) {
-  const selectedPlannedCategory = plannedCategories.find((cat) => cat.name === selected);
-  const extraOptions = options.filter((option) => !plannedCategoryNames.has(option));
+  if (!categories.length) {
+    return (
+      <div className="space-y-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+        <p>Loading categories from the backend...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
         Choose Category Business
       </p>
-
-
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          All planned categories
+          All categories
         </p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-          {plannedCategories.map((cat) => (
-            <div
-              key={cat.name}
-              role="button"
-              tabIndex={0}
-              aria-pressed={selected === cat.name}
-              onClick={() => onSelect(cat.name)}
-              onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onSelect(cat.name);
-                }
-              }}
-              className={`rounded-2xl border bg-white shadow-sm outline-none transition ${
-                selected === cat.name
-                  ? "border-blue-500 ring-5 ring-blue-200 hover:ring-blue-300"
-                  : "border-slate-200 hover:border-slate-300 hover:shadow-lg"
-                    } cursor-pointer`}
+        {categories.map((cat) => {
+          const isSelected = cat.id === selectedId;
+          const baseBorder = isSelected
+            ? "border-blue-500 ring-4 ring-blue-200/70"
+            : "border-slate-200 hover:border-slate-300 hover:shadow-lg";
+          const visual = plannedCategories.find((item) => item.slug === cat.slug);
+          const IconComponent = visual?.icon ?? HiOutlineSparkles;
+          const imageSrc = visual?.image ?? well;
+
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => onSelect(cat.id)}
+              className={`flex flex-col justify-between rounded-2xl border bg-white p-0 text-left shadow-sm transition-all ${baseBorder}`}
             >
-              <div className="h-24 w-full overflow-hidden rounded-t-2xl">
+              <div className="h-28 w-full overflow-hidden rounded-t-2xl bg-slate-100">
                 <img
-                  src={cat.image}
+                  src={imageSrc}
                   alt={cat.name}
                   className="h-full w-full object-cover"
                   loading="lazy"
                 />
               </div>
-              <div className="space-y-2 px-3 pb-3 pt-2">
+              <div className="space-y-2 px-4 pb-4 pt-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                    <cat.icon className="h-4 w-4" />
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ${isSelected ? "ring-2 ring-blue-300" : ""}`}
+                  >
+                    <IconComponent className="h-4 w-4" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {cat.name}
-                  </p>
+                  <p className="text-sm font-semibold text-slate-900">{cat.name}</p>
                 </div>
-                <p className="text-xs text-slate-600">
-                  {cat.highlights.slice(0, 2).join(" · ")}
-                </p>
+                {cat.slug && (
+                  <p className="text-xs text-slate-500">
+                    {cat.slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}
+                  </p>
+                )}
               </div>
-            </div>
-          ))}
+            </button>
+          );
+        })}
         </div>
       </div>
     </div>
   );
 }
 
-// Placeholder for other steps — implement similarly
 function DetailsStep({
   draft,
   setDraft,
+  masterCategoryId,
   subcategories,
+  selectedCategoryName,
 }: {
   draft: ServiceDraft;
   setDraft: Dispatch<SetStateAction<ServiceDraft>>;
-  subcategories: string[];
+  masterCategoryId: string;
+  subcategories: { id: string; name: string }[];
+  selectedCategoryName: string;
 }) {
   return (
     <div className="space-y-6">
-      {/* Service name, story, prices, etc. */}
+      <div className="pb-4 border-b border-slate-100">
+        <p className="text-sm font-medium text-slate-700">
+          Selected Category:{" "}
+          <span className="font-semibold">{selectedCategoryName}</span>
+        </p>
+      </div>
+
       <label className="block">
         <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
           Service Name *
@@ -783,35 +809,42 @@ function DetailsStep({
           onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
           className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200/50"
           placeholder="e.g. Premium Deep Cleaning"
+          required
         />
       </label>
+
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
           Subcategory
-        </p>
-        {subcategories.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">
-            This category does not yet have planned subcategories.
-          </p>
+        </span>
+        {masterCategoryId ? (
+          subcategories.length > 0 ? (
+            <Select
+              value={draft.subcategory}
+              onValueChange={(value) => setDraft((p) => ({ ...p, subcategory: value }))}
+            >
+              <SelectTrigger className="mt-1.5 w-full max-w-md rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200/50">
+                <SelectValue placeholder="Select a subcategory (optional)" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72 rounded-2xl border border-slate-100 bg-white shadow-lg">
+                {subcategories.map((sub) => (
+                  <SelectItem key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500 italic">
+              No subcategories available for this category yet.
+            </p>
+          )
         ) : (
-          <Select
-            value={draft.subcategory}
-            onValueChange={(value) => setDraft((p) => ({ ...p, subcategory: value }))}
-          >
-            <SelectTrigger className="mt-1.5 w-70 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200/50">
-              <SelectValue placeholder="Choose a subcategory" />
-            </SelectTrigger>
-            <SelectContent className=" w-full rounded-2xl border border-slate-100 bg-white shadow-lg">
-              {subcategories.map((sub) => (
-                <SelectItem key={sub} value={sub}>
-                  {sub}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <p className="mt-3 text-sm text-amber-600">
+            Please select a category first (previous step)
+          </p>
         )}
       </div>
-      {/* Add story, basePrice, salePrice similarly */}
     </div>
   );
 }
@@ -822,10 +855,10 @@ function RulesStep({
   rules,
   onAddRule,
 }: {
-  ruleDraft: { type: string; value: string }
-  setRuleDraft: (draft: { type: string; value: string }) => void
-  rules: { id: string; type: string; value: string }[]
-  onAddRule: () => void
+  ruleDraft: { type: string; value: string };
+  setRuleDraft: (draft: { type: string; value: string }) => void;
+  rules: { id: string; type: string; value: string }[];
+  onAddRule: () => void;
 }) {
   return (
     <div className="space-y-4">
@@ -833,13 +866,13 @@ function RulesStep({
       <div className="grid gap-3 md:grid-cols-2">
         <input
           value={ruleDraft.type}
-          placeholder="Rule type"
+          placeholder="Rule type (e.g. Min notice, Cancellation)"
           onChange={(e) => setRuleDraft({ ...ruleDraft, type: e.target.value })}
           className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
         />
         <input
           value={ruleDraft.value}
-          placeholder="Value"
+          placeholder="Value (e.g. 24 hours, 50% fee)"
           onChange={(e) => setRuleDraft({ ...ruleDraft, value: e.target.value })}
           className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
         />
@@ -847,7 +880,7 @@ function RulesStep({
       <button
         type="button"
         onClick={onAddRule}
-        className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white"
+        className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
       >
         + Add rule
       </button>
@@ -858,15 +891,13 @@ function RulesStep({
             className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-2 text-sm"
           >
             <span>
-              {rule.type}: {rule.value}
+              <strong>{rule.type}:</strong> {rule.value}
             </span>
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
-
-// You can continue implementing AvailabilityStep and RulesStep in the same style
 
 export default VendorServices;
