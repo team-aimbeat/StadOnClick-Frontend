@@ -35,9 +35,20 @@ import {
 import VendorServiceStep3, {
   VendorServiceStep3Handle,
 } from "./VendorServiceStep3";
+import {
+  useCreateOfferingMutation,
+  useCreateSlotMutation,
+  useCreateRuleMutation,
+} from "@/services/vendorOfferingsApi";
+import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi";
 
 type PricingModel = "fixed" | "hourly" | "package";
-type Slot = { id: string; label: string; capacity: number };
+type Slot = {
+  id: string;
+  label: string;
+  capacity: number;
+  status?: "available" | "blocked";
+};
 type Offering = {
   id: string;
   name: string;
@@ -63,8 +74,8 @@ type ServiceDraft = {
   story: string;
   basePrice: string;
   salePrice: string;
-  usesSlots: boolean;
   subcategory: string;
+  serviceId: string;
 };
 
 const serviceSeeds: Service[] = [
@@ -115,23 +126,22 @@ const VendorServices = () => {
   const [selectedCategory, setSelectedCategory] = useState(
     serviceSeeds[0]?.category ?? "General"
   );
+  const fallbackServiceId =
+    serviceSeeds[0]?.id ?? "568fa4d3-ce94-4de7-b5fd-77150fa023bc";
   const [serviceDraft, setServiceDraft] = useState<ServiceDraft>({
     name: "",
     story: "",
     basePrice: "",
     salePrice: "",
-    usesSlots: true,
     subcategory: "",
+    serviceId: fallbackServiceId,
   });
-  const [slotDraft, setSlotDraft] = useState({
-    label: "",
-    startTime: "",
-    capacity: 2,
-  });
-  const [slots, setSlots] = useState<Slot[]>([]);
   const [ruleDraft, setRuleDraft] = useState({ type: "", value: "" });
   const [rules, setRules] = useState<{ id: string; type: string; value: string }[]>([]);
   const step3Ref = useRef<VendorServiceStep3Handle>(null);
+  const [createOffering] = useCreateOfferingMutation();
+  const [createSlot] = useCreateSlotMutation();
+  const [createRule] = useCreateRuleMutation();
 
   useEffect(() => {
     dispatch(setPageTitle("Services"));
@@ -196,11 +206,9 @@ const VendorServices = () => {
       story: "",
       basePrice: "",
       salePrice: "",
-      usesSlots: true,
       subcategory: "",
+      serviceId: fallbackServiceId,
     });
-    setSlotDraft({ label: "", startTime: "", capacity: 2 });
-    setSlots([]);
     setRuleDraft({ type: "", value: "" });
     setRules([]);
   };
@@ -218,26 +226,6 @@ const VendorServices = () => {
     }
   };
 
-  const handleAddSlotDraft = () => {
-    if (!slotDraft.label.trim() || !slotDraft.startTime) return;
-    const timeLabel = new Date(slotDraft.startTime).toLocaleString("en-US", {
-      weekday: "short",
-      hour: "numeric",
-      minute: "numeric",
-    });
-    const newSlot: Slot = {
-      id: `slot-${Date.now()}`,
-      label: `${slotDraft.label} · ${timeLabel}`,
-      capacity: slotDraft.capacity,
-    };
-    setSlots((prev) => [...prev, newSlot]);
-    setSlotDraft({ label: "", startTime: "", capacity: 2 });
-  };
-
-  const handleRemoveSlotDraft = (id: string) => {
-    setSlots((prev) => prev.filter((s) => s.id !== id));
-  };
-
   const handleAddRule = () => {
     if (!ruleDraft.type.trim() || !ruleDraft.value.trim()) return;
     setRules((prev) => [
@@ -247,11 +235,72 @@ const VendorServices = () => {
     setRuleDraft({ type: "", value: "" });
   };
 
-  const handleSubmitWizard = () => {
+  const handleSubmitWizard = async () => {
     if (!serviceDraft.name.trim()) return;
-    const price = Number(serviceDraft.salePrice || serviceDraft.basePrice || 0);
+    const step3Valid = await step3Ref.current?.validate();
+    if (!step3Valid) return;
+    const normalizedValues = step3Ref.current?.getValues();
+    if (!normalizedValues?.offerings?.length) {
+      addNotification("Add at least one offering before continuing.");
+      return;
+    }
+
+    const serviceIdParam = serviceDraft.serviceId || fallbackServiceId;
+    try {
+      const createdOfferings = [];
+      for (const offering of normalizedValues.offerings) {
+        const created = await createOffering({
+          serviceId: serviceIdParam,
+          name: offering.name.trim(),
+          basePrice: offering.basePrice,
+          salePrice: offering.salePrice,
+          maxQuantity: offering.maxQuantity ?? null,
+        }).unwrap();
+
+        createdOfferings.push(created);
+
+        if (offering.slots?.length) {
+          for (const slot of offering.slots) {
+            await createSlot({
+              offeringId: created.id,
+              startTime: new Date(slot.startTime).toISOString(),
+              endTime: slot.endTime ? new Date(slot.endTime).toISOString() : undefined,
+              capacity: slot.capacity,
+            }).unwrap();
+          }
+        }
+      }
+
+      if (createdOfferings.length > 0 && rules.length > 0) {
+        for (const rule of rules) {
+          await createRule({
+            offeringId: createdOfferings[0].id,
+            ruleType: rule.type,
+            value: rule.value,
+          }).unwrap();
+        }
+      }
+    } catch (error) {
+      addNotification("Failed to publish offerings. Try again.");
+      return;
+    }
+
+    const baseTimestamp = Date.now();
+    const localOfferings = normalizedValues.offerings.map((offering, index) => ({
+      id: `off-${baseTimestamp}-${index}`,
+      name: offering.name,
+      price: offering.salePrice ?? offering.basePrice,
+      status: "ACTIVE" as const,
+      pricingModel: "fixed" as const,
+      slots: offering.slots.map((slot, slotIndex) => ({
+        id: `slot-${baseTimestamp}-${index}-${slotIndex}`,
+        label: formatSlotLabel(slot.startTime, slot.endTime),
+        capacity: slot.capacity,
+      })),
+    }));
+
     const newService: Service = {
-      id: `svc-${Date.now()}`,
+      id: `svc-${baseTimestamp}`,
       name: serviceDraft.name.trim(),
       story: serviceDraft.story.trim() || "New service experience",
       category: selectedCategory,
@@ -259,16 +308,7 @@ const VendorServices = () => {
       status: "DRAFT",
       pricingModel: "fixed",
       hasMedia: false,
-      offerings: [
-        {
-          id: `off-${Date.now()}`,
-          name: serviceDraft.name.trim(),
-          price,
-          status: "ACTIVE",
-          pricingModel: "fixed",
-          slots: serviceDraft.usesSlots ? slots : [],
-        },
-      ],
+      offerings: localOfferings,
     };
     setServices((prev) => [...prev, newService]);
     addNotification("Service created successfully (draft mode)");
@@ -532,6 +572,28 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 }
 
 function ServiceCard({ service, onToggleStatus }: { service: Service; onToggleStatus: () => void }) {
+  const { data: backendOfferings } = useGetServiceOfferingsQuery(service.id, {
+    skip: !service.id,
+  });
+
+  const displayOfferings = useMemo(() => {
+    if (!backendOfferings || backendOfferings.length === 0) {
+      return service.offerings;
+    }
+
+    return backendOfferings.map((offering) => ({
+      id: offering.id,
+      name: offering.name,
+      price: offering.salePrice ?? offering.basePrice,
+      status: "ACTIVE" as const,
+      slots: offering.slots.map((slot) => ({
+        id: slot.id,
+        label: formatSlotLabel(slot.startTime, slot.endTime),
+        capacity: slot.capacity,
+        status: slot.status === "OPEN" ? "available" : "blocked",
+      })),
+    }));
+  }, [backendOfferings, service.offerings]);
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md">
       <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-slate-50 px-6 py-4">
@@ -555,7 +617,7 @@ function ServiceCard({ service, onToggleStatus }: { service: Service; onToggleSt
       </div>
 
       <div className="divide-y divide-slate-100">
-        {service.offerings.map((offering) => (
+        {displayOfferings.map((offering) => (
           <div key={offering.id} className="px-6 py-5">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -601,6 +663,30 @@ function ServiceCard({ service, onToggleStatus }: { service: Service; onToggleSt
       </div>
     </div>
   );
+}
+
+function formatSlotLabel(startTime: string, endTime?: string | null) {
+  const start = new Date(startTime);
+  if (Number.isNaN(start.getTime())) {
+    return "Unknown slot";
+  }
+
+  const startLabel = start.toLocaleString("en-US", {
+    weekday: "short",
+    hour: "numeric",
+    minute: "numeric",
+  });
+
+  if (!endTime) {
+    return startLabel;
+  }
+
+  const end = new Date(endTime);
+  const endLabel = Number.isNaN(end.getTime())
+    ? "Unknown"
+    : end.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric" });
+
+  return `${startLabel} · ${endLabel}`;
 }
 
 function CategoryStep({
@@ -784,4 +870,3 @@ function RulesStep({
 // You can continue implementing AvailabilityStep and RulesStep in the same style
 
 export default VendorServices;
-
