@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Inbox, MessageCircle } from "lucide-react";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollAreaCorner, ScrollAreaScrollbar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SupportTicket, TicketMessage } from "@/features/support/support.types";
 import { cn } from "@/lib/utils";
@@ -74,7 +74,8 @@ export default function ChatThread({ ticket, messages, isLoading, authUserId }: 
   return (
     <ScrollArea
       ref={scrollRootRef}
-      className="flex-1 bg-[linear-gradient(180deg,_#f8fafc_0%,_#ffffff_40%,_#f8fafc_100%)] px-4 py-6"
+      type="always"
+      className="min-h-0 flex-1 bg-[linear-gradient(180deg,_#f8fafc_0%,_#ffffff_40%,_#f8fafc_100%)] px-4 py-6"
     >
       {isLoading ? (
         <div className="space-y-3">
@@ -137,6 +138,8 @@ export default function ChatThread({ ticket, messages, isLoading, authUserId }: 
           <p className="text-xs text-slate-500">Start the conversation when you are ready.</p>
         </div>
       )}
+      <ScrollAreaScrollbar orientation="vertical" className="w-2.5" />
+      <ScrollAreaCorner />
     </ScrollArea>
   );
 }
