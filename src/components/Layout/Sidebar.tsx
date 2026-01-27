@@ -19,7 +19,7 @@ import {
   HiBell,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
-import { Users } from "lucide-react";
+import { Activity, Users } from "lucide-react";
 
 import { RootState } from "@/app/store";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
@@ -90,6 +90,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           icon: HiChatBubbleLeftRight,
           to: withBase("chat"),
         },
+        {
+          id: "system-health",
+          label: t("System Health"),
+          icon: Activity,
+          to: withBase("system/health"),
+        },
       ];
     }
 
@@ -112,6 +118,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           label: t("Notifications"),
           icon: HiBell,
           to: withBase("moderator/notifications"),
+        },
+        {
+          id: "system-health",
+          label: t("System Health"),
+          icon: Activity,
+          to: withBase("system/health"),
         },
       ];
     }
@@ -208,7 +220,6 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         icon: HiCube,
         children: [
           { label: t("Preference Studio"), to: withBase("catalog/interests") },
-          { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
         ],
       },
       {
@@ -216,7 +227,6 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("System"),
         icon: HiCog6Tooth,
         children: [
-          { label: t("API Health"), to: withBase("system/health") },
           { label: t("API Docs"), to: withBase("system/docs") },
           { label: t("Admin Activity"), to: withBase("system/audit") },
         ],
@@ -226,6 +236,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("Administration"),
         icon: Users,
         children: [{ label: t("Staff"), to: withBase("staff") }],
+      },
+      {
+        id: "system-health",
+        label: t("System Health"),
+        icon: Activity,
+        to: withBase("system/health"),
       },
     ];
   }, [isModerator, isModeratorOnly, isSupportOnly, t, withBase]);
