@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  HiArrowLeft,
-  HiChatBubbleLeftRight,
-  HiClipboardDocumentList,
-  HiMiniPaperAirplane,
-} from "react-icons/hi2";
+import { HiArrowLeft } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
 import { DashboardContainer } from "@/components/dashboard";
@@ -15,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
-import { useAppDispatch } from "@/app/hooks";
+import ChatComposer from "@/pages/Admin/SupportChat/ChatComposer";
+import ChatThread from "@/pages/Admin/SupportChat/ChatThread";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import {
   useVendorGetTicketMessagesQuery,
@@ -27,7 +23,6 @@ import type {
   SupportTicketCategory,
   SupportTicketPriority,
   SupportTicketStatus,
-  TicketMessage,
 } from "@/features/support/support.types";
 import { cn } from "@/lib/utils";
 
@@ -77,40 +72,11 @@ const formatDate = (date: string | Date) =>
     minute: "2-digit",
   });
 
-const formatTime = (date: string) =>
-  new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-function MessageBubble({
-  message,
-  isOwn,
-  createdAt,
-}: {
-  message: TicketMessage;
-  isOwn: boolean;
-  createdAt: string;
-}) {
-  return (
-    <div className={cn("flex w-full", isOwn ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[72%] rounded-2xl px-3 py-2 text-sm shadow-sm",
-          isOwn ? "bg-blue-600 text-white" : "bg-white text-slate-800 border border-slate-100"
-        )}
-      >
-        <p className="whitespace-pre-wrap leading-relaxed">{message.body}</p>
-        <p className={cn("mt-1 text-[11px]", isOwn ? "text-blue-100" : "text-slate-500")}>
-          {formatTime(createdAt)}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function VendorTicketDetails() {
   const { ticketId } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const authUser = useAppSelector((state) => state.auth.user);
   const [messageBody, setMessageBody] = useState("");
   const lastNotifiedMessageId = useRef<string | null>(null);
   const hasInitializedMessages = useRef(false);
@@ -134,12 +100,6 @@ export default function VendorTicketDetails() {
   }, [dispatch]);
 
   const status = useMemo(() => (ticket ? statusMeta[ticket.status] : null), [ticket]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages?.length, isSending]);
 
   useEffect(() => {
     if (!messages?.length) return;
@@ -324,9 +284,9 @@ export default function VendorTicketDetails() {
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card className="shadow-sm">
-          <CardHeader className="flex items-center justify-between">
+      <div className="grid gap-5">
+        <Card className="flex h-[calc(100vh-320px)] flex-col overflow-hidden rounded-3xl border border-slate-200/80 shadow-sm">
+          <CardHeader className="flex items-center justify-between border-b border-slate-200/80">
             <div>
               <p className="text-[11px] uppercase tracking-[0.26em] text-slate-500">Conversation</p>
               <CardTitle className="text-lg text-slate-900">Messages</CardTitle>
@@ -339,102 +299,30 @@ export default function VendorTicketDetails() {
               </p>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div
-              ref={scrollRef}
-              className="max-h-[420px] min-h-[260px] space-y-3 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3"
-            >
-              {isMessagesLoading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((key) => (
-                    <div key={key} className="flex gap-2">
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : messages && messages.length ? (
-                messages.map((msg) => (
-                  <MessageBubble
-                    key={msg.id}
-                    message={msg}
-                    isOwn={msg.senderRoleSnapshot === "VENDOR"}
-                    createdAt={msg.createdAt}
-                  />
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
-                  <HiChatBubbleLeftRight className="h-8 w-8 text-slate-400" />
-                  <p className="mt-2 text-sm font-semibold text-slate-800">No messages yet</p>
-                  <p className="text-xs text-slate-500">
-                    A support agent will reply shortly.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Textarea
-                disabled={!ticket || ticket.status === "CLOSED"}
-                placeholder={
-                  ticket.status === "CLOSED"
-                    ? "Ticket closed. Please create a new ticket for further help."
-                    : "Type your message..."
-                }
-                value={messageBody}
-                onChange={(e) => setMessageBody(e.target.value)}
-              />
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  onClick={handleSendMessage}
-                  disabled={!messageBody.trim() || isSending || ticket.status === "CLOSED"}
-                  className="flex items-center gap-2"
-                >
-                  {isSending ? "Sending..." : "Send"}
-                  <HiMiniPaperAirplane className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.26em] text-slate-500">Activity</p>
-              <CardTitle className="text-lg text-slate-900">Timeline</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {ticket.events && ticket.events.length ? (
-              <div className="space-y-4">
-                {ticket.events.map((event) => (
-                  <div key={event.id} className="relative pl-7">
-                    <span className="absolute left-1 top-1.5 h-2.5 w-2.5 rounded-full bg-blue-500" />
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-slate-900">{event.type}</p>
-                      <span className="text-[11px] text-slate-500">{formatDate(event.createdAt)}</span>
-                    </div>
-                    <p className="text-xs text-slate-600">
-                      {event.performedBy
-                        ? `${event.performedBy.firstName} ${event.performedBy.lastName ?? ""}`.trim()
-                        : "System"}
-                    </p>
-                    {event.type === "STATUS_CHANGED" && event.newValue ? (
-                      <p className="text-xs text-slate-500">
-                        Status updated to {(event.newValue as any)?.status}
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
-                <HiClipboardDocumentList className="h-7 w-7 text-slate-400" />
-                <p className="mt-2 text-sm font-semibold text-slate-800">No activity yet</p>
-                <p className="text-xs text-slate-500">Updates will appear here automatically.</p>
-              </div>
-            )}
+          <CardContent className="flex flex-1 flex-col p-0">
+            <ChatThread
+              ticket={ticket}
+              messages={messages}
+              isLoading={isMessagesLoading}
+              authUserId={authUser?.id}
+            />
+            <ChatComposer
+              value={messageBody}
+              onChange={setMessageBody}
+              onSend={handleSendMessage}
+              disabled={!ticket || ticket.status === "CLOSED"}
+              isSending={isSending}
+              helperText={
+                ticket.status === "CLOSED"
+                  ? "Ticket closed. Please create a new ticket for further help."
+                  : undefined
+              }
+              placeholder={
+                ticket.status === "CLOSED"
+                  ? "Ticket closed. Please create a new ticket for further help."
+                  : "Type your message"
+              }
+            />
           </CardContent>
         </Card>
       </div>

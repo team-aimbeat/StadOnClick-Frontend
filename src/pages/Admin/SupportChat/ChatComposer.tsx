@@ -10,6 +10,7 @@ type Props = {
   disabled?: boolean;
   isSending?: boolean;
   helperText?: string;
+  placeholder?: string;
   onChange: (value: string) => void;
   onSend: () => void;
 };
@@ -19,6 +20,7 @@ export default function ChatComposer({
   disabled,
   isSending,
   helperText,
+  placeholder,
   onChange,
   onSend,
 }: Props) {
@@ -56,7 +58,7 @@ export default function ChatComposer({
               onSend();
             }
           }}
-          placeholder={disabled ? "Ticket closed or unassigned." : "Type your message"}
+          placeholder={placeholder ?? (disabled ? "Ticket closed or unassigned." : "Type your message")}
           disabled={disabled}
           rows={1}
           className="min-h-[44px] flex-1 resize-none border-0 bg-transparent px-0 text-sm text-slate-700 shadow-none focus-visible:ring-0"
