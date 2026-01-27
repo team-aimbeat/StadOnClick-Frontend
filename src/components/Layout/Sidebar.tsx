@@ -207,8 +207,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("Catalog"),
         icon: HiCube,
         children: [
-          { label: t("Interests"), to: withBase("catalog/interests") },
-          { label: t("Time Durations"), to: withBase("catalog/time-durations") },
+          { label: t("Preference Studio"), to: withBase("catalog/interests") },
           { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
         ],
       },
