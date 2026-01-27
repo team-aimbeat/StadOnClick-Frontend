@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { HiOutlineBookmark } from "react-icons/hi2";
+import { useAppSelector } from "@/app/hooks";
 import { toast } from "react-hot-toast";
 
 import { DashboardContainer } from "@/components/dashboard";
@@ -17,6 +18,7 @@ import {
   useCreateSlotMutation,
   useGetServiceOfferingsQuery,
 } from "@/services/vendorOfferingsApi";
+import { useCreateVendorServiceMutation } from "@/services/vendorServicesApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import eventImage from "@/assets/Images/event.jpg";
 import wellnessImage from "@/assets/Images/wellness.jpg";
@@ -28,10 +30,10 @@ import foodImage from "@/assets/Images/food.jpg";
 import hotelImage from "@/assets/Images/hotel.jpg";
 import well from "@/assets/Images/well.jpg";
 
+
 type StepState = "idle" | "loading" | "success" | "error";
 
 type OfferingFormValues = {
-  serviceId: string;
   name: string;
   basePrice: number;
   salePrice: number;
@@ -99,6 +101,14 @@ const formatCurrency = (value: number | null | undefined) =>
     ? new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(value)
     : "-";
 
+type VendorServiceDetails = {
+  title: string;
+  description: string;
+  terms: string;
+  latitude: string;
+  longitude: string;
+};
+
 const VendorServices = () => {
   const [selectedMasterServiceId, setSelectedMasterServiceId] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
@@ -118,7 +128,23 @@ const VendorServices = () => {
   const [offeringError, setOfferingError] = useState<string | null>(null);
   const [slotError, setSlotError] = useState<string | null>(null);
   const [ruleError, setRuleError] = useState<string | null>(null);
+  const [createdServiceId, setCreatedServiceId] = useState<string | null>(null);
+const [isCreatingService, setIsCreatingService] = useState(false);
 
+
+  const [vendorServiceDetails, setVendorServiceDetails] = useState<VendorServiceDetails>({
+    title: "",
+    description: "",
+    terms: "",
+    latitude: "",
+    longitude: "",
+  });
+  const [vendorServiceErrors, setVendorServiceErrors] = useState<Record<string, string>>({});
+  const [vendorServiceStep, setVendorServiceStep] = useState<StepState>("idle");
+  const [vendorServiceError, setVendorServiceError] = useState<string | null>(null);
+  const vendorId = useAppSelector((state) => state.auth.user?.id ?? "");
+
+  const [createVendorService] = useCreateVendorServiceMutation();
   const [createOffering] = useCreateOfferingMutation();
   const [createSlot] = useCreateSlotMutation();
   const [createRule] = useCreateRuleMutation();
@@ -137,19 +163,19 @@ const VendorServices = () => {
     skip: !selectedMasterServiceId,
   });
 
-  const {
-    data: existingOfferings = [],
-    isFetching: isOfferingsFetching,
-    isError: offeringsError,
-  } = useGetServiceOfferingsQuery(selectedCategoryId, {
-    skip: !selectedCategoryId,
-  });
+const {
+  data: existingOfferings = [],
+  isFetching: isOfferingsFetching,
+  isError: offeringsError,
+} = useGetServiceOfferingsQuery(createdServiceId!, {
+  skip: !createdServiceId,
+});
+
 
   const { register, handleSubmit, formState, reset, setValue } =
     useForm<OfferingFormValues>({
       mode: "onBlur",
       defaultValues: {
-        serviceId: "",
         name: "",
         basePrice: 0,
         salePrice: 0,
@@ -164,13 +190,16 @@ const VendorServices = () => {
     return [...masterServices].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [masterServices]);
 
-  useEffect(() => {
-    setValue("serviceId", selectedCategoryId || "");
-  }, [selectedCategoryId, setValue]);
+  const selectedMasterService = masterServiceOptions.find(
+    (service) => service.id === selectedMasterServiceId,
+  );
+  const selectedCategory = categoryOptions.find(
+    (category) => category.id === selectedCategoryId,
+  );
 
-  useEffect(() => {
-    setSelectedExistingOfferingId("");
-  }, [selectedCategoryId]);
+useEffect(() => {
+  setSelectedExistingOfferingId("");
+}, [createdServiceId]);
 
   useEffect(() => {
     if (!selectedMasterServiceId) return;
@@ -326,24 +355,86 @@ const VendorServices = () => {
     }
   };
 
+  const validateVendorServiceDetails = useCallback(() => {
+    const errors: Record<string, string> = {};
+    if (!vendorServiceDetails.title.trim()) {
+      errors.title = "Title is required.";
+    }
+    if (!vendorServiceDetails.description.trim()) {
+      errors.description = "Description is required.";
+    }
+    if (!vendorServiceDetails.terms.trim()) {
+      errors.terms = "Terms are required.";
+    }
+    if (!vendorServiceDetails.latitude.trim()) {
+      errors.latitude = "Latitude is required.";
+    } else if (Number.isNaN(Number(vendorServiceDetails.latitude))) {
+      errors.latitude = "Enter a valid latitude.";
+    }
+    if (!vendorServiceDetails.longitude.trim()) {
+      errors.longitude = "Longitude is required.";
+    } else if (Number.isNaN(Number(vendorServiceDetails.longitude))) {
+      errors.longitude = "Enter a valid longitude.";
+    }
+    setVendorServiceErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [vendorServiceDetails]);
+
+  const handleVendorServiceDetailChange = (
+    field: keyof VendorServiceDetails,
+    value: string,
+  ) => {
+    setVendorServiceDetails((prev) => ({ ...prev, [field]: value }));
+    setVendorServiceErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
   const handleCreateOffering = handleSubmit(async (values) => {
     if (!selectedCategoryId) {
       setGeneralError("Select a category before creating an offering.");
       return;
     }
+    if (!validateVendorServiceDetails()) {
+      setGeneralError("Complete the vendor service details before continuing.");
+      return;
+    }
+    if (!vendorId) {
+      setGeneralError("Unable to resolve vendor session. Please reauthenticate.");
+      return;
+    }
+
     setGeneralError(null);
+    setVendorServiceStep("loading");
+    setVendorServiceError(null);
     setOfferingStep("loading");
     setOfferingError(null);
     setIsSubmitting(true);
+
+    let createdOfferingId: string | null = null;
     try {
+     const vendorServicePayload = {
+  vendorId: '4338e9ec-5e00-4bb6-ba61-bd818f804587', // ✅ REQUIRED
+  categoryId: selectedCategoryId,
+  title: vendorServiceDetails.title.trim(),
+  description: vendorServiceDetails.description.trim(),
+  terms: vendorServiceDetails.terms.trim(),
+  latitude: Number(vendorServiceDetails.latitude),
+  longitude: Number(vendorServiceDetails.longitude),
+};
+
+const createdVendorService = await createVendorService(vendorServicePayload).unwrap();
+setCreatedServiceId(createdVendorService.id);
+
+      setVendorServiceStep("success");
+
       const payload: CreateOfferingPayload = {
-        serviceId: selectedCategoryId,
+         serviceId: createdServiceId!,
         name: values.name.trim(),
         basePrice: values.basePrice,
         salePrice: values.salePrice,
         maxQuantity: values.maxQuantity,
       };
       const createdOffering = await createOffering(payload).unwrap();
+      createdOfferingId = createdOffering.id;
       setLastCreatedOfferingId(createdOffering.id);
       setOfferingStep("success");
 
@@ -363,7 +454,7 @@ const VendorServices = () => {
         }
       }
 
-      toast.success("Offering and extras saved successfully", {
+      toast.success("Vendor service and offering saved successfully", {
         id: "vendor-offering-success",
       });
       reset();
@@ -380,24 +471,45 @@ const VendorServices = () => {
       setRuleStep("idle");
       setRuleValidationError(null);
       setRuleError(null);
+      setVendorServiceDetails({
+        title: "",
+        description: "",
+        terms: "",
+        latitude: "",
+        longitude: "",
+      });
+      setVendorServiceErrors({});
+      setVendorServiceStep("idle");
+      setVendorServiceError(null);
       setLastCreatedOfferingId(null);
       setGeneralError(null);
       setOfferingError(null);
     } catch (error) {
-      if (offeringStep === "error") {
-        return;
+      if (vendorServiceStep === "loading") {
+        const normalized = normalizeApiError(error, "Unable to create vendor service");
+        setVendorServiceError(normalized.toastMessage);
+        setVendorServiceStep("error");
+        setGeneralError(normalized.toastMessage);
+        toast.error(normalized.toastMessage, { id: "vendor-service-error" });
+      } else {
+        const normalized = normalizeApiError(error, "Unable to create offering");
+        setGeneralError(normalized.toastMessage);
+        setOfferingError(normalized.toastMessage);
+        setOfferingStep("error");
+        toast.error(normalized.toastMessage, { id: "vendor-offering-error" });
       }
-      const normalized = normalizeApiError(error, "Unable to create offering");
-      setGeneralError(normalized.toastMessage);
-      setOfferingError(normalized.toastMessage);
-      setOfferingStep("error");
-      toast.error(normalized.toastMessage, { id: "vendor-offering-error" });
     } finally {
       setIsSubmitting(false);
     }
   });
 
   const statusEntries = [
+    {
+      title: "Create vendor service",
+      state: vendorServiceStep,
+      description: "Creates the vendor-level listing before the offering.",
+      error: vendorServiceError,
+    },
     {
       title: "Create offering",
       state: offeringStep,
@@ -588,6 +700,115 @@ const VendorServices = () => {
               )}
             </div>
 
+
+{/* Vendor Service Form */}
+<section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+  <div className="flex items-center justify-between">
+    <div>
+      <h3 className="text-sm font-semibold text-slate-900">
+        Vendor service details
+      </h3>
+      <p className="text-xs text-slate-500">
+        This creates the vendor-level service before adding offerings.
+      </p>
+    </div>
+
+    {createdServiceId && (
+      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+        Service created
+      </span>
+    )}
+  </div>
+
+  <div className="grid gap-4 md:grid-cols-2">
+    <input
+      type="text"
+      placeholder="Service title *"
+      value={vendorServiceDetails.title}
+      onChange={(e) =>
+        handleVendorServiceDetailChange("title", e.target.value)
+      }
+      className="rounded-xl border px-3 py-2 text-sm"
+    />
+
+    <input
+      type="text"
+      placeholder="Latitude *"
+      value={vendorServiceDetails.latitude}
+      onChange={(e) =>
+        handleVendorServiceDetailChange("latitude", e.target.value)
+      }
+      className="rounded-xl border px-3 py-2 text-sm"
+    />
+
+    <input
+      type="text"
+      placeholder="Longitude *"
+      value={vendorServiceDetails.longitude}
+      onChange={(e) =>
+        handleVendorServiceDetailChange("longitude", e.target.value)
+      }
+      className="rounded-xl border px-3 py-2 text-sm"
+    />
+  </div>
+
+  <textarea
+    placeholder="Service description *"
+    value={vendorServiceDetails.description}
+    onChange={(e) =>
+      handleVendorServiceDetailChange("description", e.target.value)
+    }
+    className="min-h-[90px] w-full rounded-xl border px-3 py-2 text-sm"
+  />
+
+  <textarea
+    placeholder="Terms & conditions *"
+    value={vendorServiceDetails.terms}
+    onChange={(e) =>
+      handleVendorServiceDetailChange("terms", e.target.value)
+    }
+    className="min-h-[70px] w-full rounded-xl border px-3 py-2 text-sm"
+  />
+
+  <button
+    type="button"
+    disabled={isCreatingService || !!createdServiceId}
+    onClick={async () => {
+      if (!validateVendorServiceDetails()) {
+        setGeneralError("Complete vendor service details first.");
+        return;
+      }
+
+      try {
+        setIsCreatingService(true);
+
+        const payload = {
+          vendorId:'4338e9ec-5e00-4bb6-ba61-bd818f804587',
+          categoryId: selectedCategoryId,
+          title: vendorServiceDetails.title.trim(),
+          description: vendorServiceDetails.description.trim(),
+          terms: vendorServiceDetails.terms.trim(),
+          latitude: Number(vendorServiceDetails.latitude),
+          longitude: Number(vendorServiceDetails.longitude),
+        };
+
+        const created = await createVendorService(payload).unwrap();
+        setCreatedServiceId(created.id);
+
+        toast.success("Vendor service created");
+      } catch (error) {
+        toast.error(normalizeApiError(error).toastMessage);
+      } finally {
+        setIsCreatingService(false);
+      }
+    }}
+    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
+  >
+    {isCreatingService ? "Creating service..." : "Create vendor service"}
+  </button>
+</section>
+
+
             <div className="space-y-2">
               <label htmlFor="existing-offering" className="text-sm font-semibold text-slate-700">
                 Basic offerings (optional)
@@ -596,16 +817,17 @@ const VendorServices = () => {
                 id="existing-offering"
                 value={selectedExistingOfferingId}
                 onChange={(event) => setSelectedExistingOfferingId(event.target.value)}
-                disabled={!selectedCategoryId}
+               disabled={!createdServiceId}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
               >
-                <option value="">
-                  {selectedCategoryId
-                    ? isOfferingsFetching
-                      ? "Loading offerings..."
-                      : "Select an existing offering to prefill"
-                    : "Select a category first"}
-                </option>
+               <option value="">
+  {createdServiceId
+    ? isOfferingsFetching
+      ? "Loading offerings..."
+      : "Select an existing offering to prefill"
+    : "Create vendor service first"}
+</option>
+
                 {existingOfferings.map((offering) => (
                   <option key={offering.id} value={offering.id}>
                       {offering.name} - {formatCurrency(offering.salePrice)}
@@ -811,7 +1033,7 @@ const VendorServices = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+            
               className="w-full rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
             >
               {isSubmitting ? "Processing..." : "Create offering & extras"}
