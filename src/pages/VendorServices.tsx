@@ -24,10 +24,10 @@ import eventImage from "@/assets/Images/well.jpg";
 import wellnessImage from "@/assets/Images/wellness.jpg";
 import familyImage from "@/assets/Images/family.jpg";
 import learnImage from "@/assets/Images/learn.jpg";
-import homeImage from "@/assets/Images/home.jpg";
+import homeImage from "@/assets/Images/wash.jpg";
 import travelImage from "@/assets/Images/travel.jpg";
 import foodImage from "@/assets/Images/food.jpg";
-import hotelImage from "@/assets/Images/hotel.jpg";
+import hotelImage from "@/assets/Images/home.jpg";
 import well from "@/assets/Images/well.jpg";
 
 
