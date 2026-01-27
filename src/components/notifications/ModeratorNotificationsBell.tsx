@@ -46,7 +46,7 @@ export default function ModeratorNotificationsBell({ className }: Props) {
       // ignore
     }
     setOpen(false);
-    navigate(`/moderator/escalations/${entityId}`);
+    navigate(`/admin/moderator/escalations/${entityId}`);
   };
 
   const handleMarkAll = async () => {
@@ -151,7 +151,7 @@ export default function ModeratorNotificationsBell({ className }: Props) {
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
-            onClick={() => navigate("/moderator/notifications")}
+            onClick={() => navigate("/admin/moderator/notifications")}
           >
             View all notifications
           </Button>

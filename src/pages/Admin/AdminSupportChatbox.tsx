@@ -138,8 +138,10 @@ export default function AdminSupportChatbox() {
     }
   };
 
+  const isAssignedToSelf = Boolean(ticket?.assignedTo?.id && ticket?.assignedTo?.id === authUser?.id);
+
   const handleAssignToMe = async () => {
-    if (!ticketId || !authUser?.id) return;
+    if (!ticketId || !authUser?.id || isAssignedToSelf) return;
     try {
       await assignTo({ id: ticketId, assignedToUserId: authUser.id }).unwrap();
       await Promise.all([refetchTicket(), refetchList()]);
@@ -323,15 +325,19 @@ export default function AdminSupportChatbox() {
                       ))}
                   </SelectContent>
                 </Select>
-                {ticket.assignedTo ? (
-                  <Button variant="outline" size="sm" className="h-9 rounded-xl" onClick={handleAssignToMe}>
-                    Reassign to me
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="secondary" className="h-9 rounded-xl" onClick={handleAssignToMe}>
-                    Assign to me
-                  </Button>
-                )}
+                <Button
+                  variant={isAssignedToSelf ? "secondary" : ticket.assignedTo ? "outline" : "secondary"}
+                  size="sm"
+                  className="h-9 rounded-xl"
+                  onClick={handleAssignToMe}
+                  disabled={isAssignedToSelf}
+                >
+                  {ticket.assignedTo
+                    ? isAssignedToSelf
+                      ? "Assigned to you"
+                      : "Reassign to me"
+                    : "Assign to me"}
+                </Button>
               </div>
             ) : null}
           </header>

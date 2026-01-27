@@ -112,6 +112,8 @@ export default function VendorTicketDetails() {
   const dispatch = useAppDispatch();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [messageBody, setMessageBody] = useState("");
+  const lastNotifiedMessageId = useRef<string | null>(null);
+  const hasInitializedMessages = useRef(false);
 
   const { data: ticket, isLoading, isFetching, error, refetch } = useVendorGetTicketQuery(
     ticketId || "",
@@ -138,6 +140,27 @@ export default function VendorTicketDetails() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages?.length, isSending]);
+
+  useEffect(() => {
+    if (!messages?.length) return;
+    const latest = messages[messages.length - 1];
+    if (!latest) return;
+
+    if (!hasInitializedMessages.current) {
+      hasInitializedMessages.current = true;
+      lastNotifiedMessageId.current = latest.id;
+      return;
+    }
+
+    if (lastNotifiedMessageId.current === latest.id) return;
+    lastNotifiedMessageId.current = latest.id;
+
+    if (latest.senderRoleSnapshot !== "VENDOR") {
+      toast.success("Support replied to your ticket", {
+        id: `support-reply-${latest.id}`,
+      });
+    }
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!ticketId || !messageBody.trim()) return;

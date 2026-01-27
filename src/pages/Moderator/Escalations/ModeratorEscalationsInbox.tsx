@@ -1,23 +1,19 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import toast from "react-hot-toast";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Inbox, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import {
-  useModeratorAcceptEscalationMutation,
-  useModeratorCommentEscalationMutation,
   useModeratorGetEscalationQuery,
   useModeratorListEscalationsQuery,
   useModeratorListNotificationsQuery,
   useModeratorMarkNotificationReadMutation,
-  useModeratorUpdateEscalationStatusMutation,
 } from "@/features/escalations/escalationApi";
 import type {
   EscalationCategory,
@@ -29,15 +25,6 @@ import { useAppSelector } from "@/app/hooks";
 import { formatRelativeTime } from "@/components/notifications/notification.utils";
 import { formatEscalationLabel } from "@/features/escalations/escalation.utils";
 
-import ModeratorEscalationDetailView from "./ModeratorEscalationDetailView";
-
-const severityTone: Record<EscalationSeverity, string> = {
-  LOW: "bg-slate-100 text-slate-600 border-slate-200",
-  MEDIUM: "bg-blue-50 text-blue-700 border-blue-200",
-  HIGH: "bg-amber-50 text-amber-700 border-amber-200",
-  URGENT: "bg-rose-50 text-rose-700 border-rose-200",
-};
-
 const statusTone: Record<EscalationStatus, string> = {
   OPEN: "bg-blue-50 text-blue-700 border-blue-200",
   IN_PROGRESS: "bg-indigo-50 text-indigo-700 border-indigo-200",
@@ -46,15 +33,14 @@ const statusTone: Record<EscalationStatus, string> = {
   REJECTED: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
-const statusOptions: EscalationStatus[] = [
-  "OPEN",
-  "IN_PROGRESS",
-  "BLOCKED",
-  "RESOLVED",
-  "REJECTED",
-];
+const severityTone: Record<EscalationSeverity, string> = {
+  LOW: "bg-slate-100 text-slate-600 border-slate-200",
+  MEDIUM: "bg-blue-50 text-blue-700 border-blue-200",
+  HIGH: "bg-amber-50 text-amber-700 border-amber-200",
+  URGENT: "bg-rose-50 text-rose-700 border-rose-200",
+};
 
-const severityOptions: EscalationSeverity[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+const statusOptions: EscalationStatus[] = ["OPEN", "IN_PROGRESS", "BLOCKED", "RESOLVED", "REJECTED"];
 const categoryOptions: EscalationCategory[] = [
   "REFUND",
   "BOOKING",
@@ -65,6 +51,13 @@ const categoryOptions: EscalationCategory[] = [
   "SECURITY",
   "OTHER",
 ];
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString();
+};
 
 export default function ModeratorEscalationsInbox() {
   const authUser = useAppSelector((state) => state.auth.user);
@@ -77,9 +70,6 @@ export default function ModeratorEscalationsInbox() {
   const [category, setCategory] = useState<EscalationCategory | undefined>(
     (searchParams.get("category") as EscalationCategory) || undefined
   );
-  const [severity, setSeverity] = useState<EscalationSeverity | undefined>(
-    (searchParams.get("severity") as EscalationSeverity) || undefined
-  );
   const [assigned, setAssigned] = useState<"me" | "unassigned" | "all">(
     (searchParams.get("assigned") as "me" | "unassigned" | "all") || "all"
   );
@@ -88,7 +78,6 @@ export default function ModeratorEscalationsInbox() {
     search: search || undefined,
     status,
     category,
-    severity,
     assigned,
   });
 
@@ -100,22 +89,14 @@ export default function ModeratorEscalationsInbox() {
     if (search) params.set("search", search);
     if (status) params.set("status", status);
     if (category) params.set("category", category);
-    if (severity) params.set("severity", severity);
     if (assigned && assigned !== "all") params.set("assigned", assigned);
     setSearchParams(params, { replace: true });
-  }, [assigned, category, search, selectedId, setSearchParams, severity, status]);
+  }, [assigned, category, search, selectedId, setSearchParams, status]);
 
   const { data: escalation, isFetching: isDetailLoading } = useModeratorGetEscalationQuery(
     selectedId ?? "",
     { skip: !selectedId }
   );
-
-  const [acceptEscalation, { isLoading: isAccepting }] =
-    useModeratorAcceptEscalationMutation();
-  const [updateStatus, { isLoading: isUpdating }] =
-    useModeratorUpdateEscalationStatusMutation();
-  const [commentEscalation, { isLoading: isCommenting }] =
-    useModeratorCommentEscalationMutation();
 
   const { data: notifications } = useModeratorListNotificationsQuery();
   const [markNotificationRead] = useModeratorMarkNotificationReadMutation();
@@ -136,44 +117,33 @@ export default function ModeratorEscalationsInbox() {
     setSearchParams(params, { replace: true });
   };
 
-  const handleAccept = async () => {
-    if (!selectedId) return;
-    try {
-      await acceptEscalation(selectedId).unwrap();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Unable to accept escalation");
-    }
-  };
+  const selectedItem = useMemo(
+    () => data?.items?.find((item) => item.id === selectedId) ?? null,
+    [data?.items, selectedId]
+  );
 
-  const handleUpdateStatus = async (nextStatus: EscalationStatus, summary?: string) => {
-    if (!selectedId) return;
-    try {
-      await updateStatus({ id: selectedId, status: nextStatus, resolutionSummary: summary }).unwrap();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Unable to update status");
-    }
-  };
-
-  const handleComment = async (body: string) => {
-    if (!selectedId) return;
-    try {
-      await commentEscalation({ id: selectedId, body }).unwrap();
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Unable to add comment");
-    }
-  };
+  const ticketSnapshot = escalation?.ticket ?? selectedItem?.ticket ?? null;
+  const vendorName = ticketSnapshot?.vendor?.businessName ?? "Vendor";
+  const ticketNumber = ticketSnapshot?.ticketNumber ?? "Ticket";
+  const ticketId = selectedItem?.ticketId ?? escalation?.ticketId ?? "";
+  const selectedEscalationId = selectedId ?? escalation?.id ?? "";
+  const previewStatus = escalation?.status ?? selectedItem?.status;
+  const previewCategory = escalation?.category ?? selectedItem?.category;
+  const previewReason = escalation?.reason ?? selectedItem?.reason ?? "Escalation";
+  const hasSelection = Boolean(selectedId);
 
   return (
-    <div className="space-y-6 px-3 pb-8 sm:px-6">
-      <TitleBreadCrumbs title="Escalations Inbox" breadCrumbTitle="Moderator / Escalations" />
+    <div className="space-y-6">
+      <TitleBreadCrumbs title="Escalations Inbox" breadCrumbTitle="Admin / Moderator / Escalations" />
 
       <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-        <Card className="border-slate-200/80 bg-white/95 shadow-sm">
-          <CardHeader className="space-y-4 border-b border-slate-200/80 bg-slate-50/70">
+        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white/95 shadow-sm">
+          <div className="space-y-4 border-b border-slate-200/80 bg-slate-50/70 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
-                <CardTitle className="text-lg text-slate-900">Escalation queue</CardTitle>
-                <p className="text-sm text-slate-600">Filter and open escalations fast.</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Queue</p>
+                <h2 className="text-lg font-semibold text-slate-900">Escalation inbox</h2>
+                <p className="text-sm text-slate-600">Find work fast and jump into action.</p>
               </div>
               <Badge
                 variant="outline"
@@ -187,7 +157,7 @@ export default function ModeratorEscalationsInbox() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
-                  placeholder="Search by ticket number, vendor, or reason"
+                  placeholder="Search by vendor, ticket, or reason"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   className="h-10 rounded-xl border-slate-200 bg-white pl-9"
@@ -202,13 +172,11 @@ export default function ModeratorEscalationsInbox() {
                   allLabel="All statuses"
                 />
                 <FilterSelect
-                  placeholder="Severity"
-                  value={severity ?? "all"}
-                  onChange={(value) =>
-                    setSeverity(value === "all" ? undefined : (value as EscalationSeverity))
-                  }
-                  options={severityOptions}
-                  allLabel="All severities"
+                  placeholder="Assigned"
+                  value={assigned}
+                  onChange={(value) => setAssigned(value as "me" | "unassigned" | "all")}
+                  options={["me", "unassigned"]}
+                  allLabel="All"
                 />
                 <FilterSelect
                   placeholder="Category"
@@ -219,110 +187,220 @@ export default function ModeratorEscalationsInbox() {
                   options={categoryOptions}
                   allLabel="All categories"
                 />
-                <FilterSelect
-                  placeholder="Assigned"
-                  value={assigned}
-                  onChange={(value) => setAssigned(value as "me" | "unassigned" | "all")}
-                  options={["me", "unassigned"]}
-                  allLabel="All"
-                />
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-3">
+          </div>
+
+          <div className="divide-y divide-slate-200/70">
             {isFetching && !data ? (
-              <div className="space-y-2">
+              <div className="space-y-2 p-4">
                 {[1, 2, 3].map((key) => (
-                  <Skeleton key={key} className="h-16 w-full rounded-2xl" />
+                  <Skeleton key={key} className="h-16 w-full rounded-xl" />
                 ))}
               </div>
             ) : data?.items?.length ? (
-              <div className="space-y-2">
-                {data.items.map((item) => {
-                  const isActive = item.id === selectedId;
-                  const assignedLabel =
-                    item.assignedToModeratorId === authUser?.id
-                      ? "Me"
-                      : item.assignedToModeratorId
-                        ? "Assigned"
-                        : "Unassigned";
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleSelect(item)}
-                      className={cn(
-                        "group w-full rounded-2xl border px-3 py-3 text-left transition focus:outline-none",
-                        isActive
-                          ? "border-blue-200 bg-blue-50/70 shadow-sm ring-1 ring-blue-100"
-                          : "border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50"
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-700">
-                              {item.ticket.ticketNumber}
-                            </span>
-                            <span className="truncate">{item.ticket.vendor.businessName}</span>
-                          </div>
-                          <p className="text-sm font-semibold text-slate-900">{item.reason}</p>
-                          <p className="text-xs text-slate-500">{item.ticket.subject}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1 text-right">
-                          <Badge
-                            variant="outline"
-                            className={cn("border text-[10px] font-semibold", severityTone[item.severity])}
-                          >
-                            {formatEscalationLabel(item.severity)}
-                          </Badge>
-                          <span className="text-[11px] text-slate-500">
-                            {formatRelativeTime(item.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className={cn("border text-[10px] font-semibold", statusTone[item.status])}
-                        >
-                          {formatEscalationLabel(item.status)}
-                        </Badge>
-                        <span className="text-[10px] font-semibold text-slate-500">
+              data.items.map((item) => {
+                const isActive = item.id === selectedId;
+                const assignedLabel =
+                  item.assignedToModeratorId === authUser?.id
+                    ? "Me"
+                    : item.assignedToModeratorId
+                      ? "Assigned"
+                      : "Unassigned";
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleSelect(item)}
+                    className={cn(
+                      "group flex w-full items-center gap-3 px-4 py-3 text-left transition",
+                      isActive ? "bg-slate-100" : "hover:bg-slate-50"
+                    )}
+                  >
+                    <div className="flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span className="font-semibold text-slate-900">
+                          {item.ticket.vendor.businessName}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                          {item.ticket.ticketNumber}
+                        </span>
+                        <span className="text-[11px] font-semibold text-slate-500">
                           {formatEscalationLabel(item.category)}
                         </span>
-                        <span className="text-[10px] font-semibold text-slate-500">
-                          {assignedLabel}
-                        </span>
+                        <span className="text-[11px] font-semibold text-slate-400">{assignedLabel}</span>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                      <p className="text-sm font-medium text-slate-800 line-clamp-1">{item.reason}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge
+                        variant="outline"
+                        className={cn("border text-[10px] font-semibold", statusTone[item.status])}
+                      >
+                        {formatEscalationLabel(item.status)}
+                      </Badge>
+                      <span className="text-[11px] text-slate-500">
+                        {formatRelativeTime(item.updatedAt ?? item.createdAt)}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
             ) : (
               <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500">
                   <Inbox className="h-5 w-5" />
                 </div>
                 <p className="text-sm font-semibold text-slate-700">No escalations found</p>
-                <p className="text-xs text-slate-500">Try changing filters or clearing search.</p>
+                <p className="text-xs text-slate-500">Try adjusting filters or clearing search.</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <div className="rounded-3xl border border-slate-200/80 bg-white/95 p-6 shadow-sm">
-          <ModeratorEscalationDetailView
-            escalation={escalation}
-            isLoading={isDetailLoading}
-            currentUserId={authUser?.id}
-            onAccept={handleAccept}
-            onUpdateStatus={handleUpdateStatus}
-            onComment={handleComment}
-            isAccepting={isAccepting}
-            isUpdating={isUpdating}
-            isCommenting={isCommenting}
-          />
+          {!hasSelection ? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-slate-500">
+              <Inbox className="h-6 w-6 text-slate-400" />
+              Select an escalation to preview details.
+            </div>
+          ) : isDetailLoading && !escalation ? (
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
+                      {ticketNumber}
+                    </span>
+                    {previewStatus ? (
+                      <Badge
+                        variant="outline"
+                        className={cn("border text-[11px] font-semibold", statusTone[previewStatus])}
+                      >
+                        {formatEscalationLabel(previewStatus)}
+                      </Badge>
+                    ) : null}
+                    {escalation?.severity ? (
+                      <Badge
+                        variant="outline"
+                        className={cn("border text-[11px] font-semibold", severityTone[escalation.severity])}
+                      >
+                        {formatEscalationLabel(escalation.severity)}
+                      </Badge>
+                    ) : null}
+                    {previewCategory ? (
+                      <Badge variant="outline" className="border text-[11px] font-semibold">
+                        {formatEscalationLabel(previewCategory)}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    {previewReason}
+                  </h2>
+                  <p className="text-sm text-slate-600">{vendorName}</p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild variant="outline" size="sm" disabled={!ticketId}>
+                    <Link to={`/admin/support/inbox?ticketId=${ticketId}`}>Open ticket</Link>
+                  </Button>
+                  <Button asChild variant="secondary" size="sm" disabled={!ticketId}>
+                    <Link to={`/admin/chat?ticketId=${ticketId}`}>Open support chat</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to={`/admin/moderator/escalations/${selectedEscalationId}`}>Open details</Link>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Summary
+                    </p>
+                    <p className="mt-2 text-sm text-slate-700">
+                      {escalation?.description ?? previewReason}
+                    </p>
+                  </div>
+
+                  {ticketSnapshot ? (
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        Ticket context
+                      </p>
+                      <div className="mt-3 space-y-2 text-sm text-slate-700">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-slate-500">Subject</span>
+                          <span className="font-semibold text-slate-900">
+                            {ticketSnapshot.subject ?? "-"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-slate-500">Last activity</span>
+                          <span className="font-semibold text-slate-900">
+                            {formatDateTime(ticketSnapshot.lastActivityAt)}
+                          </span>
+                        </div>
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="text-slate-500">Last preview</span>
+                          <span className="max-w-[260px] text-right text-slate-700">
+                            {escalation?.ticket?.lastMessagePreview ?? "-"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Metadata
+                    </p>
+                    <div className="mt-3 space-y-2 text-sm text-slate-700">
+                      <DetailRow label="Created" value={formatDateTime(escalation?.createdAt)} />
+                      <DetailRow label="Updated" value={formatDateTime(escalation?.updatedAt)} />
+                      <DetailRow
+                        label="Assigned"
+                        value={
+                          escalation?.assignedToModerator
+                            ? `${escalation.assignedToModerator.firstName} ${
+                                escalation.assignedToModerator.lastName ?? ""
+                              }`.trim()
+                            : "Unassigned"
+                        }
+                      />
+                      <DetailRow
+                        label="Created by"
+                        value={
+                          escalation?.createdBy
+                            ? `${escalation.createdBy.firstName} ${escalation.createdBy.lastName ?? ""}`.trim()
+                            : "-"
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {escalation?.resolutionSummary ? (
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm text-emerald-800">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">
+                        Resolution summary
+                      </p>
+                      <p className="mt-2">{escalation.resolutionSummary}</p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -352,5 +430,14 @@ function FilterSelect({ placeholder, value, onChange, options, allLabel }: Filte
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-semibold text-slate-900">{value}</span>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 
 import Signup from "@/pages/user-onboarding/SignUp";
 import SignIn from "@/pages/user-onboarding/SignIn";
@@ -60,6 +60,7 @@ import ModeratorDashboard from "@/pages/Moderator/ModeratorDashboard";
 import ModeratorEscalationsInbox from "@/pages/Moderator/Escalations/ModeratorEscalationsInbox";
 import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorEscalationDetails";
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
+import { AuthBootstrap } from "@/AuthBootstrap";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -67,276 +68,280 @@ const vendorPlaceholder = (title: string, description?: string) => (
 
 const appRouter = createBrowserRouter([
   {
-    element: <AppLayout />,
+    element: (
+      <AuthBootstrap>
+        <Outlet />
+      </AuthBootstrap>
+    ),
     errorElement: <ErrorPage />,
     children: [
       {
-        path: "/",
-        element: <Home />,
+        element: <AppLayout />,
+        errorElement: <ErrorPage />,
+        children: [
+          {
+            path: "/",
+            element: <Home />,
+          },
+          {
+            path: "/account",
+            element: <UserAccount />,
+          },
+          {
+            path: "/sign-up",
+            element: <Signup />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/sign-in",
+            element: <SignIn />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/marketplace",
+            element: <Marketplace />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/wishlist",
+            element: <Wishlist />,
+          },
+          {
+            path: "/about",
+            element: <About />,
+          },
+          {
+            path: "/teams",
+            element: <Teams />,
+          },
+          {
+            path: "/support",
+            element: <Support />,
+          },
+          {
+            path: "/deals/:slug",
+            element: <DealDetail />,
+          },
+          {
+            path: "/place/:slug",
+            element: <PlaceDetail />,
+          },
+          {
+            path: "/access-denied",
+            element: <AccessDenied />,
+          },
+        ],
       },
       {
-        path: "/account",
-        element: <UserAccount />,
-      },
-      {
-        path: "/sign-up",
-        element: <Signup />,
+        path: "/admin/sign-in",
+        element: <AdminSignIn />,
         errorElement: <ErrorPage />,
       },
       {
-        path: "/sign-in",
-        element: <SignIn />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "/marketplace",
-        element: <Marketplace />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "/wishlist",
-        element: <Wishlist />,
-      },
-      {
-        path: "/about",
-        element: <About />,
-      },
-      {
-        path: "/teams",
-        element: <Teams />,
-      },
-      {
-        path: "/support",
-        element: <Support />,
-      },
-      {
-        path: "/deals/:slug",
-        element: <DealDetail />,
-      },
-      {
-        path: "/place/:slug",
-        element: <PlaceDetail />,
-      },
-      {
-        path: "/access-denied",
+        path: "/admin/access-denied",
         element: <AccessDenied />,
+        errorElement: <ErrorPage />,
       },
-    ],
-  },
-  {
-    path: "/admin/sign-in",
-    element: <AdminSignIn />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "/admin/access-denied",
-    element: <AccessDenied />,
-    errorElement: <ErrorPage />,
-  },
 
-  {
-    path: "/admin",
-    element: (
-      <AdminProtectedRoute>
-        <AdminLayout basePath="/admin" />
-      </AdminProtectedRoute>
-    ),
-    errorElement: <ErrorPage />,
+      {
+        path: "/admin",
+        element: (
+          <AdminProtectedRoute>
+            <AdminLayout basePath="/admin" />
+          </AdminProtectedRoute>
+        ),
+        errorElement: <ErrorPage />,
 
-    children: [
+        children: [
+          {
+            path: "vendors",
+            element: <VendorsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "support",
+            element: <Navigate to="/admin/support/inbox" replace />,
+          },
+          {
+            path: "support/dashboard",
+            element: <SupportAdminDashboard />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "support/inbox",
+            element: <AdminSupportInbox />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "chat",
+            element: <AdminSupportChatConsole />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "staff",
+            element: <AdminStaffPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "leads/plans",
+            element: <LeadPlansPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "*",
+            element: <AdminNotFound />,
+          },
+          {
+            path: "vendors/applications",
+            element: <VendorApplicationsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "dashboard",
+            element: <AdminDashboard />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "kyc",
+            element: <Kyc />,
+          },
+          {
+            path: "moderator",
+            element: (
+              <ModeratorProtectedRoute>
+                <Outlet />
+              </ModeratorProtectedRoute>
+            ),
+            children: [
+              {
+                path: "",
+                element: <Navigate to="/admin/moderator/dashboard" replace />,
+              },
+              {
+                path: "dashboard",
+                element: <ModeratorDashboard />,
+              },
+              {
+                path: "escalations",
+                element: <ModeratorEscalationsInbox />,
+              },
+              {
+                path: "escalations/:id",
+                element: <ModeratorEscalationDetails />,
+              },
+              {
+                path: "notifications",
+                element: <ModeratorNotifications />,
+              },
+            ],
+          },
+        ],
+      },
       {
-        path: "vendors",
-        element: <VendorsPage />,
+        path: "/vendor/sign-in",
+        element: <VendorSignIn />,
         errorElement: <ErrorPage />,
       },
       {
-        path: "support",
-        element: <Navigate to="/admin/support/inbox" replace />,
-      },
-      {
-        path: "support/dashboard",
-        element: <SupportAdminDashboard />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "support/inbox",
-        element: <AdminSupportInbox />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "chat",
-        element: <AdminSupportChatConsole />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "staff",
-        element: <AdminStaffPage />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "leads/plans",
-        element: <LeadPlansPage />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "*",
-        element: <AdminNotFound />,
-      },
-      {
-        path: "vendors/applications",
-        element: <VendorApplicationsPage />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "dashboard",
-        element: <AdminDashboard />,
-        errorElement: <ErrorPage />,
-      },
-      {
-        path: "kyc",
-        element: <Kyc />,
-      },
-      
-    ],
-  },
-  {
-    path: "/moderator",
-    element: (
-      <ModeratorProtectedRoute>
-        <AdminLayout basePath="/moderator" />
-      </ModeratorProtectedRoute>
-    ),
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "",
-        element: <Navigate to="/moderator/dashboard" replace />,
-      },
-      {
-        path: "dashboard",
-        element: <ModeratorDashboard />,
-      },
-      {
-        path: "escalations",
-        element: <ModeratorEscalationsInbox />,
-      },
-      {
-        path: "escalations/:id",
-        element: <ModeratorEscalationDetails />,
-      },
-      {
-        path: "notifications",
-        element: <ModeratorNotifications />,
-      },
-    ],
-  },
-  {
-    path: "/vendor/sign-in",
-    element: <VendorSignIn />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: "/vendor",
-    element: (
-      <VendorProtectedRoute>
-      <VendorLayout />
-    </VendorProtectedRoute>
-  ),
-  
-  errorElement: <ErrorPage />,
-  children: [
-    { path: "dashboard", element: <VendorDashboard /> },
-    { path: "leads", element: <VendorLeads /> },
-    { path: "leads/subscription", element: <VendorLeadSubscriptionPage /> },
-    {
-      path: "lead-subscriptions/success",
-      element: <SubscriptionSuccessPage />,
-    },
-      {
-        path: "leads/new",
-        element: <Navigate to="/vendor/leads?status=NEW" replace />,
-      },
-      { path: "analytics", element: <VendorAnalyticsDashboard /> },
-      { path: "jobs", element: <VendorTableShowcase /> },
-      {
-        path: "leads/contacted",
-        element: <Navigate to="/vendor/leads?status=CONTACTED" replace />,
-      },
-      {
-        path: "leads/converted",
-        element: <Navigate to="/vendor/leads?status=CONVERTED" replace />,
-      },
-      {
-        path: "leads/lost",
-        element: <Navigate to="/vendor/leads?status=LOST" replace />,
-      },
-        {
-    path: "*",
-    element: <VendorNotFound  />,
-  },
-      {
-        path: "leads/sources",
-        element: vendorPlaceholder(
-          "Lead Sources",
-          "See which channels drive volume.",
-        ),
-      },
-      {
-        path: "bookings",
-        element: <BookingsPage />,
-      },
-      {
-        path: "bookings/upcoming",
+        path: "/vendor",
         element: (
-          <BookingsPage
-            defaultStatusFilter="confirmed"
-            titleOverride="Upcoming Bookings"
-            breadcrumbOverride="Vendor / Bookings / Upcoming"
-          />
+          <VendorProtectedRoute>
+            <VendorLayout />
+          </VendorProtectedRoute>
         ),
+        errorElement: <ErrorPage />,
+        children: [
+          { path: "dashboard", element: <VendorDashboard /> },
+          { path: "leads", element: <VendorLeads /> },
+          { path: "leads/subscription", element: <VendorLeadSubscriptionPage /> },
+          {
+            path: "lead-subscriptions/success",
+            element: <SubscriptionSuccessPage />,
+          },
+          {
+            path: "leads/new",
+            element: <Navigate to="/vendor/leads?status=NEW" replace />,
+          },
+          { path: "analytics", element: <VendorAnalyticsDashboard /> },
+          { path: "jobs", element: <VendorTableShowcase /> },
+          {
+            path: "leads/contacted",
+            element: <Navigate to="/vendor/leads?status=CONTACTED" replace />,
+          },
+          {
+            path: "leads/converted",
+            element: <Navigate to="/vendor/leads?status=CONVERTED" replace />,
+          },
+          {
+            path: "leads/lost",
+            element: <Navigate to="/vendor/leads?status=LOST" replace />,
+          },
+          {
+            path: "*",
+            element: <VendorNotFound />,
+          },
+          {
+            path: "leads/sources",
+            element: vendorPlaceholder("Lead Sources", "See which channels drive volume."),
+          },
+          {
+            path: "bookings",
+            element: <BookingsPage />,
+          },
+          {
+            path: "bookings/upcoming",
+            element: (
+              <BookingsPage
+                defaultStatusFilter="confirmed"
+                titleOverride="Upcoming Bookings"
+                breadcrumbOverride="Vendor / Bookings / Upcoming"
+              />
+            ),
+          },
+          {
+            path: "bookings/completed",
+            element: (
+              <BookingsPage
+                defaultStatusFilter="completed"
+                titleOverride="Completed Bookings"
+                breadcrumbOverride="Vendor / Bookings / Completed"
+              />
+            ),
+          },
+          {
+            path: "bookings/refunds",
+            element: (
+              <BookingsPage
+                defaultStatusFilter="refund"
+                titleOverride="Refund Requests"
+                breadcrumbOverride="Vendor / Bookings / Refunds"
+              />
+            ),
+          },
+          { path: "bookings/:bookingId", element: <VendorBookingDetail /> },
+          { path: "profile", element: <VendorProfile /> },
+          { path: "services", element: <VendorServices /> },
+          {
+            path: "services/:serviceId/options",
+            element: <VendorServiceOptions />,
+          },
+          { path: "media", element: <VendorMedia /> },
+          { path: "coupons", element: <VendorCoupons /> },
+          { path: "wallet", element: <VendorWallet /> },
+          { path: "payouts", element: <VendorPayouts /> },
+          {
+            path: "subscription",
+            element: <Navigate to="/vendor/leads/subscription" replace />,
+          },
+          { path: "promote", element: <VendorPromote /> },
+          { path: "kyc", element: <VendorKyc /> },
+          { path: "stripe", element: <VendorStripe /> },
+          { path: "support", element: <VendorSupport /> },
+          { path: "support/tickets/:ticketId", element: <VendorTicketDetails /> },
+          { path: "help", element: <VendorHelp /> },
+          { path: "insights", element: <VendorInsights /> },
+        ],
       },
-      {
-        path: "bookings/completed",
-        element: (
-          <BookingsPage
-            defaultStatusFilter="completed"
-            titleOverride="Completed Bookings"
-            breadcrumbOverride="Vendor / Bookings / Completed"
-          />
-        ),
-      },
-      {
-        path: "bookings/refunds",
-        element: (
-          <BookingsPage
-            defaultStatusFilter="refund"
-            titleOverride="Refund Requests"
-            breadcrumbOverride="Vendor / Bookings / Refunds"
-          />
-        ),
-      },
-      { path: "bookings/:bookingId", element: <VendorBookingDetail /> },
-      { path: "profile", element: <VendorProfile /> },
-      { path: "services", element: <VendorServices /> },
-      {
-        path: "services/:serviceId/options",
-        element: <VendorServiceOptions />,
-      },
-      { path: "media", element: <VendorMedia /> },
-      { path: "coupons", element: <VendorCoupons /> },
-      { path: "wallet", element: <VendorWallet /> },
-      { path: "payouts", element: <VendorPayouts /> },
-      {
-        path: "subscription",
-        element: <Navigate to="/vendor/leads/subscription" replace />,
-      },
-      { path: "promote", element: <VendorPromote /> },
-      { path: "kyc", element: <VendorKyc /> },
-      { path: "stripe", element: <VendorStripe /> },
-      { path: "support", element: <VendorSupport /> },
-      { path: "support/tickets/:ticketId", element: <VendorTicketDetails /> },
-      { path: "help", element: <VendorHelp /> },
-      { path: "insights", element: <VendorInsights /> },
     ],
   },
 ]);
