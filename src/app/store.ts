@@ -13,6 +13,7 @@ import { supportApi } from "@/features/support/supportApi";
 import supportRealtimeReducer from "@/features/support/supportRealtimeSlice";
 import notificationsReducer from "@/features/notifications/notificationsSlice";
 import { escalationApi } from "@/features/escalations/escalationApi";
+import { systemHealthApi } from "@/features/systemHealth/systemHealthApi";
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +31,7 @@ export const store = configureStore({
     [adminStaffApi.reducerPath]: adminStaffApi.reducer,
     [supportApi.reducerPath]: supportApi.reducer,
     [escalationApi.reducerPath]: escalationApi.reducer,
+    [systemHealthApi.reducerPath]: systemHealthApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -40,7 +42,8 @@ export const store = configureStore({
       .concat(vendorLeadSubscriptionsApi.middleware)
       .concat(adminStaffApi.middleware)
       .concat(supportApi.middleware)
-      .concat(escalationApi.middleware),
+      .concat(escalationApi.middleware)
+      .concat(systemHealthApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

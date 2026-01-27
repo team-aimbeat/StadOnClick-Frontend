@@ -62,6 +62,7 @@ import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorE
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
+import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -213,6 +214,10 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/:tab",
             element: <PreferencesStudio />,
+          },
+          {
+            path: "system/health",
+            element: <SystemHealthPage />,
           },
           {
             path: "moderator",

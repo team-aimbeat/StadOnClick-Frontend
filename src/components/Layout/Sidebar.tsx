@@ -19,7 +19,7 @@ import {
   HiBell,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
-import { Users } from "lucide-react";
+import { Activity, Users } from "lucide-react";
 
 import { RootState } from "@/app/store";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
@@ -90,6 +90,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           icon: HiChatBubbleLeftRight,
           to: withBase("chat"),
         },
+        {
+          id: "system-health",
+          label: t("System Health"),
+          icon: Activity,
+          to: withBase("system/health"),
+        },
       ];
     }
 
@@ -113,6 +119,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           icon: HiBell,
           to: withBase("moderator/notifications"),
         },
+        {
+          id: "system-health",
+          label: t("System Health"),
+          icon: Activity,
+          to: withBase("system/health"),
+        },
       ];
     }
 
@@ -122,6 +134,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("Overview"),
         icon: HiHome,
         to: withBase("dashboard"),
+      },
+      {
+        id: "system-health",
+        label: t("System Health"),
+        icon: Activity,
+        to: withBase("system/health"),
       },
       {
         id: "support-inbox",
@@ -216,7 +234,6 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("System"),
         icon: HiCog6Tooth,
         children: [
-          { label: t("API Health"), to: withBase("system/health") },
           { label: t("API Docs"), to: withBase("system/docs") },
           { label: t("Admin Activity"), to: withBase("system/audit") },
         ],

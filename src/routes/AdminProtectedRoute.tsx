@@ -43,7 +43,12 @@ export default function AdminProtectedRoute({ children }: PropsWithChildren) {
   }
 
   if (isSupportOnly) {
-    const allowedPrefixes = ["/admin/support/inbox", "/admin/support/dashboard", "/admin/chat"];
+    const allowedPrefixes = [
+      "/admin/support/inbox",
+      "/admin/support/dashboard",
+      "/admin/chat",
+      "/admin/system/health",
+    ];
     const canAccess = allowedPrefixes.some((prefix) => location.pathname.startsWith(prefix));
     if (!canAccess) {
       return <Navigate to="/admin/access-denied" replace />;
@@ -51,7 +56,7 @@ export default function AdminProtectedRoute({ children }: PropsWithChildren) {
   }
 
   if (isModeratorOnly) {
-    const allowedPrefixes = ["/admin/moderator"];
+    const allowedPrefixes = ["/admin/moderator", "/admin/system/health"];
     const canAccess = allowedPrefixes.some((prefix) => location.pathname.startsWith(prefix));
     if (!canAccess) {
       return <Navigate to="/admin/access-denied" replace />;
