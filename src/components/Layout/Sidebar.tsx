@@ -136,12 +136,6 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         to: withBase("dashboard"),
       },
       {
-        id: "system-health",
-        label: t("System Health"),
-        icon: Activity,
-        to: withBase("system/health"),
-      },
-      {
         id: "support-inbox",
         label: t("Support Inbox"),
         icon: HiInboxStack,
@@ -226,7 +220,6 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         icon: HiCube,
         children: [
           { label: t("Preference Studio"), to: withBase("catalog/interests") },
-          { label: t("Cities (Read Only)"), to: withBase("catalog/cities") },
         ],
       },
       {
@@ -243,6 +236,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("Administration"),
         icon: Users,
         children: [{ label: t("Staff"), to: withBase("staff") }],
+      },
+      {
+        id: "system-health",
+        label: t("System Health"),
+        icon: Activity,
+        to: withBase("system/health"),
       },
     ];
   }, [isModerator, isModeratorOnly, isSupportOnly, t, withBase]);
