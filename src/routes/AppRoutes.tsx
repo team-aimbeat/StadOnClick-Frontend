@@ -61,6 +61,7 @@ import ModeratorEscalationsInbox from "@/pages/Moderator/Escalations/ModeratorEs
 import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorEscalationDetails";
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
+import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -204,6 +205,14 @@ const appRouter = createBrowserRouter([
           {
             path: "kyc",
             element: <Kyc />,
+          },
+          {
+            path: "catalog",
+            element: <Navigate to="/admin/catalog/interests" replace />,
+          },
+          {
+            path: "catalog/:tab",
+            element: <PreferencesStudio />,
           },
           {
             path: "moderator",
