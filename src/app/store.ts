@@ -8,6 +8,7 @@ import { preferencesApi } from "@/features/preferences/api/preferencesApi";
 import { vendorOfferingsApi } from "@/services/vendorOfferingsApi";
 import { serviceCategoriesApi } from "@/services/serviceCategoriesApi";
 import { serviceMediaApi } from "@/services/serviceMediaApi";
+import { vendorServicesApi } from "@/services/vendorServicesApi";
 import { adminVendorApi } from "@/features/admin/vendors/api/vendorsApi";
 import { bookingsApi } from "@/services/bookingsApi";
 import { vendorcouponsApi } from "@/services/vendoiCouponsApi";
@@ -22,6 +23,7 @@ export const store = configureStore({
     [vendorOfferingsApi.reducerPath]: vendorOfferingsApi.reducer,
     [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
     [serviceMediaApi.reducerPath]: serviceMediaApi.reducer,
+    [vendorServicesApi.reducerPath]: vendorServicesApi.reducer,
     [adminVendorApi.reducerPath]: adminVendorApi.reducer,
     [bookingsApi.reducerPath]: bookingsApi.reducer,
     [vendorcouponsApi.reducerPath]: vendorcouponsApi.reducer,
@@ -33,6 +35,7 @@ export const store = configureStore({
       .concat(vendorOfferingsApi.middleware)
       .concat(serviceCategoriesApi.middleware)
       .concat(serviceMediaApi.middleware)
+      .concat(vendorServicesApi.middleware)
       .concat(adminVendorApi.middleware)
       .concat(bookingsApi.middleware)
       .concat(vendorcouponsApi.middleware),
