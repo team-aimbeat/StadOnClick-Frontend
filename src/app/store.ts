@@ -20,6 +20,7 @@ import supportRealtimeReducer from "@/features/support/supportRealtimeSlice";
 import notificationsReducer from "@/features/notifications/notificationsSlice";
 import { escalationApi } from "@/features/escalations/escalationApi";
 import { systemHealthApi } from "@/features/systemHealth/systemHealthApi";
+import { vendorKycApi } from "@/services/vendorKycApi";
 
 export const store = configureStore({
   reducer: {
@@ -44,6 +45,7 @@ export const store = configureStore({
     [supportApi.reducerPath]: supportApi.reducer,
     [escalationApi.reducerPath]: escalationApi.reducer,
     [systemHealthApi.reducerPath]: systemHealthApi.reducer,
+    [vendorKycApi.reducerPath]: vendorKycApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -56,6 +58,7 @@ export const store = configureStore({
       .concat(adminVendorApi.middleware)
       .concat(bookingsApi.middleware)
       .concat(vendorcouponsApi.middleware)
+      .concat(vendorKycApi.middleware)
       .concat(adminLeadPlansApi.middleware)
       .concat(vendorLeadSubscriptionsApi.middleware)
       .concat(adminStaffApi.middleware)
