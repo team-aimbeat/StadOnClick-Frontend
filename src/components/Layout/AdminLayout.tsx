@@ -5,13 +5,17 @@ import Sidebar from "./Sidebar";
 import AdminHeader from "./AdminHeader";
 import Footer from "./Footer";
 
-export default function AdminLayout() {
+type AdminLayoutProps = {
+  basePath?: string;
+};
+
+export default function AdminLayout({ basePath = "/admin" }: AdminLayoutProps) {
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isSidebarCollapsed = !themeConfig.sidebar;
 
   return (
     <div className="flex min-h-screen bg-[#f1f2f8]">
-      <Sidebar basePath="/admin" />
+      <Sidebar basePath={basePath} />
 
       <div
         className={`

@@ -176,7 +176,7 @@ export const getVendorNavGroups = ({
     label: "SUPPORT",
     items: [
       {
-        label: "Support Chat",
+        label: "Support",
         icon: HiOutlineChatBubbleLeftRight,
         to: "/vendor/support",
       },

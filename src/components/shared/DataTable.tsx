@@ -842,18 +842,19 @@ export const DataTable: React.FC<DataTableProps> = ({
                                     ) : (
                                         action.icon &&
                                         action.onClick && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (action.onClick) {
-                                                        action.onClick(row);
-                                                    }
-                                                }}
-                                                className="p-1 hover:bg-gray-100 rounded transition-colors text-14px"
-                                                title={action.title}
-                                            >
-                                                <action.icon className="w-4 h-4 text-gray-600" />
-                                            </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (action.onClick) {
+                                                    action.onClick(row);
+                                                }
+                                            }}
+                                            className="group inline-flex items-center justify-center rounded-full p-2 transition-all duration-150 hover:bg-indigo-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200 hover:scale-105 active:scale-95 text-gray-600"
+                                            title={action.title}
+                                            aria-label={action.title}
+                                        >
+                                            <action.icon className="h-4 w-4 transition-colors group-hover:text-indigo-600 group-active:text-indigo-700" />
+                                        </button>
                                         )
                                     )}
                                 </React.Fragment>

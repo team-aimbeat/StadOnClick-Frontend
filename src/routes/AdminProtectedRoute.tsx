@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAppSelector } from "@/app/hooks";
 import ScreenLoader from "@/assets/animations/loader";
 
-const ADMIN_ROLES = ["ADMIN", "MODERATOR"] as const;
+const ADMIN_ROLES = ["ADMIN"] as const;
 
 function hasAdminAccess(roles?: string[]) {
   if (!roles?.length) return false;
@@ -31,9 +31,36 @@ export default function AdminProtectedRoute({ children }: PropsWithChildren) {
     );
   }
 
-  // Logged in but not admin
-  if (!hasAdminAccess(user.roles)) {
-    return <Navigate to="/access-denied" replace />;
+  const isElevatedAdmin = hasAdminAccess(user.roles);
+  const isSupportAdmin = user.roles?.includes("SUPPORT_ADMIN");
+  const isModerator = user.roles?.includes("MODERATOR");
+  const isSupportOnly = Boolean(isSupportAdmin && !isElevatedAdmin && !isModerator);
+  const isModeratorOnly = Boolean(isModerator && !isElevatedAdmin && !isSupportAdmin);
+
+  // Logged in but not allowed
+  if (!isElevatedAdmin && !isSupportAdmin && !isModerator) {
+    return <Navigate to="/admin/access-denied" replace />;
+  }
+
+  if (isSupportOnly) {
+    const allowedPrefixes = [
+      "/admin/support/inbox",
+      "/admin/support/dashboard",
+      "/admin/chat",
+      "/admin/system/health",
+    ];
+    const canAccess = allowedPrefixes.some((prefix) => location.pathname.startsWith(prefix));
+    if (!canAccess) {
+      return <Navigate to="/admin/access-denied" replace />;
+    }
+  }
+
+  if (isModeratorOnly) {
+    const allowedPrefixes = ["/admin/moderator", "/admin/system/health"];
+    const canAccess = allowedPrefixes.some((prefix) => location.pathname.startsWith(prefix));
+    if (!canAccess) {
+      return <Navigate to="/admin/access-denied" replace />;
+    }
   }
 
   return <>{children}</>;

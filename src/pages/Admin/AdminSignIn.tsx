@@ -11,13 +11,14 @@ import { toast } from "react-hot-toast";
 import { useForm, useFormState } from "react-hook-form";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import { AdminStepLogin } from "../components/admin-auth/AdminStepLogin";
+import { getPostLoginRoute } from "@/lib/authRouting";
 
 type FormValues = {
   email: string;
   password: string;
 };
 
-const ADMIN_ROLES = ["ADMIN", "MODERATOR"] as const;
+const ADMIN_ROLES = ["ADMIN", "SUPPORT_ADMIN", "MODERATOR"] as const;
 
 function hasAdminAccess(roles?: string[]) {
   if (!roles?.length) return false;
@@ -51,9 +52,9 @@ export default function AdminSignIn() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (authUser?.roles?.length && hasAdminAccess(authUser.roles)) {
-      navigate("/admin/dashboard", { replace: true });
-    }
+    const roles = authUser?.roles ?? [];
+    if (!roles.length) return;
+    navigate(getPostLoginRoute(roles), { replace: true });
   }, [authUser?.roles, navigate]);
 
  const onSubmit = useCallback(
@@ -69,18 +70,20 @@ export default function AdminSignIn() {
 
       const user = response?.user ?? response;
 
+      const isElevated = hasAdminAccess(user?.roles);
+
       // 🔐 Frontend guard (still keep backend guard too)
-      if (!hasAdminAccess(user?.roles)) {
+      if (!isElevated) {
         toast.error("Access denied. Admin role required.", {
           id: "admin-login-denied",
         });
-        return navigate("/access-denied", { replace: true });
+        return navigate("/admin/access-denied", { replace: true });
       }
 
       dispatch(setUser(user));
       toast.success("Signed in successfully", { id: "admin-login-success" });
 
-      navigate("/admin/vendors", { replace: true });
+      navigate(getPostLoginRoute(user?.roles ?? []), { replace: true });
     } catch (err) {
       const { fieldErrors, formError: normalizedFormError, toastMessage } =
         normalizeApiError(err, "Unable to sign in. Please try again.");

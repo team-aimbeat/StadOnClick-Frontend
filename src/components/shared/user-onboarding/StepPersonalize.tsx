@@ -16,13 +16,28 @@ import heartHighIcon from "@/assets/icons/heart3.svg"
 import morningIcon from "@/assets/icons/sunrise.svg"
 import afternoonIcon from "@/assets/icons/sun.svg"
 import eveningIcon from "@/assets/icons/night.svg"
+import EmojiIcon from "@/components/shared/EmojiIcon"
 
 type Props = {
   onNext: () => void
   onSkip: () => void
+  isPreview?: boolean
+  hideSaveButton?: boolean
+  previewInterests?: PublicInterest[]
+  previewTimeDurations?: PublicTimeDuration[]
+  previewPreferences?: any
 }
 
-export function StepPersonalize({ onNext, onSkip }: Props) {
+export function StepPersonalize({
+  onNext,
+  onSkip,
+  isPreview,
+  hideSaveButton,
+  previewInterests,
+  previewTimeDurations,
+  previewPreferences,
+}: Props) {
+  const previewMode = Boolean(isPreview || previewInterests || previewTimeDurations || previewPreferences)
   const [selectedTimes, setSelectedTimes] = useState<string[]>([])
   const [selectedEnergy, setSelectedEnergy] = useState<string[]>([])
   const [selectedGoals, setSelectedGoals] = useState<string[]>([])
@@ -32,39 +47,42 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
     data: interestsData,
     isLoading: interestsLoading,
     isError: interestsError,
-  } = useGetPublicInterestsQuery()
+  } = useGetPublicInterestsQuery(undefined, { skip: Boolean(previewInterests) })
   const {
     data: timeDurationsData,
     isLoading: timeDurationsLoading,
     isError: timeDurationsError,
-  } = useGetPublicTimeDurationsQuery()
+  } = useGetPublicTimeDurationsQuery(undefined, { skip: Boolean(previewTimeDurations) })
 
-  const { data: myPreferencesData } = useGetMyPreferencesQuery()
+  const { data: myPreferencesData } = useGetMyPreferencesQuery(undefined, { skip: previewMode })
+  const effectiveInterests = previewInterests ?? interestsData
+  const effectiveDurations = previewTimeDurations ?? timeDurationsData
+  const effectivePreferences = previewPreferences ?? myPreferencesData
   const preferencesAppliedRef = useRef(false)
 
   useEffect(() => {
     if (
       selectedTimes.length ||
-      myPreferencesData?.preferredDurationId ||
-      !timeDurationsData?.length
+      effectivePreferences?.preferredDurationId ||
+      !effectiveDurations?.length
     ) {
       return
     }
-    if (timeDurationsData?.length) {
-      const defaultId = timeDurationsData.find((item) => item.isDefault)?.id
+    if (effectiveDurations?.length) {
+      const defaultId = effectiveDurations.find((item) => item.isDefault)?.id
       if (defaultId) {
         setSelectedTimes((prev) => (prev.length ? prev : [defaultId]))
       }
     }
-  }, [timeDurationsData, myPreferencesData, selectedTimes])
+  }, [effectiveDurations, effectivePreferences, selectedTimes])
 
   useEffect(() => {
-    if (!myPreferencesData || preferencesAppliedRef.current) {
+    if (!effectivePreferences || preferencesAppliedRef.current) {
       return
     }
 
     const durationId =
-      myPreferencesData.preferredDurationId || myPreferencesData.preferredDuration?.id
+      effectivePreferences.preferredDurationId || effectivePreferences.preferredDuration?.id
     if (durationId) {
       setSelectedTimes([durationId])
     }
@@ -74,15 +92,15 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
       MEDIUM: "Medium energy",
       HIGH: "Active & intense",
     }
-    if (myPreferencesData.energyLevel) {
-      const energyLabel = energyLabelMap[myPreferencesData.energyLevel]
+    if (effectivePreferences.energyLevel) {
+      const energyLabel = energyLabelMap[effectivePreferences.energyLevel]
       if (energyLabel) {
         setSelectedEnergy([energyLabel])
       }
     }
 
-    if (Array.isArray(myPreferencesData.interests)) {
-      const interestIds = myPreferencesData.interests
+    if (Array.isArray(effectivePreferences.interests)) {
+      const interestIds = effectivePreferences.interests
         .map((item: any) => item.interestId ?? item.interest?.id)
         .filter(Boolean)
       setSelectedGoals(interestIds)
@@ -93,9 +111,9 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
       AFTERNOON: "Afternoon",
       EVENING: "Evening",
     }
-    if (Array.isArray(myPreferencesData.preferredTimes)) {
+    if (Array.isArray(effectivePreferences.preferredTimes)) {
       setSelectedMoments(
-        myPreferencesData.preferredTimes
+        effectivePreferences.preferredTimes
           .map((time: any) => time.timeOfDay || time)
           .map((time: string) => timeLabelMap[time])
           .filter(Boolean),
@@ -103,11 +121,11 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
     }
 
     preferencesAppliedRef.current = true
-  }, [myPreferencesData])
+  }, [effectivePreferences])
 
   const renderInterestIcon = (interest: PublicInterest) => {
     if (interest.icon) {
-      return <span className="text-base leading-none">{interest.icon}</span>
+      return <EmojiIcon emoji={interest.icon} size={18} />
     }
     const color = interest.color || "#3B82F6"
     return <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
@@ -157,6 +175,10 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
     }
 
     try {
+      if (previewMode) {
+        toast.success("Preview updated")
+        return
+      }
       await savePreferences(payload).unwrap()
       toast.success("Preferences saved")
       onNext()
@@ -172,12 +194,12 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
           How much time do you usually have?
         </p>
         <div className="flex flex-wrap gap-2">
-          {timeDurationsLoading
+          {timeDurationsLoading && !previewTimeDurations
             ? renderSkeletonPills(3)
             : timeDurationsError
               ? <p className="text-xs text-red-600">Unable to load time options.</p>
-              : timeDurationsData?.length
-                ? timeDurationsData.map((duration: PublicTimeDuration) => (
+              : effectiveDurations?.length
+                ? effectiveDurations.map((duration: PublicTimeDuration) => (
                     <button
                       key={duration.id}
                       type="button"
@@ -189,7 +211,7 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
                       }`}
                     >
                       {duration.icon ? (
-                        <span className="text-base leading-none">{duration.icon}</span>
+                        <EmojiIcon emoji={duration.icon} size={18} />
                       ) : (
                         <img src={timeIcon} alt="" className="h-4 w-4" />
                       )}
@@ -232,12 +254,12 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
           What are you looking for right now?
         </p>
         <div className="grid grid-cols-2 gap-2">
-          {interestsLoading
+          {interestsLoading && !previewInterests
             ? renderSkeletonPills(6, "w-full")
             : interestsError
               ? <p className="col-span-2 text-xs text-red-600">Unable to load interests.</p>
-              : interestsData?.length
-                ? interestsData.map((interest: PublicInterest) => (
+              : effectiveInterests?.length
+                ? effectiveInterests.map((interest: PublicInterest) => (
                     <button
                       key={interest.id}
                       type="button"
@@ -294,13 +316,15 @@ export function StepPersonalize({ onNext, onSkip }: Props) {
       </div>
 
 <div className="">
- <Button
-        className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"
-        onClick={handleSave}
-        disabled={savingPreferences}
-      >
-        {savingPreferences ? "Saving..." : "Save Preferences"}
-      </Button>
+      {!hideSaveButton ? (
+        <Button
+          className="h-[56px] w-full max-w-[487.82px] mx-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"
+          onClick={handleSave}
+          disabled={savingPreferences || previewMode}
+        >
+          {previewMode ? "Preview only" : savingPreferences ? "Saving..." : "Save Preferences"}
+        </Button>
+      ) : null}
 </div>
      
     </div>

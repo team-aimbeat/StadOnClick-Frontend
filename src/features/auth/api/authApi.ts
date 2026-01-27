@@ -72,6 +72,12 @@ export const authApi = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+    refresh: builder.mutation<{ success: boolean }, void>({
+      query: () => ({
+        url: "/auth/refresh",
+        method: "POST",
+      }),
+    }),
 
     uploadAvatar: builder.mutation<any, FormData>({
       query: (formData) => ({
@@ -92,6 +98,7 @@ export const {
   useCompleteProfileMutation,
   useLoginMutation,
   useLogoutMutation,
+  useRefreshMutation,
   useUploadAvatarMutation,
   useGetMeQuery,
 } = authApi;

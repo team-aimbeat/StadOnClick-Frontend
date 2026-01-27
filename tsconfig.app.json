@@ -8,6 +8,10 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
+    "rootDir": "src",
+    "outDir": "dist-ts/app",
+    "declaration": true,
+    "sourceMap": false,
 
     "strict": true,
     "skipLibCheck": true,
@@ -15,7 +19,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+
+    "rootDir": "src",
+    "outDir": "dist-ts/app",
+    "sourceMap": false
   },
   "include": ["src"]
 }

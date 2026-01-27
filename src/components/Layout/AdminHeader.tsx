@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   ArrowRight,
-  Bell,
   Info,
   Laptop,
   Lock,
@@ -14,15 +13,12 @@ import {
   Moon,
   Search,
   SunMedium,
-  User,
   X,
 } from "lucide-react";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 import menuHeader from "@/assets/images/banner1.png";
 import profile7 from "@/assets/images/profile-7.jpeg";
-import profile8 from "@/assets/images/profile-8.jpeg";
-import profile9 from "@/assets/images/profile-9.jpeg";
 
 import { useLogoutMutation } from "@/features/auth/api/authApi";
 import { RootState } from "@/app/store";
@@ -33,8 +29,10 @@ import {
 } from "@/features/Layout/themeConfigSlice";
 import Dropdown from "../shared/dropdown";
 import SearchBar from "../shared/SearchBar";
-import { clearAuth, logout } from "@/features/auth/authSlice";
+import { clearAuth } from "@/features/auth/authSlice";
 import { toast } from "react-hot-toast";
+import NotificationsBell from "@/components/notifications/NotificationsBell";
+import ModeratorNotificationsBell from "@/components/notifications/ModeratorNotificationsBell";
 
 type MessageItem = {
   id: number;
@@ -46,19 +44,11 @@ type MessageItem = {
   status?: "online" | "away" | "offline";
 };
 
-type NotificationItem = {
-  id: number;
-  name: string;
-  action: string;
-  time: string;
-  profile: string;
-  status?: "online" | "away" | "offline";
-};
-
 const AdminHeader = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
+  const authUser = useSelector((state: RootState) => state.auth.user);
   const isRtl = themeConfig.rtlClass === "rtl";
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -94,65 +84,12 @@ const AdminHeader = () => {
 
   const [flag, setFlag] = useState(themeConfig.locale);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [messages, setMessages] = useState<MessageItem[]>([
-    {
-      id: 1,
-      name: "Kathryn Murphy",
-      message: "hey! there I'm reaching out about the report...",
-      time: "12:30 PM",
-      count: 8,
-      profile: profile8,
-      status: "online",
-    },
-    {
-      id: 2,
-      name: "Leslie Alexander",
-      message: "The sprint board has been updated.",
-      time: "11:10 AM",
-      count: 3,
-      profile: profile9,
-    },
-    {
-      id: 3,
-      name: "John Doe",
-      message: "Let's sync at 4 PM for the launch checklist.",
-      time: "09:45 AM",
-      profile: profile7,
-    },
-    {
-      id: 4,
-      name: "Courtney Henry",
-      message: "Reminder: approvals needed on two items.",
-      time: "Yesterday",
-      profile: profile8,
-    },
-  ]);
-
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: 1,
-      profile: profile7,
-      name: "John Doe",
-      action: "invited you to Prototyping",
-      time: "45 min ago",
-      status: "online",
-    },
-    {
-      id: 2,
-      profile: profile8,
-      name: "Adam Nolan",
-      action: "mentioned you in UX Basics",
-      time: "9h ago",
-      status: "online",
-    },
-    {
-      id: 3,
-      profile: profile9,
-      name: "Anna Morgan",
-      action: "uploaded a file",
-      time: "9h ago",
-    },
-  ]);
+  const [messages, setMessages] = useState<MessageItem[]>([]);
+  const isAdmin = authUser?.roles?.includes("ADMIN");
+  const isSupportAdmin = authUser?.roles?.includes("SUPPORT_ADMIN");
+  const isModeratorOnly = authUser?.roles?.includes("MODERATOR") && !isAdmin && !isSupportAdmin;
+  const isModeratorShell = location.pathname.startsWith("/admin/moderator");
+  const showModeratorNotifications = isModeratorShell || isModeratorOnly;
 
   const actionBtnClass =
     "group grid h-10 w-10 place-content-center rounded-md mx-2 cursor-pointer border border-gray-200 bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800";
@@ -172,12 +109,6 @@ const AdminHeader = () => {
 
   const removeMessage = (value: number) => {
     setMessages((prev) => prev.filter((message) => message.id !== value));
-  };
-
-  const removeNotification = (value: number) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== value),
-    );
   };
 
   const renderThemeToggle = () => {
@@ -307,183 +238,112 @@ const AdminHeader = () => {
             </Dropdown>
           </div>
 
-          <div className="dropdown shrink-0">
-            <Dropdown
-              offset={[0, 8]}
-              placement={isRtl ? "bottom-start" : "bottom-end"}
-              btnClassName={actionBtnClass}
-              button={<Mail className="h-5 w-5" strokeWidth={1.8} />}
-            >
-              <ul className="w-[320px] text-dark dark:text-white-dark sm:w-[360px]">
-                <li
-                  className="relative h-[70px] overflow-hidden rounded-t-lg"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <img
-                    src={menuHeader}
-                    alt="Messages header"
-                    className="absolute inset-0 h-full w-full object-cover object-center brightness-75"
-                  />
-                  <div className="relative z-10 flex h-full items-center px-5 text-white">
-                    <h4 className="text-lg font-semibold">Messages</h4>
-                  </div>
-                </li>
-                <li
-                  className="max-h-[320px] overflow-y-auto divide-y divide-gray-100/80 dark:divide-white/10"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {messages.length ? (
-                    messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className="group flex items-center gap-3 px-5 py-3"
-                      >
-                        <div className="relative h-11 w-11 flex-none">
-                          <img
-                            src={message.profile}
-                            alt={`${message.name} avatar`}
-                            className="h-11 w-11 rounded-full object-cover"
-                          />
-                          {message.status !== "offline" && (
-                            <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-success ring-2 ring-white dark:ring-gray-900"></span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold leading-5 dark:text-white-light/90">
-                            {message.name}
-                          </p>
-                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                            {message.message}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                            {message.time}
-                          </span>
-                          {message.count ? (
-                            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-white">
-                              {message.count}
-                            </span>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          className="text-neutral-400 opacity-0 transition hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
-                          aria-label={t("Dismiss message") || "Dismiss message"}
-                          onClick={() => removeMessage(message.id)}
-                        >
-                          <X className="h-4.5 w-4.5" strokeWidth={1.8} />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8 text-center text-sm">
-                      <span className="rounded-full p-3 text-primary ring-4 ring-primary/30">
-                        <Info className="h-10 w-10" strokeWidth={1.8} />
-                      </span>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        No data available.
-                      </p>
-                    </div>
-                  )}
-                </li>
-                <li className="px-5 py-3 text-center">
-                  <button
-                    type="button"
-                    className="group inline-flex items-center justify-center text-sm font-semibold text-primary transition hover:underline"
+          {!showModeratorNotifications && (
+            <div className="dropdown shrink-0">
+              <Dropdown
+                offset={[0, 8]}
+                placement={isRtl ? "bottom-start" : "bottom-end"}
+                btnClassName={actionBtnClass}
+                button={<Mail className="h-5 w-5" strokeWidth={1.8} />}
+              >
+                <ul className="w-[320px] text-dark dark:text-white-dark sm:w-[360px]">
+                  <li
+                    className="relative h-[70px] overflow-hidden rounded-t-lg"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="ltr:mr-1 rtl:ml-1">
-                      View all activities
-                    </span>
-                    <ArrowRight
-                      className="h-4.5 w-4.5 transition group-hover:translate-x-1 ltr:ml-1 rtl:mr-1"
-                      strokeWidth={1.8}
+                    <img
+                      src={menuHeader}
+                      alt="Messages header"
+                      className="absolute inset-0 h-full w-full object-cover object-center brightness-75"
                     />
-                  </button>
-                </li>
-              </ul>
-            </Dropdown>
-          </div>
+                    <div className="relative z-10 flex h-full items-center px-5 text-white">
+                      <h4 className="text-lg font-semibold">Messages</h4>
+                    </div>
+                  </li>
+                  <li
+                    className="max-h-[320px] overflow-y-auto divide-y divide-gray-100/80 dark:divide-white/10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {messages.length ? (
+                      messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className="group flex items-center gap-3 px-5 py-3"
+                        >
+                          <div className="relative h-11 w-11 flex-none">
+                            <img
+                              src={message.profile}
+                              alt={`${message.name} avatar`}
+                              className="h-11 w-11 rounded-full object-cover"
+                            />
+                            {message.status !== "offline" && (
+                              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-success ring-2 ring-white dark:ring-gray-900"></span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold leading-5 dark:text-white-light/90">
+                              {message.name}
+                            </p>
+                            <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                              {message.message}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                              {message.time}
+                            </span>
+                            {message.count ? (
+                              <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-white">
+                                {message.count}
+                              </span>
+                            ) : null}
+                          </div>
+                          <button
+                            type="button"
+                            className="text-neutral-400 opacity-0 transition hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+                            aria-label={t("Dismiss message") || "Dismiss message"}
+                            onClick={() => removeMessage(message.id)}
+                          >
+                            <X className="h-4.5 w-4.5" strokeWidth={1.8} />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-3 px-5 py-8 text-center text-sm">
+                        <span className="rounded-full p-3 text-primary ring-4 ring-primary/30">
+                          <Info className="h-10 w-10" strokeWidth={1.8} />
+                        </span>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          No data available.
+                        </p>
+                      </div>
+                    )}
+                  </li>
+                  <li className="px-5 py-3 text-center">
+                    <button
+                      type="button"
+                      className="group inline-flex items-center justify-center text-sm font-semibold text-primary transition hover:underline"
+                    >
+                      <span className="ltr:mr-1 rtl:ml-1">
+                        View all activities
+                      </span>
+                      <ArrowRight
+                        className="h-4.5 w-4.5 transition group-hover:translate-x-1 ltr:ml-1 rtl:mr-1"
+                        strokeWidth={1.8}
+                      />
+                    </button>
+                  </li>
+                </ul>
+              </Dropdown>
+            </div>
+          )}
 
           <div className="dropdown shrink-0">
-            <Dropdown
-              offset={[0, 8]}
-              placement={isRtl ? "bottom-start" : "bottom-end"}
-              btnClassName={`${actionBtnClass} relative`}
-              button={<Bell className="h-5 w-5" strokeWidth={1.8} />}
-            >
-              <ul className="w-[320px] divide-y divide-gray-100/80 text-dark dark:divide-white/10 dark:text-white-dark sm:w-[360px]">
-                <li onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-between px-5 py-3 font-semibold">
-                    <h4 className="text-lg">Notifications</h4>
-                    {notifications.length ? (
-                      <span className="rounded-full bg-primary/80 px-3 py-1 text-xs text-white">
-                        {notifications.length} New
-                      </span>
-                    ) : null}
-                  </div>
-                </li>
-                <li
-                  className="max-h-[320px] overflow-y-auto"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {notifications.length ? (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="group flex items-center gap-3 px-5 py-3 transition"
-                      >
-                        <div className="relative h-12 w-12">
-                          <img
-                            className="h-12 w-12 rounded-full object-cover"
-                            alt={`${notification.name} avatar`}
-                            src={notification.profile}
-                          />
-                          {notification.status !== "offline" && (
-                            <span className="absolute bottom-0 right-1 block h-2 w-2 rounded-full bg-success"></span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold dark:text-white-light/90">
-                            {notification.name}
-                          </p>
-                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                            {notification.action}
-                          </p>
-                          <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">
-                            {notification.time}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          className="text-neutral-400 opacity-0 transition hover:text-danger group-hover:opacity-100"
-                          aria-label={
-                            t("Dismiss notification") || "Dismiss notification"
-                          }
-                          onClick={() => removeNotification(notification.id)}
-                        >
-                          <X className="h-4.5 w-4.5" strokeWidth={1.8} />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8 text-center text-sm">
-                      <span className="rounded-full p-3 text-primary ring-4 ring-primary/30">
-                        <Info className="h-10 w-10" strokeWidth={1.8} />
-                      </span>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        No data available.
-                      </p>
-                    </div>
-                  )}
-                </li>
-                <li className="px-5 py-3">
-                  <button className="btn-primary w-full bg-amber-400 text-sm font-semibold">
-                    Read All Notifications
-                  </button>
-                </li>
-              </ul>
-            </Dropdown>
+            {showModeratorNotifications ? (
+              <ModeratorNotificationsBell className={actionBtnClass} />
+            ) : (
+              <NotificationsBell className={actionBtnClass} />
+            )}
           </div>
 
           <div className="dropdown shrink-0">
