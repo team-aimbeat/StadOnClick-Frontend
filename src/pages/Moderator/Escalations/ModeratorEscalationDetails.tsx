@@ -71,7 +71,7 @@ export default function ModeratorEscalationDetails() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-3 pb-8 sm:px-6">
       <TitleBreadCrumbs
         title="Escalation Details"
         breadCrumbTitle="Moderator / Escalations / Details"
