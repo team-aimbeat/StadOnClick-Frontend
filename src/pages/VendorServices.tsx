@@ -20,7 +20,7 @@ import {
 } from "@/services/vendorOfferingsApi";
 import { useCreateVendorServiceMutation } from "@/services/vendorServicesApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
-import eventImage from "@/assets/Images/event.jpg";
+import eventImage from "@/assets/Images/well.jpg";
 import wellnessImage from "@/assets/Images/wellness.jpg";
 import familyImage from "@/assets/Images/family.jpg";
 import learnImage from "@/assets/Images/learn.jpg";
@@ -94,6 +94,37 @@ const masterServiceVisuals: Record<
   "travel-transportation": { src: travelImage, alt: "Travel & transportation" },
   "food-leisure": { src: foodImage, alt: "Food & leisure" },
   "real-estate-local-support": { src: hotelImage, alt: "Real estate & local support" },
+};
+
+const categoryVisuals: Record<string, { src: string; alt: string }> = {
+  "events-around-the-city": {
+    src: eventImage,
+    alt: "Events around the city",
+  },
+  "concerts-live-shows": {
+    src: eventImage,
+    alt: "Concerts & live shows",
+  },
+  "movie-bookings": {
+    src: homeImage,
+    alt: "Movie bookings",
+  },
+  "museums-exhibitions": {
+    src: learnImage,
+    alt: "Museums & exhibitions",
+  },
+  "tourist-buses-boat-tours": {
+    src: travelImage,
+    alt: "Tourist buses & boat tours",
+  },
+  "tourist-activities-attractions": {
+    src: familyImage,
+    alt: "Tourist activities & attractions",
+  },
+  "places-to-visit-near-city": {
+    src: travelImage,
+    alt: "Places to visit near the city",
+  },
 };
 
 const formatCurrency = (value: number | null | undefined) =>
@@ -595,22 +626,35 @@ setCreatedServiceId(createdVendorService.id);
                   key={service.id}
                   type="button"
                   onClick={() => setSelectedMasterServiceId(service.id)}
-                  className={`flex items-center gap-3 rounded-[27px] border bg-white px-4 py-3 text-left text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
+                  className={`  gap-3 rounded-[27px] border bg-white px-4 py-3  font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
                     ${isSelected ? "border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.25)]" : "border-slate-200 hover:border-slate-300"}`}
                   aria-pressed={isSelected}
                 >
-                  <div className="h-12 w-12 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-                    <img
-                      src={imageSrc}
-                      alt={imageAlt}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <p className="text-sm font-semibold text-slate-900">{service.name}</p>
-                    <p className="text-xs text-slate-500">{service.slug}</p>
-                  </div>
+            <div className="w-[140px] rounded-[32px] bg-white">
+<div className="w-[120px] rounded-[24px] bg-white">
+  {/* Image */}
+  <div className="h-[80px] overflow-hidden rounded-[18px] bg-slate-100">
+    <img
+      src={imageSrc}
+      alt={imageAlt}
+      className="h-full w-full object-cover"
+      loading="lazy"
+    />
+  </div>
+
+  {/* Text */}
+  <div className="space-y-0.5 px-2 pt-2">
+    <p className="truncate text-sm font-semibold text-slate-900">
+      {service.name}
+    </p>
+    <p className="truncate text-[11px] text-slate-500">
+      {service.slug}
+    </p>
+  </div>
+</div>
+
+</div>
+
                 </button>
               );
             })}
@@ -620,7 +664,7 @@ setCreatedServiceId(createdVendorService.id);
             </div>
          
           </div>
-          <div className="flex justify-center">
+          <div className="mt-50 ml-10">
             <ExperienceHighlightCard />
           </div>
         </div>
@@ -650,12 +694,9 @@ setCreatedServiceId(createdVendorService.id);
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {categoryOptions.map((category) => {
                     const isSelected = category.id === selectedCategoryId;
-                    const visual =
-                      masterServiceVisuals[category.slug] ??
-                      masterServiceVisuals[
-                        masterServiceOptions.find((service) => service.id === selectedMasterServiceId)
-                          ?.slug ?? ""
-                      ];
+                    const masterVisual =
+                      selectedMasterService && masterServiceVisuals[selectedMasterService.slug];
+                    const visual = categoryVisuals[category.slug] ?? masterVisual;
                     const imageSrc = visual?.src ?? well;
                     const imageAlt = visual?.alt ?? category.name;
                     return (
@@ -702,7 +743,7 @@ setCreatedServiceId(createdVendorService.id);
 
 
 {/* Vendor Service Form */}
-<section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+<section className="space-y-4 rounded-2xl border p-4">
   <div className="flex items-center justify-between">
     <div>
       <h3 className="text-sm font-semibold text-slate-900">
@@ -1106,62 +1147,19 @@ const StepStatus = ({ title, state, description, error, onRetry }: StepStatusPro
   </div>
 );
 
-const experienceGuests = ["EM", "AL", "JS"];
+
 
 const ExperienceHighlightCard = () => (
-  <div className="max-w-[280px] rounded-3xl border border-slate-100 bg-white shadow-2xl">
-    <div className="relative h-44 overflow-hidden rounded-t-3xl">
+  <div className="max-w-[480px] rounded-3xl border border-slate-100 bg-white shadow-2xl">
+    <div className="relative h-74 overflow-hidden rounded-t-3xl">
       <img
         src={eventImage}
         alt="Snowy alpine tour"
         className="h-full w-full object-cover"
       />
-      <div className="absolute left-3 top-3 rounded-2xl bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700">
-        Jan 12 · Wed
-      </div>
-      <button
-        type="button"
-        className="absolute right-3 top-3 rounded-full bg-white/80 p-2 text-slate-700 shadow"
-        aria-label="Bookmark experience"
-      >
-        <HiOutlineBookmark className="h-4 w-4" />
-      </button>
+
     </div>
-    <div className="space-y-3 px-4 pb-5 pt-4">
-      <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-500">
-        <span className="flex items-center gap-1 text-sm font-semibold text-amber-500">
-          ★
-          <span className="text-base text-slate-900">4.71</span>
-        </span>
-        <div className="flex items-center gap-1">
-          {experienceGuests.map((initial, index) => (
-            <span
-              key={initial}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white bg-slate-900 text-[11px] font-semibold text-white shadow-sm"
-              style={{ marginLeft: index === 0 ? 0 : -6 }}
-            >
-              {initial}
-            </span>
-          ))}
-          <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-400">
-            +5 joined
-          </span>
-        </div>
-      </div>
-      <h3 className="text-lg font-semibold text-slate-900">Tirol Skiing Tour</h3>
-      <p className="text-sm text-slate-500">
-        Experience guided ski tours where each turn offers clarity, connection, and the serene thrill of untouched alpine terrain.
-      </p>
-      <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
-        <span>$50/hr</span>
-        <button
-          type="button"
-          className="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:bg-slate-800"
-        >
-          Reserve
-        </button>
-      </div>
-    </div>
+
   </div>
 );
 
