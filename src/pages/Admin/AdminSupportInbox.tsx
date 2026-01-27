@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { HiArrowPath, HiCheckCircle, HiChatBubbleOvalLeft } from "react-icons/hi2";
 import toast from "react-hot-toast";
 
@@ -57,11 +57,13 @@ const priorityTone: Record<SupportTicketPriority, string> = {
 export default function AdminSupportInbox() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const authUser = useAppSelector((s) => s.auth.user);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<SupportTicketStatus | undefined>();
   const [priority, setPriority] = useState<SupportTicketPriority | undefined>();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const ticketIdParam = searchParams.get("ticketId");
 
   const { data: ticketsData, isFetching: isListFetching, refetch: refetchList } = useAdminListTicketsQuery(
     { search, status, priority }
@@ -93,6 +95,12 @@ export default function AdminSupportInbox() {
   }, []);
 
   useEffect(() => {
+    if (ticketIdParam) {
+      setSelectedId(ticketIdParam);
+    }
+  }, [ticketIdParam]);
+
+  useEffect(() => {
     dispatch(setPageTitle("Support Inbox"));
   }, [dispatch]);
 
@@ -112,11 +120,14 @@ export default function AdminSupportInbox() {
     }
   };
 
+  const isAssignedToSelf = Boolean(ticket?.assignedTo?.id && ticket?.assignedTo?.id === authUser?.id);
+
   const handleAssignToMe = async () => {
-    if (!selectedTicketId || !authUser?.id) return;
+    if (!selectedTicketId || !authUser?.id || isAssignedToSelf) return;
     try {
       await assignTo({ id: selectedTicketId, assignedToUserId: authUser.id }).unwrap();
       await Promise.all([refetchList(), refetchTicket()]);
+      toast.success("Assigned to you");
     } catch (err: any) {
       toast.error(err?.data?.message || "Unable to assign");
     }
@@ -281,8 +292,18 @@ export default function AdminSupportInbox() {
                       ))}
                   </SelectContent>
                 </Select>
-                <Button variant="default" size="sm" onClick={handleAssignToMe} disabled={!ticket} className="h-10">
-                  Assign to me
+                <Button
+                  variant={isAssignedToSelf ? "secondary" : "default"}
+                  size="sm"
+                  onClick={handleAssignToMe}
+                  disabled={!ticket || isAssignedToSelf}
+                  className="h-10"
+                >
+                  {ticket?.assignedTo
+                    ? isAssignedToSelf
+                      ? "Assigned to you"
+                      : "Reassign to me"
+                    : "Assign to me"}
                 </Button>
                 <Button
                   variant="secondary"

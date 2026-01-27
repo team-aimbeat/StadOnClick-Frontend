@@ -88,7 +88,7 @@ const AdminHeader = () => {
   const isAdmin = authUser?.roles?.includes("ADMIN");
   const isSupportAdmin = authUser?.roles?.includes("SUPPORT_ADMIN");
   const isModeratorOnly = authUser?.roles?.includes("MODERATOR") && !isAdmin && !isSupportAdmin;
-  const isModeratorShell = location.pathname.startsWith("/moderator");
+  const isModeratorShell = location.pathname.startsWith("/admin/moderator");
   const showModeratorNotifications = isModeratorShell || isModeratorOnly;
 
   const actionBtnClass =

@@ -44,7 +44,7 @@ type NavItem = {
   children?: NavChild[];
 };
 
-const Sidebar = ({ basePath = "" }: SidebarProps) => {
+const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
@@ -61,7 +61,6 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   const { t } = useTranslation();
 
   const normalizedBasePath = basePath.replace(/\/$/, "");
-  const isModeratorShell = normalizedBasePath.startsWith("/moderator");
   const withBase = useCallback(
     (path: string) => {
       if (!normalizedBasePath) return path.startsWith("/") ? path : `/${path}`;
@@ -94,25 +93,25 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       ];
     }
 
-    if (isModeratorShell || isModeratorOnly) {
+    if (isModeratorOnly) {
       return [
         {
           id: "moderator-dashboard",
           label: t("Moderator Dashboard"),
           icon: HiChartBar,
-          to: withBase("dashboard"),
+          to: withBase("moderator/dashboard"),
         },
         {
           id: "moderator-escalations",
           label: t("Escalations"),
           icon: HiInboxStack,
-          to: withBase("escalations"),
+          to: withBase("moderator/escalations"),
         },
         {
           id: "moderator-notifications",
           label: t("Notifications"),
           icon: HiBell,
-          to: withBase("notifications"),
+          to: withBase("moderator/notifications"),
         },
       ];
     }
@@ -142,6 +141,28 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         icon: HiChatBubbleLeftRight,
         to: withBase("chat"),
       },
+      ...(isModerator
+        ? [
+            {
+              id: "moderator-dashboard",
+              label: t("Moderator Dashboard"),
+              icon: HiChartBar,
+              to: withBase("moderator/dashboard"),
+            },
+            {
+              id: "moderator-escalations",
+              label: t("Escalations"),
+              icon: HiInboxStack,
+              to: withBase("moderator/escalations"),
+            },
+            {
+              id: "moderator-notifications",
+              label: t("Notifications"),
+              icon: HiBell,
+              to: withBase("moderator/notifications"),
+            },
+          ]
+        : []),
       {
         id: "compliance",
         label: t("Compliance"),
@@ -208,7 +229,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         children: [{ label: t("Staff"), to: withBase("staff") }],
       },
     ];
-  }, [isSupportOnly, t, withBase]);
+  }, [isModerator, isModeratorOnly, isSupportOnly, t, withBase]);
 
   const accentPalette = useMemo(
     () => ["#F59E0B", "#22C55E", "#EC4899", "#A855F7", "#0EA5E9", "#F97316", "#10B981"],

@@ -8,9 +8,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard", to: "/moderator/dashboard", icon: HiChartBar },
-  { id: "escalations", label: "Escalations", to: "/moderator/escalations", icon: HiInboxStack },
-  { id: "notifications", label: "Notifications", to: "/moderator/notifications", icon: HiBell },
+  { id: "dashboard", label: "Dashboard", to: "/admin/moderator/dashboard", icon: HiChartBar },
+  { id: "escalations", label: "Escalations", to: "/admin/moderator/escalations", icon: HiInboxStack },
+  { id: "notifications", label: "Notifications", to: "/admin/moderator/notifications", icon: HiBell },
 ];
 
 export default function ModeratorSidebar() {

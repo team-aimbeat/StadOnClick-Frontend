@@ -36,10 +36,10 @@ export default function ModeratorNotifications() {
   };
 
   return (
-    <div className="space-y-6 px-3 pb-8 sm:px-6">
+    <div className="space-y-6">
       <TitleBreadCrumbs
         title="Notifications"
-        breadCrumbTitle="Moderator / Notifications"
+        breadCrumbTitle="Admin / Moderator / Notifications"
       />
 
       <Card className="border border-slate-200/80 bg-white/95 shadow-sm">
@@ -114,7 +114,7 @@ export default function ModeratorNotifications() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                       <Link
-                        to={`/moderator/escalations/${notification.entityId}`}
+                        to={`/admin/moderator/escalations/${notification.entityId}`}
                         className="text-xs font-semibold text-blue-600 hover:text-blue-700"
                       >
                         View escalation
@@ -157,3 +157,4 @@ function formatNotificationType(value: string) {
     .map((chunk) => (chunk ? chunk[0].toUpperCase() + chunk.slice(1) : ""))
     .join(" ");
 }
+
