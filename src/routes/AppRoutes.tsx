@@ -11,7 +11,6 @@ import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
 import Kyc from "@/pages/Kyc";
-import ChatBox from "@/pages/ChatBox";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
 import VendorTableShowcase from "@/pages/VendorTableShowcase";
@@ -26,6 +25,7 @@ import VendorPromote from "@/pages/VendorPromote";
 import VendorKyc from "@/pages/VendorKyc";
 import VendorStripe from "@/pages/VendorStripe";
 import VendorSupport from "@/pages/VendorSupport";
+import VendorTicketDetails from "@/pages/VendorTicketDetails";
 import VendorHelp from "@/pages/VendorHelp";
 import VendorInsights from "@/pages/VendorInsights";
 import VendorBookingDetail from "@/pages/VendorBookingDetail";
@@ -43,6 +43,7 @@ import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage
 
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
+import ModeratorProtectedRoute from "./ModeratorProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
@@ -51,6 +52,14 @@ import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
 import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
 import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
 import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
+import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
+import AdminSupportInbox from "@/pages/Admin/AdminSupportInbox";
+import AdminSupportChatConsole from "@/pages/Admin/SupportChat/AdminSupportChatConsole";
+import SupportAdminDashboard from "@/pages/Admin/SupportAdminDashboard";
+import ModeratorDashboard from "@/pages/Moderator/ModeratorDashboard";
+import ModeratorEscalationsInbox from "@/pages/Moderator/Escalations/ModeratorEscalationsInbox";
+import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorEscalationDetails";
+import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -119,12 +128,17 @@ const appRouter = createBrowserRouter([
     element: <AdminSignIn />,
     errorElement: <ErrorPage />,
   },
+  {
+    path: "/admin/access-denied",
+    element: <AccessDenied />,
+    errorElement: <ErrorPage />,
+  },
 
   {
     path: "/admin",
     element: (
       <AdminProtectedRoute>
-        <AdminLayout />
+        <AdminLayout basePath="/admin" />
       </AdminProtectedRoute>
     ),
     errorElement: <ErrorPage />,
@@ -133,6 +147,30 @@ const appRouter = createBrowserRouter([
       {
         path: "vendors",
         element: <VendorsPage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "support",
+        element: <Navigate to="/admin/support/inbox" replace />,
+      },
+      {
+        path: "support/dashboard",
+        element: <SupportAdminDashboard />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "support/inbox",
+        element: <AdminSupportInbox />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "chat",
+        element: <AdminSupportChatConsole />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "staff",
+        element: <AdminStaffPage />,
         errorElement: <ErrorPage />,
       },
       {
@@ -158,9 +196,37 @@ const appRouter = createBrowserRouter([
         path: "kyc",
         element: <Kyc />,
       },
+      
+    ],
+  },
+  {
+    path: "/moderator",
+    element: (
+      <ModeratorProtectedRoute>
+        <AdminLayout basePath="/moderator" />
+      </ModeratorProtectedRoute>
+    ),
+    errorElement: <ErrorPage />,
+    children: [
       {
-        path: "chat",
-        element: <ChatBox />,
+        path: "",
+        element: <Navigate to="/moderator/dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <ModeratorDashboard />,
+      },
+      {
+        path: "escalations",
+        element: <ModeratorEscalationsInbox />,
+      },
+      {
+        path: "escalations/:id",
+        element: <ModeratorEscalationDetails />,
+      },
+      {
+        path: "notifications",
+        element: <ModeratorNotifications />,
       },
     ],
   },
@@ -268,6 +334,7 @@ const appRouter = createBrowserRouter([
       { path: "kyc", element: <VendorKyc /> },
       { path: "stripe", element: <VendorStripe /> },
       { path: "support", element: <VendorSupport /> },
+      { path: "support/tickets/:ticketId", element: <VendorTicketDetails /> },
       { path: "help", element: <VendorHelp /> },
       { path: "insights", element: <VendorInsights /> },
     ],

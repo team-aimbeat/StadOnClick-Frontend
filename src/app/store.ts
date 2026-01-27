@@ -8,18 +8,28 @@ import { preferencesApi } from "@/features/preferences/api/preferencesApi";
 import { adminVendorApi } from "@/features/admin/vendors/api/vendorsApi";
 import { adminLeadPlansApi } from "@/features/adminLeads/api/adminLeadPlans.api";
 import { vendorLeadSubscriptionsApi } from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
+import { adminStaffApi } from "@/features/admin/staff/adminStaffApi";
+import { supportApi } from "@/features/support/supportApi";
+import supportRealtimeReducer from "@/features/support/supportRealtimeSlice";
+import notificationsReducer from "@/features/notifications/notificationsSlice";
+import { escalationApi } from "@/features/escalations/escalationApi";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     preferences: preferencesReducer,
     themeConfig: themeConfigSlice,
+    supportRealtime: supportRealtimeReducer,
+    notifications: notificationsReducer,
     [authApi.reducerPath]: authApi.reducer,
     [preferencesApi.reducerPath]: preferencesApi.reducer,
     [adminVendorApi.reducerPath]: adminVendorApi.reducer,
     [adminLeadPlansApi.reducerPath]: adminLeadPlansApi.reducer,
     [vendorLeadSubscriptionsApi.reducerPath]:
       vendorLeadSubscriptionsApi.reducer,
+    [adminStaffApi.reducerPath]: adminStaffApi.reducer,
+    [supportApi.reducerPath]: supportApi.reducer,
+    [escalationApi.reducerPath]: escalationApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -27,7 +37,10 @@ export const store = configureStore({
       .concat(preferencesApi.middleware)
       .concat(adminVendorApi.middleware)
       .concat(adminLeadPlansApi.middleware)
-      .concat(vendorLeadSubscriptionsApi.middleware),
+      .concat(vendorLeadSubscriptionsApi.middleware)
+      .concat(adminStaffApi.middleware)
+      .concat(supportApi.middleware)
+      .concat(escalationApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

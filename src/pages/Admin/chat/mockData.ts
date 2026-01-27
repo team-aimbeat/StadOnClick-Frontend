@@ -1,0 +1,120 @@
+import profile7 from "@/assets/images/profile-7.jpeg";
+import profile8 from "@/assets/images/profile-8.jpeg";
+import profile9 from "@/assets/images/profile-9.jpeg";
+import profile1 from "@/assets/images/profile-8.jpeg";
+import type { AgentUser, Contact } from "./types";
+
+export const agentUser: AgentUser = {
+  id: 0,
+  name: "Alon Smith",
+  path: profile7,
+  designation: "Support Admin",
+};
+
+export const contactsMock: Contact[] = [
+  {
+    userId: 1,
+    name: "Nia Hillyer",
+    path: profile7,
+    time: "2:09 PM",
+    preview: "How do you do?",
+    lastSeen: "Active now",
+    role: "Vendor",
+    status: "active",
+    unreadCount: 2,
+    messages: [
+      { fromUserId: 1, toUserId: 0, text: "Hi, I am back from vacation" },
+      { fromUserId: 0, toUserId: 1, text: "How are you?" },
+      { fromUserId: 1, toUserId: 0, text: "Welcome back!" },
+      { fromUserId: 1, toUserId: 0, text: "I am all well" },
+      { fromUserId: 0, toUserId: 1, text: "Coffee?" },
+    ],
+    active: true,
+  },
+  {
+    userId: 2,
+    name: "Sean Freeman",
+    path: profile8,
+    time: "12:09 PM",
+    preview: "I was wondering...",
+    lastSeen: "Last seen 10m ago",
+    role: "Vendor",
+    status: "away",
+    unreadCount: 0,
+    messages: [
+      { fromUserId: 0, toUserId: 2, text: "Hello" },
+      { fromUserId: 0, toUserId: 2, text: "It's me" },
+      { fromUserId: 0, toUserId: 2, text: "I have a question regarding project." },
+    ],
+    active: false,
+  },
+  {
+    userId: 3,
+    name: "Alma Clarke",
+    path: profile9,
+    time: "1:44 PM",
+    preview: "I've forgotten how it felt before",
+    lastSeen: "Active 5m ago",
+    role: "Admin",
+    status: "active",
+    unreadCount: 1,
+    messages: [
+      { fromUserId: 0, toUserId: 3, text: "Hey Buddy." },
+      { fromUserId: 0, toUserId: 3, text: "What's up" },
+      { fromUserId: 3, toUserId: 0, text: "I am sick" },
+      { fromUserId: 0, toUserId: 3, text: "Not coming to office today." },
+    ],
+    active: true,
+  },
+  {
+    userId: 4,
+    name: "Alan Green",
+    path: profile1,
+    time: "2:06 PM",
+    preview: "Need approval on the refund",
+    lastSeen: "Last seen 30m ago",
+    role: "Vendor",
+    status: "offline",
+    unreadCount: 0,
+    messages: [
+      { fromUserId: 0, toUserId: 4, text: "Hi, collect your check" },
+      { fromUserId: 4, toUserId: 0, text: "Ok, I will be there in 10 mins" },
+    ],
+    active: true,
+  },
+  {
+    userId: 5,
+    name: "Shaun Park",
+    path: profile9,
+    time: "2:05 PM",
+    preview: "It's not that bad...",
+    lastSeen: "Active 1h ago",
+    role: "Vendor",
+    status: "away",
+    unreadCount: 3,
+    messages: [
+      { fromUserId: 0, toUserId: 3, text: "Hi, I am back from vacation" },
+      { fromUserId: 0, toUserId: 3, text: "How are you?" },
+      { fromUserId: 0, toUserId: 5, text: "Welcome Back" },
+      { fromUserId: 0, toUserId: 5, text: "I am all well" },
+      { fromUserId: 5, toUserId: 0, text: "Coffee?" },
+    ],
+    active: false,
+  },
+  {
+    userId: 6,
+    name: "Roxanne",
+    path: profile7,
+    time: "2:00 PM",
+    preview: "Uploaded files to server.",
+    lastSeen: "Offline",
+    role: "Vendor",
+    status: "offline",
+    unreadCount: 0,
+    messages: [
+      { fromUserId: 0, toUserId: 6, text: "Hi" },
+      { fromUserId: 0, toUserId: 6, text: "Uploaded files to server." },
+    ],
+    active: false,
+  },
+];
