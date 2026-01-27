@@ -615,46 +615,37 @@ setCreatedServiceId(createdVendorService.id);
             ))}
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr">
             {masterServiceOptions.map((service) => {
               const isSelected = service.id === selectedMasterServiceId;
               const visual = masterServiceVisuals[service.slug];
-              const imageSrc = visual?.src ?? well;
+              const imageSrc = visual?.src ?? swell;
               const imageAlt = visual?.alt ?? service.name;
               return (
                 <button
                   key={service.id}
                   type="button"
                   onClick={() => setSelectedMasterServiceId(service.id)}
-                  className={`  gap-3 rounded-[27px] border bg-white px-4 py-3  font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
-                    ${isSelected ? "border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.25)]" : "border-slate-200 hover:border-slate-300"}`}
+                  className={`flex h-full w-full flex-col gap-3 rounded-[24px] border bg-white px-3 py-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
+                    ${isSelected ? "border-blue-500 shadow-[0_12px_30px_rgba(59,130,246,0.15)]" : "border-slate-200 hover:border-slate-300"}`}
                   aria-pressed={isSelected}
                 >
-            <div className="w-[140px] rounded-[32px] bg-white">
-<div className="w-[120px] rounded-[24px] bg-white">
-  {/* Image */}
-  <div className="h-[80px] overflow-hidden rounded-[18px] bg-slate-100">
-    <img
-      src={imageSrc}
-      alt={imageAlt}
-      className="h-full w-full object-cover"
-      loading="lazy"
-    />
-  </div>
-
-  {/* Text */}
-  <div className="space-y-0.5 px-2 pt-2">
-    <p className="truncate text-sm font-semibold text-slate-900">
-      {service.name}
-    </p>
-    <p className="truncate text-[11px] text-slate-500">
-      {service.slug}
-    </p>
-  </div>
-</div>
-
-</div>
-
+                  <div className="h-32 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100">
+                    <img
+                      src={imageSrc}
+                      alt={imageAlt}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="space-y-0.5 px-1">
+                    <p className="truncate text-base font-semibold text-slate-900">
+                      {service.name}
+                    </p>
+                    <p className="truncate text-[11px] text-slate-500">
+                      {service.slug}
+                    </p>
+                  </div>
                 </button>
               );
             })}
