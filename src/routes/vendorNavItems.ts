@@ -14,6 +14,7 @@ import {
   HiOutlineBookmarkSquare,
   HiOutlineUserGroup,
   HiOutlineTicket,
+  HiOutlineBell,
 } from "react-icons/hi2";
 import { IconType } from "react-icons";
 
@@ -61,6 +62,11 @@ export const getVendorNavGroups = ({
         label: "Analytics",
         icon: HiOutlinePresentationChartLine,
         to: "/vendor/analytics",
+      },
+      {
+        label: "Notifications",
+        icon: HiOutlineBell,
+        to: "/vendor/notifications",
       },
     ],
   },
