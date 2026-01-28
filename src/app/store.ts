@@ -17,6 +17,9 @@ import { systemHealthApi } from "@/features/systemHealth/systemHealthApi";
 import { leadsApi } from "@/features/leads/api/leadsApi";
 import { serviceCategoriesApi } from "@/features/serviceCategories/api/serviceCategoriesApi";
 import { vendorNotificationsApi } from "@/features/vendorNotifications/api/vendorNotificationsApi";
+import { vendorWalletApi } from "@/features/vendorWallet/api/walletApi";
+import { vendorStripeApi } from "@/features/vendorStripe/api/vendorStripeApi";
+import { adminFinanceApi } from "@/features/admin/finance/api/adminFinanceApi";
 
 export const store = configureStore({
   reducer: {
@@ -38,6 +41,9 @@ export const store = configureStore({
     [leadsApi.reducerPath]: leadsApi.reducer,
     [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
     [vendorNotificationsApi.reducerPath]: vendorNotificationsApi.reducer,
+    [vendorWalletApi.reducerPath]: vendorWalletApi.reducer,
+    [vendorStripeApi.reducerPath]: vendorStripeApi.reducer,
+    [adminFinanceApi.reducerPath]: adminFinanceApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -52,7 +58,10 @@ export const store = configureStore({
       .concat(systemHealthApi.middleware)
       .concat(leadsApi.middleware)
       .concat(serviceCategoriesApi.middleware)
-      .concat(vendorNotificationsApi.middleware),
+      .concat(vendorNotificationsApi.middleware)
+      .concat(vendorWalletApi.middleware)
+      .concat(vendorStripeApi.middleware)
+      .concat(adminFinanceApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
