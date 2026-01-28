@@ -1,202 +1,302 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { HiOutlineCheckCircle, HiOutlineExclamationTriangle, HiOutlineShieldCheck } from "react-icons/hi2";
+import { HiOutlineExclamationTriangle, HiOutlineArrowDownTray, HiOutlineArrowUpTray, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
-import { useMockLoader } from "@/lib/useMockLoader";
-
-type PayoutHistoryRow = {
-  id: string;
-  amount: number;
-  status: "paid" | "processing" | "failed";
-  requestedAt: string;
-  note?: string;
-};
-
-const historySeed: PayoutHistoryRow[] = [
-  { id: "PO-1208", amount: 15200, status: "paid", requestedAt: "2025-01-10", note: "Bank transfer completed" },
-  { id: "PO-1207", amount: 8200, status: "paid", requestedAt: "2024-12-24" },
-  { id: "PO-1206", amount: 5400, status: "failed", requestedAt: "2024-12-12", note: "Account mismatch" },
-];
+import { 
+  useGetWalletSummaryQuery, 
+  useGetWalletTransactionsQuery, 
+  useRequestPayoutMutation 
+} from "@/features/vendorWallet/api/walletApi";
+import { useGetStripeStatusQuery } from "@/features/vendorStripe/api/vendorStripeApi";
+import { toast } from "react-hot-toast";
+import { DataTable } from "@/components/shared/DataTable";
+import dayjs from "dayjs";
 
 const VendorPayouts = () => {
   const dispatch = useAppDispatch();
-  const loading = useMockLoader();
-  const [amount, setAmount] = useState(12000);
+  const [requestAmount, setRequestAmount] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [kycVerified] = useState(false);
-  const [stripeConnected] = useState(false);
+
+  const { data: summaryData, isLoading: isSummaryLoading } = useGetWalletSummaryQuery();
+  const { data: stripeData, isLoading: isStripeLoading } = useGetStripeStatusQuery();
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useGetWalletTransactionsQuery({ page: 1, limit: 50 });
+  const [requestPayout, { isLoading: isPayoutRequesting }] = useRequestPayoutMutation();
 
   useEffect(() => {
-    dispatch(setPageTitle("Payouts"));
+    dispatch(setPageTitle("Settlements"));
   }, [dispatch]);
 
-  const pendingNote = useMemo(() => {
-    if (!kycVerified) {
-      return "KYC not verified. Upload documents to unlock payouts.";
-    }
-    if (!stripeConnected) {
-      return "Connect Stripe to receive payouts.";
-    }
-    return "";
-  }, [kycVerified, stripeConnected]);
+  const summary = summaryData?.data;
+  const stripe = stripeData?.data;
+  const payoutHistory = (transactionsData?.data || []).filter(tx => tx.type === 'PAYOUT' || tx.type === 'REFUND');
 
-  const canRequest = kycVerified && stripeConnected;
-  const pendingAmount = 32000;
-  const pendingCount = 2;
+  const stripeConnected = stripe?.payoutsEnabled;
 
-  const handleConfirm = () => {
-    setModalOpen(false);
-    setSuccessMessage("Payout request submitted. We will process it in 24 hrs.");
+  const handleConfirm = async () => {
+    const amount = parseFloat(requestAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Invalid settlement amount");
+      return;
+    }
+
+    try {
+      await requestPayout({ amount }).unwrap();
+      toast.success("Settlement request acknowledged");
+      setModalOpen(false);
+      setRequestAmount("");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Transfer protocols failed");
+    }
   };
 
-  if (loading) {
+  if (isSummaryLoading || isStripeLoading || isTransactionsLoading) {
     return (
-      <DashboardContainer className="space-y-4 pt-8">
-        <div className="h-8 w-1/3 animate-pulse rounded-full bg-slate-200" />
-        <div className="grid grid-cols-1 gap-4">
-          <div className="h-32 rounded-2xl border border-slate-200 bg-slate-100 animate-pulse" />
-          <div className="h-48 rounded-2xl border border-slate-200 bg-slate-100 animate-pulse" />
+      <DashboardContainer className="space-y-8 pb-12">
+        {/* Header Skeleton */}
+        <div className="space-y-2">
+           <div className="h-4 w-24 bg-slate-100 rounded animate-pulse" />
+           <div className="h-8 w-48 bg-slate-100 rounded-lg animate-pulse" />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Left Panel Skeleton */}
+          <div className="finance-card rounded-2xl p-8 space-y-8 border border-slate-100">
+             <div>
+                <div className="h-3 w-32 bg-slate-100 rounded animate-pulse mb-3" />
+                <div className="h-10 w-40 bg-slate-100 rounded-lg animate-pulse" />
+                <div className="h-3 w-32 bg-slate-100 rounded animate-pulse mt-3" />
+             </div>
+             <div className="space-y-3">
+                <div className="h-12 w-full bg-slate-100 rounded-xl animate-pulse" />
+                <div className="h-10 w-full bg-slate-50 rounded-lg animate-pulse" />
+             </div>
+          </div>
+
+          {/* Right Panel Skeleton */}
+          <div className="lg:col-span-2 space-y-6">
+             <div className="finance-card rounded-2xl p-8 border border-slate-100">
+                <div className="flex justify-between mb-8">
+                   <div className="h-4 w-40 bg-slate-100 rounded animate-pulse" />
+                   <div className="h-6 w-24 bg-slate-100 rounded animate-pulse" />
+                </div>
+                <div className="flex gap-4">
+                   <div className="flex-1 h-16 bg-slate-50 rounded-2xl animate-pulse border border-slate-100" />
+                   <div className="w-40 h-16 bg-slate-100 rounded-2xl animate-pulse" />
+                </div>
+             </div>
+
+             <div className="finance-card rounded-2xl overflow-hidden border-slate-100">
+                <div className="h-12 bg-slate-50/50 border-b border-slate-100 w-full" />
+                <div className="p-0">
+                   {[...Array(5)].map((_, i) => (
+                     <div key={i} className="flex justify-between px-6 py-5 border-b border-slate-50">
+                        <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
+                        <div className="h-3 w-24 bg-slate-100 rounded animate-pulse" />
+                        <div className="h-5 w-20 rounded-full bg-slate-100 animate-pulse" />
+                        <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
+                     </div>
+                   ))}
+                </div>
+             </div>
+          </div>
         </div>
       </DashboardContainer>
     );
   }
 
   return (
-    <DashboardContainer className="space-y-5 pb-10">
-      <TitleBreadCrumbs title="Payouts" breadCrumbTitle="Vendor / Payouts" />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Pending payouts</p>
-          <p className="text-3xl font-semibold text-slate-900">₹{pendingAmount.toLocaleString("en-IN")}</p>
-          <p className="text-xs text-slate-500">{pendingCount} requests waiting approval</p>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+    <DashboardContainer className="space-y-8 pb-12">
+      <TitleBreadCrumbs title="Settlement Control" breadCrumbTitle="Finance / Payouts" />
+      
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Control Panel */}
+        <div className="finance-card rounded-2xl p-8 space-y-8">
+          <div>
+            <p className="text-sm font-semibold text-slate-500 mb-1">Awaiting Release</p>
+            <p className="text-metric text-4xl tracking-tighter">
+              <span className="text-sm font-medium opacity-30 mr-1.5">{summary?.currency}</span>
+              {summary?.pendingPayoutBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-slate-500 font-medium mt-2">Active withdrawal queue balance</p>
+          </div>
+          
+          <div className="space-y-3">
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              disabled={!canRequest}
-              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!stripeConnected || !summary?.availableBalance}
+              className="w-full rounded-xl bg-slate-950 py-4 text-[10px] font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-slate-800 disabled:opacity-10 active:scale-95 flex items-center justify-center gap-2"
             >
-              Request payout
+              <HiOutlineArrowUpTray className="w-4 h-4" />
+              Request Transfer
             </button>
-            <NavLink to="/vendor/wallet" className="text-xs font-semibold text-blue-600 hover:text-blue-500">
-              View wallet
+            <NavLink to="/vendor/wallet" className="flex items-center justify-center gap-2 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">
+              <HiOutlineArrowDownTray className="w-4 h-4" />
+              View Full Ledger
             </NavLink>
           </div>
-          {!canRequest && (
-            <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-              <HiOutlineExclamationTriangle className="inline h-4 w-4" />
-              {pendingNote}
-              <div className="mt-1 space-x-2 text-[11px] font-semibold">
-                {!kycVerified && (
-                  <NavLink to="/vendor/kyc" className="text-blue-600 hover:text-blue-500">
-                    Upload KYC
-                  </NavLink>
-                )}
-                {!stripeConnected && (
-                  <NavLink to="/vendor/stripe" className="text-blue-600 hover:text-blue-500">
-                    Connect Stripe
-                  </NavLink>
-                )}
+
+          {!stripeConnected && (
+            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-[10px] font-bold text-amber-700 leading-relaxed">
+              <div className="flex items-center gap-2 mb-2">
+                 <HiOutlineExclamationTriangle className="w-4 h-4" />
+                 Compliance Required
+              </div>
+              Stripe payout infrastructure is not yet active. Complete onboarding to enable transfers.
+              <div className="mt-3">
+                <NavLink to="/vendor/stripe" className="inline-flex items-center gap-1 text-slate-950 font-black hover:underline uppercase tracking-tighter">
+                  Sync Stripe Console &rarr;
+                </NavLink>
               </div>
             </div>
           )}
         </div>
 
-        <div className="lg:col-span-2 space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Request payout</p>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900">
-                Amount to request
+        {/* Right Action Hub */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="finance-card rounded-2xl p-8">
+            <div className="flex items-center justify-between mb-8">
+               <h3 className="text-sm font-bold text-slate-900">Tactile Settlement Control</h3>
+               <div className="px-3 py-1 rounded bg-slate-950 text-[10px] font-bold text-white uppercase tracking-wider leading-none">
+                  Manual Entry
+               </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1 group">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-black text-slate-300 group-focus-within:text-slate-950 transition-colors">{summary?.currency}</span>
+                <input
+                  type="number"
+                  value={requestAmount}
+                  placeholder="0.00"
+                  onChange={(event) => setRequestAmount(event.target.value)}
+                  className="w-full finance-input-professional text-3xl text-metric pl-14"
+                />
               </div>
-              <input
-                type="number"
-                value={amount}
-                onChange={(event) => setAmount(Number(event.target.value))}
-                className="rounded-2xl border border-slate-200 px-3 py-2 text-sm"
-              />
               <button
                 type="button"
+                disabled={!stripeConnected || !requestAmount}
                 onClick={() => setModalOpen(true)}
-                disabled={!canRequest}
-                className="rounded-2xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-2xl bg-slate-950 px-10 py-5 text-[11px] font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-slate-800 disabled:opacity-10 active:scale-95 shadow-lg shadow-slate-100"
               >
-                Submit request
+                Submit Protocol
               </button>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Payout requests above ₹5,000 will be reviewed manually.
+            <p className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center justify-between">
+              <span>Transferable Volume: {summary?.currency} {summary?.availableBalance?.toLocaleString() || "0.00"}</span>
+              <button onClick={() => setRequestAmount(summary?.availableBalance?.toString() || "")} className="text-indigo-600 hover:text-indigo-800 transition-colors">Apply Max</button>
             </p>
-            {successMessage && (
-              <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                <HiOutlineCheckCircle className="inline h-4 w-4" /> {successMessage}
-              </div>
-            )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white">
-            <div className="px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-400">
-              Payout history
+          <div className="finance-card rounded-2xl overflow-hidden border-slate-100">
+            <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <span className="text-sm font-bold text-slate-700">Settlement Audit Log</span>
+              <span className="text-xs text-slate-500 font-medium">Recent 50 Events</span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Request</th>
-                    <th className="px-4 py-3 text-left">Amount</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Requested</th>
-                    <th className="px-4 py-3 text-left">Notes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {historySeed.map((row) => (
-                    <tr key={row.id}>
-                      <td className="px-4 py-3 font-semibold text-slate-900">{row.id}</td>
-                      <td className="px-4 py-3">
-                        ₹{row.amount.toLocaleString("en-IN")}
-                      </td>
-                      <td className="px-4 py-3 capitalize text-slate-700">{row.status}</td>
-                      <td className="px-4 py-3">{row.requestedAt}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{row.note || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              title="Settlement Audit Log"
+              breadCrumbTitle="Finance / History"
+              data={payoutHistory}
+              loading={isTransactionsLoading}
+              columns={[
+                {
+                  key: "id",
+                  title: "Reference",
+                  render: (value: string) => (
+                    <span className="font-mono text-mono-finance text-[10px] text-slate-400">
+                      #{value.slice(0, 10).toUpperCase()}
+                    </span>
+                  ),
+                },
+                {
+                  key: "amount",
+                  title: "Volume",
+                  render: (value: any) => (
+                    <div className="font-black text-slate-950 text-mono-finance text-sm tracking-tight text-right pr-12">
+                      {summary?.currency} {parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </div>
+                  ),
+                },
+                {
+                  key: "status",
+                  title: "State",
+                  render: (value: string) => (
+                    <span className={`status-indicator ${
+                      value === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700' : 
+                      value === 'PENDING' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
+                    }`}>
+                      <span className={`w-1 h-1 rounded-full ${
+                         value === "CONFIRMED" ? "bg-emerald-500" : value === "PENDING" ? "bg-amber-500" : "bg-rose-500"
+                      }`} />
+                      {value}
+                    </span>
+                  ),
+                },
+                {
+                  key: "createdAt",
+                  title: "Logged",
+                  render: (value: string) => (
+                    <span className="text-slate-500 font-medium">
+                      {dayjs(value).format('DD MMM')}
+                    </span>
+                  ),
+                },
+                {
+                  key: "description",
+                  title: "Adjudication",
+                  render: (value: string) => (
+                    <span className="text-slate-400 font-medium italic truncate max-w-[120px]" title={value || "System Automated"}>
+                      {value || "System Automated"}
+                    </span>
+                  ),
+                },
+              ]}
+              selectable={false}
+              showSerialNumber={false}
+              className="finance-card rounded-2xl overflow-hidden border-slate-100"
+              noRecordText="No historical transfer events registered"
+            />
           </div>
         </div>
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Confirm payout</p>
-            <p className="mt-2 text-xl font-semibold text-slate-900">
-              Request ₹{amount.toLocaleString("en-IN")}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-[2px] animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+            <h3 className="text-2xl font-black text-slate-950 tracking-tighter">Authorize Transfer</h3>
+            <div className="mt-6 flex items-baseline gap-2 mb-2">
+               <span className="text-sm font-medium text-slate-400">{summary?.currency}</span>
+               <p className="text-4xl font-metric text-metric tracking-tighter">
+                 {parseFloat(requestAmount).toLocaleString() || "0.00"}
+               </p>
+            </div>
+            <p className="mt-4 text-[11px] text-slate-500 font-medium leading-relaxed mb-8">
+              Protocol will initiate an external sync with Stripe infrastructure. Funds will clear into the merchant account after treasury adjudication.
             </p>
-            <p className="mt-1 text-sm text-slate-600">
-              This payout will be processed to the connected Stripe account after verification.
-            </p>
-            <div className="mt-4 flex items-center justify-end gap-2">
+            <div className="flex flex-col gap-3">
               <button
                 type="button"
-                onClick={() => setModalOpen(false)}
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600"
+                disabled={isPayoutRequesting}
+                onClick={handleConfirm}
+                className="w-full rounded-2xl bg-slate-950 py-5 text-[11px] font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-slate-800 active:scale-95 shadow-xl shadow-slate-100 flex items-center justify-center gap-2"
               >
-                Cancel
+                {isPayoutRequesting ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
+                  <>
+                    <HiOutlineCheckCircle className="w-4 h-4" />
+                    Commit Transfer
+                  </>
+                )}
               </button>
               <button
                 type="button"
-                onClick={handleConfirm}
-                className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white"
+                onClick={() => setModalOpen(false)}
+                className="w-full rounded-2xl bg-slate-50 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
               >
-                Confirm request
+                 Abort Request
               </button>
             </div>
           </div>
