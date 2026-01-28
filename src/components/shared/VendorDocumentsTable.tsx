@@ -4,6 +4,7 @@ import {
   HiXMark,
 } from "react-icons/hi2";
 import { toast } from "react-hot-toast";
+import { useAppSelector } from "@/app/hooks";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -160,7 +161,18 @@ const VendorDocumentsTable = ({
   vendor = defaultVendor,
   registerUploadHandler,
 }: VendorDocumentsTableProps) => {
-  const { data: documents = [], isFetching } = useGetVendorKycDocumentsQuery();
+  const authUser = useAppSelector((state) => state.auth.user);
+  const hasVendorRole = Boolean(authUser?.roles?.includes("VENDOR"));
+  const shouldFetchDocuments = Boolean(authUser && hasVendorRole);
+
+  const {
+    data: documents = [],
+    isFetching,
+    isError,
+    error,
+  } = useGetVendorKycDocumentsQuery(undefined, {
+    skip: !shouldFetchDocuments,
+  });
   const [uploadVendorKycDocument, { isLoading: isUploading }] =
     useUploadVendorKycDocumentMutation();
   const [selectedType, setSelectedType] = useState<VendorKycDocumentType>(
@@ -170,7 +182,6 @@ const VendorDocumentsTable = ({
   const [isDragging, setIsDragging] = useState(false);
   const [activeDoc, setActiveDoc] = useState<VendorDoc | null>(null);
   const [viewDoc, setViewDoc] = useState<VendorDoc | null>(null);
-  const [approveMenuOpen, setApproveMenuOpen] = useState(false);
   const [approveReason, setApproveReason] = useState("");
   const [approveComment, setApproveComment] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -179,12 +190,21 @@ const VendorDocumentsTable = ({
 
   const vendorDocs = useMemo(() => mapKycDocuments(documents, vendor), [documents, vendor]);
 
-  useEffect(() => {
-    if (!approveMenuOpen) {
-      setApproveReason("");
-      setApproveComment("");
-    }
-  }, [approveMenuOpen]);
+  const normalizedQueryError = useMemo(() => {
+    if (!isError) return null;
+    return normalizeApiError(error, "Unable to load your documents.");
+  }, [error, isError]);
+
+  const vendorNotFound = normalizedQueryError?.formError === "VENDOR_NOT_FOUND";
+
+  const vendorIssueMessage = vendorNotFound
+    ? "We can’t find your vendor profile right now. Complete onboarding or contact support to proceed."
+    : !shouldFetchDocuments
+      ? "You need a verified vendor session to access KYC documents."
+      : undefined;
+
+  const generalQueryErrorMessage =
+    isError && !vendorNotFound ? normalizedQueryError?.toastMessage : undefined;
 
   useEffect(() => {
     if (registerUploadHandler) {
@@ -202,10 +222,12 @@ const VendorDocumentsTable = ({
         return;
       }
 
+      const vendorId="4338e9ec-5e00-4bb6-ba61-bd818f804587"
       try {
         for (const file of files) {
           const formData = new FormData();
           formData.append("type", selectedType);
+          formData.append("vendorId", vendorId);
           formData.append("file", file);
           await uploadVendorKycDocument(formData).unwrap();
         }
@@ -246,7 +268,7 @@ const VendorDocumentsTable = ({
   };
 
   const columns = [
-    { key: "id", header: "ID", width: "90px" },
+    // { key: "id", header: "ID", width: "90px" },
     {
       key: "vendor",
       header: "Vendor",
@@ -368,399 +390,418 @@ const VendorDocumentsTable = ({
           <Button
             className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
             onClick={() => setUploadOpen(true)}
+            disabled={!shouldFetchDocuments || Boolean(vendorIssueMessage) || isUploading}
           >
             Upload document
           </Button>
         </div>
       </div>
-      <VendorTable<VendorDoc>
-        columns={columns}
-        data={vendorDocs}
-        className={toolbarSkeleton ? "opacity-80" : undefined}
-        showToolbar={!toolbarSkeleton}
-      />
-      {uploadOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
-          onClick={() => setUploadOpen(false)}
-        >
-          <div
-            className="relative w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setUploadOpen(false)}
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
-            >
-              <HiXMark className="h-4 w-4" />
-            </button>
 
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 pb-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Documents & Verification</p>
-                <p className="text-xs text-gray-500">
-                  Upload and manage your business documents. Approved documents increase trust.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <img
-                  src={vendorAvatar}
-                  alt="Vendor profile"
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{vendor.name}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <span>ID: {vendor.id}</span>
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                      {vendorStatusLabel}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-gray-200 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">Upload a new document</p>
-                  <p className="text-xs text-gray-500">
-                    Business registration, insurance certificate, owner ID, tax documents (PDF, JPG, PNG)
-                  </p>
-                </div>
-                <Button
-                  className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                >
-                  {isUploading ? "Uploading…" : "Upload document"}
-                </Button>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <span className="text-xs font-semibold text-gray-500">Document type</span>
-                <Select
-                  value={selectedType}
-                  onValueChange={(value) => setSelectedType(value as VendorKycDocumentType)}
-                >
-                  <SelectTrigger className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="w-full rounded-2xl border border-gray-200 bg-white">
-                    {DOCUMENT_TYPES.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div
-                className={`mt-4 rounded-xl border border-dashed px-4 py-6 text-center text-xs ${
-                  isDragging
-                    ? "border-blue-400 bg-blue-50 text-blue-600"
-                    : "border-blue-200 bg-blue-50/30 text-gray-500"
-                }`}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    fileInputRef.current?.click();
-                  }
-                }}
-              >
-                Drag & drop files here, or click "Upload document"
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
-                multiple
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <div className="relative flex-1">
-                <input
-                  placeholder="Search documents..."
-                  className="h-10 w-full rounded-full border border-gray-200 pl-10 pr-4 text-xs text-gray-600 outline-none focus:border-blue-500"
-                />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <HiEllipsisHorizontal className="h-4 w-4 rotate-90" />
-                </span>
-              </div>
-              <Button variant="outline" className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50">
-                Status filter
-              </Button>
-              <Button variant="outline" className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50">
-                Type filter
-              </Button>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
-              <span className="font-semibold text-gray-700">Your documents</span>
-              <span>Last updated: today</span>
-            </div>
-
-            <div className="mt-3">
-              <VendorTable<VendorDoc> columns={columns} data={vendorDocs} showToolbar={false} />
-            </div>
-          </div>
+      {vendorIssueMessage ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/80 px-4 py-4 text-sm font-semibold text-rose-700">
+          {vendorIssueMessage}
         </div>
-      ) : null}
-      {activeDoc ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
-          onClick={() => setActiveDoc(null)}
-        >
-          <div
-            className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setActiveDoc(null)}
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
+      ) : (
+        <>
+          {generalQueryErrorMessage && (
+            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50/80 px-4 py-3 text-sm font-semibold text-rose-700">
+              {generalQueryErrorMessage}
+            </div>
+          )}
+
+          <VendorTable<VendorDoc>
+            columns={columns}
+            data={vendorDocs}
+            className={toolbarSkeleton ? "opacity-80" : undefined}
+            showToolbar={!toolbarSkeleton}
+          />
+
+          {uploadOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+              onClick={() => setUploadOpen(false)}
             >
-              <HiXMark className="h-4 w-4" />
-            </button>
+              <div
+                className="relative w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => setUploadOpen(false)}
+                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
+                >
+                  <HiXMark className="h-4 w-4" />
+                </button>
 
-            <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
-              <div className="bg-gray-100 p-4">
-                <img
-                  src={activeDoc.docImage}
-                  alt={`${activeDoc.vendor} document`}
-                  className="h-full max-h-[520px] w-full rounded-xl object-cover"
-                />
-              </div>
-
-              <div className="flex flex-col gap-5 mt-5 mb-5 ml-5 mr-5 bg-gray-50 p-6 rounded-2xl">
-                <div className="flex flex-col items-center text-center">
-                  <img
-                    src={activeDoc.avatar}
-                    alt={activeDoc.vendor}
-                    className="h-20 w-20 rounded-full border border-gray-200 object-cover"
-                  />
-                  <h3 className="mt-3 text-lg font-semibold text-gray-900">{activeDoc.vendor}</h3>
-                  <p className="text-sm text-gray-500">ID: {activeDoc.id}</p>
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 pb-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Documents & Verification</p>
+                    <p className="text-xs text-gray-500">
+                      Upload and manage your business documents. Approved documents increase trust.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={vendorAvatar}
+                      alt="Vendor profile"
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{vendor.name}</p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>ID: {vendor.id}</span>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                          {vendorStatusLabel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between text-gray-500">
-                    <span>Document type</span>
-                    <span className="font-medium text-gray-900">{activeDoc.docType}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-gray-500">
-                    <span>Category</span>
-                    <span className="font-medium text-gray-900">{activeDoc.category}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-gray-500">
-                    <span>Submitted</span>
-                    <span className="font-medium text-gray-900">
-                      {activeDoc.submitted} - {activeDoc.submittedTime}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-gray-500">
-                    <span>Status</span>
-                    <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusStyles(
-                        activeDoc.status,
-                      )}`}
+                <div className="mt-5 rounded-2xl border border-gray-200 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Upload a new document</p>
+                      <p className="text-xs text-gray-500">
+                        Business registration, insurance certificate, owner ID, tax documents (PDF, JPG, PNG)
+                      </p>
+                    </div>
+                    <Button
+                      className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
                     >
-                      {activeDoc.status}
-                    </span>
+                      {isUploading ? "Uploading…" : "Upload document"}
+                    </Button>
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700">Comment</label>
-                  <textarea
-                    placeholder="Add a note for this KYC review"
-                    value={approveComment}
-                    onChange={(event) => setApproveComment(event.target.value)}
-                    className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
-                  />
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">Reason *</label>
-                    <Select value={approveReason} onValueChange={(value) => setApproveReason(value)}>
-                      <SelectTrigger className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
-                        <SelectValue placeholder="Select a reason" />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <span className="text-xs font-semibold text-gray-500">Document type</span>
+                    <Select
+                      value={selectedType}
+                      onValueChange={(value) => setSelectedType(value as VendorKycDocumentType)}
+                    >
+                      <SelectTrigger className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="w-full rounded-2xl border border-gray-200 bg-white">
-                        <SelectItem value="valid">Document is valid</SelectItem>
-                        <SelectItem value="verified">Verified vendor</SelectItem>
-                        <SelectItem value="other">Other follow-up</SelectItem>
+                        {DOCUMENT_TYPES.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <p className="mt-2 text-xs text-gray-500">The selected reason is logged and shared with the vendor.</p>
                   </div>
-                </div>
-
-                <div className="mt-auto flex flex-wrap gap-3">
-                  <Button
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                    onClick={handleApprove}
-                    disabled={!approveReason}
+                  <div
+                    className={`mt-4 rounded-xl border border-dashed px-4 py-6 text-center text-xs ${
+                      isDragging
+                        ? "border-blue-400 bg-blue-50 text-blue-600"
+                        : "border-blue-200 bg-blue-50/30 text-gray-500"
+                    }`}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        fileInputRef.current?.click();
+                      }
+                    }}
                   >
-                    Approve
-                  </Button>
-                  <Button className="bg-red-500 text-white hover:bg-red-600">Decline</Button>
-                  <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50">
-                    Request reupload
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {viewDoc ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
-          onClick={() => setViewDoc(null)}
-        >
-          <div
-            className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="border-b border-gray-200 px-6 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={viewDoc.avatar}
-                    alt={viewDoc.vendor}
-                    className="h-10 w-10 rounded-full border border-gray-200 object-cover"
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{viewDoc.vendor}</p>
-                    <p className="text-xs text-gray-500">
-                      Vendor verification · Documents & audit trail
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles(
-                      viewDoc.status,
-                    )}`}
-                  >
-                    {viewDoc.status}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setViewDoc(null)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
-                  >
-                    <HiXMark className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-4 bg-gray-50 p-5 md:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">Uploaded documents</p>
-                    <p className="text-xs text-gray-500">
-                      {viewDoc.documents.length} files · Click a card to open viewer
-                    </p>
+                    Drag & drop files here, or click "Upload document"
                   </div>
                   <input
-                    placeholder="Search documents..."
-                    className="h-9 w-full max-w-[180px] rounded-full border border-gray-200 px-3 text-xs text-gray-600 outline-none focus:border-blue-500"
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileChange}
                   />
                 </div>
 
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {viewDoc.documents.map((doc) => (
-                    <div
-                      key={doc.name}
-                      className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-[10px] font-semibold text-gray-500">
-                          PDF
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-gray-900">{doc.name}</p>
-                          <p className="text-xs text-gray-500">PDF · 1.2 MB</p>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-                          Approved
-                        </span>
-                        <Button
-                          variant="outline"
-                          className="h-8 rounded-full border-gray-300 px-4 text-xs text-gray-600 hover:bg-gray-100"
-                        >
-                          View
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                <p className="text-sm font-semibold text-gray-900">Verification workflow</p>
-                <p className="text-xs text-gray-500">Progress and recorded actions</p>
-
-                <div className="mt-4 rounded-xl bg-gray-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-gray-500">Current status</p>
-                      <p className="text-sm font-semibold text-gray-900">{viewDoc.status}</p>
-                    </div>
-                    <span className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-1 text-xs font-semibold text-emerald-600">
-                      OK
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      placeholder="Search documents..."
+                      className="h-10 w-full rounded-full border border-gray-200 pl-10 pr-4 text-xs text-gray-600 outline-none focus:border-blue-500"
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <HiEllipsisHorizontal className="h-4 w-4 rotate-90" />
                     </span>
                   </div>
+                  <Button variant="outline" className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50">
+                    Status filter
+                  </Button>
+                  <Button variant="outline" className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50">
+                    Type filter
+                  </Button>
                 </div>
 
-                <div className="mt-4">
-                  <p className="text-xs font-semibold text-gray-700">Activity log</p>
-                  <div className="mt-3 space-y-4">
-                    {activityLogEntries.map((entry, index) => (
-                      <div key={`${entry.action}-${index}`} className="flex items-start gap-3">
-                        <div className="relative flex w-4 justify-center">
-                          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-slate-400" />
-                          {index < activityLogEntries.length - 1 ? (
-                            <span className="absolute left-1/2 top-4 h-6 w-px -translate-x-1/2 bg-gray-200" />
-                          ) : null}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{entry.action}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(entry.createdAt).toLocaleString("en-GB")}
-                          </p>
-                          {entry.comment && (
-                            <p className="text-xs text-gray-500">{entry.comment}</p>
-                          )}
-                        </div>
+                <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+                  <span className="font-semibold text-gray-700">Your documents</span>
+                  <span>Last updated: today</span>
+                </div>
+
+                <div className="mt-3">
+                  <VendorTable<VendorDoc> columns={columns} data={vendorDocs} showToolbar={false} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeDoc && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
+              onClick={() => setActiveDoc(null)}
+            >
+              <div
+                className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveDoc(null)}
+                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
+                >
+                  <HiXMark className="h-4 w-4" />
+                </button>
+
+                <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
+                  <div className="bg-gray-100 p-4">
+                    <img
+                      src={activeDoc.docImage}
+                      alt={`${activeDoc.vendor} document`}
+                      className="h-full max-h-[520px] w-full rounded-xl object-cover"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-5 mt-5 mb-5 ml-5 mr-5 bg-gray-50 p-6 rounded-2xl">
+                    <div className="flex flex-col items-center text-center">
+                      <img
+                        src={activeDoc.avatar}
+                        alt={activeDoc.vendor}
+                        className="h-20 w-20 rounded-full border border-gray-200 object-cover"
+                      />
+                      <h3 className="mt-3 text-lg font-semibold text-gray-900">{activeDoc.vendor}</h3>
+                      <p className="text-sm text-gray-500">ID: {activeDoc.id}</p>
+                    </div>
+
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Document type</span>
+                        <span className="font-medium text-gray-900">{activeDoc.docType}</span>
                       </div>
-                    ))}
-                    {!activityLogEntries.length && (
-                      <div className="text-xs text-gray-400">No activity recorded yet.</div>
-                    )}
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Category</span>
+                        <span className="font-medium text-gray-900">{activeDoc.category}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Submitted</span>
+                        <span className="font-medium text-gray-900">
+                          {activeDoc.submitted} - {activeDoc.submittedTime}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Status</span>
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusStyles(
+                            activeDoc.status,
+                          )}`}
+                        >
+                          {activeDoc.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium text-gray-700">Comment</label>
+                      <textarea
+                        placeholder="Add a note for this KYC review"
+                        value={approveComment}
+                        onChange={(event) => setApproveComment(event.target.value)}
+                        className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
+                      />
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700">Reason *</label>
+                        <Select value={approveReason} onValueChange={(value) => setApproveReason(value)}>
+                          <SelectTrigger className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
+                            <SelectValue placeholder="Select a reason" />
+                          </SelectTrigger>
+                          <SelectContent className="w-full rounded-2xl border border-gray-200 bg-white">
+                            <SelectItem value="valid">Document is valid</SelectItem>
+                            <SelectItem value="verified">Verified vendor</SelectItem>
+                            <SelectItem value="other">Other follow-up</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="mt-2 text-xs text-gray-500">The selected reason is logged and shared with the vendor.</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto flex flex-wrap gap-3">
+                      <Button
+                        className="bg-blue-600 text-white hover:bg-blue-700"
+                        onClick={handleApprove}
+                        disabled={!approveReason}
+                      >
+                        Approve
+                      </Button>
+                      <Button className="bg-red-500 text-white hover:bg-red-600">Decline</Button>
+                      <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50">
+                        Request reupload
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      ) : null}
+          )}
+
+          {viewDoc && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
+              onClick={() => setViewDoc(null)}
+            >
+              <div
+                className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="border-b border-gray-200 px-6 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={viewDoc.avatar}
+                        alt={viewDoc.vendor}
+                        className="h-10 w-10 rounded-full border border-gray-200 object-cover"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{viewDoc.vendor}</p>
+                        <p className="text-xs text-gray-500">
+                          Vendor verification · Documents & audit trail
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles(
+                          viewDoc.status,
+                        )}`}
+                      >
+                        {viewDoc.status}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setViewDoc(null)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
+                      >
+                        <HiXMark className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 bg-gray-50 p-5 md:grid-cols-[1.2fr_0.8fr]">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">Uploaded documents</p>
+                        <p className="text-xs text-gray-500">
+                          {viewDoc.documents.length} files · Click a card to open viewer
+                        </p>
+                      </div>
+                      <input
+                        placeholder="Search documents..."
+                        className="h-9 w-full max-w-[180px] rounded-full border border-gray-200 px-3 text-xs text-gray-600 outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {viewDoc.documents.map((doc) => (
+                        <div
+                          key={doc.name}
+                          className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-[10px] font-semibold text-gray-500">
+                              PDF
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-gray-900">{doc.name}</p>
+                              <p className="text-xs text-gray-500">PDF · 1.2 MB</p>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-2">
+                            <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+                              Approved
+                            </span>
+                            <Button
+                              variant="outline"
+                              className="h-8 rounded-full border-gray-300 px-4 text-xs text-gray-600 hover:bg-gray-100"
+                            >
+                              View
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <p className="text-sm font-semibold text-gray-900">Verification workflow</p>
+                    <p className="text-xs text-gray-500">Progress and recorded actions</p>
+
+                    <div className="mt-4 rounded-xl bg-gray-50 p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-500">Current status</p>
+                          <p className="text-sm font-semibold text-gray-900">{viewDoc.status}</p>
+                        </div>
+                        <span className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-1 text-xs font-semibold text-emerald-600">
+                          OK
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold text-gray-700">Activity log</p>
+                      <div className="mt-3 space-y-4">
+                        {activityLogEntries.map((entry, index) => (
+                          <div key={`${entry.action}-${index}`} className="flex items-start gap-3">
+                            <div className="relative flex w-4 justify-center">
+                              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-slate-400" />
+                              {index < activityLogEntries.length - 1 ? (
+                                <span className="absolute left-1/2 top-4 h-6 w-px -translate-x-1/2 bg-gray-200" />
+                              ) : null}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{entry.action}</p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(entry.createdAt).toLocaleString("en-GB")}
+                              </p>
+                              {entry.comment && (
+                                <p className="text-xs text-gray-500">{entry.comment}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {!activityLogEntries.length && (
+                          <div className="text-xs text-gray-400">No activity recorded yet.</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </>
   );
 };
