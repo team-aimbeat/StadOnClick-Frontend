@@ -167,6 +167,10 @@ const appRouter = createBrowserRouter([
             path: "support",
             element: <Navigate to="/admin/support/inbox" replace />,
           },
+           {
+            path: "compliance/kyc",
+            element: <AdminKycDocumentsPage />,
+          },
           {
             path: "support/dashboard",
             element: <SupportAdminDashboard />,
@@ -206,10 +210,7 @@ const appRouter = createBrowserRouter([
             element: <AdminDashboard />,
             errorElement: <ErrorPage />,
           },
-          {
-            path: "compliance/kyc",
-            element: <AdminKycDocumentsPage />,
-          },
+         
           {
             path: "catalog",
             element: <Navigate to="/admin/catalog/interests" replace />,

@@ -30,7 +30,6 @@ import foodImage from "@/assets/Images/food.jpg";
 import hotelImage from "@/assets/Images/home.jpg";
 import well from "@/assets/Images/well.jpg";
 
-
 type StepState = "idle" | "loading" | "success" | "error";
 
 type OfferingFormValues = {
@@ -82,18 +81,24 @@ const stateBadgeStyles: Record<StepState, string> = {
   error: "bg-rose-100 text-rose-700",
 };
 
-const masterServiceVisuals: Record<
-  string,
-  { src: string; alt: string }
-> = {
-  "experiences-activities": { src: eventImage, alt: "Experiences & activities" },
+const masterServiceVisuals: Record<string, { src: string; alt: string }> = {
+  "experiences-activities": {
+    src: eventImage,
+    alt: "Experiences & activities",
+  },
   "health-wellness": { src: wellnessImage, alt: "Health & wellness" },
   "kids-family": { src: familyImage, alt: "Kids & family" },
-  "learning-skill-development": { src: learnImage, alt: "Learning & skill development" },
+  "learning-skill-development": {
+    src: learnImage,
+    alt: "Learning & skill development",
+  },
   "home-personal-services": { src: homeImage, alt: "Home & personal services" },
   "travel-transportation": { src: travelImage, alt: "Travel & transportation" },
   "food-leisure": { src: foodImage, alt: "Food & leisure" },
-  "real-estate-local-support": { src: hotelImage, alt: "Real estate & local support" },
+  "real-estate-local-support": {
+    src: hotelImage,
+    alt: "Real estate & local support",
+  },
 };
 
 const categoryVisuals: Record<string, { src: string; alt: string }> = {
@@ -129,7 +134,10 @@ const categoryVisuals: Record<string, { src: string; alt: string }> = {
 
 const formatCurrency = (value: number | null | undefined) =>
   value != null
-    ? new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(value)
+    ? new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: "USD",
+      }).format(value)
     : "-";
 
 type VendorServiceDetails = {
@@ -143,15 +151,22 @@ type VendorServiceDetails = {
 const VendorServices = () => {
   const [selectedMasterServiceId, setSelectedMasterServiceId] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [selectedExistingOfferingId, setSelectedExistingOfferingId] = useState("");
+  const [selectedExistingOfferingId, setSelectedExistingOfferingId] =
+    useState("");
   const [enableSlots, setEnableSlots] = useState(false);
   const [enableRules, setEnableRules] = useState(false);
   const [slotFields, setSlotFields] = useState<SlotFields>(slotInitialState);
   const [ruleFields, setRuleFields] = useState<RuleFields>(ruleInitialState);
-  const [slotValidationError, setSlotValidationError] = useState<string | null>(null);
-  const [ruleValidationError, setRuleValidationError] = useState<string | null>(null);
+  const [slotValidationError, setSlotValidationError] = useState<string | null>(
+    null,
+  );
+  const [ruleValidationError, setRuleValidationError] = useState<string | null>(
+    null,
+  );
   const [generalError, setGeneralError] = useState<string | null>(null);
-  const [lastCreatedOfferingId, setLastCreatedOfferingId] = useState<string | null>(null);
+  const [lastCreatedOfferingId, setLastCreatedOfferingId] = useState<
+    string | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [offeringStep, setOfferingStep] = useState<StepState>("idle");
   const [slotStep, setSlotStep] = useState<StepState>("idle");
@@ -160,19 +175,23 @@ const VendorServices = () => {
   const [slotError, setSlotError] = useState<string | null>(null);
   const [ruleError, setRuleError] = useState<string | null>(null);
   const [createdServiceId, setCreatedServiceId] = useState<string | null>(null);
-const [isCreatingService, setIsCreatingService] = useState(false);
+  const [isCreatingService, setIsCreatingService] = useState(false);
 
-
-  const [vendorServiceDetails, setVendorServiceDetails] = useState<VendorServiceDetails>({
-    title: "",
-    description: "",
-    terms: "",
-    latitude: "",
-    longitude: "",
-  });
-  const [vendorServiceErrors, setVendorServiceErrors] = useState<Record<string, string>>({});
+  const [vendorServiceDetails, setVendorServiceDetails] =
+    useState<VendorServiceDetails>({
+      title: "",
+      description: "",
+      terms: "",
+      latitude: "",
+      longitude: "",
+    });
+  const [vendorServiceErrors, setVendorServiceErrors] = useState<
+    Record<string, string>
+  >({});
   const [vendorServiceStep, setVendorServiceStep] = useState<StepState>("idle");
-  const [vendorServiceError, setVendorServiceError] = useState<string | null>(null);
+  const [vendorServiceError, setVendorServiceError] = useState<string | null>(
+    null,
+  );
   const vendorId = useAppSelector((state) => state.auth.user?.id ?? "");
 
   const [createVendorService] = useCreateVendorServiceMutation();
@@ -194,14 +213,13 @@ const [isCreatingService, setIsCreatingService] = useState(false);
     skip: !selectedMasterServiceId,
   });
 
-const {
-  data: existingOfferings = [],
-  isFetching: isOfferingsFetching,
-  isError: offeringsError,
-} = useGetServiceOfferingsQuery(createdServiceId!, {
-  skip: !createdServiceId,
-});
-
+  const {
+    data: existingOfferings = [],
+    isFetching: isOfferingsFetching,
+    isError: offeringsError,
+  } = useGetServiceOfferingsQuery(createdServiceId!, {
+    skip: !createdServiceId,
+  });
 
   const { register, handleSubmit, formState, reset, setValue } =
     useForm<OfferingFormValues>({
@@ -218,7 +236,9 @@ const {
 
   const masterServiceOptions = useMemo(() => {
     if (!masterServices.length) return [];
-    return [...masterServices].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    return [...masterServices].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
+    );
   }, [masterServices]);
 
   const selectedMasterService = masterServiceOptions.find(
@@ -228,9 +248,9 @@ const {
     (category) => category.id === selectedCategoryId,
   );
 
-useEffect(() => {
-  setSelectedExistingOfferingId("");
-}, [createdServiceId]);
+  useEffect(() => {
+    setSelectedExistingOfferingId("");
+  }, [createdServiceId]);
 
   useEffect(() => {
     if (!selectedMasterServiceId) return;
@@ -254,7 +274,9 @@ useEffect(() => {
 
   useEffect(() => {
     if (!selectedExistingOfferingId) return;
-    const offering = existingOfferings.find((item) => item.id === selectedExistingOfferingId);
+    const offering = existingOfferings.find(
+      (item) => item.id === selectedExistingOfferingId,
+    );
     if (!offering) return;
     setValue("name", offering.name);
     setValue("basePrice", offering.basePrice);
@@ -429,7 +451,9 @@ useEffect(() => {
       return;
     }
     if (!vendorId) {
-      setGeneralError("Unable to resolve vendor session. Please reauthenticate.");
+      setGeneralError(
+        "Unable to resolve vendor session. Please reauthenticate.",
+      );
       return;
     }
 
@@ -442,23 +466,24 @@ useEffect(() => {
 
     let createdOfferingId: string | null = null;
     try {
-     const vendorServicePayload = {
-  vendorId: '4338e9ec-5e00-4bb6-ba61-bd818f804587', // ✅ REQUIRED
-  categoryId: selectedCategoryId,
-  title: vendorServiceDetails.title.trim(),
-  description: vendorServiceDetails.description.trim(),
-  terms: vendorServiceDetails.terms.trim(),
-  latitude: Number(vendorServiceDetails.latitude),
-  longitude: Number(vendorServiceDetails.longitude),
-};
+      const vendorServicePayload = {
+        vendorId: "953771d3-dfe7-4135-9c54-f6f0df61e250", // ✅ REQUIRED
+        categoryId: selectedCategoryId,
+        title: vendorServiceDetails.title.trim(),
+        description: vendorServiceDetails.description.trim(),
+        terms: vendorServiceDetails.terms.trim(),
+        latitude: Number(vendorServiceDetails.latitude),
+        longitude: Number(vendorServiceDetails.longitude),
+      };
 
-const createdVendorService = await createVendorService(vendorServicePayload).unwrap();
-setCreatedServiceId(createdVendorService.id);
+      const createdVendorService =
+        await createVendorService(vendorServicePayload).unwrap();
+      setCreatedServiceId(createdVendorService.id);
 
       setVendorServiceStep("success");
 
       const payload: CreateOfferingPayload = {
-         serviceId: createdServiceId!,
+        serviceId: createdServiceId!,
         name: values.name.trim(),
         basePrice: values.basePrice,
         salePrice: values.salePrice,
@@ -517,13 +542,19 @@ setCreatedServiceId(createdVendorService.id);
       setOfferingError(null);
     } catch (error) {
       if (vendorServiceStep === "loading") {
-        const normalized = normalizeApiError(error, "Unable to create vendor service");
+        const normalized = normalizeApiError(
+          error,
+          "Unable to create vendor service",
+        );
         setVendorServiceError(normalized.toastMessage);
         setVendorServiceStep("error");
         setGeneralError(normalized.toastMessage);
         toast.error(normalized.toastMessage, { id: "vendor-service-error" });
       } else {
-        const normalized = normalizeApiError(error, "Unable to create offering");
+        const normalized = normalizeApiError(
+          error,
+          "Unable to create offering",
+        );
         setGeneralError(normalized.toastMessage);
         setOfferingError(normalized.toastMessage);
         setOfferingStep("error");
@@ -573,10 +604,12 @@ setCreatedServiceId(createdVendorService.id);
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
           Vendor Experience
         </p>
-        <h1 className="text-3xl font-semibold text-slate-900">Create Offerings</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">
+          Create Offerings
+        </h1>
         <p className="text-sm text-slate-500">
-          Work through master services, categories, and offerings in order. Each section updates
-          responsively to keep the workflow focused.
+          Work through master services, categories, and offerings in order. Each
+          section updates responsively to keep the workflow focused.
         </p>
       </div>
 
@@ -586,84 +619,95 @@ setCreatedServiceId(createdVendorService.id);
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
               Master service
             </p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-900">Select your core offering</h2>
+            <h2 className="mt-2 text-xl font-semibold text-slate-900">
+              Select your core offering
+            </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Choose a master service card in the section below to unlock dependent categories,
-              offerings, and slot/rule configuration. Images keep the layout familiar while the
-              form lets you capture pricing details.
+              Choose a master service card in the section below to unlock
+              dependent categories, offerings, and slot/rule configuration.
+              Images keep the layout familiar while the form lets you capture
+              pricing details.
             </p>
             <div className="mt-4 flex flex-wrap gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-              <span className="rounded-full border border-slate-200 px-3 py-1">Responsive</span>
-              <span className="rounded-full border border-slate-200 px-3 py-1">Accessible</span>
-              <span className="rounded-full border border-slate-200 px-3 py-1">Master-focused</span>
+              <span className="rounded-full border border-slate-200 px-3 py-1">
+                Responsive
+              </span>
+              <span className="rounded-full border border-slate-200 px-3 py-1">
+                Accessible
+              </span>
+              <span className="rounded-full border border-slate-200 px-3 py-1">
+                Master-focused
+              </span>
             </div>
 
             <div className="mt-5">
-                     {isMasterLoading ? (
-          <div className="grid gap-3 mt-10 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 animate-pulse"
-              >
-                <div className="h-12 w-12 rounded-full bg-slate-200" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 w-20 rounded-full bg-slate-200" />
-                  <div className="h-2 w-16 rounded-full bg-slate-200" />
+              {isMasterLoading ? (
+                <div className="grid gap-3 mt-10 sm:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 animate-pulse"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-slate-200" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-20 rounded-full bg-slate-200" />
+                        <div className="h-2 w-16 rounded-full bg-slate-200" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr">
-            {masterServiceOptions.map((service) => {
-              const isSelected = service.id === selectedMasterServiceId;
-              const visual = masterServiceVisuals[service.slug];
-              const imageSrc = visual?.src ?? swell;
-              const imageAlt = visual?.alt ?? service.name;
-              return (
-                <button
-                  key={service.id}
-                  type="button"
-                  onClick={() => setSelectedMasterServiceId(service.id)}
-                  className={`flex h-full w-full flex-col gap-3 rounded-[24px] border bg-white px-3 py-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr">
+                  {masterServiceOptions.map((service) => {
+                    const isSelected = service.id === selectedMasterServiceId;
+                    const visual = masterServiceVisuals[service.slug];
+                    const imageSrc = visual?.src ?? swell;
+                    const imageAlt = visual?.alt ?? service.name;
+                    return (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => setSelectedMasterServiceId(service.id)}
+                        className={`flex h-full w-full flex-col gap-3 rounded-[24px] border bg-white px-3 py-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
                     ${isSelected ? "border-blue-500 shadow-[0_12px_30px_rgba(59,130,246,0.15)]" : "border-slate-200 hover:border-slate-300"}`}
-                  aria-pressed={isSelected}
-                >
-                  <div className="h-32 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100">
-                    <img
-                      src={imageSrc}
-                      alt={imageAlt}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="space-y-0.5 px-1">
-                    <p className="truncate text-base font-semibold text-slate-900">
-                      {service.name}
-                    </p>
-                    <p className="truncate text-[11px] text-slate-500">
-                      {service.slug}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
+                        aria-pressed={isSelected}
+                      >
+                        <div className="h-32 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100">
+                          <img
+                            src={imageSrc}
+                            alt={imageAlt}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="space-y-0.5 px-1">
+                          <p className="truncate text-base font-semibold text-slate-900">
+                            {service.name}
+                          </p>
+                          <p className="truncate text-[11px] text-slate-500">
+                            {service.slug}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-         
           </div>
-        <div className="mt-4 ml-4">
-          <MasterServiceHero service={selectedMasterService} />
-        </div>
+          <div className="mt-4 ml-4">
+            <MasterServiceHero service={selectedMasterService} />
+          </div>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
         <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-          <form className="space-y-6" onSubmit={handleCreateOffering} noValidate>
+          <form
+            className="space-y-6"
+            onSubmit={handleCreateOffering}
+            noValidate
+          >
             <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-slate-700">Category</p>
@@ -683,39 +727,43 @@ setCreatedServiceId(createdVendorService.id);
                   </div>
                 ) : categoryOptions.length > 0 ? (
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {categoryOptions.map((category) => {
-                    const isSelected = category.id === selectedCategoryId;
-                    const masterVisual =
-                      selectedMasterService && masterServiceVisuals[selectedMasterService.slug];
-                    const visual = categoryVisuals[category.slug] ?? masterVisual;
-                    const imageSrc = visual?.src ?? well;
-                    const imageAlt = visual?.alt ?? category.name;
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => setSelectedCategoryId(category.id)}
-                        className={`rounded-2xl border px-3 py-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
+                    {categoryOptions.map((category) => {
+                      const isSelected = category.id === selectedCategoryId;
+                      const masterVisual =
+                        selectedMasterService &&
+                        masterServiceVisuals[selectedMasterService.slug];
+                      const visual =
+                        categoryVisuals[category.slug] ?? masterVisual;
+                      const imageSrc = visual?.src ?? well;
+                      const imageAlt = visual?.alt ?? category.name;
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => setSelectedCategoryId(category.id)}
+                          className={`rounded-2xl border px-3 py-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
                             ${isSelected ? "border-blue-500 bg-blue-50 text-slate-900" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}
-                        aria-pressed={isSelected}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                            <img
-                              src={imageSrc}
-                              alt={imageAlt}
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
+                          aria-pressed={isSelected}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                              <img
+                                src={imageSrc}
+                                alt={imageAlt}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div>
+                              <p className="font-semibold">{category.name}</p>
+                              <p className="text-xs text-slate-500">
+                                {category.slug}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-semibold">{category.name}</p>
-                            <p className="text-xs text-slate-500">{category.slug}</p>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-xs text-slate-500">
@@ -723,7 +771,9 @@ setCreatedServiceId(createdVendorService.id);
                   </p>
                 )
               ) : (
-                <p className="text-xs text-slate-500">Choose a master service first.</p>
+                <p className="text-xs text-slate-500">
+                  Choose a master service first.
+                </p>
               )}
               {categoryError && (
                 <p className="text-xs text-rose-600">
@@ -732,137 +782,143 @@ setCreatedServiceId(createdVendorService.id);
               )}
             </div>
 
+            {/* Vendor Service Form */}
+            <section className="space-y-4 rounded-2xl border p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    Vendor service details
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    This creates the vendor-level service before adding
+                    offerings.
+                  </p>
+                </div>
 
-{/* Vendor Service Form */}
-<section className="space-y-4 rounded-2xl border p-4">
-  <div className="flex items-center justify-between">
-    <div>
-      <h3 className="text-sm font-semibold text-slate-900">
-        Vendor service details
-      </h3>
-      <p className="text-xs text-slate-500">
-        This creates the vendor-level service before adding offerings.
-      </p>
-    </div>
+                {createdServiceId && (
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    Service created
+                  </span>
+                )}
+              </div>
 
-    {createdServiceId && (
-      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-        Service created
-      </span>
-    )}
-  </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <input
+                  type="text"
+                  placeholder="Service title *"
+                  value={vendorServiceDetails.title}
+                  onChange={(e) =>
+                    handleVendorServiceDetailChange("title", e.target.value)
+                  }
+                  className="rounded-xl border px-3 py-2 text-sm"
+                />
 
-  <div className="grid gap-4 md:grid-cols-2">
-    <input
-      type="text"
-      placeholder="Service title *"
-      value={vendorServiceDetails.title}
-      onChange={(e) =>
-        handleVendorServiceDetailChange("title", e.target.value)
-      }
-      className="rounded-xl border px-3 py-2 text-sm"
-    />
+                <input
+                  type="text"
+                  placeholder="Latitude *"
+                  value={vendorServiceDetails.latitude}
+                  onChange={(e) =>
+                    handleVendorServiceDetailChange("latitude", e.target.value)
+                  }
+                  className="rounded-xl border px-3 py-2 text-sm"
+                />
 
-    <input
-      type="text"
-      placeholder="Latitude *"
-      value={vendorServiceDetails.latitude}
-      onChange={(e) =>
-        handleVendorServiceDetailChange("latitude", e.target.value)
-      }
-      className="rounded-xl border px-3 py-2 text-sm"
-    />
+                <input
+                  type="text"
+                  placeholder="Longitude *"
+                  value={vendorServiceDetails.longitude}
+                  onChange={(e) =>
+                    handleVendorServiceDetailChange("longitude", e.target.value)
+                  }
+                  className="rounded-xl border px-3 py-2 text-sm"
+                />
+              </div>
 
-    <input
-      type="text"
-      placeholder="Longitude *"
-      value={vendorServiceDetails.longitude}
-      onChange={(e) =>
-        handleVendorServiceDetailChange("longitude", e.target.value)
-      }
-      className="rounded-xl border px-3 py-2 text-sm"
-    />
-  </div>
+              <textarea
+                placeholder="Service description *"
+                value={vendorServiceDetails.description}
+                onChange={(e) =>
+                  handleVendorServiceDetailChange("description", e.target.value)
+                }
+                className="min-h-[90px] w-full rounded-xl border px-3 py-2 text-sm"
+              />
 
-  <textarea
-    placeholder="Service description *"
-    value={vendorServiceDetails.description}
-    onChange={(e) =>
-      handleVendorServiceDetailChange("description", e.target.value)
-    }
-    className="min-h-[90px] w-full rounded-xl border px-3 py-2 text-sm"
-  />
+              <textarea
+                placeholder="Terms & conditions *"
+                value={vendorServiceDetails.terms}
+                onChange={(e) =>
+                  handleVendorServiceDetailChange("terms", e.target.value)
+                }
+                className="min-h-[70px] w-full rounded-xl border px-3 py-2 text-sm"
+              />
 
-  <textarea
-    placeholder="Terms & conditions *"
-    value={vendorServiceDetails.terms}
-    onChange={(e) =>
-      handleVendorServiceDetailChange("terms", e.target.value)
-    }
-    className="min-h-[70px] w-full rounded-xl border px-3 py-2 text-sm"
-  />
+              <button
+                type="button"
+                disabled={isCreatingService || !!createdServiceId}
+                onClick={async () => {
+                  if (!validateVendorServiceDetails()) {
+                    setGeneralError("Complete vendor service details first.");
+                    return;
+                  }
 
-  <button
-    type="button"
-    disabled={isCreatingService || !!createdServiceId}
-    onClick={async () => {
-      if (!validateVendorServiceDetails()) {
-        setGeneralError("Complete vendor service details first.");
-        return;
-      }
+                  try {
+                    setIsCreatingService(true);
 
-      try {
-        setIsCreatingService(true);
+                    const payload = {
+                      vendorId: "953771d3-dfe7-4135-9c54-f6f0df61e250",
+                      categoryId: selectedCategoryId,
+                      title: vendorServiceDetails.title.trim(),
+                      description: vendorServiceDetails.description.trim(),
+                      terms: vendorServiceDetails.terms.trim(),
+                      latitude: Number(vendorServiceDetails.latitude),
+                      longitude: Number(vendorServiceDetails.longitude),
+                    };
 
-        const payload = {
-          vendorId:'4338e9ec-5e00-4bb6-ba61-bd818f804587',
-          categoryId: selectedCategoryId,
-          title: vendorServiceDetails.title.trim(),
-          description: vendorServiceDetails.description.trim(),
-          terms: vendorServiceDetails.terms.trim(),
-          latitude: Number(vendorServiceDetails.latitude),
-          longitude: Number(vendorServiceDetails.longitude),
-        };
+                    const created = await createVendorService(payload).unwrap();
+                    setCreatedServiceId(created.id);
 
-        const created = await createVendorService(payload).unwrap();
-        setCreatedServiceId(created.id);
-
-        toast.success("Vendor service created");
-      } catch (error) {
-        toast.error(normalizeApiError(error).toastMessage);
-      } finally {
-        setIsCreatingService(false);
-      }
-    }}
-    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
-  >
-    {isCreatingService ? "Creating service..." : "Create vendor service"}
-  </button>
-</section>
-
+                    toast.success("Vendor service created");
+                  } catch (error) {
+                    toast.error(normalizeApiError(error).toastMessage);
+                  } finally {
+                    setIsCreatingService(false);
+                  }
+                }}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
+              >
+                {isCreatingService
+                  ? "Creating service..."
+                  : "Create vendor service"}
+              </button>
+            </section>
 
             <div className="space-y-2">
-              <label htmlFor="existing-offering" className="text-sm font-semibold text-slate-700">
+              <label
+                htmlFor="existing-offering"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Basic offerings (optional)
               </label>
               <select
                 id="existing-offering"
                 value={selectedExistingOfferingId}
-                onChange={(event) => setSelectedExistingOfferingId(event.target.value)}
-               disabled={!createdServiceId}
+                onChange={(event) =>
+                  setSelectedExistingOfferingId(event.target.value)
+                }
+                disabled={!createdServiceId}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
               >
-               <option value="">
-  {createdServiceId
-    ? isOfferingsFetching
-      ? "Loading offerings..."
-      : "Select an existing offering to prefill"
-    : "Create vendor service first"}
-</option>
+                <option value="">
+                  {createdServiceId
+                    ? isOfferingsFetching
+                      ? "Loading offerings..."
+                      : "Select an existing offering to prefill"
+                    : "Create vendor service first"}
+                </option>
 
                 {existingOfferings.map((offering) => (
                   <option key={offering.id} value={offering.id}>
-                      {offering.name} - {formatCurrency(offering.salePrice)}
+                    {offering.name} - {formatCurrency(offering.salePrice)}
                   </option>
                 ))}
               </select>
@@ -872,7 +928,8 @@ setCreatedServiceId(createdVendorService.id);
                 </p>
               )}
               <p className="text-xs text-slate-500">
-                Only the offering ID is stored internally; select one to reuse its values.
+                Only the offering ID is stored internally; select one to reuse
+                its values.
               </p>
             </div>
 
@@ -884,7 +941,9 @@ setCreatedServiceId(createdVendorService.id);
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">Offering name *</span>
+                <span className="font-semibold text-slate-600">
+                  Offering name *
+                </span>
                 <input
                   type="text"
                   {...register("name", { required: "Offerings need a name." })}
@@ -897,7 +956,9 @@ setCreatedServiceId(createdVendorService.id);
               </label>
 
               <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">Base price *</span>
+                <span className="font-semibold text-slate-600">
+                  Base price *
+                </span>
                 <input
                   type="number"
                   step="0.01"
@@ -910,12 +971,16 @@ setCreatedServiceId(createdVendorService.id);
                   placeholder="500"
                 />
                 {errors.basePrice && (
-                  <p className="text-xs text-rose-600">{errors.basePrice.message}</p>
+                  <p className="text-xs text-rose-600">
+                    {errors.basePrice.message}
+                  </p>
                 )}
               </label>
 
               <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">Sale price *</span>
+                <span className="font-semibold text-slate-600">
+                  Sale price *
+                </span>
                 <input
                   type="number"
                   step="0.01"
@@ -928,12 +993,16 @@ setCreatedServiceId(createdVendorService.id);
                   placeholder="450"
                 />
                 {errors.salePrice && (
-                  <p className="text-xs text-rose-600">{errors.salePrice.message}</p>
+                  <p className="text-xs text-rose-600">
+                    {errors.salePrice.message}
+                  </p>
                 )}
               </label>
 
               <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">Max quantity</span>
+                <span className="font-semibold text-slate-600">
+                  Max quantity
+                </span>
                 <input
                   type="number"
                   {...register("maxQuantity", {
@@ -944,7 +1013,9 @@ setCreatedServiceId(createdVendorService.id);
                   placeholder="Optional"
                 />
                 {errors.maxQuantity && (
-                  <p className="text-xs text-rose-600">{errors.maxQuantity.message}</p>
+                  <p className="text-xs text-rose-600">
+                    {errors.maxQuantity.message}
+                  </p>
                 )}
               </label>
             </div>
@@ -966,32 +1037,44 @@ setCreatedServiceId(createdVendorService.id);
               {enableSlots && (
                 <div className="grid gap-4 md:grid-cols-3">
                   <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">Start time *</span>
+                    <span className="font-semibold text-slate-600">
+                      Start time *
+                    </span>
                     <input
                       type="datetime-local"
                       value={slotFields.startTime}
-                      onChange={(event) => handleSlotFieldUpdate("startTime", event.target.value)}
+                      onChange={(event) =>
+                        handleSlotFieldUpdate("startTime", event.target.value)
+                      }
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
                       required
                     />
                   </label>
                   <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">End time *</span>
+                    <span className="font-semibold text-slate-600">
+                      End time *
+                    </span>
                     <input
                       type="datetime-local"
                       value={slotFields.endTime}
-                      onChange={(event) => handleSlotFieldUpdate("endTime", event.target.value)}
+                      onChange={(event) =>
+                        handleSlotFieldUpdate("endTime", event.target.value)
+                      }
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
                       required
                     />
                   </label>
                   <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">Capacity *</span>
+                    <span className="font-semibold text-slate-600">
+                      Capacity *
+                    </span>
                     <input
                       type="number"
                       min="1"
                       value={slotFields.capacity}
-                      onChange={(event) => handleSlotFieldUpdate("capacity", event.target.value)}
+                      onChange={(event) =>
+                        handleSlotFieldUpdate("capacity", event.target.value)
+                      }
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
                       required
                     />
@@ -1015,16 +1098,21 @@ setCreatedServiceId(createdVendorService.id);
                 Enable rules
               </label>
               <p className="text-xs text-slate-500">
-                Rules do not rely on the slot ID-only the offering ID returned in step 1.
+                Rules do not rely on the slot ID-only the offering ID returned
+                in step 1.
               </p>
 
               {enableRules && (
                 <div className="space-y-3">
                   <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">Rule type *</span>
+                    <span className="font-semibold text-slate-600">
+                      Rule type *
+                    </span>
                     <select
                       value={ruleFields.type}
-                      onChange={(event) => handleRuleFieldUpdate("type", event.target.value)}
+                      onChange={(event) =>
+                        handleRuleFieldUpdate("type", event.target.value)
+                      }
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
                     >
                       <option value="">Select a rule type</option>
@@ -1036,10 +1124,14 @@ setCreatedServiceId(createdVendorService.id);
                     </select>
                   </label>
                   <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">Value *</span>
+                    <span className="font-semibold text-slate-600">
+                      Value *
+                    </span>
                     <textarea
                       value={ruleFields.value}
-                      onChange={(event) => handleRuleFieldUpdate("value", event.target.value)}
+                      onChange={(event) =>
+                        handleRuleFieldUpdate("value", event.target.value)
+                      }
                       className="min-h-[96px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
                       placeholder="Describe what customers should know about this rule."
                       required
@@ -1055,17 +1147,20 @@ setCreatedServiceId(createdVendorService.id);
 
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <p className="text-base font-semibold text-slate-900">Summary</p>
+                <p className="text-base font-semibold text-slate-900">
+                  Summary
+                </p>
                 <span className="text-xs text-slate-500">
                   Sequential, transactional API calls.
                 </span>
               </div>
-              <p className="text-xs text-slate-500">All fields marked with * are required.</p>
+              <p className="text-xs text-slate-500">
+                All fields marked with * are required.
+              </p>
             </div>
 
             <button
               type="submit"
-            
               className="w-full rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
             >
               {isSubmitting ? "Processing..." : "Create offering & extras"}
@@ -1087,7 +1182,9 @@ setCreatedServiceId(createdVendorService.id);
           {lastCreatedOfferingId && (
             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600">
               Latest offering ID:{" "}
-              <span className="font-semibold text-slate-900">{lastCreatedOfferingId}</span>
+              <span className="font-semibold text-slate-900">
+                {lastCreatedOfferingId}
+              </span>
             </div>
           )}
         </section>
@@ -1104,21 +1201,29 @@ type StepStatusProps = {
   onRetry?: () => void;
 };
 
-const StepStatus = ({ title, state, description, error, onRetry }: StepStatusProps) => (
+const StepStatus = ({
+  title,
+  state,
+  description,
+  error,
+  onRetry,
+}: StepStatusProps) => (
   <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
     <div className="flex items-start justify-between gap-3">
       <div>
         <p className="text-sm font-semibold text-slate-900">{title}</p>
         {description && <p className="text-xs text-slate-500">{description}</p>}
       </div>
-      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${stateBadgeStyles[state]}`}>
+      <span
+        className={`rounded-full px-3 py-1 text-xs font-semibold ${stateBadgeStyles[state]}`}
+      >
         {state === "idle"
           ? "Pending"
           : state === "loading"
-          ? "Working"
-          : state === "success"
-          ? "Done"
-          : "Failed"}
+            ? "Working"
+            : state === "success"
+              ? "Done"
+              : "Failed"}
       </span>
     </div>
     {error && (
@@ -1138,14 +1243,14 @@ const StepStatus = ({ title, state, description, error, onRetry }: StepStatusPro
   </div>
 );
 
-
-
 type MasterServiceHeroProps = {
   service?: ServiceMasterCategory | null;
 };
 
 const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
-  const visual = service ? masterServiceVisuals[service.slug] : masterServiceVisuals["experiences-activities"];
+  const visual = service
+    ? masterServiceVisuals[service.slug]
+    : masterServiceVisuals["experiences-activities"];
   const heroImage = visual?.src ?? eventImage;
   const heroLabel = service ? service.name : "Select a master service";
   const heroSlug = service ? service.slug : "master service";
@@ -1175,9 +1280,15 @@ const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
         </div>
       </div>
       <div className="mt-4">
-        <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Master service</p>
-        <h3 className="mt-1 text-xl font-semibold text-slate-900">{heroLabel}</h3>
-        <p className="text-sm text-slate-500">{heroSlug.replaceAll("-", " ")}</p>
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-400">
+          Master service
+        </p>
+        <h3 className="mt-1 text-xl font-semibold text-slate-900">
+          {heroLabel}
+        </h3>
+        <p className="text-sm text-slate-500">
+          {heroSlug.replaceAll("-", " ")}
+        </p>
         <p className="mt-2 text-sm text-slate-600">
           {service
             ? "This showcase panel highlights the core service you selected before you configure offerings."

@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  HiEllipsisHorizontal,
-  HiXMark,
-} from "react-icons/hi2";
+import { HiEllipsisHorizontal, HiXMark } from "react-icons/hi2";
 import { toast } from "react-hot-toast";
 import { useAppSelector } from "@/app/hooks";
 
@@ -34,6 +31,8 @@ import {
   VendorKycDocumentType,
 } from "@/services/vendorKycApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
+import { useGetMeQuery } from "@/features/auth/api/authApi";
+import { TbActivityHeartbeat } from "react-icons/tb";
 
 export type VendorProfile = {
   name: string;
@@ -92,7 +91,9 @@ const statusStyles = (status: VendorDoc["status"]) => {
   return "bg-blue-100 text-blue-700";
 };
 
-const formatDocumentStatus = (status: VendorKycDocumentStatus): VendorDoc["status"] => {
+const formatDocumentStatus = (
+  status: VendorKycDocumentStatus,
+): VendorDoc["status"] => {
   if (status === "APPROVED") {
     return "Completed";
   }
@@ -110,7 +111,10 @@ const defaultVendor: VendorProfile = {
   verified: true,
 };
 
-const mapKycDocuments = (docs: VendorKycDocument[], vendor: VendorProfile): VendorDoc[] =>
+const mapKycDocuments = (
+  docs: VendorKycDocument[],
+  vendor: VendorProfile,
+): VendorDoc[] =>
   docs.map((doc) => {
     const typeLabel = documentTypeLabels[doc.type] ?? doc.type;
     const createdAt = new Date(doc.submittedAt);
@@ -188,7 +192,10 @@ const VendorDocumentsTable = ({
   const vendorAvatar = vendor.avatar ?? profile7;
   const vendorStatusLabel = vendor.verified ? "Verified" : "Pending";
 
-  const vendorDocs = useMemo(() => mapKycDocuments(documents, vendor), [documents, vendor]);
+  const vendorDocs = useMemo(
+    () => mapKycDocuments(documents, vendor),
+    [documents, vendor],
+  );
 
   const normalizedQueryError = useMemo(() => {
     if (!isError) return null;
@@ -222,7 +229,7 @@ const VendorDocumentsTable = ({
         return;
       }
 
-      const vendorId="4338e9ec-5e00-4bb6-ba61-bd818f804587"
+      const vendorId = "953771d3-dfe7-4135-9c54-f6f0df61e250";
       try {
         for (const file of files) {
           const formData = new FormData();
@@ -234,7 +241,10 @@ const VendorDocumentsTable = ({
         toast.success("Document uploaded successfully.");
         setUploadOpen(false);
       } catch (error) {
-        const normalized = normalizeApiError(error, "Unable to upload document");
+        const normalized = normalizeApiError(
+          error,
+          "Unable to upload document",
+        );
         toast.error(normalized.toastMessage);
       }
     },
@@ -280,7 +290,9 @@ const VendorDocumentsTable = ({
             alt={row.vendor}
             className="w-8 h-8 rounded-full border border-gray-200"
           />
-          <span className="font-medium text-gray-900 dark:text-gray-100">{row.vendor}</span>
+          <span className="font-medium text-gray-900 dark:text-gray-100">
+            {row.vendor}
+          </span>
         </div>
       ),
     },
@@ -304,7 +316,9 @@ const VendorDocumentsTable = ({
       header: "Submitted",
       render: (row: VendorDoc) => (
         <div>
-          <div className="text-gray-900 dark:text-gray-100">{row.submitted}</div>
+          <div className="text-gray-900 dark:text-gray-100">
+            {row.submitted}
+          </div>
           <div className="text-xs text-gray-400">{row.submittedTime}</div>
         </div>
       ),
@@ -354,9 +368,21 @@ const VendorDocumentsTable = ({
     },
   ];
 
-  const activityLogEntries = useMemo(() => viewDoc?.auditTrail ?? [], [viewDoc]);
+  const activityLogEntries = useMemo(
+    () => viewDoc?.auditTrail ?? [],
+    [viewDoc],
+  );
 
   const toolbarSkeleton = isFetching && vendorDocs.length === 0;
+const { data } = useGetMeQuery();
+const user = data?.user;
+
+const VendorProfile:any = {
+  id: user?.id,
+  name: user?.displayName ?? "Vendor",
+  avatar: user?.profileImageUrl ?? profile7,
+    email: user?.email ?? "Vendor",
+};
 
   return (
     <>
@@ -364,25 +390,29 @@ const VendorDocumentsTable = ({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-col gap-3">
             <div>
-              <p className="text-sm font-semibold text-gray-900">Documents & Verification</p>
-              <p className="text-xs text-gray-500">Upload and manage your business documents.</p>
+              <p className="text-sm font-semibold text-gray-900">
+                Documents & Verification
+              </p>
+              <p className="text-xs text-gray-500">
+                Upload and manage your business documents.
+              </p>
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-500">
               <img
-                src={vendorAvatar}
-                alt={vendor.name}
+                src={VendorProfile.avatar}
+                alt={VendorProfile.name}
                 className="h-10 w-10 rounded-full border border-gray-200 object-cover"
               />
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {vendor.name}
+                  {VendorProfile.name}
                   <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
                     {vendorStatusLabel}
                   </span>
                 </p>
                 <p className="text-xs text-gray-400">
-                  ID: {vendor.id}
-                  {vendor.location ? ` · ${vendor.location}` : ""}
+                  Email: {VendorProfile.email}
+                  {VendorProfile.location ? ` · ${VendorProfile.location}` : ""}
                 </p>
               </div>
             </div>
@@ -390,7 +420,11 @@ const VendorDocumentsTable = ({
           <Button
             className="rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
             onClick={() => setUploadOpen(true)}
-            disabled={!shouldFetchDocuments || Boolean(vendorIssueMessage) || isUploading}
+            disabled={
+              !shouldFetchDocuments ||
+              Boolean(vendorIssueMessage) ||
+              isUploading
+            }
           >
             Upload document
           </Button>
@@ -435,9 +469,12 @@ const VendorDocumentsTable = ({
 
                 <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-200 pb-4">
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">Documents & Verification</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      Documents & Verification
+                    </p>
                     <p className="text-xs text-gray-500">
-                      Upload and manage your business documents. Approved documents increase trust.
+                      Upload and manage your business documents. Approved
+                      documents increase trust.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -447,7 +484,9 @@ const VendorDocumentsTable = ({
                       className="h-10 w-10 rounded-full object-cover"
                     />
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{vendor.name}</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {vendor.name}
+                      </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span>ID: {vendor.id}</span>
                         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
@@ -461,9 +500,12 @@ const VendorDocumentsTable = ({
                 <div className="mt-5 rounded-2xl border border-gray-200 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">Upload a new document</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        Upload a new document
+                      </p>
                       <p className="text-xs text-gray-500">
-                        Business registration, insurance certificate, owner ID, tax documents (PDF, JPG, PNG)
+                        Business registration, insurance certificate, owner ID,
+                        tax documents (PDF, JPG, PNG)
                       </p>
                     </div>
                     <Button
@@ -475,10 +517,14 @@ const VendorDocumentsTable = ({
                     </Button>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <span className="text-xs font-semibold text-gray-500">Document type</span>
+                    <span className="text-xs font-semibold text-gray-500">
+                      Document type
+                    </span>
                     <Select
                       value={selectedType}
-                      onValueChange={(value) => setSelectedType(value as VendorKycDocumentType)}
+                      onValueChange={(value) =>
+                        setSelectedType(value as VendorKycDocumentType)
+                      }
                     >
                       <SelectTrigger className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
                         <SelectValue />
@@ -536,21 +582,33 @@ const VendorDocumentsTable = ({
                       <HiEllipsisHorizontal className="h-4 w-4 rotate-90" />
                     </span>
                   </div>
-                  <Button variant="outline" className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50">
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50"
+                  >
                     Status filter
                   </Button>
-                  <Button variant="outline" className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50">
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50"
+                  >
                     Type filter
                   </Button>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
-                  <span className="font-semibold text-gray-700">Your documents</span>
+                  <span className="font-semibold text-gray-700">
+                    Your documents
+                  </span>
                   <span>Last updated: today</span>
                 </div>
 
                 <div className="mt-3">
-                  <VendorTable<VendorDoc> columns={columns} data={vendorDocs} showToolbar={false} />
+                  <VendorTable<VendorDoc>
+                    columns={columns}
+                    data={vendorDocs}
+                    showToolbar={false}
+                  />
                 </div>
               </div>
             </div>
@@ -589,18 +647,26 @@ const VendorDocumentsTable = ({
                         alt={activeDoc.vendor}
                         className="h-20 w-20 rounded-full border border-gray-200 object-cover"
                       />
-                      <h3 className="mt-3 text-lg font-semibold text-gray-900">{activeDoc.vendor}</h3>
-                      <p className="text-sm text-gray-500">ID: {activeDoc.id}</p>
+                      <h3 className="mt-3 text-lg font-semibold text-gray-900">
+                        {activeDoc.vendor}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        ID: {activeDoc.id}
+                      </p>
                     </div>
 
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center justify-between text-gray-500">
                         <span>Document type</span>
-                        <span className="font-medium text-gray-900">{activeDoc.docType}</span>
+                        <span className="font-medium text-gray-900">
+                          {activeDoc.docType}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between text-gray-500">
                         <span>Category</span>
-                        <span className="font-medium text-gray-900">{activeDoc.category}</span>
+                        <span className="font-medium text-gray-900">
+                          {activeDoc.category}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between text-gray-500">
                         <span>Submitted</span>
@@ -621,26 +687,44 @@ const VendorDocumentsTable = ({
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-sm font-medium text-gray-700">Comment</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        Comment
+                      </label>
                       <textarea
                         placeholder="Add a note for this KYC review"
                         value={approveComment}
-                        onChange={(event) => setApproveComment(event.target.value)}
+                        onChange={(event) =>
+                          setApproveComment(event.target.value)
+                        }
                         className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
                       />
                       <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">Reason *</label>
-                        <Select value={approveReason} onValueChange={(value) => setApproveReason(value)}>
+                        <label className="text-sm font-medium text-gray-700">
+                          Reason *
+                        </label>
+                        <Select
+                          value={approveReason}
+                          onValueChange={(value) => setApproveReason(value)}
+                        >
                           <SelectTrigger className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
                             <SelectValue placeholder="Select a reason" />
                           </SelectTrigger>
                           <SelectContent className="w-full rounded-2xl border border-gray-200 bg-white">
-                            <SelectItem value="valid">Document is valid</SelectItem>
-                            <SelectItem value="verified">Verified vendor</SelectItem>
-                            <SelectItem value="other">Other follow-up</SelectItem>
+                            <SelectItem value="valid">
+                              Document is valid
+                            </SelectItem>
+                            <SelectItem value="verified">
+                              Verified vendor
+                            </SelectItem>
+                            <SelectItem value="other">
+                              Other follow-up
+                            </SelectItem>
                           </SelectContent>
                         </Select>
-                        <p className="mt-2 text-xs text-gray-500">The selected reason is logged and shared with the vendor.</p>
+                        <p className="mt-2 text-xs text-gray-500">
+                          The selected reason is logged and shared with the
+                          vendor.
+                        </p>
                       </div>
                     </div>
 
@@ -652,8 +736,13 @@ const VendorDocumentsTable = ({
                       >
                         Approve
                       </Button>
-                      <Button className="bg-red-500 text-white hover:bg-red-600">Decline</Button>
-                      <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50">
+                      <Button className="bg-red-500 text-white hover:bg-red-600">
+                        Decline
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                      >
                         Request reupload
                       </Button>
                     </div>
@@ -681,7 +770,9 @@ const VendorDocumentsTable = ({
                         className="h-10 w-10 rounded-full border border-gray-200 object-cover"
                       />
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{viewDoc.vendor}</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {viewDoc.vendor}
+                        </p>
                         <p className="text-xs text-gray-500">
                           Vendor verification · Documents & audit trail
                         </p>
@@ -710,9 +801,12 @@ const VendorDocumentsTable = ({
                   <div className="rounded-2xl border border-gray-200 bg-white p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">Uploaded documents</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          Uploaded documents
+                        </p>
                         <p className="text-xs text-gray-500">
-                          {viewDoc.documents.length} files · Click a card to open viewer
+                          {viewDoc.documents.length} files · Click a card to
+                          open viewer
                         </p>
                       </div>
                       <input
@@ -732,12 +826,16 @@ const VendorDocumentsTable = ({
                               PDF
                             </div>
                             <div className="flex-1">
-                              <p className="text-sm font-semibold text-gray-900">{doc.name}</p>
-                              <p className="text-xs text-gray-500">PDF · 1.2 MB</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {doc.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                PDF · 1.2 MB
+                              </p>
                             </div>
                           </div>
                           <div className="mt-3 flex items-center justify-between gap-2">
-                            <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+                            <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibo ld text-emerald-600">
                               Approved
                             </span>
                             <Button
@@ -753,14 +851,22 @@ const VendorDocumentsTable = ({
                   </div>
 
                   <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                    <p className="text-sm font-semibold text-gray-900">Verification workflow</p>
-                    <p className="text-xs text-gray-500">Progress and recorded actions</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      Verification workflow
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Progress and recorded actions
+                    </p>
 
                     <div className="mt-4 rounded-xl bg-gray-50 p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-gray-500">Current status</p>
-                          <p className="text-sm font-semibold text-gray-900">{viewDoc.status}</p>
+                          <p className="text-xs text-gray-500">
+                            Current status
+                          </p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {viewDoc.status}
+                          </p>
                         </div>
                         <span className="rounded-full border border-emerald-300 bg-emerald-50 px-4 py-1 text-xs font-semibold text-emerald-600">
                           OK
@@ -769,10 +875,15 @@ const VendorDocumentsTable = ({
                     </div>
 
                     <div className="mt-4">
-                      <p className="text-xs font-semibold text-gray-700">Activity log</p>
+                      <p className="text-xs font-semibold text-gray-700">
+                        Activity log
+                      </p>
                       <div className="mt-3 space-y-4">
                         {activityLogEntries.map((entry, index) => (
-                          <div key={`${entry.action}-${index}`} className="flex items-start gap-3">
+                          <div
+                            key={`${entry.action}-${index}`}
+                            className="flex items-start gap-3"
+                          >
                             <div className="relative flex w-4 justify-center">
                               <span className="mt-1 h-2.5 w-2.5 rounded-full bg-slate-400" />
                               {index < activityLogEntries.length - 1 ? (
@@ -780,18 +891,26 @@ const VendorDocumentsTable = ({
                               ) : null}
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{entry.action}</p>
+                              <p className="text-sm font-medium text-gray-900">
+                                {entry.action}
+                              </p>
                               <p className="text-xs text-gray-500">
-                                {new Date(entry.createdAt).toLocaleString("en-GB")}
+                                {new Date(entry.createdAt).toLocaleString(
+                                  "en-GB",
+                                )}
                               </p>
                               {entry.comment && (
-                                <p className="text-xs text-gray-500">{entry.comment}</p>
+                                <p className="text-xs text-gray-500">
+                                  {entry.comment}
+                                </p>
                               )}
                             </div>
                           </div>
                         ))}
                         {!activityLogEntries.length && (
-                          <div className="text-xs text-gray-400">No activity recorded yet.</div>
+                          <div className="text-xs text-gray-400">
+                            No activity recorded yet.
+                          </div>
                         )}
                       </div>
                     </div>
