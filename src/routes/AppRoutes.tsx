@@ -64,7 +64,8 @@ import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
-import AdminFinancePage from "@/pages/Admin/Finance/AdminFinancePage";
+import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
+import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -192,8 +193,13 @@ const appRouter = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
-            path: "finance",
-            element: <AdminFinancePage />,
+            path: "finance/payouts",
+            element: <AdminPayoutsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "finance/platform-wallet",
+            element: <AdminPlatformWalletPage />,
             errorElement: <ErrorPage />,
           },
           {
