@@ -21,6 +21,9 @@ import notificationsReducer from "@/features/notifications/notificationsSlice";
 import { escalationApi } from "@/features/escalations/escalationApi";
 import { systemHealthApi } from "@/features/systemHealth/systemHealthApi";
 import { vendorKycApi } from "@/services/vendorKycApi";
+import { leadsApi } from "@/features/leads/api/leadsApi";
+import { serviceCategoriesApi } from "@/features/serviceCategories/api/serviceCategoriesApi";
+import { vendorNotificationsApi } from "@/features/vendorNotifications/api/vendorNotificationsApi";
 
 export const store = configureStore({
   reducer: {
@@ -46,6 +49,9 @@ export const store = configureStore({
     [escalationApi.reducerPath]: escalationApi.reducer,
     [systemHealthApi.reducerPath]: systemHealthApi.reducer,
     [vendorKycApi.reducerPath]: vendorKycApi.reducer,
+    [leadsApi.reducerPath]: leadsApi.reducer,
+    [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
+    [vendorNotificationsApi.reducerPath]: vendorNotificationsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -64,7 +70,10 @@ export const store = configureStore({
       .concat(adminStaffApi.middleware)
       .concat(supportApi.middleware)
       .concat(escalationApi.middleware)
-      .concat(systemHealthApi.middleware),
+      .concat(systemHealthApi.middleware)
+      .concat(leadsApi.middleware)
+      .concat(serviceCategoriesApi.middleware)
+      .concat(vendorNotificationsApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

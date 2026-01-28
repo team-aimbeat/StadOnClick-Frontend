@@ -39,6 +39,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import VendorLayout from "@/components/layout/VendorLayout";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
+import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 
@@ -267,6 +268,7 @@ const appRouter = createBrowserRouter([
         errorElement: <ErrorPage />,
         children: [
           { path: "dashboard", element: <VendorDashboard /> },
+          { path: "notifications", element: <VendorNotifications /> },
           { path: "leads", element: <VendorLeads /> },
           { path: "leads/subscription", element: <VendorLeadSubscriptionPage /> },
           {

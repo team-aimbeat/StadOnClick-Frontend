@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -14,7 +14,6 @@ import {
   Moon,
   Search,
   SunMedium,
-  User,
   X,
 } from "lucide-react";
 import i18next from "i18next";
@@ -36,6 +35,11 @@ import SearchBar from "../shared/SearchBar";
 import { clearAuth } from "@/features/auth/authSlice";
 import toast from "react-hot-toast";
 import { useLogoutMutation } from "@/features/auth/api/authApi";
+import {
+  useListVendorNotificationsQuery,
+  useMarkAllVendorNotificationsReadMutation,
+  useMarkVendorNotificationReadMutation,
+} from "@/features/vendorNotifications/api/vendorNotificationsApi";
 
 type MessageItem = {
   id: number;
@@ -47,14 +51,14 @@ type MessageItem = {
   status?: "online" | "away" | "offline";
 };
 
-type NotificationItem = {
-  id: number;
-  name: string;
-  action: string;
-  time: string;
-  profile: string;
-  status?: "online" | "away" | "offline";
-};
+const formatTimestamp = (value: string) =>
+  new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(value));
 
 const VendorHeader = () => {
   const location = useLocation();
@@ -129,31 +133,14 @@ const VendorHeader = () => {
     },
   ]);
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: 1,
-      profile: profile7,
-      name: "John Doe",
-      action: "invited you to Prototyping",
-      time: "45 min ago",
-      status: "online",
-    },
-    {
-      id: 2,
-      profile: profile8,
-      name: "Adam Nolan",
-      action: "mentioned you in UX Basics",
-      time: "9h ago",
-      status: "online",
-    },
-    {
-      id: 3,
-      profile: profile9,
-      name: "Anna Morgan",
-      action: "uploaded a file",
-      time: "9h ago",
-    },
-  ]);
+  const { data: vendorNotifications = [] } = useListVendorNotificationsQuery();
+  const [markNotificationRead] = useMarkVendorNotificationReadMutation();
+  const [markAllNotificationsRead] = useMarkAllVendorNotificationsReadMutation();
+
+  const unreadCount = useMemo(
+    () => vendorNotifications.filter((item) => !item.readAt).length,
+    [vendorNotifications]
+  );
 
   const actionBtnClass =
     "group grid h-10 w-10 place-content-center rounded-md mx-2 cursor-pointer border border-gray-200 bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800";
@@ -175,10 +162,12 @@ const VendorHeader = () => {
     setMessages((prev) => prev.filter((message) => message.id !== value));
   };
 
-  const removeNotification = (value: number) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== value)
-    );
+  const handleNotificationClick = async (id: string) => {
+    try {
+      await markNotificationRead(id).unwrap();
+    } finally {
+      navigate("/vendor/leads");
+    }
   };
 
   const renderThemeToggle = () => {
@@ -419,9 +408,9 @@ const VendorHeader = () => {
                 <li onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-between px-5 py-3 font-semibold">
                     <h4 className="text-lg">Notifications</h4>
-                    {notifications.length ? (
+                    {unreadCount ? (
                       <span className="rounded-full bg-primary/80 px-3 py-1 text-xs text-white">
-                        {notifications.length} New
+                        {unreadCount} New
                       </span>
                     ) : null}
                   </div>
@@ -430,44 +419,39 @@ const VendorHeader = () => {
                   className="max-h-[320px] overflow-y-auto"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {notifications.length ? (
-                    notifications.map((notification) => (
-                      <div
+                  {vendorNotifications.length ? (
+                    vendorNotifications.map((notification) => (
+                      <button
                         key={notification.id}
-                        className="group flex items-center gap-3 px-5 py-3 transition"
+                        type="button"
+                        onClick={() => handleNotificationClick(notification.id)}
+                        className="group flex w-full items-start gap-3 px-5 py-3 text-left transition hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
-                        <div className="relative h-12 w-12">
-                          <img
-                            className="h-12 w-12 rounded-full object-cover"
-                            alt={`${notification.name} avatar`}
-                            src={notification.profile}
-                          />
-                          {notification.status !== "offline" && (
-                            <span className="absolute bottom-0 right-1 block h-2 w-2 rounded-full bg-success"></span>
+                        <div className="relative h-10 w-10">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-200">
+                            <Bell className="h-5 w-5" strokeWidth={1.8} />
+                          </div>
+                          {!notification.readAt && (
+                            <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-success"></span>
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold dark:text-white-light/90">
-                            {notification.name}
+                            {notification.title}
                           </p>
                           <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                            {notification.action}
+                            {notification.body ?? "New lead received."}
                           </p>
                           <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">
-                            {notification.time}
+                            {formatTimestamp(notification.createdAt)}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          className="text-neutral-400 opacity-0 transition hover:text-danger group-hover:opacity-100"
-                          aria-label={
-                            t("Dismiss notification") || "Dismiss notification"
-                          }
-                          onClick={() => removeNotification(notification.id)}
-                        >
-                          <X className="h-4.5 w-4.5" strokeWidth={1.8} />
-                        </button>
-                      </div>
+                        {!notification.readAt ? (
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                            New
+                          </span>
+                        ) : null}
+                      </button>
                     ))
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-3 px-5 py-8 text-center text-sm">
@@ -481,7 +465,11 @@ const VendorHeader = () => {
                   )}
                 </li>
                 <li className="px-5 py-3">
-                  <button className="btn-primary w-full bg-amber-400 text-sm font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => markAllNotificationsRead()}
+                    className="btn-primary w-full bg-amber-400 text-sm font-semibold"
+                  >
                     Read All Notifications
                   </button>
                 </li>
