@@ -25,6 +25,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
     "emoji-picker-react": "^4.17.1",
     "framer-motion": "^12.27.5",
