@@ -10,6 +10,8 @@ import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
+import ServiceDetail from "@/pages/ServiceDetail";
+import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import Kyc from "@/pages/Kyc";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
@@ -42,6 +44,7 @@ import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
+import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
@@ -67,6 +70,8 @@ import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
+import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
+import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -199,6 +204,54 @@ const appRouter = createBrowserRouter([
           {
             path: "leads/plans",
             element: <LeadPlansPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings",
+            element: <AdminBookingsPage defaultStatusFilter="all" />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings/upcoming",
+            element: (
+              <AdminBookingsPage
+                defaultStatusFilter="upcoming"
+                titleOverride="Upcoming Bookings"
+                breadcrumbOverride="Admin / Bookings / Upcoming"
+              />
+            ),
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings/completed",
+            element: (
+              <AdminBookingsPage
+                defaultStatusFilter="completed"
+                titleOverride="Completed Bookings"
+                breadcrumbOverride="Admin / Bookings / Completed"
+              />
+            ),
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings/refunds",
+            element: (
+              <AdminBookingsPage
+                defaultStatusFilter="refund_requested"
+                titleOverride="Refund Requests"
+                breadcrumbOverride="Admin / Bookings / Refunds"
+              />
+            ),
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "finance/payouts",
+            element: <AdminPayoutsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "finance/platform-wallet",
+            element: <AdminPlatformWalletPage />,
             errorElement: <ErrorPage />,
           },
           {

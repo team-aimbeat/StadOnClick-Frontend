@@ -1,0 +1,663 @@
+import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { CalendarClock, Eye, Phone } from "lucide-react";
+import {
+  HiOutlineCheckCircle,
+  HiOutlineClock,
+  HiOutlineExclamationTriangle,
+  HiOutlineSparkles,
+} from "react-icons/hi2";
+import dayjs from "dayjs";
+
+import { ListingPage } from "@/components/shared/ListingPage";
+import type {
+  ColumnConfig,
+  DataTableSortStatus,
+  FilterConfig,
+  RowData,
+} from "@/components/shared/DataTable";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
+import { useLazyListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
+import type {
+  AdminBookingItem,
+  AdminBookingStatus,
+} from "@/features/admin/bookings/types/adminBooking.types";
+import type { ActionConfig } from "@/types/Table/action";
+
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
+const STATUS_FILTER_OPTIONS: FilterConfig["options"] = [
+  { label: "All bookings", value: "all" },
+  { label: "Upcoming (Pending + Confirmed)", value: "upcoming" },
+  { label: "Pending", value: "pending" },
+  { label: "Confirmed", value: "confirmed" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
+  { label: "Refund requests", value: "refund_requested" },
+  { label: "Refunded", value: "refunded" },
+];
+
+const STATUS_FILTER_MAP: Record<string, string> = {
+  pending: "PENDING",
+  confirmed: "CONFIRMED",
+  completed: "COMPLETED",
+  cancelled: "CANCELLED",
+  refund_requested: "REFUND_REQUESTED",
+  refunded: "REFUNDED",
+};
+
+const STATUS_TONE: Record<
+  AdminBookingStatus,
+  { bg: string; text: string; ring: string; label: string }
+> = {
+  PENDING: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    ring: "ring-amber-200",
+    label: "Pending",
+  },
+  CONFIRMED: {
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    ring: "ring-blue-200",
+    label: "Confirmed",
+  },
+  COMPLETED: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    ring: "ring-emerald-200",
+    label: "Completed",
+  },
+  CANCELLED: {
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    ring: "ring-slate-200",
+    label: "Cancelled",
+  },
+  REFUND_REQUESTED: {
+    bg: "bg-rose-50",
+    text: "text-rose-700",
+    ring: "ring-rose-200",
+    label: "Refund request",
+  },
+  REFUNDED: {
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    ring: "ring-purple-200",
+    label: "Refunded",
+  },
+};
+
+const parseCalendarRange = (
+  value: string
+): { from?: string; to?: string } => {
+  const [fromText, toText] = value.split(" - ").map((segment) => segment.trim());
+  const parsedFrom = dayjs(fromText, "YYYY/MM/DD");
+  const parsedTo = dayjs(toText, "YYYY/MM/DD");
+
+  return {
+    from: parsedFrom.isValid() ? parsedFrom.format("YYYY-MM-DD") : undefined,
+    to: parsedTo.isValid() ? parsedTo.format("YYYY-MM-DD") : undefined,
+  };
+};
+
+type AdminBookingRow = RowData & {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  vendorName: string;
+  vendorStatus: string;
+  serviceTitle: string;
+  serviceCategory?: string;
+  slotStart?: string;
+  slotEnd?: string | null;
+  status: AdminBookingStatus;
+  amount: number;
+  createdAt: string;
+  reviewCount: number;
+};
+
+type AdminBookingsPageProps = {
+  defaultStatusFilter?: string;
+  titleOverride?: string;
+  breadcrumbOverride?: string;
+};
+
+const buildStatusParam = (filter?: string) => {
+  if (!filter || filter === "all") {
+    return undefined;
+  }
+
+  if (filter === "upcoming") {
+    return "CONFIRMED,PENDING";
+  }
+
+  return STATUS_FILTER_MAP[filter] ?? filter.toUpperCase();
+};
+
+const defaultSort: DataTableSortStatus = {
+  columnAccessor: "createdAt",
+  direction: "desc",
+};
+
+export default function AdminBookingsPage({
+  defaultStatusFilter = "all",
+  titleOverride,
+  breadcrumbOverride,
+}: AdminBookingsPageProps) {
+  const dispatch = useAppDispatch();
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus>(defaultSort);
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
+  const [statusFilter, setStatusFilter] = useState(defaultStatusFilter);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRangeLabel, setDateRangeLabel] = useState("");
+  const [dateRangeQuery, setDateRangeQuery] = useState<{ from?: string; to?: string }>({});
+  const [priceInputs, setPriceInputs] = useState({ min: "", max: "" });
+  const [activePriceFilter, setActivePriceFilter] = useState<{ min?: string; max?: string }>({});
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const hasPriceFilter = Boolean(activePriceFilter.min || activePriceFilter.max);
+
+  const [fetchBookings, { data, isFetching, isError }] =
+    useLazyListAdminBookingsQuery();
+
+  const listingTitle = titleOverride ?? "Admin bookings";
+  const breadcrumbTitle = breadcrumbOverride ?? "Admin / Bookings";
+
+  useEffect(() => {
+    fetchBookings({
+      page,
+      limit: rowsPerPage,
+      sortBy: sortStatus.columnAccessor,
+      sortOrder: sortStatus.direction,
+      search: searchTerm || undefined,
+      statuses: buildStatusParam(statusFilter),
+      fromDate: dateRangeQuery.from,
+      toDate: dateRangeQuery.to,
+    });
+  }, [
+    fetchBookings,
+    page,
+    rowsPerPage,
+    sortStatus,
+    searchTerm,
+    statusFilter,
+    dateRangeQuery.from,
+    dateRangeQuery.to,
+    activePriceFilter.min,
+    activePriceFilter.max,
+  ]);
+
+  useEffect(() => {
+    dispatch(setPageTitle(listingTitle));
+  }, [dispatch, listingTitle]);
+
+  useEffect(() => {
+    setStatusFilter(defaultStatusFilter);
+    setPage(1);
+  }, [defaultStatusFilter]);
+
+  const bookingRows = useMemo<AdminBookingRow[]>(() => {
+    const items = data?.data || [];
+    return items.map((item) => {
+      const nameParts = [item.user?.firstName, item.user?.lastName]
+        .filter(Boolean)
+        .join(" ");
+
+      const amount = Number(item.orderItem?.priceFinal ?? item.orderItem?.priceOriginal ?? 0);
+
+      return {
+        id: item.id,
+        orderNumber: item.orderItem?.orderNumber ?? item.id,
+        customerName: nameParts || "—",
+        customerEmail: item.user?.email ?? "—",
+        vendorName: item.vendorProfile?.businessName ?? "—",
+        vendorStatus: item.vendorProfile?.status ?? "—",
+        serviceTitle: item.vendorService?.title ?? "—",
+        serviceCategory: item.vendorService?.category?.name,
+        slotStart: item.slot?.startTime,
+        slotEnd: item.slot?.endTime,
+        status: item.status,
+        amount: Number.isFinite(amount) ? amount : 0,
+        reviewCount: item.vendorService?._count?.reviews ?? 0,
+        createdAt: item.createdAt,
+      };
+    });
+  }, [data?.data]);
+
+  const totals = useMemo(() => {
+    const bucket = {
+      confirmed: 0,
+      pending: 0,
+      completed: 0,
+      cancelled: 0,
+      refundRequests: 0,
+      totalValue: 0,
+    };
+
+    for (const row of bookingRows) {
+      if (row.status === "CONFIRMED") bucket.confirmed += 1;
+      if (row.status === "PENDING") bucket.pending += 1;
+      if (row.status === "COMPLETED") bucket.completed += 1;
+      if (row.status === "CANCELLED") bucket.cancelled += 1;
+      if (row.status === "REFUND_REQUESTED") bucket.refundRequests += 1;
+      bucket.totalValue += row.amount;
+    }
+
+    return bucket;
+  }, [bookingRows]);
+
+  const totalMeta = data?.meta;
+  const controlledPagination = useMemo(
+    () => ({
+      page,
+      pageSize: rowsPerPage,
+      totalPages: totalMeta?.totalPages ?? 1,
+      totalRecords: totalMeta?.total ?? 0,
+    }),
+    [page, rowsPerPage, totalMeta?.total, totalMeta?.totalPages]
+  );
+
+  const filters = useMemo<FilterConfig[]>(
+    () => [
+      {
+        key: "status",
+        label: "Status",
+        options: STATUS_FILTER_OPTIONS,
+      },
+    ],
+    []
+  );
+
+  const initialActiveFilters = useMemo(
+    () =>
+      typeof defaultStatusFilter === "string" && defaultStatusFilter !== ""
+        ? { status: defaultStatusFilter }
+        : undefined,
+    [defaultStatusFilter]
+  );
+
+  const columns = useMemo<ColumnConfig[]>(() => {
+    return [
+      {
+        key: "orderNumber",
+        title: "Order #",
+        sortable: true,
+        render: (value: string) => (
+          <span className="font-semibold text-slate-900">{value}</span>
+        ),
+      },
+      {
+        key: "customerName",
+        title: "Customer",
+        sortable: true,
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-900">{booking.customerName}</span>
+              <span className="text-xs font-medium text-slate-500">{booking.customerEmail}</span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "vendorName",
+        title: "Vendor",
+        sortable: true,
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-900">{booking.vendorName}</span>
+              <span className="text-xs font-medium text-slate-500">{booking.vendorStatus}</span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "serviceTitle",
+        title: "Service",
+        sortable: true,
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          return (
+            <div className="flex flex-col">
+              <span className="text-sm text-slate-800">{booking.serviceTitle}</span>
+              {booking.serviceCategory && (
+                <span className="text-xs font-medium text-slate-500">{booking.serviceCategory}</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        key: "slotStart",
+        title: "Schedule",
+        sortable: true,
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          const date = booking.slotStart ?? booking.createdAt;
+          return (
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              <CalendarClock className="h-4 w-4 text-slate-500" />
+              <span>{date ? dayjs(date).format("MMM D, YYYY • h:mm A") : "TBD"}</span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "status",
+        title: "Status",
+        sortable: true,
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          const tone = STATUS_TONE[booking.status];
+          return (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}
+            >
+              <span className="h-2 w-2 rounded-full bg-current" />
+              {tone.label}
+            </span>
+          );
+        },
+      },
+      {
+        key: "reviewCount",
+        title: "Reviews",
+        sortable: true,
+        render: (value: number) => (
+          <span className="text-sm font-semibold text-slate-900">{value}</span>
+        ),
+      },
+      {
+        key: "amount",
+        title: "Value",
+        sortable: true,
+        render: (value: number) => (
+          <span className="font-semibold text-slate-900">{currencyFormatter.format(value)}</span>
+        ),
+      },
+      {
+        key: "createdAt",
+        title: "Created",
+        sortable: true,
+        render: (value: string) => (
+          <span className="text-sm text-slate-700">{dayjs(value).format("DD MMM YYYY")}</span>
+        ),
+      },
+    ];
+  }, []);
+
+  const sortOptions = useMemo(
+    () => [
+      { key: "createdAt", label: "Created (Newest first desc)" },
+      { key: "slotStart", label: "Schedule (Earliest first asc)" },
+      { key: "amount", label: "Value (High-Low desc)" },
+      { key: "vendorName", label: "Vendor (A-Z asc)" },
+      { key: "reviewCount", label: "Reviews (High-Low desc)" },
+    ],
+    []
+  );
+
+  const actions = useMemo<ActionConfig<AdminBookingRow>[]>(() => {
+    return [
+      {
+        title: "View booking",
+        icon: Eye,
+        onClick: (row) => {
+          console.log("View booking", row.orderNumber);
+        },
+      },
+      {
+        title: "Email customer",
+        icon: Phone,
+        onClick: (row) => {
+          const target = row.customerEmail;
+          if (target) {
+            window.open(`mailto:${target}`);
+          }
+        },
+      },
+    ];
+  }, []);
+
+  const clearDateRange = useCallback(() => {
+    setDateRangeLabel("");
+    setDateRangeQuery({});
+    setPage(1);
+  }, []);
+
+  const handleDateRangeSelect = useCallback(
+    (range: string) => {
+      if (!range) {
+        clearDateRange();
+        return;
+      }
+      setDateRangeLabel(range);
+      setDateRangeQuery(parseCalendarRange(range));
+      setPage(1);
+    },
+    [clearDateRange]
+  );
+
+  const handleFilter = useCallback(
+    (filters: Record<string, string>) => {
+      const nextStatus = filters?.status ?? "all";
+      setStatusFilter(nextStatus);
+      setPage(1);
+    },
+    [setStatusFilter, setPage]
+  );
+
+  const handlePriceInputChange = useCallback(
+    (field: "min" | "max") => (event: ChangeEvent<HTMLInputElement>) => {
+      setPriceInputs((prev) => ({ ...prev, [field]: event.target.value }));
+    },
+    []
+  );
+
+  const applyPriceFilter = useCallback(() => {
+    const nextMin = priceInputs.min.trim();
+    const nextMax = priceInputs.max.trim();
+    setActivePriceFilter({
+      min: nextMin || undefined,
+      max: nextMax || undefined,
+    });
+    setPage(1);
+  }, [priceInputs]);
+
+  const clearPriceFilter = useCallback(() => {
+    setPriceInputs({ min: "", max: "" });
+    setActivePriceFilter({});
+    setPage(1);
+  }, []);
+
+  const handlePriceKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        applyPriceFilter();
+      }
+    },
+    [applyPriceFilter]
+  );
+
+  const priceFilterLabel = useMemo(() => {
+    if (!hasPriceFilter) return "";
+    const valueParts: string[] = [];
+
+    if (activePriceFilter.min) {
+      const parsed = Number(activePriceFilter.min);
+      valueParts.push(
+        `from ${Number.isFinite(parsed) ? currencyFormatter.format(parsed) : activePriceFilter.min}`
+      );
+    }
+
+    if (activePriceFilter.max) {
+      const parsed = Number(activePriceFilter.max);
+      valueParts.push(
+        `up to ${Number.isFinite(parsed) ? currencyFormatter.format(parsed) : activePriceFilter.max}`
+      );
+    }
+
+    return `Price ${valueParts.join(" & ")}`;
+  }, [activePriceFilter, hasPriceFilter]);
+
+  const headerSlot = (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="space-y-1 text-sm text-slate-500">
+        {dateRangeLabel && (
+          <div className="flex items-center gap-2">
+            <span>Filtered by: {dateRangeLabel}</span>
+            <button
+              type="button"
+              onClick={clearDateRange}
+              className="text-slate-600 underline-offset-2 hover:text-slate-900"
+            >
+              Clear range
+            </button>
+          </div>
+        )}
+        {priceFilterLabel && <div>{priceFilterLabel}</div>}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="admin-booking-price-min">
+          Min price
+        </label>
+        <input
+          id="admin-booking-price-min"
+          type="number"
+          min="0"
+          placeholder="Min price"
+          className="h-10 rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-blue-500"
+          value={priceInputs.min}
+          onChange={handlePriceInputChange("min")}
+          onKeyDown={handlePriceKeyDown}
+        />
+
+        <label className="sr-only" htmlFor="admin-booking-price-max">
+          Max price
+        </label>
+        <input
+          id="admin-booking-price-max"
+          type="number"
+          min="0"
+          placeholder="Max price"
+          className="h-10 rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-blue-500"
+          value={priceInputs.max}
+          onChange={handlePriceInputChange("max")}
+          onKeyDown={handlePriceKeyDown}
+        />
+
+        <button
+          type="button"
+          onClick={applyPriceFilter}
+          className="h-10 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-500"
+        >
+          Apply price filter
+        </button>
+
+        {hasPriceFilter && (
+          <button
+            type="button"
+            onClick={clearPriceFilter}
+            className="h-10 rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Clear price
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <ListingPage
+      title={listingTitle}
+      breadCrumbTitle={breadcrumbTitle}
+      description="Review vendor bookings, keep an eye on refunds, and drill into pending confirmations."
+      stats={[
+        {
+          title: "Confirmed",
+          value: totals.confirmed,
+          subtitle: "Scheduled & ready",
+          icon: HiOutlineCheckCircle,
+          accentColor: "blue",
+        },
+        {
+          title: "Pending",
+          value: totals.pending,
+          subtitle: "Awaiting action",
+          icon: HiOutlineClock,
+          accentColor: "yellow",
+        },
+        {
+          title: "Refund requests",
+          value: totals.refundRequests,
+          subtitle: "Needs triage",
+          icon: HiOutlineExclamationTriangle,
+          accentColor: "red",
+        },
+        {
+          title: "Completed",
+          value: totals.completed,
+          subtitle: "Closed in view",
+          icon: HiOutlineSparkles,
+          accentColor: "green",
+        },
+      ]}
+      summary={{
+        left: dateRangeLabel
+          ? `Range: ${dateRangeLabel}`
+          : "Select a quick range in the table header.",
+        right: `Selected bookings: ${selectedRows.length}`,
+      }}
+      headerSlot={headerSlot}
+      tableProps={{
+        title: "Bookings",
+        breadCrumbTitle: "Operations / Admin Bookings",
+        data: bookingRows,
+        columns,
+        filters,
+        sortOptions,
+        searchable: true,
+        searchPlaceholder: "Search bookings, customers, vendors, or orders...",
+        searchValue: searchTerm,
+        showSerialNumber: true,
+        defaultActiveFilters: initialActiveFilters,
+        rowsPerPageOptions: [10, 20, 40],
+        defaultRowsPerPage: rowsPerPage,
+        controlledPagination,
+        sortStatus,
+        onSort: (status) => {
+          setSortStatus(status);
+          setPage(1);
+        },
+        onSearch: (value) => {
+          setSearchTerm(value ?? "");
+          setPage(1);
+        },
+        onFilter: handleFilter,
+        onRowSelect: (ids) => setSelectedRows(ids),
+        onPaginationChange: ({ page: newPage, pageSize }) => {
+          setRowsPerPage(pageSize);
+          setPage(newPage);
+        },
+        onDateRangeSelect: handleDateRangeSelect,
+        actions,
+        loading: isFetching,
+        error: isError ? "Unable to load bookings right now." : null,
+        noRecordText: "No bookings match the selected filters.",
+        minHeight: 320,
+        className: "border border-slate-200",
+      }}
+    />
+  );
+}
