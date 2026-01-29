@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { useAppSelector } from "@/app/hooks";
 import { toast } from "react-hot-toast";
+import { HiOutlinePlus, HiOutlineTrash, HiOutlinePlusCircle } from "react-icons/hi2";
 
 import { DashboardContainer } from "@/components/dashboard";
 import type { ServiceMasterCategory } from "@/services/serviceCategoriesApi";
@@ -18,7 +19,11 @@ import {
   useCreateSlotMutation,
   useGetServiceOfferingsQuery,
 } from "@/services/vendorOfferingsApi";
-import { useCreateVendorServiceMutation } from "@/services/vendorServicesApi";
+import {
+  useCreateVendorServiceMutation,
+  useGetVendorServicesQuery,
+  useGetVendorProfileStatusQuery,
+} from "@/services/vendorServicesApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import eventImage from "@/assets/Images/well.jpg";
 import wellnessImage from "@/assets/Images/wellness.jpg";
@@ -176,6 +181,18 @@ const VendorServices = () => {
   const [ruleError, setRuleError] = useState<string | null>(null);
   const [createdServiceId, setCreatedServiceId] = useState<string | null>(null);
   const [isCreatingService, setIsCreatingService] = useState(false);
+  const [showListing, setShowListing] = useState(true);
+
+  const { data: profileStatus } = useGetVendorProfileStatusQuery();
+  const dynamicVendorId = profileStatus?.id;
+
+  const {
+    data: vendorServices = [],
+    isLoading: isServicesLoading,
+    refetch: refetchServices,
+  } = useGetVendorServicesQuery(dynamicVendorId!, {
+    skip: !dynamicVendorId,
+  });
 
   const [vendorServiceDetails, setVendorServiceDetails] =
     useState<VendorServiceDetails>({
@@ -221,16 +238,31 @@ const VendorServices = () => {
     skip: !createdServiceId,
   });
 
-  const { register, handleSubmit, formState, reset, setValue } =
-    useForm<OfferingFormValues>({
-      mode: "onBlur",
-      defaultValues: {
-        name: "",
-        basePrice: 0,
-        salePrice: 0,
-        maxQuantity: undefined,
-      },
-    });
+  const {
+    register,
+    handleSubmit,
+    formState,
+    reset,
+    setValue,
+    control,
+  } = useForm<{ offerings: OfferingFormValues[] }>({
+    mode: "onBlur",
+    defaultValues: {
+      offerings: [
+        {
+          name: "",
+          basePrice: 0,
+          salePrice: 0,
+          maxQuantity: undefined,
+        },
+      ],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "offerings",
+  });
 
   const { errors } = formState;
 
@@ -278,10 +310,11 @@ const VendorServices = () => {
       (item) => item.id === selectedExistingOfferingId,
     );
     if (!offering) return;
-    setValue("name", offering.name);
-    setValue("basePrice", offering.basePrice);
-    setValue("salePrice", offering.salePrice);
-    setValue("maxQuantity", offering.maxQuantity ?? undefined);
+    // Prefill the FIRST offering card
+    setValue("offerings.0.name", offering.name);
+    setValue("offerings.0.basePrice", offering.basePrice);
+    setValue("offerings.0.salePrice", offering.salePrice);
+    setValue("offerings.0.maxQuantity", offering.maxQuantity ?? undefined);
   }, [existingOfferings, selectedExistingOfferingId, setValue]);
 
   const handleSlotFieldUpdate = (field: keyof SlotFields, value: string) => {
@@ -438,10 +471,14 @@ const VendorServices = () => {
     value: string,
   ) => {
     setVendorServiceDetails((prev) => ({ ...prev, [field]: value }));
-    setVendorServiceErrors((prev) => ({ ...prev, [field]: undefined }));
+    setVendorServiceErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
-  const handleCreateOffering = handleSubmit(async (values) => {
+  const handleCreateOffering = handleSubmit(async (data) => {
     if (!selectedCategoryId) {
       setGeneralError("Select a category before creating an offering.");
       return;
@@ -450,10 +487,8 @@ const VendorServices = () => {
       setGeneralError("Complete the vendor service details before continuing.");
       return;
     }
-    if (!vendorId) {
-      setGeneralError(
-        "Unable to resolve vendor session. Please reauthenticate.",
-      );
+    if (!dynamicVendorId) {
+      setGeneralError("Unable to resolve vendor session. Please reauthenticate.");
       return;
     }
 
@@ -464,55 +499,55 @@ const VendorServices = () => {
     setOfferingError(null);
     setIsSubmitting(true);
 
-    let createdOfferingId: string | null = null;
+    let currentServiceId = createdServiceId;
+
     try {
-      const vendorServicePayload = {
-        vendorId: "e6f6ce15-ff9f-40da-b1c8-88afd9aee225", // ✅ REQUIRED
-        categoryId: selectedCategoryId,
-        title: vendorServiceDetails.title.trim(),
-        description: vendorServiceDetails.description.trim(),
-        terms: vendorServiceDetails.terms.trim(),
-        latitude: Number(vendorServiceDetails.latitude),
-        longitude: Number(vendorServiceDetails.longitude),
-      };
+      // 1. Create Service if not exists
+      if (!currentServiceId) {
+        const vendorServicePayload = {
+          vendorId: dynamicVendorId,
+          categoryId: selectedCategoryId,
+          title: vendorServiceDetails.title.trim(),
+          description: vendorServiceDetails.description.trim(),
+          terms: vendorServiceDetails.terms.trim(),
+          latitude: Number(vendorServiceDetails.latitude),
+          longitude: Number(vendorServiceDetails.longitude),
+        };
 
-      const createdVendorService =
-        await createVendorService(vendorServicePayload).unwrap();
-      setCreatedServiceId(createdVendorService.id);
+        const createdVendorService = await createVendorService(vendorServicePayload).unwrap();
+        currentServiceId = createdVendorService.id;
+        setCreatedServiceId(currentServiceId);
+        setVendorServiceStep("success");
+        toast.success("Vendor service created");
+      }
 
-      setVendorServiceStep("success");
+      // 2. Create multiple Offerings
+      for (const offeringVals of data.offerings) {
+        const payload: CreateOfferingPayload = {
+          serviceId: currentServiceId,
+          name: offeringVals.name.trim(),
+          basePrice: offeringVals.basePrice,
+          salePrice: offeringVals.salePrice,
+          maxQuantity: offeringVals.maxQuantity,
+        };
+        const createdOffering = await createOffering(payload).unwrap();
+        setLastCreatedOfferingId(createdOffering.id);
 
-      const payload: CreateOfferingPayload = {
-        serviceId: createdServiceId!,
-        name: values.name.trim(),
-        basePrice: values.basePrice,
-        salePrice: values.salePrice,
-        maxQuantity: values.maxQuantity,
-      };
-      const createdOffering = await createOffering(payload).unwrap();
-      createdOfferingId = createdOffering.id;
-      setLastCreatedOfferingId(createdOffering.id);
-      setOfferingStep("success");
-
-      if (enableSlots) {
-        try {
+        if (enableSlots) {
           await createSlotFlow(createdOffering.id);
-        } catch {
-          return;
         }
-      }
 
-      if (enableRules) {
-        try {
+        if (enableRules) {
           await createRuleFlow(createdOffering.id);
-        } catch {
-          return;
         }
       }
 
-      toast.success("Vendor service and offering saved successfully", {
-        id: "vendor-offering-success",
+      setOfferingStep("success");
+      toast.success("All offerings and extra configurations saved successfully", {
+        id: "vendor-multi-offering-success",
       });
+      
+      // Cleanup & show list
       reset();
       setSelectedMasterServiceId("");
       setSelectedCategoryId("");
@@ -521,45 +556,12 @@ const VendorServices = () => {
       setEnableRules(false);
       setSlotFields({ ...slotInitialState });
       setRuleFields({ ...ruleInitialState });
-      setSlotStep("idle");
-      setSlotValidationError(null);
-      setSlotError(null);
-      setRuleStep("idle");
-      setRuleValidationError(null);
-      setRuleError(null);
-      setVendorServiceDetails({
-        title: "",
-        description: "",
-        terms: "",
-        latitude: "",
-        longitude: "",
-      });
-      setVendorServiceErrors({});
-      setVendorServiceStep("idle");
-      setVendorServiceError(null);
-      setLastCreatedOfferingId(null);
-      setGeneralError(null);
-      setOfferingError(null);
+      setShowListing(true);
+      refetchServices();
     } catch (error) {
-      if (vendorServiceStep === "loading") {
-        const normalized = normalizeApiError(
-          error,
-          "Unable to create vendor service",
-        );
-        setVendorServiceError(normalized.toastMessage);
-        setVendorServiceStep("error");
-        setGeneralError(normalized.toastMessage);
-        toast.error(normalized.toastMessage, { id: "vendor-service-error" });
-      } else {
-        const normalized = normalizeApiError(
-          error,
-          "Unable to create offering",
-        );
-        setGeneralError(normalized.toastMessage);
-        setOfferingError(normalized.toastMessage);
-        setOfferingStep("error");
-        toast.error(normalized.toastMessage, { id: "vendor-offering-error" });
-      }
+      const normalized = normalizeApiError(error, "Operation failed");
+      setGeneralError(normalized.toastMessage);
+      toast.error(normalized.toastMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -598,19 +600,128 @@ const VendorServices = () => {
     },
   ];
 
+  if (showListing) {
+    return (
+      <DashboardContainer className="space-y-6 pb-16">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-semibold text-slate-900">
+              My Services
+            </h1>
+            <p className="text-sm text-slate-500">
+              Manage your existing services or add new ones to your profile.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setShowListing(false);
+              setCreatedServiceId(null);
+              reset();
+            }}
+            className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Add New Service
+          </button>
+        </div>
+
+        {isServicesLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-48 rounded-3xl border border-slate-100 bg-white/60 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : vendorServices && vendorServices.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {vendorServices.map((service) => (
+              <div
+                key={service.id}
+                className="group relative rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:shadow-md"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  {service.categoryId && (
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Category ID: {service.categoryId.slice(0, 8)}
+                    </span>
+                  )}
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                      service.status === "LIVE"
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-amber-50 text-amber-600"
+                    }`}
+                  >
+                    {service.status}
+                  </span>
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-slate-900 line-clamp-1">
+                  {service.title}
+                </h3>
+                <p className="mb-4 text-sm text-slate-500 line-clamp-2">
+                  {service.description}
+                </p>
+                <div className="flex items-center justify-between border-t border-slate-50 pt-4">
+                  <div className="text-xs text-slate-400">
+                    ID: {service.id.slice(0, 8)}...
+                  </div>
+                  <button
+                    type="button"
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    Manage Service →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-20">
+            <div className="mb-4 rounded-full bg-slate-100 p-4">
+              <HiOutlinePlus className="h-8 w-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              No services yet
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Start adding services to showcase what you offer.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowListing(false)}
+              className="mt-6 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Construct your first service
+            </button>
+          </div>
+        )}
+      </DashboardContainer>
+    );
+  }
+
   return (
     <DashboardContainer className="space-y-6 pb-16">
-      <div className="space-y-1">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
-          Vendor Experience
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-900">
-          Create Offerings
-        </h1>
-        <p className="text-sm text-slate-500">
-          Work through master services, categories, and offerings in order. Each
-          section updates responsively to keep the workflow focused.
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
+            Vendor Experience
+          </p>
+          <h1 className="text-3xl font-semibold text-slate-900">
+            Create Offerings
+          </h1>
+          <p className="text-sm text-slate-500">
+            Work through master services, categories, and offerings in order.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowListing(true)}
+          className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+        >
+          Cancel
+        </button>
       </div>
 
       <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
@@ -661,7 +772,7 @@ const VendorServices = () => {
                   {masterServiceOptions.map((service) => {
                     const isSelected = service.id === selectedMasterServiceId;
                     const visual = masterServiceVisuals[service.slug];
-                    const imageSrc = visual?.src ?? swell;
+                    const imageSrc = visual?.src ?? well;
                     const imageAlt = visual?.alt ?? service.name;
                     return (
                       <button
@@ -939,86 +1050,113 @@ const VendorServices = () => {
               </div>
             )}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">
-                  Offering name *
-                </span>
-                <input
-                  type="text"
-                  {...register("name", { required: "Offerings need a name." })}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                  placeholder="e.g. Premium Food Service"
-                />
-                {errors.name && (
-                  <p className="text-xs text-rose-600">{errors.name.message}</p>
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="relative grid border rounded-2xl px-5 py-8 gap-4 md:grid-cols-2 group"
+              >
+                {fields.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition"
+                  >
+                    <HiOutlineTrash className="h-5 w-5" />
+                  </button>
                 )}
-              </label>
+                <label className="space-y-1 text-sm text-slate-700">
+                  <span className="font-semibold text-slate-600">
+                    Offering name *
+                  </span>
+                  <input
+                    type="text"
+                    {...register(`offerings.${index}.name` as const, {
+                      required: "Offerings need a name.",
+                    })}
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                    placeholder="e.g. Premium Food Service"
+                  />
+                  {errors.offerings?.[index]?.name && (
+                    <p className="text-xs text-rose-600">
+                      {errors.offerings[index]?.name?.message}
+                    </p>
+                  )}
+                </label>
 
-              <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">
-                  Base price *
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register("basePrice", {
-                    required: "Base price is required.",
-                    min: { value: 0, message: "Must be zero or higher." },
-                    valueAsNumber: true,
-                  })}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                  placeholder="500"
-                />
-                {errors.basePrice && (
-                  <p className="text-xs text-rose-600">
-                    {errors.basePrice.message}
-                  </p>
-                )}
-              </label>
+                <label className="space-y-1 text-sm text-slate-700">
+                  <span className="font-semibold text-slate-600">
+                    Base price *
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register(`offerings.${index}.basePrice` as const, {
+                      required: "Base price is required.",
+                      min: { value: 0, message: "Must be zero or higher." },
+                      valueAsNumber: true,
+                    })}
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                    placeholder="500"
+                  />
+                  {errors.offerings?.[index]?.basePrice && (
+                    <p className="text-xs text-rose-600">
+                      {errors.offerings[index]?.basePrice?.message}
+                    </p>
+                  )}
+                </label>
 
-              <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">
-                  Sale price *
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register("salePrice", {
-                    required: "Sale price is required.",
-                    min: { value: 0, message: "Must be zero or higher." },
-                    valueAsNumber: true,
-                  })}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                  placeholder="450"
-                />
-                {errors.salePrice && (
-                  <p className="text-xs text-rose-600">
-                    {errors.salePrice.message}
-                  </p>
-                )}
-              </label>
+                <label className="space-y-1 text-sm text-slate-700">
+                  <span className="font-semibold text-slate-600">
+                    Sale price *
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register(`offerings.${index}.salePrice` as const, {
+                      required: "Sale price is required.",
+                      min: { value: 0, message: "Must be zero or higher." },
+                      valueAsNumber: true,
+                    })}
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                    placeholder="450"
+                  />
+                  {errors.offerings?.[index]?.salePrice && (
+                    <p className="text-xs text-rose-600">
+                      {errors.offerings[index]?.salePrice?.message}
+                    </p>
+                  )}
+                </label>
 
-              <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-semibold text-slate-600">
-                  Max quantity
-                </span>
-                <input
-                  type="number"
-                  {...register("maxQuantity", {
-                    min: { value: 1, message: "Must be at least 1" },
-                    valueAsNumber: true,
-                  })}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                  placeholder="Optional"
-                />
-                {errors.maxQuantity && (
-                  <p className="text-xs text-rose-600">
-                    {errors.maxQuantity.message}
-                  </p>
-                )}
-              </label>
-            </div>
+                <label className="space-y-1 text-sm text-slate-700">
+                  <span className="font-semibold text-slate-600">
+                    Max quantity
+                  </span>
+                  <input
+                    type="number"
+                    {...register(`offerings.${index}.maxQuantity` as const, {
+                      min: { value: 1, message: "Must be at least 1" },
+                      valueAsNumber: true,
+                    })}
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                    placeholder="Optional"
+                  />
+                  {errors.offerings?.[index]?.maxQuantity && (
+                    <p className="text-xs text-rose-600">
+                      {errors.offerings[index]?.maxQuantity?.message}
+                    </p>
+                  )}
+                </label>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => append({ name: "", basePrice: 0, salePrice: 0 })}
+              className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50 transition"
+            >
+              <HiOutlinePlusCircle className="h-5 w-5" />
+              Add another offering
+            </button>
 
             <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">

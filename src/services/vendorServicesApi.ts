@@ -32,7 +32,17 @@ export const vendorServicesApi = createApi({
         body,
       }),
     }),
+    getVendorServices: builder.query<VendorServiceEntity[], string>({
+      query: (vendorId) => `/vendor/vendor-services/${vendorId}`,
+    }),
+    getVendorProfileStatus: builder.query<any, void>({
+      query: () => "/vendor/onboarding/status",
+    }),
   }),
 });
 
-export const { useCreateVendorServiceMutation } = vendorServicesApi;
+export const {
+  useCreateVendorServiceMutation,
+  useGetVendorServicesQuery,
+  useGetVendorProfileStatusQuery,
+} = vendorServicesApi;

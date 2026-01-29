@@ -48,7 +48,7 @@ const VendorMedia = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmingMediaId, setConfirmingMediaId] = useState<string | null>(null);
   const resolvedServiceId =
-    serviceId ?? "568fa4d3-ce94-4de7-b5fd-77150fa023bc";
+    serviceId ?? "64e3564c-072f-4a5f-b9b9-b0546ac1c554";
   const [deleteServiceMedia] = useDeleteServiceMediaMutation();
 
   useEffect(() => {

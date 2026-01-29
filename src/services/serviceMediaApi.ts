@@ -36,11 +36,12 @@ export const serviceMediaApi = createApi({
     
     uploadServiceMedia: builder.mutation<
       ServiceMedia,
-      { serviceId: string; file: File; sortOrder?: number }
+      { serviceId: string; file: File; title:string;sortOrder?: number }
     >({
-      query: ({ serviceId, file, sortOrder }) => {
+      query: ({ serviceId, file,title, sortOrder }) => {
         const form = new FormData();
-        form.append('serviceId', serviceId);
+        form.append('serviceId', serviceId)
+         form.append('title', title);
         if (typeof sortOrder === 'number') {
           form.append('sortOrder', sortOrder.toString());
         }
