@@ -358,17 +358,18 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                                     isOpen && `delay-[${idx * 30}ms]`
                                   )}
                                 >
-                                  <NavLink
-                                    to={child.to}
-                                    className={({ isActive }) =>
-                                      cn(
-                                        "group flex h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors",
-                                        isActive
-                                          ? "bg-blue-50 text-[#4F7DFF] font-semibold"
-                                          : "text-slate-600 hover:bg-slate-50 hover:text-[#4F7DFF]"
-                                      )
-                                    }
-                                  >
+                              <NavLink
+                                to={child.to}
+                                end={child.to === withBase("bookings")}
+                                className={({ isActive }) =>
+                                  cn(
+                                    "group flex h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors",
+                                    isActive
+                                      ? "bg-blue-50 text-[#4F7DFF] font-semibold"
+                                      : "text-slate-600 hover:bg-slate-50 hover:text-[#4F7DFF]"
+                                  )
+                                }
+                              >
                                     <span
                                       className="h-2.5 w-2.5 rounded-full flex-shrink-0"
                                       style={{

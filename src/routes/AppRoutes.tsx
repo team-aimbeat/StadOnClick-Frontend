@@ -41,6 +41,7 @@ import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
+import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
@@ -190,6 +191,44 @@ const appRouter = createBrowserRouter([
           {
             path: "leads/plans",
             element: <LeadPlansPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings",
+            element: <AdminBookingsPage defaultStatusFilter="all" />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings/upcoming",
+            element: (
+              <AdminBookingsPage
+                defaultStatusFilter="upcoming"
+                titleOverride="Upcoming Bookings"
+                breadcrumbOverride="Admin / Bookings / Upcoming"
+              />
+            ),
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings/completed",
+            element: (
+              <AdminBookingsPage
+                defaultStatusFilter="completed"
+                titleOverride="Completed Bookings"
+                breadcrumbOverride="Admin / Bookings / Completed"
+              />
+            ),
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "bookings/refunds",
+            element: (
+              <AdminBookingsPage
+                defaultStatusFilter="refund_requested"
+                titleOverride="Refund Requests"
+                breadcrumbOverride="Admin / Bookings / Refunds"
+              />
+            ),
             errorElement: <ErrorPage />,
           },
           {
