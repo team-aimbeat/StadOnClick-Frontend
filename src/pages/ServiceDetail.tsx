@@ -1,4 +1,4 @@
-import { ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
+import { Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
 import { services } from "@/data/services"
@@ -70,6 +70,7 @@ import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
 import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
 import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
 
@@ -200,7 +201,7 @@ export default function ServiceDetail() {
                       />
                     </div>
                   ))}
-           <button className="absolute mt-[420px]  border right-96 rounded-2xl bg-white px-4 py-2 text-sm font-semibold hover:bg-white">
+           <button className="absolute mt-[420px]  borderright-96 rounded-2xl bg-white px-4 py-2 text-sm font-semibold hover:bg-white">
           See all photos
         </button>
                 </div>
@@ -211,11 +212,11 @@ export default function ServiceDetail() {
                     {service.status}
                   </span>
                 )}
-                {service.category && (
+                {/* {service.category && (
                   <span className="rounded-full border border-slate-200 px-3 py-1">
                     Category ID: {service.category.id}
                   </span>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -329,31 +330,41 @@ export default function ServiceDetail() {
             {reviews?.map((review) => (
               <article
                 key={review.id}
-                className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 shadow-sm"
+                className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-700">
-                      {review.comment.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        Guest
+                <div className="flex gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
+                    {review.comment.substring(0, 1).toUpperCase()}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[15px] font-bold text-slate-900">
+                        Ananya R.
                       </p>
-                      <p className="text-xs text-slate-500">Verified Visit</p>
+                      <Badge variant="outline" className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50">
+                        <Check className="h-3 w-3 stroke-[3px]" />
+                        Verified
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`h-3 w-3 ${
+                            s <= review.rating
+                              ? "fill-orange-400 text-orange-400"
+                              : "text-slate-200"
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
-                  <span className="flex items-center gap-1 text-sm font-semibold text-amber-500">
-                    <Star className="h-4 w-4" />
-                    {review.rating.toFixed(1)}
-                  </span>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-600">
+                <p className="text-[15px] leading-relaxed text-slate-600">
                   {review.comment}
                 </p>
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{new Date(review.createdAt).toLocaleDateString()}</span>
-                  <span>Online Guest</span>
+                <div className="text-[13px] font-medium text-slate-400">
+                  {new Date(review.createdAt).toLocaleDateString()}
                 </div>
               </article>
             ))}
@@ -390,7 +401,7 @@ export default function ServiceDetail() {
                 ))}
               </div>
             </div>
-            <div className="space-y-6 rounded-[32px] border border-slate-200 bg-white p-8">
+            <div className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-8">
               <div className="space-y-1">
                 <h3 className="text-xl font-bold text-slate-900">Write a Review</h3>
                 <p className="text-sm font-medium text-slate-500">Your rating</p>
