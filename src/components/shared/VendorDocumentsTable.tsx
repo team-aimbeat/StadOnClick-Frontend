@@ -59,7 +59,11 @@ export type VendorDoc = {
   auditTrail?: {
     action: string;
     comment?: string;
-    performedBy: string;
+    performedBy: {
+        firstName: string;
+        lastName?: string | null;
+        email: string;
+    };
     createdAt: string;
   }[];
 };
@@ -229,7 +233,7 @@ const VendorDocumentsTable = ({
         return;
       }
 
-      const vendorId = "953771d3-dfe7-4135-9c54-f6f0df61e250";
+      const vendorId = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225";
       try {
         for (const file of files) {
           const formData = new FormData();
@@ -374,15 +378,15 @@ const VendorDocumentsTable = ({
   );
 
   const toolbarSkeleton = isFetching && vendorDocs.length === 0;
-const { data } = useGetMeQuery();
-const user = data?.user;
+  const { data } = useGetMeQuery();
+  const user = data?.user;
 
-const VendorProfile:any = {
-  id: user?.id,
-  name: user?.displayName ?? "Vendor",
-  avatar: user?.profileImageUrl ?? profile7,
+  const VendorProfile: any = {
+    id: user?.id,
+    name: user?.displayName ?? "Vendor",
+    avatar: user?.profileImageUrl ?? profile7,
     email: user?.email ?? "Vendor",
-};
+  };
 
   return (
     <>
@@ -897,7 +901,7 @@ const VendorProfile:any = {
                               <p className="text-xs text-gray-500">
                                 {new Date(entry.createdAt).toLocaleString(
                                   "en-GB",
-                                )}
+                                )} · {entry.performedBy?.firstName} {entry.performedBy?.lastName ?? ""}
                               </p>
                               {entry.comment && (
                                 <p className="text-xs text-gray-500">

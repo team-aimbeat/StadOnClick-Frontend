@@ -24,7 +24,11 @@ type AdminVendor = {
 type AdminKycAuditLog = {
   action: string;
   comment?: string | null;
-  performedBy: string;
+  performedBy: {
+    firstName: string;
+    lastName?: string | null;
+    email: string;
+  };
   createdAt: string;
 };
 
@@ -301,7 +305,7 @@ const AdminKycDocumentsPage = () => {
                       {log.action.replace(/_/g, " ")}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(log.createdAt).toLocaleString("en-GB")}
+                      {new Date(log.createdAt).toLocaleString("en-GB")} · {log.performedBy?.firstName} {log.performedBy?.lastName ?? ""}
                     </p>
                     {log.comment && (
                       <p className="mt-1 text-xs text-gray-600">

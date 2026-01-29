@@ -18,7 +18,11 @@ export type VendorKycAuditAction =
 export type VendorKycAuditTrail = {
   action: VendorKycAuditAction;
   comment?: string | null;
-  performedBy: string;
+  performedBy: {
+    firstName: string;
+    lastName?: string | null;
+    email: string;
+  };
   createdAt: string;
 };
 

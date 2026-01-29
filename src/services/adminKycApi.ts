@@ -1,7 +1,6 @@
 import { baseQueryWithReauth } from "@/app/services/baseApi";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
-
 /* ================= TYPES ================= */
 
 type AdminVendor = {
@@ -10,11 +9,25 @@ type AdminVendor = {
   avatar?: string | null;
 };
 
-type AdminKycAuditLog = {
+export type AdminKycAuditLog = {
+  id: string;
   action: string;
   comment?: string | null;
-  performedBy: string;
+  performedBy: {
+    firstName: string;
+    lastName?: string | null;
+    email: string;
+  };
   createdAt: string;
+  document: {
+    id: string;
+    type: string;
+    vendor: {
+      user: any;
+      id: string;
+      firstName: string;
+    };
+  };
 };
 
 type AdminKycDocument = {
@@ -52,6 +65,19 @@ export const adminKycApi = createApi({
             ]
           : [{ type: "AdminKyc", id: "LIST" }],
     }),
+
+    /* =======================
+       GET ALL KYC AUDIT LOGS
+    ======================= */
+getAllKycAuditLogs: builder.query<AdminKycAuditLog[], void>({
+  query: () => "/admin/vendors/kyc/audit-logs",
+  transformResponse: (response: {
+    success: boolean;
+    data: AdminKycAuditLog[];
+  }) => response.data,
+  providesTags: [{ type: "AdminKyc", id: "AUDIT_LOGS" }],
+}),
+
 
     /* =======================
        APPROVE DOCUMENT
@@ -120,6 +146,7 @@ export const adminKycApi = createApi({
 
 export const {
   useGetAllVendorKycDocumentsQuery,
+  useGetAllKycAuditLogsQuery,
   useApproveKycDocumentMutation,
   useRejectKycDocumentMutation,
   useRequestKycReuploadMutation,
