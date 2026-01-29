@@ -12,8 +12,14 @@ export type ServiceCategory = {
   id: string;
   name: string;
   slug: string;
+  icon?: string | null;
   masterCategoryId: string;
+  isActive: boolean;
   sortOrder?: number;
+};
+
+type ListResponse = {
+  data: ServiceCategory[];
 };
 
 export const serviceCategoriesApi = createApi({
@@ -24,7 +30,7 @@ export const serviceCategoriesApi = createApi({
   tagTypes: ["ServiceMasterCategory", "ServiceCategory"],
   endpoints: (builder) => ({
     getMasterCategories: builder.query<ServiceMasterCategory[], void>({
-      query: () => "/service-categories",
+      query: () => "/service-categories/master-categories",
       transformResponse: (response: ServiceMasterCategory[] | undefined) =>
         response ?? [],
       providesTags: (result) =>
@@ -47,10 +53,25 @@ export const serviceCategoriesApi = createApi({
             }))
           : [],
     }),
+    listServiceCategories: builder.query<ServiceCategory[], void>({
+      query: () => "/service-categories",
+      transformResponse: (response: ListResponse | ServiceCategory[]) => {
+        if (Array.isArray(response)) return response;
+        return response.data ?? [];
+      },
+      providesTags: (result) =>
+        result
+          ? result.map((category) => ({
+              type: "ServiceCategory" as const,
+              id: category.id,
+            }))
+          : [],
+    }),
   }),
 });
 
 export const {
   useGetMasterCategoriesQuery,
   useGetServiceCategoriesByMasterQuery,
+  useListServiceCategoriesQuery,
 } = serviceCategoriesApi;

@@ -467,7 +467,7 @@ const VendorServices = () => {
     let createdOfferingId: string | null = null;
     try {
       const vendorServicePayload = {
-        vendorId: "953771d3-dfe7-4135-9c54-f6f0df61e250", // ✅ REQUIRED
+        vendorId: "e6f6ce15-ff9f-40da-b1c8-88afd9aee225", // ✅ REQUIRED
         categoryId: selectedCategoryId,
         title: vendorServiceDetails.title.trim(),
         description: vendorServiceDetails.description.trim(),
@@ -865,7 +865,7 @@ const VendorServices = () => {
                     setIsCreatingService(true);
 
                     const payload = {
-                      vendorId: "953771d3-dfe7-4135-9c54-f6f0df61e250",
+                      vendorId: "e6f6ce15-ff9f-40da-b1c8-88afd9aee225",
                       categoryId: selectedCategoryId,
                       title: vendorServiceDetails.title.trim(),
                       description: vendorServiceDetails.description.trim(),

@@ -66,6 +66,7 @@ import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
+import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -170,6 +171,10 @@ const appRouter = createBrowserRouter([
            {
             path: "compliance/kyc",
             element: <AdminKycDocumentsPage />,
+          },
+             {
+            path: "compliance/kyc/audit",
+            element: <AdminKycAuditLogsPage />,
           },
           {
             path: "support/dashboard",

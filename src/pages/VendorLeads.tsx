@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+ï»¿import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   HiOutlineChevronDown,
@@ -18,7 +18,7 @@ import {
   useUpdateVendorLeadStatusMutation,
 } from "@/features/leads/api/leadsApi";
 import type { LeadStatus, VendorLeadItem } from "@/features/leads/types/leads.types";
-import { useListServiceCategoriesQuery } from "@/features/serviceCategories/api/serviceCategoriesApi";
+import { useListServiceCategoriesQuery } from "@/services/serviceCategoriesApi";
 
 const statusOptions: LeadStatus[] = ["NEW", "CONTACTED", "CONVERTED", "LOST"];
 
@@ -51,7 +51,7 @@ const LeadCard = ({
   const isLocked = lead.isLocked;
   const message = isLocked
     ? "Upgrade your plan to unlock contact details and the full enquiry."
-    : lead.lead.message ?? "—";
+    : lead.lead.message ?? "â€”";
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-5">
@@ -121,8 +121,8 @@ const LeadCard = ({
               Contact
             </p>
             <p className="mt-1 text-sm text-slate-700">
-              {isLocked ? "Locked" : lead.lead.email ?? "—"}
-              {lead.lead.phone ? ` • ${isLocked ? "Locked" : lead.lead.phone}` : ""}
+              {isLocked ? "Locked" : lead.lead.email ?? "â€”"}
+              {lead.lead.phone ? ` â€¢ ${isLocked ? "Locked" : lead.lead.phone}` : ""}
             </p>
           </div>
           {lead.lockReason ? (
@@ -157,7 +157,7 @@ const LeadCard = ({
                 </option>
               ))}
             </select>
-            {isSaving ? <span className="text-[11px] text-emerald-600">Saving…</span> : null}
+            {isSaving ? <span className="text-[11px] text-emerald-600">Savingâ€¦</span> : null}
           </div>
         </div>
         {isLocked ? (
