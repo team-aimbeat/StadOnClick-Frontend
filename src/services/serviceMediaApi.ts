@@ -7,6 +7,7 @@ export interface ServiceMedia {
   isActive: boolean;
   sortOrder: number;
   signedUrl: string;
+  title: string;
 }
 
 export const serviceMediaApi = createApi({

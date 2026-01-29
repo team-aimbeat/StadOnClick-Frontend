@@ -64,13 +64,42 @@ const starBreakdown = [
   { label: "1 ⭐", percent: 1 },
 ]
 
+import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
+import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
+import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
+import { useGetServiceReviewsQuery } from "@/services/serviceReviewsApi"
+
+const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
+
 export default function ServiceDetail() {
   const navigate = useNavigate()
   const { serviceSlug } = useParams<{ serviceSlug?: string }>()
-  const service =
-    services.find((item) => item.slug === serviceSlug) ??
-    services[0]
- const galleryImages = [salon1, salon2, salon3]
+
+  // 1. Fetch vendor services list (scoped by vendorId)
+  const { data: vendorServices, isLoading: servicesLoading } = useGetVendorServicesQuery(VENDOR_ID)
+
+  // Find the specific service matching the slug
+  const service = vendorServices?.find((s) => s.name.toLowerCase().replace(/ /g, '-') === serviceSlug) || vendorServices?.[0]
+  const serviceId = service?.id
+
+  // 2. Fetch Media (isolated)
+  const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(serviceId ?? "", { skip: !serviceId })
+
+  // 3. Fetch Offerings (isolated)
+  const { data: offerings, isLoading: offeringsLoading } = useGetServiceOfferingsQuery(serviceId ?? "", { skip: !serviceId })
+
+  // 4. Fetch Reviews (isolated)
+  const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(serviceId ?? "", { skip: !serviceId })
+
+  if (servicesLoading || mediaLoading || offeringsLoading || reviewsLoading) {
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+  }
+
+  if (!service) {
+    return <div className="flex min-h-screen items-center justify-center">Service not found</div>
+  }
+
+  const galleryImages = media?.filter(m => m.type === 'IMAGE').map(m => m.signedUrl) || [salon1, salon2, salon3]
 
 
   return (
@@ -90,15 +119,15 @@ export default function ServiceDetail() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold text-slate-900">
-                    {service.title}
+                    {service.name}
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                     <div className="flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-600">
                       <Star className="h-4 w-4" />
-                      {service.rating.toFixed(1)}
+                      {(reviews && reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0")}
                     </div>
                     <span className="text-xs text-slate-400">
-                      ({service.reviews}+ verified guest reviews)
+                      ({reviews?.length || 0} verified guest reviews)
                     </span>
                   </div>
                 </div>
@@ -121,7 +150,7 @@ export default function ServiceDetail() {
                 <div className="aspect-[4/3] w-full overflow-hidden  bg-slate-100 shadow-inner">
                   <img
                     src={galleryImages[0]}
-                    alt={`${service.title} hero`}
+                    alt={`${service.name} hero`}
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -133,7 +162,7 @@ export default function ServiceDetail() {
                     >
                       <img
                         src={image}
-                        alt={`${service.title} gallery`}
+                        alt={`${service.name} gallery`}
                         className="h-full w-full object-cover"
                       />
                     </div>
@@ -144,14 +173,16 @@ export default function ServiceDetail() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                {service.heroHighlights?.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-slate-200 px-3 py-1"
-                  >
-                    {tag}
+                {service.status && (
+                  <span className="rounded-full border border-slate-200 px-3 py-1">
+                    {service.status}
                   </span>
-                ))}
+                )}
+                {service.categoryId && (
+                  <span className="rounded-full border border-slate-200 px-3 py-1">
+                    Category ID: {service.categoryId}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -191,27 +222,27 @@ export default function ServiceDetail() {
                 </p>
               </div>
               <span className="text-sm font-semibold text-slate-500">
-                {service.details.length} packages
+                {offerings?.length || 0} packages
               </span>
             </div>
             <div className="space-y-4">
-              {service.details.map((detail, index) => (
+              {offerings?.map((offering) => (
                 <div
-                  key={`${service.id}-${index}`}
+                  key={offering.id}
                   className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
                 >
                   <div>
                     <p className="text-base font-semibold text-slate-900">
-                      {detail.title}
+                      {offering.name}
                     </p>
-                    <p className="text-xs text-slate-500">{detail.subtitle}</p>
+                    <p className="text-xs text-slate-500">{offering.id}</p>
                     <p className="text-xs font-semibold text-slate-400">
-                      {detail.duration}
+                      Max Qty: {offering.maxQuantity || "N/A"}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-3">
                     <span className="text-lg font-bold text-slate-900">
-                      {detail.price}
+                      ${offering.salePrice}
                     </span>
                     <button className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-600">
                       Reserve
@@ -258,11 +289,11 @@ export default function ServiceDetail() {
               </p>
             </div>
             <button className="text-sm font-semibold text-blue-600">
-              View all {service.reviews} reviews
+              View all {reviews?.length || 0} reviews
             </button>
           </div>
           <div className="grid gap-6 lg:grid-cols-2">
-            {reviewCards.map((review) => (
+            {reviews?.map((review) => (
               <article
                 key={review.id}
                 className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 shadow-sm"
@@ -270,13 +301,13 @@ export default function ServiceDetail() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-700">
-                      {review.initials}
+                      {review.comment.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
-                        {review.name}
+                        Guest
                       </p>
-                      <p className="text-xs text-slate-500">{review.role}</p>
+                      <p className="text-xs text-slate-500">Verified Visit</p>
                     </div>
                   </div>
                   <span className="flex items-center gap-1 text-sm font-semibold text-amber-500">
@@ -285,11 +316,11 @@ export default function ServiceDetail() {
                   </span>
                 </div>
                 <p className="text-sm leading-relaxed text-slate-600">
-                  {review.text}
+                  {review.comment}
                 </p>
                 <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{review.date}</span>
-                  <span>{review.location}</span>
+                  <span>{new Date(review.createdAt).toLocaleDateString()}</span>
+                  <span>Online Guest</span>
                 </div>
               </article>
             ))}
@@ -300,11 +331,13 @@ export default function ServiceDetail() {
                 Customer reviews
               </p>
               <div className="flex items-center gap-3">
-                <div className="text-4xl font-bold text-slate-900">4.5</div>
-                <div className="flex flex-col text-sm text-slate-500">
-                  <span>Based on {service.reviews} reviews</span>
-                  <span>Let us know what stood out</span>
-                </div>
+                <p className="text-4xl font-bold text-slate-900">
+                {(reviews && reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0")}
+              </p>
+              <div className="flex flex-col text-sm text-slate-500">
+                <span>Based on {reviews?.length || 0} reviews</span>
+                <span>Let us know what stood out</span>
+              </div>
               </div>
               <div className="space-y-2">
                 {starBreakdown.map((row) => (
@@ -350,12 +383,12 @@ export default function ServiceDetail() {
             </span>
           </div>
           <p className="text-sm leading-relaxed text-slate-500">
-            {service.about ??
+            {service.description ??
               "An elevated wellness studio delivering tailored rituals, smart touches, and seamless reservations."}
           </p>
           <div className="overflow-hidden rounded-3xl border border-slate-200">
             <iframe
-              title={`Map for ${service.title}`}
+              title={`Map for ${service.name}`}
               src="https://www.openstreetmap.org/export/embed.html?bbox=-86.7551%2C33.5122%2C-86.7475%2C33.5061&layer=mapnik"
               className="h-64 w-full"
               loading="lazy"

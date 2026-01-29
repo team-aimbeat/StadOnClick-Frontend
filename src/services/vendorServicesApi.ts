@@ -3,13 +3,10 @@ import { baseQueryWithReauth } from "@/app/services/baseApi";
 
 export type VendorServiceEntity = {
   id: string;
-  vendorId: string;
-  categoryId: string;
-  title: string;
-  description?: string | null;
-  latitude: number;
-  longitude: number;
+  name: string;
+  description: string;
   status: "DRAFT" | "LIVE" | "PAUSED";
+  category?: any;
 };
 
 export interface CreateVendorServicePayload {
@@ -34,6 +31,14 @@ export const vendorServicesApi = createApi({
     }),
     getVendorServices: builder.query<VendorServiceEntity[], string>({
       query: (vendorId) => `/vendor/vendor-services/${vendorId}`,
+      transformResponse: (response: any[]) =>
+        response.map((s: any) => ({
+          id: s.id,
+          name: s.title,
+          description: s.description,
+          status: s.status,
+          category: s.category,
+        })),
     }),
     getVendorProfileStatus: builder.query<any, void>({
       query: () => "/vendor/onboarding/status",
