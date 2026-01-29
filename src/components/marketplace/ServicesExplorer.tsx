@@ -206,7 +206,7 @@ export default function ServicesExplorer() {
 
         <div className="flex-1 space-y-6">
           <header
-            className="space-y-4 rounded-lg px-6 py-10 text-white shadow-lg min-h-[250px]"
+            className="space-y-4 rounded-lg px-6 py-10 text-white shadow-lg min-h-[300px]"
             style={{
               backgroundImage: ` url(${bannerImage})`,
               backgroundSize: "cover",
