@@ -60,9 +60,9 @@ export type VendorDoc = {
     action: string;
     comment?: string;
     performedBy: {
-        firstName: string;
-        lastName?: string | null;
-        email: string;
+      firstName: string;
+      lastName?: string | null;
+      email: string;
     };
     createdAt: string;
   }[];
@@ -349,13 +349,6 @@ const VendorDocumentsTable = ({
           >
             <DropdownMenuItem
               className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
-              onSelect={() => setActiveDoc(row)}
-            >
-              Edit
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
               onSelect={() => setViewDoc(row)}
             >
               View
@@ -386,6 +379,26 @@ const VendorDocumentsTable = ({
     name: user?.displayName ?? "Vendor",
     avatar: user?.profileImageUrl ?? profile7,
     email: user?.email ?? "Vendor",
+  };
+
+  const getStatusDotColor = (status: string) => {
+    switch (status) {
+      case "SUBMITTED":
+      case "PENDING":
+        return "bg-yellow-400";
+
+      case "APPROVED":
+        return "bg-green-500";
+
+      case "REJECTED":
+        return "bg-rose-500";
+
+      case "REQUESTED_REUPLOAD":
+        return "bg-blue-500";
+
+      default:
+        return "bg-gray-400";
+    }
   };
 
   return (
@@ -460,7 +473,7 @@ const VendorDocumentsTable = ({
               onClick={() => setUploadOpen(false)}
             >
               <div
-                className="relative w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl"
+                className="relative w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl"
                 onClick={(event) => event.stopPropagation()}
               >
                 <button
@@ -575,183 +588,6 @@ const VendorDocumentsTable = ({
                     onChange={handleFileChange}
                   />
                 </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <div className="relative flex-1">
-                    <input
-                      placeholder="Search documents..."
-                      className="h-10 w-full rounded-full border border-gray-200 pl-10 pr-4 text-xs text-gray-600 outline-none focus:border-blue-500"
-                    />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                      <HiEllipsisHorizontal className="h-4 w-4 rotate-90" />
-                    </span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50"
-                  >
-                    Status filter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-10 rounded-full border-gray-200 px-4 text-xs text-gray-600 hover:bg-gray-50"
-                  >
-                    Type filter
-                  </Button>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
-                  <span className="font-semibold text-gray-700">
-                    Your documents
-                  </span>
-                  <span>Last updated: today</span>
-                </div>
-
-                <div className="mt-3">
-                  <VendorTable<VendorDoc>
-                    columns={columns}
-                    data={vendorDocs}
-                    showToolbar={false}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeDoc && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
-              onClick={() => setActiveDoc(null)}
-            >
-              <div
-                className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  onClick={() => setActiveDoc(null)}
-                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-100"
-                >
-                  <HiXMark className="h-4 w-4" />
-                </button>
-
-                <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
-                  <div className="bg-gray-100 p-4">
-                    <img
-                      src={activeDoc.docImage}
-                      alt={`${activeDoc.vendor} document`}
-                      className="h-full max-h-[520px] w-full rounded-xl object-cover"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-5 mt-5 mb-5 ml-5 mr-5 bg-gray-50 p-6 rounded-2xl">
-                    <div className="flex flex-col items-center text-center">
-                      <img
-                        src={activeDoc.avatar}
-                        alt={activeDoc.vendor}
-                        className="h-20 w-20 rounded-full border border-gray-200 object-cover"
-                      />
-                      <h3 className="mt-3 text-lg font-semibold text-gray-900">
-                        {activeDoc.vendor}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        ID: {activeDoc.id}
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 text-sm">
-                      <div className="flex items-center justify-between text-gray-500">
-                        <span>Document type</span>
-                        <span className="font-medium text-gray-900">
-                          {activeDoc.docType}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-gray-500">
-                        <span>Category</span>
-                        <span className="font-medium text-gray-900">
-                          {activeDoc.category}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-gray-500">
-                        <span>Submitted</span>
-                        <span className="font-medium text-gray-900">
-                          {activeDoc.submitted} - {activeDoc.submittedTime}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-gray-500">
-                        <span>Status</span>
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusStyles(
-                            activeDoc.status,
-                          )}`}
-                        >
-                          {activeDoc.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium text-gray-700">
-                        Comment
-                      </label>
-                      <textarea
-                        placeholder="Add a note for this KYC review"
-                        value={approveComment}
-                        onChange={(event) =>
-                          setApproveComment(event.target.value)
-                        }
-                        className="mt-2 min-h-[96px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-700 outline-none focus:border-blue-500"
-                      />
-                      <div className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">
-                          Reason *
-                        </label>
-                        <Select
-                          value={approveReason}
-                          onValueChange={(value) => setApproveReason(value)}
-                        >
-                          <SelectTrigger className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-0">
-                            <SelectValue placeholder="Select a reason" />
-                          </SelectTrigger>
-                          <SelectContent className="w-full rounded-2xl border border-gray-200 bg-white">
-                            <SelectItem value="valid">
-                              Document is valid
-                            </SelectItem>
-                            <SelectItem value="verified">
-                              Verified vendor
-                            </SelectItem>
-                            <SelectItem value="other">
-                              Other follow-up
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="mt-2 text-xs text-gray-500">
-                          The selected reason is logged and shared with the
-                          vendor.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-auto flex flex-wrap gap-3">
-                      <Button
-                        className="bg-blue-600 text-white hover:bg-blue-700"
-                        onClick={handleApprove}
-                        disabled={!approveReason}
-                      >
-                        Approve
-                      </Button>
-                      <Button className="bg-red-500 text-white hover:bg-red-600">
-                        Decline
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                      >
-                        Request reupload
-                      </Button>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -839,9 +675,7 @@ const VendorDocumentsTable = ({
                             </div>
                           </div>
                           <div className="mt-3 flex items-center justify-between gap-2">
-                            <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibo ld text-emerald-600">
-                              Approved
-                            </span>
+                            <span className="   px-3 py-1 text-xs "></span>
                             <Button
                               variant="outline"
                               className="h-8 rounded-full border-gray-300 px-4 text-xs text-gray-600 hover:bg-gray-100"
@@ -889,7 +723,12 @@ const VendorDocumentsTable = ({
                             className="flex items-start gap-3"
                           >
                             <div className="relative flex w-4 justify-center">
-                              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-slate-400" />
+                              <span
+                                className={`mt-1 h-2.5 w-2.5 rounded-full ${getStatusDotColor(
+                                  entry.action,
+                                )}`}
+                              />
+
                               {index < activityLogEntries.length - 1 ? (
                                 <span className="absolute left-1/2 top-4 h-6 w-px -translate-x-1/2 bg-gray-200" />
                               ) : null}
@@ -901,7 +740,9 @@ const VendorDocumentsTable = ({
                               <p className="text-xs text-gray-500">
                                 {new Date(entry.createdAt).toLocaleString(
                                   "en-GB",
-                                )} · {entry.performedBy?.firstName} {entry.performedBy?.lastName ?? ""}
+                                )}{" "}
+                                · {entry.performedBy?.firstName}{" "}
+                                {entry.performedBy?.lastName ?? ""}
                               </p>
                               {entry.comment && (
                                 <p className="text-xs text-gray-500">
