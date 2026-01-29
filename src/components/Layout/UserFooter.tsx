@@ -118,7 +118,7 @@ const UserFooter = () => {
   const regionSelectId = useId();
 
   return (
-    <footer className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
+    <footer className="bg-white text-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-8 lg:grid-cols-[1.4fr,1fr,1fr,auto] lg:items-start">
           <div className="space-y-6">
@@ -127,13 +127,13 @@ const UserFooter = () => {
                 QR
               </div>
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-700">
                   Marketplace Scale
                 </p>
-                <h2 className="text-2xl font-semibold leading-tight text-slate-900 dark:text-slate-50">
+                <h2 className="text-2xl font-semibold leading-tight text-slate-900 dark:text-slate-900">
                   Download the StadOnClick App
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
+                <p className="text-sm text-slate-700 ">
                   Unlock curated experiences, deals, and vendor intelligence in
                   one trusted destination.
                 </p>
@@ -147,7 +147,7 @@ const UserFooter = () => {
                 </Button>
                 <div className="flex items-center gap-2 text-sm font-medium text-amber-500">
                   <Star className="h-4 w-4" aria-hidden />
-                  <span className="text-slate-600 dark:text-slate-300">
+                  <span className="text-slate-700 ">
                     4.9  120K+ downloads
                   </span>
                 </div>
@@ -156,14 +156,14 @@ const UserFooter = () => {
           </div>
 
           <div className="flex flex-col gap-3 lg:items-end">
-            <p className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            <p className="text-sm font-semibold uppercase tracking-widest text-slate-700">
               Follow us
             </p>
             <div className="flex gap-3 text-slate-600 dark:text-slate-200">
               {socialLinks.map((link) => (
                 <a
                   key={link.label}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-slate-900"
                   aria-label={link.label}
                   href={link.href}
                 >
@@ -179,14 +179,14 @@ const UserFooter = () => {
         <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {navColumns.map((column) => (
             <div key={column.title} className="space-y-3">
-              <p className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <p className="text-sm font-semibold uppercase tracking-widest text-slate-700">
                 {column.title}
               </p>
-              <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+              <ul className="space-y-2 text-sm text-slate-700">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <a
-                      className="hover:text-slate-900 hover:underline dark:hover:text-white"
+                      className="hover:text-slate-900 hover:underline dark:hover:text-slate-900"
                       href={link.href}
                     >
                       {link.label}
@@ -197,17 +197,17 @@ const UserFooter = () => {
             </div>
           ))}
           <div className="hidden flex-col gap-3 lg:flex">
-            <p className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            <p className="text-sm font-semibold uppercase tracking-widest text-slate-700">
               Quick Links
             </p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">
               Categories
             </p>
-            <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+            <ul className="space-y-2 text-sm text-slate-700">
               {quickLinks.map((link) => (
                 <li key={link.label}>
                   <a
-                    className="hover:text-slate-900 hover:underline dark:hover:text-white"
+                      className="hover:text-slate-900 hover:underline dark:hover:text-slate-900"
                     href={link.href}
                   >
                     {link.label}
@@ -224,15 +224,15 @@ const UserFooter = () => {
             className="rounded-2xl border border-slate-200 bg-white/60 shadow-sm dark:border-slate-800 dark:bg-slate-900/70"
           >
             <AccordionItem value="quick-links">
-              <AccordionTrigger className="text-sm font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <AccordionTrigger className="text-sm font-semibold uppercase tracking-widest text-slate-700">
                 Categories
               </AccordionTrigger>
               <AccordionContent>
-                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                <ul className="space-y-2 text-sm text-slate-700">
                   {quickLinks.map((link) => (
                     <li key={link.label}>
                       <a
-                        className="hover:text-slate-900 hover:underline dark:hover:text-white"
+                        className="hover:text-slate-900 hover:underline dark:hover:text-slate-900"
                         href={link.href}
                       >
                         {link.label}

@@ -73,9 +73,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
   }, [location]);
 
   const navItems: NavItem[] = [
-    // =========================
     // OVERVIEW
-    // =========================
     {
       id: "overview",
       label: t("Overview"),
@@ -83,9 +81,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       to: withBase("dashboard"),
     },
 
-    // =========================
     // VENDOR OPERATIONS
-    // =========================
     {
       id: "vendors",
       label: t("Vendors"),
@@ -103,9 +99,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       ],
     },
 
-    // =========================
     // COMPLIANCE (KYC + REVIEW)
-    // =========================
     {
       id: "compliance",
       label: t("Compliance"),
@@ -115,10 +109,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
         { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
       ],
     },
-
-    // =========================
     // LEADS & MONETIZATION
-    // =========================
     {
       id: "leads",
       label: t("Leads & Monetization"),
@@ -136,9 +127,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       ],
     },
 
-    // =========================
     // BOOKINGS (vendor)
-    // =========================
     {
       id: "bookings",
       label: t("Bookings"),
@@ -151,9 +140,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       ],
     },
 
-    // =========================
     // PAYOUTS / FINANCE (future-ready)
-    // =========================
     {
       id: "finance",
       label: t("Finance"),
@@ -170,9 +157,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       ],
     },
 
-    // =========================
     // CATALOG / CONFIGURATION
-    // =========================
     {
       id: "catalog",
       label: t("Catalog"),
@@ -184,9 +169,7 @@ const Sidebar = ({ basePath = "" }: SidebarProps) => {
       ],
     },
 
-    // =========================
     // SYSTEM
-    // =========================
     {
       id: "system",
       label: t("System"),

@@ -10,6 +10,8 @@ import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
+import ServiceDetail from "@/pages/ServiceDetail";
+import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import Kyc from "@/pages/Kyc";
 import ChatBox from "@/pages/ChatBox";
 import NotFound from "@/pages/NotFound";
@@ -47,6 +49,7 @@ import AdminProtectedRoute from "./AdminProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
+import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -79,6 +82,19 @@ const appRouter = createBrowserRouter([
         path: "/marketplace",
         element: <Marketplace />,
         errorElement: <ErrorPage />,
+      },
+      {
+        path: "/marketplace/restaurants",
+        element: <RestaurantMarketplace />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/services/:serviceSlug",
+        element: <ServiceDetail />,
+      },
+      {
+        path: "/restaurants/:restaurantSlug",
+        element: <RestaurantServiceDetail />,
       },
       {
         path: "/wishlist",

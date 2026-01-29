@@ -3,6 +3,11 @@ import salonImage from "@/assets/Images/spa.svg"
 import spaImage from "@/assets/Images/salon.svg"
 import partyImage from "@/assets/Images/party.svg"
 import activityImage from "@/assets/Images/hotel.svg"
+import green from "@/assets/images/green.png"
+import pink from "@/assets/images/pink.png"
+import blue from "@/assets/images/blue.png"
+import purple from "@/assets/images/purple.png"
+
 
 const offerCards = [
   {
@@ -10,35 +15,35 @@ const offerCards = [
     subtitle: "Offers from",
     price: "₹249",
     image: buffetImage,
-    color: "bg-[#1fa260]",
+    bgImage: green,
   },
   {
     title: "Salon",
     subtitle: "Offers from",
     price: "₹249",
     image: salonImage,
-    color: "bg-[#1f6fb6]",
+    bgImage: pink,
   },
   {
     title: "Spa",
     subtitle: "Offers from",
     price: "₹249",
     image: spaImage,
-    color: "bg-[#a7b11a]",
+    bgImage: blue,
   },
   {
     title: "Party",
     subtitle: "Offers from",
     price: "₹249",
     image: partyImage,
-    color: "bg-[#7b77d6]",
+    bgImage: purple,
   },
   {
     title: "Hotels",
     subtitle: "Offers from",
     price: "₹249",
     image: activityImage,
-    color: "bg-[#ef635a]",
+    bgImage: green,
   },
 
    
@@ -47,37 +52,42 @@ const offerCards = [
 
 export default function HomeDiscount() {
   return (
-    <section className="mt-10  text-start lg:px-1">
-      <h2 className="text-[28px] font-normal text-black">
+    <div className="space-y-10 text-start">
+      <section className="mt-2">
+        <h2 className="text-[28px] font-semibold text-slate-800 text-start mb-4 -tracking-tight">
           Save big across services
         </h2>
 
 
-      <div className="mt-5  flex gap-5 overflow-x-auto pb-2 lg:grid lg:grid-cols-5 lg:justify-items-center lg:gap-10 lg:overflow-visible ">
-        {offerCards.map((card) => (
-          <article
-            key={card.title}
-            className={`relative min-w-[215px] h-[215px] overflow-hidden rounded-3xl ${card.color} p-3 text-left text-white shadow-md`}
-          >
-            <div className="relative z-10">
-              <p className="text-base font-semibold">{card.title}</p>
-              <p className="text-[11px] text-white/90">{card.subtitle}</p>
-              <p className="mt-1 text-xs font-semibold">{card.price}</p>
-            </div>
-          
-            <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 text-xs">
-              →
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 h-[220px] overflow-hidden">
-              <img
-                src={card.image}
-                alt={card.title}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
+        <div className="mt-5 flex gap-5 overflow-x-auto pb-2 lg:grid lg:grid-cols-5 lg:justify-items-center lg:gap-10 lg:overflow-visible">
+          {offerCards.map((card) => (
+            <article
+              key={card.title}
+              className="relative h-[186px] min-w-[225px] overflow-hidden rounded-3xl bg-cover bg-center p-3 text-left text-white shadow-md"
+              style={{ backgroundImage: `url(${card.bgImage})` }}
+            >
+              <div className="relative z-10">
+                <p className="text-xl tracking-wider font-semibold">{card.title}</p>
+                <p className="text-[12px] text-white font-medium">
+                  {card.subtitle}
+                </p>
+                <p className="mt-1 text-sm font-semibold">{card.price}</p>
+              </div>
+
+              <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 text-xs">
+                →
+              </div>
+              <div className="absolute h-[97px] overflow-hidden -ml-1">
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  className="h-[104px] w-[205px] object-cover"
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
   )
 }
