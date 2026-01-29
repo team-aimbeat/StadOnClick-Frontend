@@ -69,6 +69,7 @@ import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
+import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -236,6 +237,11 @@ const appRouter = createBrowserRouter([
           {
             path: "finance/payouts",
             element: <AdminPayoutsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "finance/sponsorship-plans",
+            element: <AdminSponsorshipPlansPage />,
             errorElement: <ErrorPage />,
           },
           {
