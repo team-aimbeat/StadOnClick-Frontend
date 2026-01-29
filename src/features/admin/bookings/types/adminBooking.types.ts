@@ -32,6 +32,9 @@ export type AdminBookingService = {
   title: string;
   status: string;
   category?: AdminBookingCategory | null;
+  _count?: {
+    reviews: number;
+  };
 };
 
 export type AdminBookingSlot = {
