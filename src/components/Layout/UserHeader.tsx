@@ -48,6 +48,17 @@ type NotificationItem = {
   time: string;
 };
 
+const searchCategories = [
+  { label: "Beauty", slug: "salon-deals" },
+  { label: "Sports", slug: "games-outings" },
+  { label: "Events", slug: "new-deals" },
+  { label: "Hotels", slug: "restaurant-deals" },
+  { label: "Vacation", slug: "gift-cards" },
+  { label: "Dining", slug: "buffet-deals" },
+];
+
+const locations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad"];
+
 const cartPreviewItems: CartPreviewItem[] = [
   {
     title: "Nordic Spa Evening",
@@ -99,6 +110,8 @@ export default function UserHeader() {
 
   const [cartMenuOpen, setCartMenuOpen] = useState(false);
   const [notificationsMenuOpen, setNotificationsMenuOpen] = useState(false);
+  const [showHeaderSearch, setShowHeaderSearch] = useState(false);
+  const [query, setQuery] = useState("");
 
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
@@ -134,6 +147,34 @@ export default function UserHeader() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowHeaderSearch(window.scrollY > 320);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const categoryLookup = useMemo(() => {
+    const lookup = new Map<string, string>();
+    searchCategories.forEach((c) => lookup.set(c.label.toLowerCase(), c.slug));
+    return lookup;
+  }, []);
+
+  const handleSearch = () => {
+    const normalized = query.trim().toLowerCase();
+    const directMatch = categoryLookup.get(normalized);
+    const partialMatch = searchCategories.find((c) =>
+      c.label.toLowerCase().includes(normalized)
+    );
+    const target = directMatch ?? partialMatch?.slug ?? "new-deals";
+    navigate(`/services/${target}`, {
+      state: { location: locations[0], query },
+    });
+  };
 
   const categories = useMemo<Category[]>(
     () => [
@@ -293,17 +334,43 @@ export default function UserHeader() {
               <span className="sr-only">StadOnClick logo</span>
             </div>
             <div className="leading-tight">
-              <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
+              
+              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
                 StadOnClick
               </p>
-              <p className="text-base font-semibold text-slate-900">
+              <p className="text-base font-semibold tracking-[0.1em] text-slate-900">
                 Discover Sweden
               </p>
             </div>
           </Link>
 
-          <div className="flex-1 text-xs font-medium uppercase tracking-[0.4em] text-slate-500">
-            Curated experiences. Local hosts. No filter needed.
+          <div className="flex-1">
+            {showHeaderSearch ? (
+              <div className="mx-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5">
+                <input
+                  type="search"
+                  placeholder="Search salons, gyms, restaurants, events..."
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) =>
+                    event.key === "Enter" && handleSearch()
+                  }
+                  className="w-full bg-transparent px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                  aria-label="Search"
+                />
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  className="rounded-full bg-blue-500 px-5 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+                >
+                  Search
+                </button>
+              </div>
+            ) : (
+              <div className="text-xs font-medium uppercase tracking-[0.4em] text-slate-500">
+                Curated experiences. Local hosts. No filter needed.
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -531,7 +598,7 @@ export default function UserHeader() {
         </div>
       </div>
 
-      <div className="border-t border-sky-200 bg-white shadow-lg">
+      <div className="border-t border-[#e6e6e6] bg-white shadow-sm">
         <div className="relative" onMouseLeave={() => setHovered(null)}>
           <div className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 overflow-x-auto px-4 py-3 sm:px-6">
             {categories.map((item) => (

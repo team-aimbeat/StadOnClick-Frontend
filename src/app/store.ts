@@ -20,6 +20,7 @@ import { vendorNotificationsApi } from "@/features/vendorNotifications/api/vendo
 import { vendorWalletApi } from "@/features/vendorWallet/api/walletApi";
 import { vendorStripeApi } from "@/features/vendorStripe/api/vendorStripeApi";
 import { adminFinanceApi } from "@/features/admin/finance/api/adminFinanceApi";
+import { adminBookingsApi } from "@/features/admin/bookings/api/adminBookingsApi";
 
 export const store = configureStore({
   reducer: {
@@ -44,6 +45,7 @@ export const store = configureStore({
     [vendorWalletApi.reducerPath]: vendorWalletApi.reducer,
     [vendorStripeApi.reducerPath]: vendorStripeApi.reducer,
     [adminFinanceApi.reducerPath]: adminFinanceApi.reducer,
+    [adminBookingsApi.reducerPath]: adminBookingsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -61,7 +63,8 @@ export const store = configureStore({
       .concat(vendorNotificationsApi.middleware)
       .concat(vendorWalletApi.middleware)
       .concat(vendorStripeApi.middleware)
-      .concat(adminFinanceApi.middleware),
+      .concat(adminFinanceApi.middleware)
+      .concat(adminBookingsApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
