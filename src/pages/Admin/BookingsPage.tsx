@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarClock, Eye, Phone } from "lucide-react";
 import {
   HiOutlineCheckCircle,
@@ -119,6 +119,7 @@ type AdminBookingRow = RowData & {
   status: AdminBookingStatus;
   amount: number;
   createdAt: string;
+  reviewCount: number;
 };
 
 type AdminBookingsPageProps = {
@@ -157,7 +158,10 @@ export default function AdminBookingsPage({
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRangeLabel, setDateRangeLabel] = useState("");
   const [dateRangeQuery, setDateRangeQuery] = useState<{ from?: string; to?: string }>({});
+  const [priceInputs, setPriceInputs] = useState({ min: "", max: "" });
+  const [activePriceFilter, setActivePriceFilter] = useState<{ min?: string; max?: string }>({});
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const hasPriceFilter = Boolean(activePriceFilter.min || activePriceFilter.max);
 
   const [fetchBookings, { data, isFetching, isError }] =
     useLazyListAdminBookingsQuery();
@@ -185,6 +189,8 @@ export default function AdminBookingsPage({
     statusFilter,
     dateRangeQuery.from,
     dateRangeQuery.to,
+    activePriceFilter.min,
+    activePriceFilter.max,
   ]);
 
   useEffect(() => {
@@ -218,6 +224,7 @@ export default function AdminBookingsPage({
         slotEnd: item.slot?.endTime,
         status: item.status,
         amount: Number.isFinite(amount) ? amount : 0,
+        reviewCount: item.vendorService?._count?.reviews ?? 0,
         createdAt: item.createdAt,
       };
     });
@@ -281,7 +288,7 @@ export default function AdminBookingsPage({
         key: "orderNumber",
         title: "Order #",
         sortable: true,
-        render: (value: string, row: AdminBookingRow) => (
+        render: (value: string) => (
           <span className="font-semibold text-slate-900">{value}</span>
         ),
       },
@@ -289,51 +296,57 @@ export default function AdminBookingsPage({
         key: "customerName",
         title: "Customer",
         sortable: true,
-        render: (_: string, row: AdminBookingRow) => (
-          <div className="flex flex-col">
-            <span className="font-semibold text-slate-900">{row.customerName}</span>
-            <span className="text-xs font-medium text-slate-500">{row.customerEmail}</span>
-          </div>
-        ),
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-900">{booking.customerName}</span>
+              <span className="text-xs font-medium text-slate-500">{booking.customerEmail}</span>
+            </div>
+          );
+        },
       },
       {
         key: "vendorName",
         title: "Vendor",
         sortable: true,
-        render: (value: string, row: AdminBookingRow) => (
-          <div className="flex flex-col">
-            <span className="font-semibold text-slate-900">{value}</span>
-            <span className="text-xs font-medium text-slate-500">{row.vendorStatus}</span>
-          </div>
-        ),
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-900">{booking.vendorName}</span>
+              <span className="text-xs font-medium text-slate-500">{booking.vendorStatus}</span>
+            </div>
+          );
+        },
       },
       {
         key: "serviceTitle",
         title: "Service",
         sortable: true,
-        render: (value: string, row: AdminBookingRow) => (
-          <div className="flex flex-col">
-            <span className="text-sm text-slate-800">{value}</span>
-            {row.serviceCategory && (
-              <span className="text-xs font-medium text-slate-500">{row.serviceCategory}</span>
-            )}
-          </div>
-        ),
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          return (
+            <div className="flex flex-col">
+              <span className="text-sm text-slate-800">{booking.serviceTitle}</span>
+              {booking.serviceCategory && (
+                <span className="text-xs font-medium text-slate-500">{booking.serviceCategory}</span>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: "slotStart",
         title: "Schedule",
         sortable: true,
-        render: (_: string, row: AdminBookingRow) => {
-          const date = row.slotStart ?? row.createdAt;
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          const date = booking.slotStart ?? booking.createdAt;
           return (
             <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
               <CalendarClock className="h-4 w-4 text-slate-500" />
-              <span>
-                {date
-                  ? dayjs(date).format("MMM D, YYYY • h:mm A")
-                  : "TBD"}
-              </span>
+              <span>{date ? dayjs(date).format("MMM D, YYYY • h:mm A") : "TBD"}</span>
             </div>
           );
         },
@@ -342,8 +355,9 @@ export default function AdminBookingsPage({
         key: "status",
         title: "Status",
         sortable: true,
-        render: (_: string, row: AdminBookingRow) => {
-          const tone = STATUS_TONE[row.status];
+        render: (_: string, row: RowData) => {
+          const booking = row as AdminBookingRow;
+          const tone = STATUS_TONE[booking.status];
           return (
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}
@@ -355,13 +369,19 @@ export default function AdminBookingsPage({
         },
       },
       {
+        key: "reviewCount",
+        title: "Reviews",
+        sortable: true,
+        render: (value: number) => (
+          <span className="text-sm font-semibold text-slate-900">{value}</span>
+        ),
+      },
+      {
         key: "amount",
         title: "Value",
         sortable: true,
         render: (value: number) => (
-          <span className="font-semibold text-slate-900">
-            {currencyFormatter.format(value)}
-          </span>
+          <span className="font-semibold text-slate-900">{currencyFormatter.format(value)}</span>
         ),
       },
       {
@@ -369,9 +389,7 @@ export default function AdminBookingsPage({
         title: "Created",
         sortable: true,
         render: (value: string) => (
-          <span className="text-sm text-slate-700">
-            {dayjs(value).format("DD MMM YYYY")}
-          </span>
+          <span className="text-sm text-slate-700">{dayjs(value).format("DD MMM YYYY")}</span>
         ),
       },
     ];
@@ -383,6 +401,7 @@ export default function AdminBookingsPage({
       { key: "slotStart", label: "Schedule (Earliest first asc)" },
       { key: "amount", label: "Value (High-Low desc)" },
       { key: "vendorName", label: "Vendor (A-Z asc)" },
+      { key: "reviewCount", label: "Reviews (High-Low desc)" },
     ],
     []
   );
@@ -429,27 +448,135 @@ export default function AdminBookingsPage({
   );
 
   const handleFilter = useCallback(
-    (key: string, value: string) => {
-      if (key === "status") {
-        setStatusFilter(value);
-        setPage(1);
-      }
+    (filters: Record<string, string>) => {
+      const nextStatus = filters?.status ?? "all";
+      setStatusFilter(nextStatus);
+      setPage(1);
+    },
+    [setStatusFilter, setPage]
+  );
+
+  const handlePriceInputChange = useCallback(
+    (field: "min" | "max") => (event: ChangeEvent<HTMLInputElement>) => {
+      setPriceInputs((prev) => ({ ...prev, [field]: event.target.value }));
     },
     []
   );
 
-  const headerSlot = dateRangeLabel ? (
-    <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-      <span>Filtered by: {dateRangeLabel}</span>
-      <button
-        type="button"
-        onClick={clearDateRange}
-        className="text-slate-600 underline-offset-2 hover:text-slate-900"
-      >
-        Clear range
-      </button>
+  const applyPriceFilter = useCallback(() => {
+    const nextMin = priceInputs.min.trim();
+    const nextMax = priceInputs.max.trim();
+    setActivePriceFilter({
+      min: nextMin || undefined,
+      max: nextMax || undefined,
+    });
+    setPage(1);
+  }, [priceInputs]);
+
+  const clearPriceFilter = useCallback(() => {
+    setPriceInputs({ min: "", max: "" });
+    setActivePriceFilter({});
+    setPage(1);
+  }, []);
+
+  const handlePriceKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        applyPriceFilter();
+      }
+    },
+    [applyPriceFilter]
+  );
+
+  const priceFilterLabel = useMemo(() => {
+    if (!hasPriceFilter) return "";
+    const valueParts: string[] = [];
+
+    if (activePriceFilter.min) {
+      const parsed = Number(activePriceFilter.min);
+      valueParts.push(
+        `from ${Number.isFinite(parsed) ? currencyFormatter.format(parsed) : activePriceFilter.min}`
+      );
+    }
+
+    if (activePriceFilter.max) {
+      const parsed = Number(activePriceFilter.max);
+      valueParts.push(
+        `up to ${Number.isFinite(parsed) ? currencyFormatter.format(parsed) : activePriceFilter.max}`
+      );
+    }
+
+    return `Price ${valueParts.join(" & ")}`;
+  }, [activePriceFilter, hasPriceFilter]);
+
+  const headerSlot = (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="space-y-1 text-sm text-slate-500">
+        {dateRangeLabel && (
+          <div className="flex items-center gap-2">
+            <span>Filtered by: {dateRangeLabel}</span>
+            <button
+              type="button"
+              onClick={clearDateRange}
+              className="text-slate-600 underline-offset-2 hover:text-slate-900"
+            >
+              Clear range
+            </button>
+          </div>
+        )}
+        {priceFilterLabel && <div>{priceFilterLabel}</div>}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="admin-booking-price-min">
+          Min price
+        </label>
+        <input
+          id="admin-booking-price-min"
+          type="number"
+          min="0"
+          placeholder="Min price"
+          className="h-10 rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-blue-500"
+          value={priceInputs.min}
+          onChange={handlePriceInputChange("min")}
+          onKeyDown={handlePriceKeyDown}
+        />
+
+        <label className="sr-only" htmlFor="admin-booking-price-max">
+          Max price
+        </label>
+        <input
+          id="admin-booking-price-max"
+          type="number"
+          min="0"
+          placeholder="Max price"
+          className="h-10 rounded-md border border-slate-200 px-3 text-sm outline-none focus:border-blue-500"
+          value={priceInputs.max}
+          onChange={handlePriceInputChange("max")}
+          onKeyDown={handlePriceKeyDown}
+        />
+
+        <button
+          type="button"
+          onClick={applyPriceFilter}
+          className="h-10 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-500"
+        >
+          Apply price filter
+        </button>
+
+        {hasPriceFilter && (
+          <button
+            type="button"
+            onClick={clearPriceFilter}
+            className="h-10 rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Clear price
+          </button>
+        )}
+      </div>
     </div>
-  ) : null;
+  );
 
   return (
     <ListingPage
