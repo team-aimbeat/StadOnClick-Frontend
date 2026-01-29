@@ -15,7 +15,7 @@ const avatars = [
 export default function HomeSubscribe() {
   return (
    <section
-  className="relative mt-12 w-screen -mx-[calc((100vw-100%)/2)] py-16 bg-cover bg-center h-[454px]"
+  className="relative mt-12 w-screen -mx-[calc((100vw-100%)/2)] py-16 bg-cover bg-center h-[454px] "
   style={{ backgroundImage: `url(${subscribeBg})` }}
 >
   {/* Dark overlay */}

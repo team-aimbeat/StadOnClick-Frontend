@@ -10,6 +10,8 @@ import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
+import ServiceDetail from "@/pages/ServiceDetail";
+import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import Kyc from "@/pages/Kyc";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";

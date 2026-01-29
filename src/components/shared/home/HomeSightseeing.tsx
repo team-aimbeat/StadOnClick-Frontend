@@ -6,79 +6,96 @@ import sight5 from "@/assets/Images/sight5.svg"
 
 export default function HomeSightseeing() {
   return (
-    <section className="mt-14">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr_1fr]">
-
+    <section className="mt-16 bg-slate-100 py-10">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 lg:grid-cols-[1fr_1.2fr_1fr]">
         {/* LEFT COLUMN */}
-        <div className="flex flex-col justify-between">
-          <div>
-            <span className="inline-block rounded-sm bg-[#F1FAFF] px-3 py-1 text-[13px] font-medium text-black">
-              Curated spots • Real photos • Updated info
-            </span>
-
-            <h2 className="mt-3 text-[30px] font-semibold text-green-950 ">
-              Discover sightseeing near you
-            </h2>
-
-            <p className="mt-2 max-w-lg text-[14px] leading-6 text-gray-700">
-              Browse handpicked viewpoints, parks, and local attractions.
-              See what’s open, what’s trending, and plan your visit in minutes.
+        <div className="flex flex-col gap-6">
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-[16px] italic text-slate-600">
+              It helps me avoid traffic jams
             </p>
+            <p className="mt-2 text-[14px] font-semibold text-slate-700">
+              Sam Carter
+            </p>
+            <p className="text-[12px] text-slate-400">Tourist, UK</p>
+          </div>
 
-            <button className="mt-5 rounded-full border border-[#3289FF] px-6 py-2 text-sm font-semibold text-[#3289FF] hover:border-blue-600 hover:text-blue-700">
-              Explore
+          <div className="relative overflow-hidden rounded-2xl shadow-sm">
+            <img
+              src={sight2}
+              alt="City drive"
+              className="h-[250px] w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-slate-900/40" />
+            <p className="absolute bottom-3 left-3 text-[16px] font-semibold text-white">
+              I never want to drive a city-less car
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-[16px] font-semibold text-slate-700">
+              Related experiences
+            </p>
+            <ul className="mt-2 space-y-1 text-[14px] text-slate-500">
+              <li>Scenic coastlines</li>
+              <li>Local attractions</li>
+              <li>Mountain getaways</li>
+            </ul>
+            <button className="mt-4 inline-flex items-center gap-2 text-[14px] font-semibold text-slate-900">
+              ↗ Visit site
             </button>
           </div>
 
-          {/* Bottom image */}
-          <div className="mt-5 overflow-hidden">
-            <img
-              src={sight3}
-              alt="City skyline at night"
-              className="h-[210px] w-[420px] object-cover"
-            />
-          </div>
+          
         </div>
 
-        {/* MIDDLE COLUMN (STACKED IMAGES) */}
-       <div className="flex flex-col gap-2">
-  <div className="overflow-hidden">
-    <img
-      src={sight4}
-      alt="Mountain river view"
-      className="h-[448px] w-[350px] object-cover object-top"
-    />
-  </div>
-
-  <div className="overflow-hidden ">
-    <img
-      src={sight1}
-      alt="Scenic landscape"
-      className="h-[70px] w-[350px] object-cover object-bottom"
-    />
-  </div>
-</div>
-
+        {/* CENTER COLUMN */}
+        <div className="overflow-hidden rounded-2xl shadow-lg">
+          <img
+            src={sight5}
+            alt="Main scenic view"
+            className="h-full min-h-[380px] w-full object-cover "
+          />
+        </div>
 
         {/* RIGHT COLUMN */}
-        <div className="flex flex-col gap-2">
-          <div className="overflow-hidden">
+        <div className="flex flex-col gap-6">
+          <div className="overflow-hidden rounded-2xl shadow-sm">
             <img
-              src={sight2}
-              alt="Forest river"
-              className="h-[224px] w-[350px] object-cover"
+              src={sight4}
+              alt="Traveler"
+              className="h-[250px] w-full object-cover"
             />
           </div>
 
-          <div className="overflow-hidden">
-            <img
-              src={sight5}
-              alt="Lake pier at sunset"
-              className="h-[294px] w-[350px] object-cover"
-            />
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-2xl font-semibold text-slate-200">“</p>
+            <p className="mt-2 text-[14px] text-slate-600">
+              I love SYNC because it helps me save money.
+            </p>
+            <p className="mt-3 text-sm font-semibold text-slate-700">
+              Daniel Smith
+            </p>
+            <p className="text-[12px] text-slate-400">Marketing, USA</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <p className="text-sm font-semibold text-slate-800">
+              The automotive user experience is being redefined.
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              Enjoy curated places with real-time updates and simpler planning.
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-500">
+              <span className="rounded-full bg-slate-100 px-2 py-1">
+                Need help
+              </span>
+              <span className="rounded-full bg-slate-100 px-2 py-1">
+                Recommend
+              </span>
+            </div>
           </div>
         </div>
-
       </div>
     </section>
   )
