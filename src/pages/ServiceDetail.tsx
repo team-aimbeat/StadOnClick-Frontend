@@ -1,5 +1,6 @@
 import { ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
+import { useState } from "react"
 import { services } from "@/data/services"
 import salon1 from "@/assets/images/salon1.png"
 import salon2 from "@/assets/images/salon2.png"
@@ -67,13 +68,20 @@ const starBreakdown = [
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
 import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
 import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
-import { useGetServiceReviewsQuery } from "@/services/serviceReviewsApi"
+import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
+import { Button } from "@/components/ui/button"
 
 const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
 
 export default function ServiceDetail() {
   const navigate = useNavigate()
   const { serviceSlug } = useParams<{ serviceSlug?: string }>()
+
+  const [userRating, setUserRating] = useState(0)
+  const [userComment, setUserComment] = useState("")
+  const [hoverRating, setHoverRating] = useState(0)
+
+  const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
 
   // 1. Fetch vendor services list (scoped by vendorId)
   const { data: vendorServices, isLoading: servicesLoading } = useGetVendorServicesQuery(VENDOR_ID)
@@ -88,8 +96,33 @@ export default function ServiceDetail() {
   // 3. Fetch Offerings (isolated)
   const { data: offerings, isLoading: offeringsLoading } = useGetServiceOfferingsQuery(serviceId ?? "", { skip: !serviceId })
 
-  // 4. Fetch Reviews (isolated)
   const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(serviceId ?? "", { skip: !serviceId })
+
+  const handleSubmitReview = async () => {
+    if (!serviceId) return
+    if (userRating === 0) {
+      alert("Please select a rating")
+      return
+    }
+    if (!userComment.trim()) {
+      alert("Please enter a comment")
+      return
+    }
+
+    try {
+      await createReview({
+        serviceId,
+        rating: userRating,
+        comment: userComment,
+      }).unwrap()
+      setUserRating(0)
+      setUserComment("")
+      alert("Review submitted successfully!")
+    } catch (err) {
+      console.error("Failed to submit review:", err)
+      alert("Failed to submit review. Please try again.")
+    }
+  }
 
   if (servicesLoading || mediaLoading || offeringsLoading || reviewsLoading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>
@@ -113,7 +146,7 @@ export default function ServiceDetail() {
           <ChevronLeft className="h-4 w-4" />
           Back to services
         </button>
-        <div className="rounded-3xl bg-white p-8 shadow-lg">
+        <div className="rounded-3xl bg-white p-8 ">
           <div className="grid gap-6 lg:grid-cols-[0.fr_1.5fr]">
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -147,27 +180,27 @@ export default function ServiceDetail() {
                 </div>
               </div>
               <div className="grid gap-5 lg:grid-cols-[1.50fr_0.9fr]">
-                <div className="aspect-[4/3] w-full overflow-hidden  bg-slate-100 shadow-inner">
+                <div className="aspect-[4/3] w-full overflow-hidden">
                   <img
                     src={galleryImages[0]}
                     alt={`${service.name} hero`}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full  rounded-2xl"
                   />
                 </div>
                 <div className="flex flex-col gap-4">
                   {galleryImages.slice(1).map((image) => (
                     <div
                       key={image}
-                      className="relative h-57 w-full overflow-hidden  bg-slate-100 shadow-inner"
+                      className="relative h-57 w-full overflow-hidden  bg-slate-100 "
                     >
                       <img
                         src={image}
                         alt={`${service.name} gallery`}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover rounded-2xl"
                       />
                     </div>
                   ))}
-           <button className="absolute mt-[420px] right-96 rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold shadow hover:bg-white">
+           <button className="absolute mt-[420px]  border right-96 rounded-2xl bg-white px-4 py-2 text-sm font-semibold hover:bg-white">
           See all photos
         </button>
                 </div>
@@ -178,9 +211,9 @@ export default function ServiceDetail() {
                     {service.status}
                   </span>
                 )}
-                {service.categoryId && (
+                {service.category && (
                   <span className="rounded-full border border-slate-200 px-3 py-1">
-                    Category ID: {service.categoryId}
+                    Category ID: {service.category.id}
                   </span>
                 )}
               </div>
@@ -211,7 +244,7 @@ export default function ServiceDetail() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.55fr_0.9fr]">
-          <div className="space-y-5 rounded-3xl bg-white p-8 shadow-lg">
+          <div className="space-y-5 rounded-3xl bg-white p-8 ">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">
@@ -244,7 +277,7 @@ export default function ServiceDetail() {
                     <span className="text-lg font-bold text-slate-900">
                       ${offering.salePrice}
                     </span>
-                    <button className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-600">
+                    <button className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-600">
                       Reserve
                     </button>
                   </div>
@@ -253,7 +286,7 @@ export default function ServiceDetail() {
             </div>
           </div>
 
-          <div className="space-y-5 rounded-3xl bg-white p-6 shadow-lg">
+          <div className="space-y-5 rounded-3xl bg-white p-6 ">
             <h3 className="text-lg font-semibold text-slate-900">
               Reviews snapshot
             </h3>
@@ -279,7 +312,7 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        <div className="space-y-5 rounded-3xl bg-white p-8 shadow-lg">
+        <div className="space-y-5 rounded-3xl bg-white p-8 ">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Reviews</h2>
@@ -325,7 +358,7 @@ export default function ServiceDetail() {
               </article>
             ))}
           </div>
-          <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+          <div className="grid gap-4 lg:grid-cols-[1.0fr_0.9fr]">
             <div className="space-y-3 rounded-2xl border border-slate-100 p-5">
               <p className="text-lg font-semibold text-slate-900">
                 Customer reviews
@@ -357,23 +390,52 @@ export default function ServiceDetail() {
                 ))}
               </div>
             </div>
-            <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-              <p className="text-lg font-semibold text-slate-900">Write a review</p>
+            <div className="space-y-6 rounded-[32px] border border-slate-200 bg-white p-8">
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-slate-900">Write a Review</h3>
+                <p className="text-sm font-medium text-slate-500">Your rating</p>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setUserRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110 active:scale-95"
+                  >
+                    <Star
+                      className={`h-8 w-8 transition-colors ${
+                        star <= (hoverRating || userRating)
+                          ? "fill-orange-400 text-orange-400"
+                          : "text-orange-400"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
               <textarea
-                placeholder="Tell fellow guests what made your visit special"
-                className="min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 focus:border-blue-400 focus:outline-none"
+                value={userComment}
+                onChange={(e) => setUserComment(e.target.value)}
+                placeholder="What did you like about this experience?"
+                className="min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-[15px] text-slate-600 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
               />
-              <button className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-                Submit review
-              </button>
-              <p className="text-xs text-slate-400">
-                Reviews are moderated before publishing.
-              </p>
+
+              <Button
+                onClick={handleSubmitReview}
+                disabled={isSubmitting}
+                className=""
+              >
+                {isSubmitting ? "Submitting..." : "Submit Review"}
+              </Button>
             </div>
           </div>
         </div>
 
-        <div className="space-y-5 rounded-3xl bg-white p-8 shadow-lg">
+        <div className="space-y-5 rounded-3xl bg-white p-8 ">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-slate-900">
               About the spa

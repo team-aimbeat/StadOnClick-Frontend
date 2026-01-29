@@ -11,12 +11,22 @@ export interface ServiceReview {
 export const serviceReviewsApi = createApi({
   reducerPath: "serviceReviewsApi",
   baseQuery: baseQueryWithReauth,
+  tagTypes: ["ServiceReview"],
   endpoints: (builder) => ({
     getServiceReviews: builder.query<ServiceReview[], string>({
       query: (serviceId) => `/vendor/reviews/service/${serviceId}`,
       transformResponse: (response: any) => response.data ?? response,
+      providesTags: (result, error, serviceId) => [{ type: "ServiceReview" as const, id: serviceId }],
+    }),
+    createReview: builder.mutation<ServiceReview, { serviceId: string; rating: number; comment: string }>({
+      query: (body) => ({
+        url: "/vendor/reviews",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (result, error, { serviceId }) => [{ type: "ServiceReview" as const, id: serviceId }],
     }),
   }),
 });
 
-export const { useGetServiceReviewsQuery } = serviceReviewsApi;
+export const { useGetServiceReviewsQuery, useCreateReviewMutation } = serviceReviewsApi;
