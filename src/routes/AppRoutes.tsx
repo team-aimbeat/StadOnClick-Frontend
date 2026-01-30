@@ -36,9 +36,7 @@ import Support from "@/pages/Support";
 import UserAccount from "@/pages/UserAccount";
 import Wishlist from "@/pages/Wishlist";
 import VendorPlaceholder from "@/pages/VendorPlaceholder";
-import AppLayout from "@/components/layout/AppLayout";
-import AdminLayout from "@/components/layout/AdminLayout";
-import VendorLayout from "@/components/layout/VendorLayout";
+
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
@@ -70,6 +68,11 @@ import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
+import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
+import AppLayout from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import VendorLayout from "@/components/layout/VendorLayout";
+
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -101,6 +104,7 @@ const appRouter = createBrowserRouter([
             element: <Signup />,
             errorElement: <ErrorPage />,
           },
+
           {
             path: "/sign-in",
             element: <SignIn />,
@@ -118,6 +122,20 @@ const appRouter = createBrowserRouter([
           {
             path: "/about",
             element: <About />,
+          },
+
+          {
+            path: "/marketplace/restaurants",
+            element: <RestaurantMarketplace />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/services/:serviceSlug",
+            element: <ServiceDetail />,
+          },
+          {
+            path: "/restaurants/:restaurantSlug",
+            element: <RestaurantServiceDetail />,
           },
           {
             path: "/teams",
@@ -328,7 +346,10 @@ const appRouter = createBrowserRouter([
           { path: "dashboard", element: <VendorDashboard /> },
           { path: "notifications", element: <VendorNotifications /> },
           { path: "leads", element: <VendorLeads /> },
-          { path: "leads/subscription", element: <VendorLeadSubscriptionPage /> },
+          {
+            path: "leads/subscription",
+            element: <VendorLeadSubscriptionPage />,
+          },
           {
             path: "lead-subscriptions/success",
             element: <SubscriptionSuccessPage />,
@@ -357,7 +378,10 @@ const appRouter = createBrowserRouter([
           },
           {
             path: "leads/sources",
-            element: vendorPlaceholder("Lead Sources", "See which channels drive volume."),
+            element: vendorPlaceholder(
+              "Lead Sources",
+              "See which channels drive volume.",
+            ),
           },
           {
             path: "bookings",
@@ -412,7 +436,10 @@ const appRouter = createBrowserRouter([
           { path: "kyc", element: <VendorKyc /> },
           { path: "stripe", element: <VendorStripe /> },
           { path: "support", element: <VendorSupport /> },
-          { path: "support/tickets/:ticketId", element: <VendorTicketDetails /> },
+          {
+            path: "support/tickets/:ticketId",
+            element: <VendorTicketDetails />,
+          },
           { path: "help", element: <VendorHelp /> },
           { path: "insights", element: <VendorInsights /> },
         ],

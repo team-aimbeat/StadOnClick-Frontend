@@ -70,7 +70,7 @@ export default function ServiceDetail() {
   const service =
     services.find((item) => item.slug === serviceSlug) ??
     services[0]
- const galleryImages = [salon1, salon2,salon3]
+ const galleryImages = [salon1, salon2, salon3]
 
 
   return (
