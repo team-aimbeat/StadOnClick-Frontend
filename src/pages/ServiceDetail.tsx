@@ -246,7 +246,7 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.55fr_0.9fr]">
+        <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-5 rounded-3xl bg-white p-8 ">
             <div className="flex items-center justify-between">
               <div>
@@ -289,30 +289,30 @@ export default function ServiceDetail() {
             </div>
           </div>
 
-          <div className="space-y-5 rounded-3xl bg-white p-6 ">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Reviews snapshot
-            </h3>
-            <div className="space-y-4">
-              {metricHighlights.map((metric) => (
-                <div key={metric.label} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                    <span>{metric.label}</span>
-                    <span>{metric.value.toFixed(1)}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div
-                      className="h-2 rounded-full bg-blue-500"
-                      style={{ width: `${(metric.value / 5) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-              Share the good vibes—help others find their oasis.
-            </div>
-          </div>
+       <div className="space-y-5 rounded-3xl bg-white max-w-[600px] p-8">
+  <div className="flex items-center justify-between">
+    <h2 className="text-xl font-semibold text-slate-900">
+      About the spa
+    </h2>
+
+    <a
+      href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm font-semibold text-blue-600 hover:underline"
+    >
+      Directions
+    </a>
+  </div>
+
+  <LocationMap
+    lat={19.136326}
+
+    lng={72.827660}
+    name={service.name}
+  />
+</div>
+       
         </div>
 
 <div className="max-w-[800px]">
@@ -568,34 +568,7 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-       <div className="space-y-5 rounded-3xl bg-white p-8">
-  <div className="flex items-center justify-between">
-    <h2 className="text-xl font-semibold text-slate-900">
-      About the spa
-    </h2>
 
-    <a
-      href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-sm font-semibold text-blue-600 hover:underline"
-    >
-      Directions
-    </a>
-  </div>
-
-  <p className="text-sm leading-relaxed text-slate-500">
-    {service.description ??
-      "An elevated wellness studio delivering tailored rituals, smart touches, and seamless reservations."}
-  </p>
-
-  <LocationMap
-    lat={19.136326}
-
-    lng={72.827660}
-    name={service.name}
-  />
-</div>
 
       </div>
     </section>
