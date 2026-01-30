@@ -23,11 +23,12 @@ export type VendorServiceEntity = {
   longitude: any;
   latitude: any;
   id: string;
-  name: string;
+  title: string;
   description: string;
   status: "DRAFT" | "LIVE" | "PAUSED";
   category?: any;
   refundPolicy?: RefundPolicyInput | null;
+  terms?: string | null;
 };
 
 export interface CreateVendorServicePayload {
@@ -38,6 +39,15 @@ export interface CreateVendorServicePayload {
   latitude: number;
   longitude: number;
   refundPolicy: RefundPolicyInput;
+}
+
+export interface UpdateVendorServicePayload {
+  id: string;
+  title?: string;
+  description?: string;
+  terms?: string;
+  status?: "DRAFT" | "LIVE" | "PAUSED";
+  refundPolicy?: RefundPolicyInput;
 }
 
 export const vendorServicesApi = createApi({
@@ -51,15 +61,26 @@ export const vendorServicesApi = createApi({
         body,
       }),
     }),
+    updateVendorService: builder.mutation<VendorServiceEntity, UpdateVendorServicePayload>({
+      query: ({ id, ...body }) => ({
+        url: `/vendor/vendor-services/${id}`,
+        method: "PUT",
+        body,
+      }),
+    }),
     getVendorServices: builder.query<VendorServiceEntity[], string>({
       query: (vendorId) => `/vendor/vendor-services/${vendorId}`,
       transformResponse: (response: any[]) =>
         response.map((s: any) => ({
           id: s.id,
-          name: s.title,
+          title: s.title,
           description: s.description,
           status: s.status,
           category: s.category,
+          latitude: s.latitude,
+          longitude: s.longitude,
+          terms: s.terms,
+          refundPolicy: s.refundPolicy,
         })),
     }),
     getVendorProfileStatus: builder.query<any, void>({
@@ -70,6 +91,7 @@ export const vendorServicesApi = createApi({
 
 export const {
   useCreateVendorServiceMutation,
+  useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
   useGetVendorProfileStatusQuery,
 } = vendorServicesApi;

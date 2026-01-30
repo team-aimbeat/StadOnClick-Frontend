@@ -22,6 +22,7 @@ import {
 } from "@/services/vendorOfferingsApi";
 import {
   useCreateVendorServiceMutation,
+  useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
   useGetVendorProfileStatusQuery,
 } from "@/services/vendorServicesApi";
@@ -277,6 +278,7 @@ const VendorServices = () => {
   );
 
   const [createVendorService] = useCreateVendorServiceMutation();
+  const [updateVendorService] = useUpdateVendorServiceMutation();
   const [createOffering] = useCreateOfferingMutation();
   const [createSlot] = useCreateSlotMutation();
   const [createRule] = useCreateRuleMutation();
@@ -819,7 +821,7 @@ const VendorServices = () => {
                   </span>
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-slate-900 line-clamp-1">
-                  {service.name}
+                  {service.title}
                 </h3>
                 <p className="mb-4 text-sm text-slate-500 line-clamp-2">
                   {service.description}
@@ -831,6 +833,32 @@ const VendorServices = () => {
                   <button
                     type="button"
                     className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    onClick={() => {
+                      setShowListing(false);
+                      setCreatedServiceId(service.id);
+                      setSelectedCategoryId(service.category?.id ?? "");
+                      setSelectedMasterServiceId(service.category?.masterCategoryId ?? "");
+                      setVendorServiceDetails({
+                        title: service.title ?? "",
+                        description: service.description ?? "",
+                        terms: service.terms ?? "",
+                        latitude: service.latitude?.toString() ?? "",
+                        longitude: service.longitude?.toString() ?? "",
+                      });
+                      setRefundPolicy(
+                        service.refundPolicy?.type
+                          ? {
+                              type: service.refundPolicy.type,
+                              windowHours:
+                                service.refundPolicy.windowHours != null
+                                  ? String(service.refundPolicy.windowHours)
+                                  : "48",
+                            }
+                          : defaultRefundPolicy,
+                      );
+                      setHighestStep(4);
+                      setCurrentStep(3);
+                    }}
                   >
                     Manage Service →
                   </button>
