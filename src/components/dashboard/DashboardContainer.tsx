@@ -10,7 +10,7 @@ export function DashboardContainer({
   className,
 }: DashboardContainerProps) {
   return (
-    <div className={cn("mx-auto  px-4 lg:px-6", className)}>
+    <div className={cn("mx-auto  ", className)}>
       {children}
     </div>
   );

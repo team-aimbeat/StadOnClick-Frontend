@@ -8,10 +8,10 @@ import {
 import { cn } from "@/lib/utils";
 import { JSX } from "react";
 
-type Trend = "up" | "down" | "neutral";
-type AccentColor = "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
+export type Trend = "up" | "down" | "neutral";
+export type AccentColor = "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
 
-type StatCardProps = {
+export type StatCardProps = {
   title: string;
   value: string | number;
   subtitle?: string;

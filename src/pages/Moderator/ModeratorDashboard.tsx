@@ -5,7 +5,7 @@ import { HiBolt, HiCheckCircle, HiClock, HiInboxStack } from "react-icons/hi2";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { Card, CardContent } from "@/components/ui/card";
-import StatsCard from "@/components/shared/StatsCard";
+import StatsCard, { type StatCardProps } from "@/components/shared/StatsCard";
 import {
   useModeratorListEscalationsQuery,
 } from "@/features/escalations/escalationApi";
@@ -67,7 +67,7 @@ export default function ModeratorDashboard() {
     }).length;
   }, [activeAssigned, overdueCutoff]);
 
-  const kpis = [
+  const kpis: StatCardProps[] = [
     {
       title: "Open escalations",
       value: openData?.total ?? 0,
@@ -132,7 +132,7 @@ export default function ModeratorDashboard() {
                     <div className="space-y-1">
                       <p className="font-semibold text-slate-900">
                         {item.ticket.vendor.businessName}
-                        <span className="text-slate-500"> · {item.ticket.ticketNumber}</span>
+                        <span className="text-slate-500"> ï¿½ {item.ticket.ticketNumber}</span>
                       </p>
                       <p className="text-xs text-slate-500 line-clamp-1">{item.reason}</p>
                     </div>
