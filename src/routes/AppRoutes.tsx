@@ -18,6 +18,7 @@ import BookingsPage from "@/pages/BookingsPage";
 import VendorTableShowcase from "@/pages/VendorTableShowcase";
 import VendorProfile from "@/pages/VendorProfile";
 import VendorServices from "@/pages/VendorServices";
+import VendorCategoryDetail from "@/pages/VendorCategoryDetail";
 import VendorServiceOptions from "@/pages/VendorServiceOptions";
 import VendorMedia from "@/pages/VendorMedia";
 import VendorCoupons from "@/pages/VendorCoupons";
@@ -65,6 +66,8 @@ import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
+import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
+import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
@@ -189,6 +192,14 @@ const appRouter = createBrowserRouter([
             path: "support",
             element: <Navigate to="/admin/support/inbox" replace />,
           },
+           {
+            path: "compliance/kyc",
+            element: <AdminKycDocumentsPage />,
+          },
+             {
+            path: "compliance/kyc/audit",
+            element: <AdminKycAuditLogsPage />,
+          },
           {
             path: "support/dashboard",
             element: <SupportAdminDashboard />,
@@ -281,10 +292,7 @@ const appRouter = createBrowserRouter([
             element: <AdminDashboard />,
             errorElement: <ErrorPage />,
           },
-          {
-            path: "kyc",
-            element: <Kyc />,
-          },
+         
           {
             path: "catalog",
             element: <Navigate to="/admin/catalog/interests" replace />,

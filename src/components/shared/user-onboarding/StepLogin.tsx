@@ -116,7 +116,7 @@ export function StepLogin({
 
       <Button
         className="h-[52px] w-full max-w-[480px] mx-auto text-[16px]"
-        disabled={!isValid || loading}
+     
         onClick={onSubmit}
       >
         {loading ? "Signing in..." : "Continue"}

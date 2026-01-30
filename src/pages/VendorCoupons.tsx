@@ -1,12 +1,13 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { HiOutlinePlus, HiOutlineXMark } from "react-icons/hi2";
+import { HiEye, HiEyeSlash, HiOutlinePlus } from "react-icons/hi2";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { useMockLoader } from "@/lib/useMockLoader";
+import { useCreateCouponMutation, useGetCouponsQuery } from "@/services/vendoiCouponsApi";
+import { CouponDialog, CouponFormValues } from "@/components/modals/CouponDialog";
 
 type Coupon = {
   code: string;
@@ -19,91 +20,99 @@ type Coupon = {
   preview: string;
 };
 
-const initialCoupons: Coupon[] = [
-  {
-    code: "URBANFIX10",
-    title: "10% off on repairs",
-    discount: 10,
-    minOrder: 1000,
-    maxUses: 50,
-    expiry: "2025-02-15",
-    status: "ACTIVE",
-    preview: "UrbanFix 10% off on repairs · ₹1000 min order",
-  },
-  {
-    code: "HEAT20",
-    title: "20% off on heating services",
-    discount: 20,
-    minOrder: 1800,
-    maxUses: 25,
-    expiry: "2025-03-10",
-    status: "DISABLED",
-    preview: "20% off on heating services (Disabled)",
-  },
-  {
-    code: "CLEAN25",
-    title: "25% off deep cleaning",
-    discount: 25,
-    minOrder: 2500,
-    maxUses: 10,
-    expiry: "2024-12-31",
-    status: "EXPIRED",
-    preview: "25% off deep cleaning (Expired)",
-  },
+const gradientClasses = [
+  "from-slate-900 to-red-600",
+  "from-slate-900 to-fuchsia-600",
+  "from-sky-900 to-emerald-600",
+  "from-red-900 to-amber-500",
 ];
 
 const VendorCoupons = () => {
   const dispatch = useAppDispatch();
-  const loading = useMockLoader();
-  const [coupons, setCoupons] = useState(initialCoupons);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [form, setForm] = useState({
-    code: "",
-    title: "",
-    discount: 10,
-    minOrder: 0,
-    maxUses: 10,
-    expiry: "",
-  });
+
+  const { data: coupons = [], isLoading, isError, error } =
+    useGetCouponsQuery();
+
+  const [createCoupon] = useCreateCouponMutation();
+  const [previewCouponCode, setPreviewCouponCode] = useState<string>();
+  const [previewGradient, setPreviewGradient] = useState(gradientClasses[0]);
+  const handlePreview = (couponCode: string, index: number) => {
+    setPreviewCouponCode(couponCode);
+    setPreviewGradient(gradientClasses[index % gradientClasses.length]);
+  };
+
+  const activeCoupon = useMemo(() => {
+    const target =
+      previewCouponCode
+        ? coupons.find((c) => c.code === previewCouponCode)
+        : coupons.find((c) => c.status === "ACTIVE");
+
+    return target ?? coupons[0];
+  }, [coupons, previewCouponCode]);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     dispatch(setPageTitle("Coupons"));
   }, [dispatch]);
 
-  const activeCoupon = useMemo(
-    () => coupons.find((coupon) => coupon.status === "ACTIVE") ?? coupons[0],
-    [coupons]
-  );
+  useEffect(() => {
+    if (!activeCoupon) {
+      setPreviewGradient(gradientClasses[0]);
+      return;
+    }
 
-  const handleCreate = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextCoupon: Coupon = {
-      code: form.code.toUpperCase().replace(/\s+/g, ""),
-      title: form.title,
-      discount: form.discount,
-      minOrder: form.minOrder,
-      maxUses: form.maxUses,
-      expiry: form.expiry,
+    const index = coupons.findIndex((coupon) => coupon.code === activeCoupon.code);
+    const gradient = gradientClasses[index % gradientClasses.length] ?? gradientClasses[0];
+    setPreviewGradient(gradient);
+  }, [activeCoupon, coupons]);
+
+  useEffect(() => {
+    if (!previewCouponCode && coupons.length) {
+      const fallback = coupons.find((coupon) => coupon.status === "ACTIVE") ?? coupons[0];
+      setPreviewCouponCode(fallback?.code);
+    }
+  }, [coupons, previewCouponCode]);
+
+  const handleCreateCoupon = async (
+    values: CouponFormValues,
+  ): Promise<string | undefined> => {
+    const payload: Partial<Coupon> = {
+      code: values.code.toUpperCase().replace(/\s+/g, ""),
+      title: values.title,
+      discount: values.discount,
+      minOrder: values.minOrder,
+      maxUses: values.maxUses,
+      expiry: values.expiry,
       status: "ACTIVE",
-      preview: `${form.title} · ${form.discount}% off`,
+      preview: `${values.title} � ${values.discount}% off`,
     };
-    setCoupons((prev) => [nextCoupon, ...prev]);
-    setDrawerOpen(false);
-    setForm({
-      code: "",
-      title: "",
-      discount: 10,
-      minOrder: 0,
-      maxUses: 10,
-      expiry: "",
-    });
+
+    try {
+      const newCoupon = await createCoupon(payload).unwrap();
+      setPreviewCouponCode(newCoupon.code);
+      return undefined;
+    } catch (err) {
+      console.error("Failed to create coupon", err);
+      return (err as any)?.data?.message || "Failed to create coupon";
+    }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardContainer className="space-y-4 pt-8">
         <div className="h-8 w-1/4 animate-pulse rounded-full bg-slate-200" />
         <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
+      </DashboardContainer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DashboardContainer className="pt-8">
+        <p className="text-sm text-red-500">
+          {(error as any)?.data?.message || "Failed to load coupons"}
+        </p>
       </DashboardContainer>
     );
   }
@@ -113,59 +122,99 @@ const VendorCoupons = () => {
       <TitleBreadCrumbs title="Coupons" breadCrumbTitle="Vendor / Coupons" />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-700">Active coupons</p>
+        <p className="text-sm font-semibold text-slate-700">
+          Active coupons
+        </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => setDialogOpen(true)}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300"
           >
             <HiOutlinePlus className="h-4 w-4" />
             Create coupon
           </button>
-          <NavLink to="/vendor/promote" className="text-xs font-semibold text-blue-600 hover:text-blue-500">
+          <NavLink
+            to="/vendor/promote"
+            className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+          >
             Promote coupons
           </NavLink>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Preview</p>
-          <p className="mt-2 text-lg font-semibold text-slate-900">{activeCoupon?.title}</p>
-          <p className="text-sm text-slate-600">{activeCoupon?.preview}</p>
-          <div className="mt-3 space-y-1 text-xs text-slate-500">
-            <p>Code: {activeCoupon?.code}</p>
-            <p>Discount: {activeCoupon?.discount}%</p>
-            <p>Min order: ₹{activeCoupon?.minOrder}</p>
-            <p>Expires: {activeCoupon?.expiry}</p>
+        <div className="rounded-2xl  bg-white p-6">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+            Preview
+          </p>
+          <div className="mt-4 flex items-center justify-center">
+            <div
+              className={`relative flex w-full max-w-md items-stretch gap-3 rounded-[26px] bg-gradient-to-r ${previewGradient} text-white`}
+            >
+              <div className="pointer-events-none absolute left-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  bg-white" />
+              <div className="pointer-events-none absolute right-[-18px] top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full  bg-white" />
+                           <div
+  className="absolute right-0 top-1 bottom-1 w-[288px]"
+  style={{
+    backgroundImage: "radial-gradient(circle,  #facc15 4px, transparent 2px)",
+    backgroundSize: "15px 12px",
+    backgroundRepeat: "repeat-y",
+  }}
+/>
+              <div className="flex w-35 flex-col items-center  justify-between  bg-slate-100 px-3 py-4 text-center font-black text-slate-900">
+
+
+                <span className="text-[10px] uppercase tracking-[0.4em]">SHOPPING COUPON</span>
+                <span className="text-4xl leading-none">{activeCoupon?.discount ?? 0}%</span>
+                <span className="text-[11px] uppercase tracking-[0.4em] text-slate-500">OFF</span>
+              </div>
+              <div className="flex w-3/4 flex-col justify-center gap-2 px-5 py-4 text-left">
+                <p className="text-xs uppercase tracking-[0.4em] text-white/70">
+                  STADONCLICK.COM
+                </p>
+                <p className="text-3xl font-black uppercase tracking-[0.3em]">COUPON</p>
+                <p className="text-[12px] uppercase tracking-[0.35em] text-white/80">
+                  Valid until <span className="font-semibold">{activeCoupon?.expiry ?? "DECEMBER 2023"}</span>
+                </p>
+                <p className="text-[14px]  tracking-[0.2em] text-white/80">
+                  Code: {activeCoupon?.code ?? "CODE"}
+                </p>
+              </div>
+          
+            </div>
           </div>
         </div>
 
         <div className="lg:col-span-2">
           <div className="rounded-2xl border border-slate-200 bg-white">
-            <div className="px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-400">Coupons</div>
+            <div className="px-4 py-3 text-xs uppercase tracking-[0.3em] text-slate-400">
+              Coupons
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Code</th>
-                    <th className="px-4 py-3 text-left">Title</th>
-                    <th className="px-4 py-3 text-left">Discount</th>
-                    <th className="px-4 py-3 text-left">Min order</th>
-                    <th className="px-4 py-3 text-left">Uses</th>
-                    <th className="px-4 py-3 text-left">Expiry</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                  </tr>
+                    <tr>
+                      <th className="px-4 py-3 text-left">Code</th>
+                      <th className="px-4 py-3 text-left">Title</th>
+                      <th className="px-4 py-3 text-left">Discount</th>
+                      <th className="px-4 py-3 text-left">Min order</th>
+                      <th className="px-4 py-3 text-left">Uses</th>
+                      <th className="px-4 py-3 text-left">Expiry</th>
+                      <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-left">Actions</th>
+                    </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {coupons.map((coupon) => (
+                  {coupons.map((coupon, index) => (
                     <tr key={coupon.code}>
-                      <td className="px-4 py-3 font-semibold text-slate-900">{coupon.code}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-900">
+                        {coupon.code}
+                      </td>
                       <td className="px-4 py-3">{coupon.title}</td>
-                      <td className="px-4 py-3 text-slate-900">{coupon.discount}%</td>
-                      <td className="px-4 py-3 text-slate-900">₹{coupon.minOrder}</td>
-                      <td className="px-4 py-3 text-slate-900">{coupon.maxUses}</td>
+                      <td className="px-4 py-3">{coupon.discount}%</td>
+                      <td className="px-4 py-3">₹{coupon.minOrder}</td>
+                      <td className="px-4 py-3">{coupon.maxUses}</td>
                       <td className="px-4 py-3">{coupon.expiry}</td>
                       <td className="px-4 py-3">
                         <span
@@ -173,12 +222,25 @@ const VendorCoupons = () => {
                             coupon.status === "ACTIVE"
                               ? "bg-emerald-50 text-emerald-700"
                               : coupon.status === "EXPIRED"
-                                ? "bg-slate-100 text-slate-600"
-                                : "bg-amber-50 text-amber-700"
+                              ? "bg-slate-100 text-slate-600"
+                              : "bg-amber-50 text-amber-700"
                           }`}
                         >
                           {coupon.status}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => handlePreview(coupon.code, index)}
+                          className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                            previewCouponCode === coupon.code
+                              ? "border-white bg-white text-slate-900"
+                              : "border-transparent bg-white/10 text-white hover:border-white hover:bg-white/20"
+                          }`}
+                        >
+                         <HiEye className="h-5 w-5"/>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -189,73 +251,15 @@ const VendorCoupons = () => {
         </div>
       </div>
 
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40">
-          <div className="h-full w-full max-w-md overflow-auto rounded-l-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">New coupon</p>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                className="text-slate-400 hover:text-slate-700"
-              >
-                <HiOutlineXMark className="h-5 w-5" />
-              </button>
-            </div>
-            <form className="mt-4 space-y-3" onSubmit={handleCreate}>
-              <input
-                placeholder="Code"
-                value={form.code}
-                onChange={(event) => setForm({ ...form, code: event.target.value })}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-              <input
-                placeholder="Title"
-                value={form.title}
-                onChange={(event) => setForm({ ...form, title: event.target.value })}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <input
-                  type="number"
-                  placeholder="Discount %"
-                  value={form.discount}
-                  onChange={(event) => setForm({ ...form, discount: Number(event.target.value) })}
-                  className="rounded-xl border border-slate-200 px-3 py-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Min order"
-                  value={form.minOrder}
-                  onChange={(event) => setForm({ ...form, minOrder: Number(event.target.value) })}
-                  className="rounded-xl border border-slate-200 px-3 py-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Max uses"
-                  value={form.maxUses}
-                  onChange={(event) => setForm({ ...form, maxUses: Number(event.target.value) })}
-                  className="rounded-xl border border-slate-200 px-3 py-2"
-                />
-              </div>
-              <input
-                type="date"
-                value={form.expiry}
-                onChange={(event) => setForm({ ...form, expiry: event.target.value })}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              />
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-              >
-                Publish coupon
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+
+      <CouponDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={handleCreateCoupon}
+      />
     </DashboardContainer>
   );
 };
 
 export default VendorCoupons;
+
