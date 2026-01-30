@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useForm, useFieldArray } from "react-hook-form";
-import { useAppSelector } from "@/app/hooks";
 import { toast } from "react-hot-toast";
 import { HiOutlinePlus, HiOutlineTrash, HiOutlinePlusCircle } from "react-icons/hi2";
 
@@ -26,14 +26,14 @@ import {
   useGetVendorProfileStatusQuery,
 } from "@/services/vendorServicesApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
-import eventImage from "@/assets/Images/well.jpg";
-import wellnessImage from "@/assets/Images/wellness.jpg";
-import familyImage from "@/assets/Images/family.jpg";
-import learnImage from "@/assets/Images/learn.jpg";
-import homeImage from "@/assets/Images/wash.jpg";
-import travelImage from "@/assets/Images/travel.jpg";
-import foodImage from "@/assets/Images/food.jpg";
-import hotelImage from "@/assets/Images/home.jpg";
+import eventImage from "@/assets/Images/optimized/well-sm.jpg";
+import wellnessImage from "@/assets/Images/optimized/wellness-sm.jpg";
+import familyImage from "@/assets/Images/optimized/family-sm.jpg";
+import learnImage from "@/assets/Images/optimized/learn-sm.jpg";
+import homeImage from "@/assets/Images/optimized/wash-sm.jpg";
+import travelImage from "@/assets/Images/optimized/travel-sm.jpg";
+import foodImage from "@/assets/Images/optimized/food-sm.jpg";
+import hotelImage from "@/assets/Images/optimized/home-sm.jpg";
 import well from "@/assets/Images/well.jpg";
 
 type StepState = "idle" | "loading" | "success" | "error";
@@ -235,7 +235,17 @@ const VendorServices = () => {
   const [isCreatingService, setIsCreatingService] = useState(false);
   const [showListing, setShowListing] = useState(true);
   const [selectedMasterForQuery, setSelectedMasterForQuery] = useState("");
-  const [isMasterFetchPending, startMasterTransition] = useTransition();
+  const [, startMasterTransition] = useTransition();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [highestStep, setHighestStep] = useState(1);
+  const [wizardError, setWizardError] = useState<string | null>(null);
+
+  const handleSelectMaster = useCallback((id: string) => {
+    setSelectedMasterServiceId(id);
+    startMasterTransition(() => {
+      setSelectedMasterForQuery(id);
+    });
+  }, [startMasterTransition]);
 
   const { data: profileStatus } = useGetVendorProfileStatusQuery();
   const dynamicVendorId = profileStatus?.id;
@@ -265,7 +275,6 @@ const VendorServices = () => {
   const [vendorServiceError, setVendorServiceError] = useState<string | null>(
     null,
   );
-  const vendorId = useAppSelector((state) => state.auth.user?.id ?? "");
 
   const [createVendorService] = useCreateVendorServiceMutation();
   const [createOffering] = useCreateOfferingMutation();
@@ -336,9 +345,30 @@ const VendorServices = () => {
     (category) => category.id === selectedCategoryId,
   );
 
+  const stepOrder = useMemo(
+    () => [
+      { id: 1, label: "Master service" },
+      { id: 2, label: "Service category" },
+      { id: 3, label: "Vendor service details" },
+      { id: 4, label: "Offerings & extras" },
+    ],
+    [],
+  );
+  const stepMotion = {
+    initial: { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -14 },
+    transition: { duration: 0.18, ease: [0.16, 0.64, 0.37, 0.99] as const },
+  };
+
   useEffect(() => {
     setSelectedExistingOfferingId("");
   }, [createdServiceId]);
+
+  useEffect(() => {
+    setWizardError(null);
+    setGeneralError(null);
+  }, [currentStep]);
 
   useEffect(() => {
     if (!selectedMasterServiceId) return;
@@ -358,6 +388,8 @@ const VendorServices = () => {
     setOfferingError(null);
     setGeneralError(null);
     setLastCreatedOfferingId(null);
+    setCurrentStep(1);
+    setHighestStep(1);
   }, [selectedMasterServiceId]);
 
   useEffect(() => {
@@ -383,6 +415,45 @@ const VendorServices = () => {
     setRuleFields((prev) => ({ ...prev, [field]: value }));
     setRuleValidationError(null);
     setRuleStep((prev) => (prev === "error" ? "idle" : prev));
+  };
+
+  const goToStep = (step: number) => {
+    const safe = Math.min(Math.max(step, 1), 4);
+    setCurrentStep(safe);
+    setHighestStep((prev) => Math.max(prev, safe));
+  };
+
+  const handleNextFromMaster = () => {
+    if (!selectedMasterServiceId) {
+      setWizardError("Select a master service to continue.");
+      return;
+    }
+    setWizardError(null);
+    goToStep(2);
+  };
+
+  const handleNextFromCategory = () => {
+    if (!selectedCategoryId) {
+      setWizardError("Pick a category before moving forward.");
+      return;
+    }
+    setWizardError(null);
+    goToStep(3);
+  };
+
+  const handleNextFromDetails = () => {
+    if (!selectedCategoryId) {
+      setWizardError("Pick a category before entering details.");
+      goToStep(2);
+      return;
+    }
+    const isValid = validateVendorServiceDetails();
+    if (!isValid) {
+      setWizardError("Complete the required vendor service fields.");
+      return;
+    }
+    setWizardError(null);
+    goToStep(4);
   };
 
   const validateSlotInputs = useCallback(() => {
@@ -709,7 +780,7 @@ const VendorServices = () => {
               setCreatedServiceId(null);
               reset();
             }}
-            className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700"
           >
             Add New Service
           </button>
@@ -732,9 +803,9 @@ const VendorServices = () => {
                 className="group relative rounded-3xl border border-slate-100 bg-white p-5 transition"
               >
                 <div className="mb-4 flex items-center justify-between">
-                  {service.categoryId && (
+                  {service.category?.id && (
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      Category ID: {service.categoryId.slice(0, 8)}
+                      Category ID: {service.category.id.slice(0, 8)}
                     </span>
                   )}
                   <span
@@ -748,7 +819,7 @@ const VendorServices = () => {
                   </span>
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-slate-900 line-clamp-1">
-                  {service.title}
+                  {service.name}
                 </h3>
                 <p className="mb-4 text-sm text-slate-500 line-clamp-2">
                   {service.description}
@@ -781,7 +852,7 @@ const VendorServices = () => {
             <button
               type="button"
               onClick={() => setShowListing(false)}
-              className="mt-6 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+              className="mt-6 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700"
             >
               Construct your first service
             </button>
@@ -793,6 +864,7 @@ const VendorServices = () => {
 
   return (
     <DashboardContainer className="space-y-6 pb-16">
+      {/* wizard content */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
@@ -802,731 +874,841 @@ const VendorServices = () => {
             Create Offerings
           </h1>
           <p className="text-sm text-slate-500">
-            Work through master services, categories, and offerings in order.
+            Move step by step: master service → category → details → offerings.
           </p>
         </div>
         <button
           type="button"
-          onClick={() => setShowListing(true)}
-          className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+          onClick={() => {
+            setShowListing(true);
+            setCurrentStep(1);
+          }}
+          className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-600 transition-colors duration-200 hover:bg-slate-100"
         >
           Cancel
         </button>
       </div>
 
-      <div className="rounded-3xl border border-slate-100 bg-white p-6">
-        <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr] items-start">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
-              Master service
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-900">
-              Select your core offering
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Choose a master service card in the section below to unlock
-              dependent categories, offerings, and slot/rule configuration.
-              Images keep the layout familiar while the form lets you capture
-              pricing details.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-              <span className="rounded-full border border-slate-200 px-3 py-1">
-                Responsive
-              </span>
-              <span className="rounded-full border border-slate-200 px-3 py-1">
-                Accessible
-              </span>
-              <span className="rounded-full border border-slate-200 px-3 py-1">
-                Master-focused
-              </span>
-            </div>
-
-            <div className="mt-5">
-              {isMasterLoading ? (
-                <div className="grid gap-3 mt-10 sm:grid-cols-2 lg:grid-cols-3">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 animate-pulse"
-                    >
-                      <div className="h-12 w-12 rounded-full bg-slate-200" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-3 w-20 rounded-full bg-slate-200" />
-                        <div className="h-2 w-16 rounded-full bg-slate-200" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr">
-                {masterServiceOptions.map((service) => {
-                  const isSelected = service.id === selectedMasterServiceId;
-                  const visual = masterServiceVisuals[service.slug];
-                  const imageSrc = visual?.src ?? well;
-                  const imageAlt = visual?.alt ?? service.name;
-                  return (
-                    <MasterServiceCard
-                      key={service.id}
-                      service={service}
-                      isSelected={isSelected}
-                      visual={{ src: imageSrc, alt: imageAlt }}
-                      onSelect={handleSelectMaster}
-                    />
-                  );
-                })}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="mt-4 ml-4">
-            <MasterServiceHero service={selectedMasterService} />
-          </div>
+      <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
+        <div className="flex flex-wrap gap-3">
+          {stepOrder.map((step) => {
+            const isActive = currentStep === step.id;
+            const isDone = currentStep > step.id;
+            const isClickable = step.id <= highestStep;
+            return (
+              <div
+                key={step.id}
+                role={isClickable ? "button" : undefined}
+                tabIndex={isClickable ? 0 : -1}
+                onClick={() => isClickable && goToStep(step.id)}
+                onKeyDown={(e) => {
+                  if (!isClickable) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    goToStep(step.id);
+                  }
+                }}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : isDone
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-slate-50 text-slate-600"
+                }`}
+                style={{ cursor: isClickable ? "pointer" : "default" }}
+              >
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                    isActive
+                      ? "bg-blue-600 text-white"
+                      : isDone
+                        ? "bg-emerald-500 text-white"
+                        : "bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  {step.id}
+                </span>
+                <span>{step.label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        <section className="rounded-3xl border border-slate-100 bg-white p-6">
-          <form
-            className="space-y-6"
-            onSubmit={handleCreateOffering}
-            noValidate
+      <AnimatePresence mode="wait" initial={false}>
+        {currentStep === 1 && (
+          <motion.section
+            key="step-1"
+            className="rounded-3xl border border-slate-100 bg-white p-6"
+            {...stepMotion}
           >
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-700">Category</p>
-                <span className="text-xs text-slate-500">
-                  Built from the selected master service
-                </span>
-              </div>
-              {selectedMasterServiceId ? (
-                isCategoryFetching ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr] items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
+                Master service
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-slate-900">
+                Select your core offering
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Choose a master service to unlock categories, details, and offerings.
+              </p>
+
+              <div className="mt-5">
+                {isMasterLoading ? (
+                  <div className="grid gap-3 mt-10 sm:grid-cols-2 lg:grid-cols-3">
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div
                         key={index}
-                        className="h-20 rounded-2xl border border-slate-200 bg-white/60 animate-pulse"
-                      />
+                        className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/60 px-4 py-3 animate-pulse"
+                      >
+                        <div className="h-12 w-12 rounded-full bg-slate-200" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 w-20 rounded-full bg-slate-200" />
+                          <div className="h-2 w-16 rounded-full bg-slate-200" />
+                        </div>
+                      </div>
                     ))}
                   </div>
-                ) : categoryOptions.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {categoryOptions.map((category) => {
-                      const isSelected = category.id === selectedCategoryId;
-                      const masterVisual =
-                        selectedMasterService &&
-                        masterServiceVisuals[selectedMasterService.slug];
-                      const visual =
-                        categoryVisuals[category.slug] ?? masterVisual;
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr">
+                    {masterServiceOptions.map((service) => {
+                      const isSelected = service.id === selectedMasterServiceId;
+                      const visual = masterServiceVisuals[service.slug];
                       const imageSrc = visual?.src ?? well;
-                      const imageAlt = visual?.alt ?? category.name;
+                      const imageAlt = visual?.alt ?? service.name;
                       return (
-                        <button
-                          key={category.id}
-                          type="button"
-                          onClick={() => setSelectedCategoryId(category.id)}
-                          className={`rounded-2xl border px-3 py-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
-                            ${isSelected ? "border-blue-500 bg-blue-50 text-slate-900" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}
-                          aria-pressed={isSelected}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                              <img
-                                src={imageSrc}
-                                alt={imageAlt}
-                                className="h-full w-full object-cover"
-                                loading="lazy"
-                                decoding="async"
-                                fetchPriority="low"
-                              />
-                            </div>
-                            <div>
-                              <p className="font-semibold">{category.name}</p>
-                              <p className="text-xs text-slate-500">
-                                {category.slug}
-                              </p>
-                            </div>
-                          </div>
-                        </button>
+                        <MasterServiceCard
+                          key={service.id}
+                          service={service}
+                          isSelected={isSelected}
+                          visual={{ src: imageSrc, alt: imageAlt }}
+                          onSelect={handleSelectMaster}
+                        />
                       );
                     })}
                   </div>
-                ) : (
-                  <p className="text-xs text-slate-500">
-                    No categories found for this service yet.
-                  </p>
-                )
-              ) : (
-                <p className="text-xs text-slate-500">
-                  Choose a master service first.
-                </p>
-              )}
-              {categoryError && (
-                <p className="text-xs text-rose-600">
-                  Unable to load categories for that service right now.
-                </p>
-              )}
+                )}
+              </div>
             </div>
-
-            {/* Vendor Service Form */}
-            <section className="space-y-4 rounded-2xl border p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    Vendor service details
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    This creates the vendor-level service before adding
-                    offerings.
-                  </p>
-                </div>
-
-                {createdServiceId && (
-                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    Service created
-                  </span>
-                )}
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <input
-                  type="text"
-                  placeholder="Service title *"
-                  value={vendorServiceDetails.title}
-                  onChange={(e) =>
-                    handleVendorServiceDetailChange("title", e.target.value)
-                  }
-                  className="rounded-xl border px-3 py-2 text-sm"
-                />
-              </div>
-
-              <LocationPicker
-                value={{
-                  lat: vendorServiceDetails.latitude
-                    ? Number(vendorServiceDetails.latitude)
-                    : null,
-                  lng: vendorServiceDetails.longitude
-                    ? Number(vendorServiceDetails.longitude)
-                    : null,
-                }}
-                onChange={({ lat, lng }) => {
-                  handleVendorServiceDetailChange("latitude", String(lat));
-                  handleVendorServiceDetailChange("longitude", String(lng));
-                }}
-              />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lat">
-                    Latitude (optional manual entry)
-                  </label>
-                  <input
-                    id="manual-lat"
-                    type="number"
-                    step="0.000001"
-                    min="-90"
-                    max="90"
-                    value={vendorServiceDetails.latitude}
-                    onChange={(e) => handleVendorServiceDetailChange("latitude", e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                    placeholder="e.g. 28.6139"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lng">
-                    Longitude (optional manual entry)
-                  </label>
-                  <input
-                    id="manual-lng"
-                    type="number"
-                    step="0.000001"
-                    min="-180"
-                    max="180"
-                    value={vendorServiceDetails.longitude}
-                    onChange={(e) => handleVendorServiceDetailChange("longitude", e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                    placeholder="e.g. 77.2090"
-                  />
-                </div>
-              </div>
-              {(vendorServiceErrors.latitude || vendorServiceErrors.longitude) && (
-                <p className="text-xs text-rose-600">
-                  {vendorServiceErrors.latitude || vendorServiceErrors.longitude}
-                </p>
-              )}
-
-              <textarea
-                placeholder="Service description *"
-                value={vendorServiceDetails.description}
-                onChange={(e) =>
-                  handleVendorServiceDetailChange("description", e.target.value)
-                }
-                className="min-h-[90px] w-full rounded-xl border px-3 py-2 text-sm"
-              />
-
-              <textarea
-                placeholder="Terms & conditions *"
-                value={vendorServiceDetails.terms}
-                onChange={(e) =>
-                  handleVendorServiceDetailChange("terms", e.target.value)
-                }
-                className="min-h-[70px] w-full rounded-xl border px-3 py-2 text-sm"
-              />
-
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      Refund policy
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Define how cancellations are refunded for this service.
-                    </p>
-                  </div>
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Master-level
-                  </span>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 hover:border-blue-500">
-                    <input
-                      type="radio"
-                      name="refund-policy"
-                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      value="PARTIAL_BEFORE_WINDOW"
-                      checked={refundPolicy.type === "PARTIAL_BEFORE_WINDOW"}
-                      onChange={() =>
-                        handleRefundPolicyChange("type", "PARTIAL_BEFORE_WINDOW")
-                      }
-                    />
-                    <div>
-                      <p className="font-semibold text-slate-900">
-                        Refund before cutoff (platform keeps commission)
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Refund applies if cancelled in time; platform commission is always kept.
-                      </p>
-                    </div>
-                  </label>
-
-                  <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 hover:border-blue-500">
-                    <input
-                      type="radio"
-                      name="refund-policy"
-                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
-                      value="NO_REFUND"
-                      checked={refundPolicy.type === "NO_REFUND"}
-                      onChange={() => handleRefundPolicyChange("type", "NO_REFUND")}
-                    />
-                    <div>
-                      <p className="font-semibold text-slate-900">No refunds</p>
-                      <p className="text-xs text-slate-500">
-                        Cancellations are not refunded.
-                      </p>
-                    </div>
-                  </label>
-                </div>
-
-                {refundPolicy.type !== "NO_REFUND" ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-1 text-sm text-slate-700">
-                      <span className="font-semibold text-slate-600">
-                        Cutoff window (hours before start) *
-                      </span>
-                      <input
-                        type="number"
-                        min="1"
-                        value={refundPolicy.windowHours}
-                        onChange={(event) =>
-                          handleRefundPolicyChange("windowHours", event.target.value)
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                        placeholder="e.g. 48"
-                      />
-                    </label>
-
-                    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-3 text-xs text-slate-600">
-                      <p className="font-semibold text-slate-800">
-                        Refund percent is set by the platform admin; platform commission is non-refundable.
-                      </p>
-                      <p className="mt-1">
-                        When a refund applies, the platform&apos;s global rule decides the refund percentage and
-                        the commission kept; vendors cannot override it.
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-
-                {vendorServiceErrors.refundPolicy && (
-                  <p className="text-xs text-rose-600">{vendorServiceErrors.refundPolicy}</p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                disabled={isCreatingService || !!createdServiceId}
-                onClick={async () => {
-                  if (!validateVendorServiceDetails()) {
-                    setGeneralError("Complete vendor service details first.");
-                    return;
-                  }
-                  if (!dynamicVendorId) {
-                    setGeneralError("Unable to resolve vendor account. Please sign in again.");
-                    return;
-                  }
-
-                  try {
-                    setIsCreatingService(true);
-
-                    const parsedWindowHours =
-                      refundPolicy.type === "NO_REFUND"
-                        ? null
-                        : Number(refundPolicy.windowHours);
-                    const payload = {
-                      vendorId: dynamicVendorId,
-                      categoryId: selectedCategoryId,
-                      title: vendorServiceDetails.title.trim(),
-                      description: vendorServiceDetails.description.trim(),
-                      terms: vendorServiceDetails.terms.trim(),
-                      latitude: Number(vendorServiceDetails.latitude),
-                      longitude: Number(vendorServiceDetails.longitude),
-                      refundPolicy: {
-                        type: refundPolicy.type,
-                        windowHours: parsedWindowHours,
-                      },
-                    };
-
-                    const created = await createVendorService(payload).unwrap();
-                    setCreatedServiceId(created.id);
-
-                    toast.success("Vendor service created");
-                  } catch (error) {
-                    toast.error(normalizeApiError(error).toastMessage);
-                  } finally {
-                    setIsCreatingService(false);
-                  }
-                }}
-                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
-              >
-                {isCreatingService
-                  ? "Creating service..."
-                  : "Create vendor service"}
-              </button>
-            </section>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="existing-offering"
-                className="text-sm font-semibold text-slate-700"
-              >
-                Basic offerings (optional)
-              </label>
-              <select
-                id="existing-offering"
-                value={selectedExistingOfferingId}
-                onChange={(event) =>
-                  setSelectedExistingOfferingId(event.target.value)
-                }
-                disabled={!createdServiceId}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-              >
-                <option value="">
-                  {createdServiceId
-                    ? isOfferingsFetching
-                      ? "Loading offerings..."
-                      : "Select an existing offering to prefill"
-                    : "Create vendor service first"}
-                </option>
-
-                {existingOfferings.map((offering) => (
-                  <option key={offering.id} value={offering.id}>
-                    {offering.name} - {formatCurrency(offering.salePrice)}
-                  </option>
-                ))}
-              </select>
-              {offeringsError && (
-                <p className="text-xs text-rose-600">
-                  Unable to surface existing offerings for this category.
-                </p>
-              )}
-              <p className="text-xs text-slate-500">
-                Only the offering ID is stored internally; select one to reuse
-                its values.
-              </p>
+            <div className="mt-4 ml-4">
+              <MasterServiceHero service={selectedMasterService} />
             </div>
+          </div>
 
-            {generalError && (
-              <div className="rounded-2xl bg-rose-50/80 p-3 text-sm text-rose-800">
-                {generalError}
-              </div>
-            )}
+          {wizardError && (
+            <p className="mt-4 text-sm text-rose-600">{wizardError}</p>
+          )}
 
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="relative grid border rounded-2xl px-5 py-8 gap-4 md:grid-cols-2 group"
-              >
-                {fields.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition"
-                  >
-                    <HiOutlineTrash className="h-5 w-5" />
-                  </button>
-                )}
-                <label className="space-y-1 text-sm text-slate-700">
-                  <span className="font-semibold text-slate-600">
-                    Offering name *
-                  </span>
-                  <input
-                    type="text"
-                    {...register(`offerings.${index}.name` as const, {
-                      required: "Offerings need a name.",
-                    })}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                    placeholder="e.g. Premium Food Service"
-                  />
-                  {errors.offerings?.[index]?.name && (
-                    <p className="text-xs text-rose-600">
-                      {errors.offerings[index]?.name?.message}
-                    </p>
-                  )}
-                </label>
-
-                <label className="space-y-1 text-sm text-slate-700">
-                  <span className="font-semibold text-slate-600">
-                    Base price *
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    {...register(`offerings.${index}.basePrice` as const, {
-                      required: "Base price is required.",
-                      min: { value: 0, message: "Must be zero or higher." },
-                      valueAsNumber: true,
-                    })}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                    placeholder="500"
-                  />
-                  {errors.offerings?.[index]?.basePrice && (
-                    <p className="text-xs text-rose-600">
-                      {errors.offerings[index]?.basePrice?.message}
-                    </p>
-                  )}
-                </label>
-
-                <label className="space-y-1 text-sm text-slate-700">
-                  <span className="font-semibold text-slate-600">
-                    Sale price *
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    {...register(`offerings.${index}.salePrice` as const, {
-                      required: "Sale price is required.",
-                      min: { value: 0, message: "Must be zero or higher." },
-                      valueAsNumber: true,
-                    })}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                    placeholder="450"
-                  />
-                  {errors.offerings?.[index]?.salePrice && (
-                    <p className="text-xs text-rose-600">
-                      {errors.offerings[index]?.salePrice?.message}
-                    </p>
-                  )}
-                </label>
-
-                <label className="space-y-1 text-sm text-slate-700">
-                  <span className="font-semibold text-slate-600">
-                    Max quantity
-                  </span>
-                  <input
-                    type="number"
-                    {...register(`offerings.${index}.maxQuantity` as const, {
-                      min: { value: 1, message: "Must be at least 1" },
-                      valueAsNumber: true,
-                    })}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                    placeholder="Optional"
-                  />
-                  {errors.offerings?.[index]?.maxQuantity && (
-                    <p className="text-xs text-rose-600">
-                      {errors.offerings[index]?.maxQuantity?.message}
-                    </p>
-                  )}
-                </label>
-              </div>
-            ))}
-
+          <div className="mt-6 flex justify-end">
             <button
               type="button"
-              onClick={() => append({ name: "", basePrice: 0, salePrice: 0 })}
-              className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50 transition"
+              onClick={handleNextFromMaster}
+              className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700 disabled:bg-slate-400"
+              disabled={!selectedMasterServiceId}
             >
-              <HiOutlinePlusCircle className="h-5 w-5" />
-              Add another offering
+              Continue to categories
             </button>
+          </div>
+          </motion.section>
+        )}
+
+        {currentStep === 2 && (
+          <motion.section
+            key="step-2"
+            className="rounded-3xl border border-slate-100 bg-white p-6 space-y-4"
+            {...stepMotion}
+          >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                Step 2 · Category
+              </p>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Choose a service category
+              </h2>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => goToStep(1)}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleNextFromCategory}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700 disabled:bg-slate-400"
+                disabled={!selectedCategoryId}
+              >
+                Continue to details
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+            {selectedMasterServiceId ? (
+              isCategoryFetching ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-20 rounded-2xl border border-slate-200 bg-white/60 animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : categoryOptions.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {categoryOptions.map((category) => {
+                    const isSelected = category.id === selectedCategoryId;
+                    const masterVisual =
+                      selectedMasterService &&
+                      masterServiceVisuals[selectedMasterService.slug];
+                    const visual =
+                      categoryVisuals[category.slug] ?? masterVisual;
+                    const imageSrc = visual?.src ?? well;
+                    const imageAlt = visual?.alt ?? category.name;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => setSelectedCategoryId(category.id)}
+                        className={`rounded-2xl border px-3 py-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
+                          ${isSelected ? "border-blue-500 bg-blue-50 text-slate-900" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}
+                        aria-pressed={isSelected}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                            <img
+                              src={imageSrc}
+                              alt={imageAlt}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              fetchPriority="low"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-semibold">{category.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {category.slug}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  No categories found for this service yet.
+                </p>
+              )
+            ) : (
+              <p className="text-xs text-slate-500">
+                Choose a master service first.
+              </p>
+            )}
+            {categoryError && (
+              <p className="text-xs text-rose-600">
+                Unable to load categories for that service right now.
+              </p>
+            )}
+          </div>
+
+          {wizardError && (
+            <p className="text-sm text-rose-600">{wizardError}</p>
+          )}
+          </motion.section>
+        )}
+
+        {currentStep === 3 && (
+          <motion.section
+            key="step-3"
+            className="rounded-3xl border border-slate-100 bg-white p-6 space-y-5"
+            {...stepMotion}
+          >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                Step 3 · Vendor service
+              </p>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Fill vendor service details
+              </h2>
+              <p className="text-sm text-slate-500">
+                These values are needed before offerings are created.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => goToStep(2)}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleNextFromDetails}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700"
+              >
+                Continue to offerings
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-2xl border p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Vendor service details
+                </h3>
+                <p className="text-xs text-slate-500">
+                  This creates the vendor-level service before adding offerings.
+                </p>
+              </div>
+
+              {createdServiceId && (
+                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Service created
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <input
+                type="text"
+                placeholder="Service title *"
+                value={vendorServiceDetails.title}
+                onChange={(e) =>
+                  handleVendorServiceDetailChange("title", e.target.value)
+                }
+                className="rounded-xl border px-3 py-2 text-sm"
+              />
+            </div>
+
+            <LocationPicker
+              value={{
+                lat: vendorServiceDetails.latitude
+                  ? Number(vendorServiceDetails.latitude)
+                  : null,
+                lng: vendorServiceDetails.longitude
+                  ? Number(vendorServiceDetails.longitude)
+                  : null,
+              }}
+              onChange={({ lat, lng }) => {
+                handleVendorServiceDetailChange("latitude", String(lat));
+                handleVendorServiceDetailChange("longitude", String(lng));
+              }}
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lat">
+                  Latitude (optional manual entry)
+                </label>
+                <input
+                  id="manual-lat"
+                  type="number"
+                  step="0.000001"
+                  min="-90"
+                  max="90"
+                  value={vendorServiceDetails.latitude}
+                  onChange={(e) => handleVendorServiceDetailChange("latitude", e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                  placeholder="e.g. 28.6139"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lng">
+                  Longitude (optional manual entry)
+                </label>
+                <input
+                  id="manual-lng"
+                  type="number"
+                  step="0.000001"
+                  min="-180"
+                  max="180"
+                  value={vendorServiceDetails.longitude}
+                  onChange={(e) => handleVendorServiceDetailChange("longitude", e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                  placeholder="e.g. 77.2090"
+                />
+              </div>
+            </div>
+            {(vendorServiceErrors.latitude || vendorServiceErrors.longitude) && (
+              <p className="text-xs text-rose-600">
+                {vendorServiceErrors.latitude || vendorServiceErrors.longitude}
+              </p>
+            )}
+
+            <textarea
+              placeholder="Service description *"
+              value={vendorServiceDetails.description}
+              onChange={(e) =>
+                handleVendorServiceDetailChange("description", e.target.value)
+              }
+              className="min-h-[90px] w-full rounded-xl border px-3 py-2 text-sm"
+            />
+
+            <textarea
+              placeholder="Terms & conditions *"
+              value={vendorServiceDetails.terms}
+              onChange={(e) =>
+                handleVendorServiceDetailChange("terms", e.target.value)
+              }
+              className="min-h-[70px] w-full rounded-xl border px-3 py-2 text-sm"
+            />
 
             <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={enableSlots}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  onChange={(event) => setEnableSlots(event.target.checked)}
-                />
-                Enable slots
-              </label>
-              <p className="text-xs text-slate-500">
-                Only call the slot API if you need time-based capacity.
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    Refund policy
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Define how cancellations are refunded for this service.
+                  </p>
+                </div>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Master-level
+                </span>
+              </div>
 
-              {enableSlots && (
-                <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 hover:border-blue-500">
+                  <input
+                    type="radio"
+                    name="refund-policy"
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    value="PARTIAL_BEFORE_WINDOW"
+                    checked={refundPolicy.type === "PARTIAL_BEFORE_WINDOW"}
+                    onChange={() =>
+                      handleRefundPolicyChange("type", "PARTIAL_BEFORE_WINDOW")
+                    }
+                  />
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      Refund before cutoff (platform keeps commission)
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Refund applies if cancelled in time; platform commission is always kept.
+                    </p>
+                  </div>
+                </label>
+
+                <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 hover:border-blue-500">
+                  <input
+                    type="radio"
+                    name="refund-policy"
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    value="NO_REFUND"
+                    checked={refundPolicy.type === "NO_REFUND"}
+                    onChange={() => handleRefundPolicyChange("type", "NO_REFUND")}
+                  />
+                  <div>
+                    <p className="font-semibold text-slate-900">No refunds</p>
+                    <p className="text-xs text-slate-500">
+                      Cancellations are not refunded.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {refundPolicy.type !== "NO_REFUND" ? (
+                <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-1 text-sm text-slate-700">
                     <span className="font-semibold text-slate-600">
-                      Start time *
-                    </span>
-                    <input
-                      type="datetime-local"
-                      value={slotFields.startTime}
-                      onChange={(event) =>
-                        handleSlotFieldUpdate("startTime", event.target.value)
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                      required
-                    />
-                  </label>
-                  <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">
-                      End time *
-                    </span>
-                    <input
-                      type="datetime-local"
-                      value={slotFields.endTime}
-                      onChange={(event) =>
-                        handleSlotFieldUpdate("endTime", event.target.value)
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                      required
-                    />
-                  </label>
-                  <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">
-                      Capacity *
+                      Cutoff window (hours before start) *
                     </span>
                     <input
                       type="number"
                       min="1"
-                      value={slotFields.capacity}
+                      value={refundPolicy.windowHours}
                       onChange={(event) =>
-                        handleSlotFieldUpdate("capacity", event.target.value)
+                        handleRefundPolicyChange("windowHours", event.target.value)
                       }
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                      required
+                      placeholder="e.g. 48"
                     />
                   </label>
-                </div>
-              )}
 
-              {slotValidationError && (
-                <p className="text-xs text-rose-600">{slotValidationError}</p>
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-3 text-xs text-slate-600">
+                    <p className="font-semibold text-slate-800">
+                      Refund percent is set by the platform admin; platform commission is non-refundable.
+                    </p>
+                    <p className="mt-1">
+                      When a refund applies, the platform&apos;s global rule decides the refund percentage and
+                      the commission kept; vendors cannot override it.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {vendorServiceErrors.refundPolicy && (
+                <p className="text-xs text-rose-600">{vendorServiceErrors.refundPolicy}</p>
               )}
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={enableRules}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  onChange={(event) => setEnableRules(event.target.checked)}
-                />
-                Enable rules
-              </label>
-              <p className="text-xs text-slate-500">
-                Rules do not rely on the slot ID-only the offering ID returned
-                in step 1.
-              </p>
+            {/* Create vendor service button removed per request */}
+          </div>
 
-              {enableRules && (
-                <div className="space-y-3">
-                  <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">
-                      Rule type *
-                    </span>
-                    <select
-                      value={ruleFields.type}
-                      onChange={(event) =>
-                        handleRuleFieldUpdate("type", event.target.value)
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                    >
-                      <option value="">Select a rule type</option>
-                      {RULE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="space-y-1 text-sm text-slate-700">
-                    <span className="font-semibold text-slate-600">
-                      Value *
-                    </span>
-                    <textarea
-                      value={ruleFields.value}
-                      onChange={(event) =>
-                        handleRuleFieldUpdate("value", event.target.value)
-                      }
-                      className="min-h-[96px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                      placeholder="Describe what customers should know about this rule."
-                      required
-                    />
-                  </label>
-                </div>
-              )}
+          {wizardError && (
+            <p className="text-sm text-rose-600">{wizardError}</p>
+          )}
+          </motion.section>
+        )}
 
-              {ruleValidationError && (
-                <p className="text-xs text-rose-600">{ruleValidationError}</p>
-              )}
-            </div>
-
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-base font-semibold text-slate-900">
-                  Summary
+        {currentStep === 4 && (
+          <motion.div
+            key="step-4"
+            className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]"
+            {...stepMotion}
+          >
+          <section className="rounded-3xl border border-slate-100 bg-white p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                  Step 4 · Offerings & extras
                 </p>
-                <span className="text-xs text-slate-500">
-                  Sequential, transactional API calls.
-                </span>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Build offerings for this service
+                </h2>
               </div>
-              <p className="text-xs text-slate-500">
-                All fields marked with * are required.
+              <button
+                type="button"
+                onClick={() => goToStep(3)}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
+              >
+                Back
+              </button>
+            </div>
+
+            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <p className="font-semibold text-slate-800">Summary</p>
+              <p>
+                Master:{" "}
+                <span className="font-semibold">{selectedMasterService?.name ?? "—"}</span>
+              </p>
+              <p>
+                Category:{" "}
+                <span className="font-semibold">{selectedCategory?.name ?? "—"}</span>
               </p>
             </div>
 
-            <button
-              type="submit"
-              className="w-full rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
-            >
-              {isSubmitting ? "Processing..." : "Create offering & extras"}
-            </button>
-          </form>
-        </section>
+            <form className="space-y-6" onSubmit={handleCreateOffering} noValidate>
+              <div className="space-y-2">
+                <label
+                  htmlFor="existing-offering"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Basic offerings (optional)
+                </label>
+                <select
+                  id="existing-offering"
+                  value={selectedExistingOfferingId}
+                  onChange={(event) =>
+                    setSelectedExistingOfferingId(event.target.value)
+                  }
+                  disabled={!createdServiceId}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-50 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                >
+                  <option value="">
+                    {createdServiceId
+                      ? isOfferingsFetching
+                        ? "Loading offerings..."
+                        : "Select an existing offering to prefill"
+                      : "Create vendor service first"}
+                  </option>
 
-        <section className="space-y-4">
-          {statusEntries.map((entry) => (
-            <StepStatus
-              key={entry.title}
-              title={entry.title}
-              state={entry.state}
-              description={entry.description}
-              error={entry.error}
-              onRetry={entry.onRetry}
-            />
-          ))}
+                  {existingOfferings.map((offering) => (
+                    <option key={offering.id} value={offering.id}>
+                      {offering.name} - {formatCurrency(offering.salePrice)}
+                    </option>
+                  ))}
+                </select>
+                {offeringsError && (
+                  <p className="text-xs text-rose-600">
+                    Unable to surface existing offerings for this category.
+                  </p>
+                )}
+                <p className="text-xs text-slate-500">
+                  Only the offering ID is stored internally; select one to reuse its values.
+                </p>
+              </div>
+
+              {generalError && (
+                <div className="rounded-2xl bg-rose-50/80 p-3 text-sm text-rose-800">
+                  {generalError}
+                </div>
+              )}
+
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="relative grid border rounded-2xl px-5 py-8 gap-4 md:grid-cols-2 group"
+                >
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition"
+                    >
+                      <HiOutlineTrash className="h-5 w-5" />
+                    </button>
+                  )}
+                  <label className="space-y-1 text-sm text-slate-700">
+                    <span className="font-semibold text-slate-600">
+                      Offering name *
+                    </span>
+                    <input
+                      type="text"
+                      {...register(`offerings.${index}.name` as const, {
+                        required: "Offerings need a name.",
+                      })}
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                      placeholder="e.g. Premium Food Service"
+                    />
+                    {errors.offerings?.[index]?.name && (
+                      <p className="text-xs text-rose-600">
+                        {errors.offerings[index]?.name?.message}
+                      </p>
+                    )}
+                  </label>
+
+                  <label className="space-y-1 text-sm text-slate-700">
+                    <span className="font-semibold text-slate-600">
+                      Base price *
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      {...register(`offerings.${index}.basePrice` as const, {
+                        required: "Base price is required.",
+                        min: { value: 0, message: "Must be zero or higher." },
+                        valueAsNumber: true,
+                      })}
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                      placeholder="500"
+                    />
+                    {errors.offerings?.[index]?.basePrice && (
+                      <p className="text-xs text-rose-600">
+                        {errors.offerings[index]?.basePrice?.message}
+                      </p>
+                    )}
+                  </label>
+
+                  <label className="space-y-1 text-sm text-slate-700">
+                    <span className="font-semibold text-slate-600">
+                      Sale price *
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      {...register(`offerings.${index}.salePrice` as const, {
+                        required: "Sale price is required.",
+                        min: { value: 0, message: "Must be zero or higher." },
+                        valueAsNumber: true,
+                      })}
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                      placeholder="450"
+                    />
+                    {errors.offerings?.[index]?.salePrice && (
+                      <p className="text-xs text-rose-600">
+                        {errors.offerings[index]?.salePrice?.message}
+                      </p>
+                    )}
+                  </label>
+
+                  <label className="space-y-1 text-sm text-slate-700">
+                    <span className="font-semibold text-slate-600">
+                      Max quantity
+                    </span>
+                    <input
+                      type="number"
+                      {...register(`offerings.${index}.maxQuantity` as const, {
+                        min: { value: 1, message: "Must be at least 1" },
+                        valueAsNumber: true,
+                      })}
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                      placeholder="Optional"
+                    />
+                    {errors.offerings?.[index]?.maxQuantity && (
+                      <p className="text-xs text-rose-600">
+                        {errors.offerings[index]?.maxQuantity?.message}
+                      </p>
+                    )}
+                  </label>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => append({ name: "", basePrice: 0, salePrice: 0 })}
+                className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-500 transition-colors duration-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50"
+              >
+                <HiOutlinePlusCircle className="h-5 w-5" />
+                Add another offering
+              </button>
+
+              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={enableSlots}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    onChange={(event) => setEnableSlots(event.target.checked)}
+                  />
+                  Enable slots
+                </label>
+                <p className="text-xs text-slate-500">
+                  Only call the slot API if you need time-based capacity.
+                </p>
+
+                {enableSlots && (
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <label className="space-y-1 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-600">
+                        Start time *
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={slotFields.startTime}
+                        onChange={(event) =>
+                          handleSlotFieldUpdate("startTime", event.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                        required
+                      />
+                    </label>
+                    <label className="space-y-1 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-600">
+                        End time *
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={slotFields.endTime}
+                        onChange={(event) =>
+                          handleSlotFieldUpdate("endTime", event.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                        required
+                      />
+                    </label>
+                    <label className="space-y-1 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-600">
+                        Capacity *
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={slotFields.capacity}
+                        onChange={(event) =>
+                          handleSlotFieldUpdate("capacity", event.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                        required
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {slotValidationError && (
+                  <p className="text-xs text-rose-600">{slotValidationError}</p>
+                )}
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={enableRules}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    onChange={(event) => setEnableRules(event.target.checked)}
+                  />
+                  Enable rules
+                </label>
+                <p className="text-xs text-slate-500">
+                  Rules do not rely on the slot ID—only the offering ID returned in step 1.
+                </p>
+
+                {enableRules && (
+                  <div className="space-y-3">
+                    <label className="space-y-1 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-600">
+                        Rule type *
+                      </span>
+                      <select
+                        value={ruleFields.type}
+                        onChange={(event) =>
+                          handleRuleFieldUpdate("type", event.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                      >
+                        <option value="">Select a rule type</option>
+                        {RULE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-1 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-600">
+                        Value *
+                      </span>
+                      <textarea
+                        value={ruleFields.value}
+                        onChange={(event) =>
+                          handleRuleFieldUpdate("value", event.target.value)
+                        }
+                        className="min-h-[96px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                        placeholder="Describe what customers should know about this rule."
+                        required
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {ruleValidationError && (
+                  <p className="text-xs text-rose-600">{ruleValidationError}</p>
+                )}
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-base font-semibold text-slate-900">
+                    Summary
+                  </p>
+                  <span className="text-xs text-slate-500">
+                    Sequential, transactional API calls.
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  All fields marked with * are required.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+              className="w-full rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+              >
+                {isSubmitting ? "Processing..." : "Create offering & extras"}
+              </button>
+            </form>
+          </section>
+
+          <section className="space-y-4">
+            {statusEntries.map((entry) => (
+              <StepStatus
+                key={entry.title}
+                title={entry.title}
+                state={entry.state}
+                description={entry.description}
+                error={entry.error}
+                onRetry={entry.onRetry}
+              />
+            ))}
           {lastCreatedOfferingId && (
             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600">
               Latest offering ID:{" "}
@@ -1536,7 +1718,9 @@ const VendorServices = () => {
             </div>
           )}
         </section>
-      </div>
+        </motion.div>
+        )}
+      </AnimatePresence>
     </DashboardContainer>
   );
 };
@@ -1651,9 +1835,3 @@ const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
 };
 
 export default VendorServices;
-  const handleSelectMaster = useCallback((id: string) => {
-    setSelectedMasterServiceId(id);
-    startMasterTransition(() => {
-      setSelectedMasterForQuery(id);
-    });
-  }, []);
