@@ -13,6 +13,7 @@ import { ActionConfig } from "@/types/Table/action";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { ListingPage } from "@/components/shared/ListingPage";
+import { useGetBookingsQuery } from "@/services/bookingsApi";
 
 type BookingsPageProps = {
   defaultStatusFilter?: string;
@@ -37,97 +38,6 @@ const currency = new Intl.NumberFormat("en-IN", {
   currency: "INR",
   maximumFractionDigits: 0,
 });
-
-export const bookingsSeed: BookingRow[] = [
-  {
-    id: "BK-2401",
-    customer: "Aarav Kulkarni",
-    service: "AC Service & Gas Refill",
-    status: "CONFIRMED",
-    startTime: "2025-01-20T10:30:00Z",
-    city: "Mumbai",
-    channel: "Marketplace",
-    amount: 7200,
-    contact: "+91 98111 22110",
-  },
-  {
-    id: "BK-2400",
-    customer: "Meera Nair",
-    service: "Deep Cleaning - 2BHK",
-    status: "COMPLETED",
-    startTime: "2025-01-18T14:00:00Z",
-    city: "Bengaluru",
-    channel: "Organic",
-    amount: 8200,
-    contact: "+91 98765 00123",
-  },
-  {
-    id: "BK-2399",
-    customer: "Prakash Sharma",
-    service: "Pest Control - Full Home",
-    status: "PENDING",
-    startTime: "2025-01-21T08:00:00Z",
-    city: "Pune",
-    channel: "Phone",
-    amount: 6400,
-    contact: "+91 97664 32001",
-  },
-  {
-    id: "BK-2398",
-    customer: "Sakshi Rawat",
-    service: "Sofa Shampoo",
-    status: "CANCELLED",
-    startTime: "2025-01-17T12:15:00Z",
-    city: "Delhi",
-    channel: "Marketplace",
-    amount: 4800,
-    contact: "+91 98117 00456",
-  },
-  {
-    id: "BK-2397",
-    customer: "Nikhil Shah",
-    service: "Car Detailing - Premium",
-    status: "COMPLETED",
-    startTime: "2025-01-15T07:45:00Z",
-    city: "Ahmedabad",
-    channel: "WhatsApp",
-    amount: 5600,
-    contact: "+91 98765 12003",
-  },
-  {
-    id: "BK-2396",
-    customer: "Ananya Gupta",
-    service: "Home Painting - 2BHK",
-    status: "REFUND_REQUESTED",
-    startTime: "2025-01-14T09:30:00Z",
-    city: "Jaipur",
-    channel: "Referral",
-    amount: 12600,
-    contact: "+91 98989 76007",
-  },
-  {
-    id: "BK-2395",
-    customer: "Vishal Mehta",
-    service: "RO Service & Filter Change",
-    status: "PENDING",
-    startTime: "2025-01-22T16:20:00Z",
-    city: "Chennai",
-    channel: "Organic",
-    amount: 3100,
-    contact: "+91 98202 11009",
-  },
-  {
-    id: "BK-2394",
-    customer: "Mahesh Iyer",
-    service: "Kitchen Deep Cleaning",
-    status: "CONFIRMED",
-    startTime: "2025-01-23T11:00:00Z",
-    city: "Hyderabad",
-    channel: "Marketplace",
-    amount: 6900,
-    contact: "+91 97777 88991",
-  },
-];
 
 const statusTone: Record<
   BookingRow["status"],
@@ -177,17 +87,30 @@ export default function BookingsPage({
   });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
-  const [bookingRows, setBookingRows] = useState<BookingRow[]>(bookingsSeed);
+  const [bookingRows, setBookingRows] = useState<BookingRow[]>([]);
+  const { data: backendBookings, isFetching, isError } = useGetBookingsQuery();
   const defaultFilters = useMemo(
     () => (defaultStatusFilter ? { status: defaultStatusFilter } : undefined),
     [defaultStatusFilter]
   );
+
+  useEffect(() => {
+    if (backendBookings !== undefined) {
+      setBookingRows(backendBookings);
+    }
+  }, [backendBookings]);
 
   const updateBookingStatus = (id: string, nextStatus: BookingRow["status"]) => {
     setBookingRows((prev) =>
       prev.map((row) => (row.id === id ? { ...row, status: nextStatus } : row))
     );
   };
+
+  const backendStatusMessage = useMemo(() => {
+    if (isError) return "Failed to load latest bookings";
+    if (isFetching) return "Syncing latest bookings";
+    return "";
+  }, [isError, isFetching]);
 
   const listingTitle = titleOverride ?? "Bookings";
   const breadcrumb = breadcrumbOverride ?? "Vendor / Bookings";
@@ -209,7 +132,7 @@ export default function BookingsPage({
   const columns = useMemo<ColumnConfig[]>(() => [
     {
       key: "id",
-      title: "Booking ID",
+      title: "Order ID",
       sortable: true,
       render: (value: string) => <span className="font-semibold text-slate-900">{value}</span>,
     },
@@ -407,12 +330,12 @@ export default function BookingsPage({
       ]}
       summary={{
         left: dateRangeLabel ? `Range: ${dateRangeLabel}` : "Use the quick date selector in the table header.",
-        right: `Selected bookings: ${selectedRows.length}`,
+        right: `Selected bookings: ${selectedRows.length}${backendStatusMessage ? ` | ${backendStatusMessage}` : ""}`,
       }}
-        tableProps={{
-          title: "Bookings",
-          breadCrumbTitle: "Operations / Bookings Table",
-          data: bookingRows,
+      tableProps={{
+        title: "Bookings",
+        breadCrumbTitle: "Operations / Bookings Table",
+        data: bookingRows,
         columns,
         filters,
         sortOptions,

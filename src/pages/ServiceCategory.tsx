@@ -12,7 +12,7 @@ import icon8 from "@/assets/icons/s8.png"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 import { useSubmitLeadMutation } from "@/features/leads/api/leadsApi"
-import { useListServiceCategoriesQuery } from "@/features/serviceCategories/api/serviceCategoriesApi"
+import { useListServiceCategoriesQuery } from "@/services/serviceCategoriesApi"
 
 const categories = [
   { label: "Buffet Deals", icon: icon1, slug: "buffet-deals" },

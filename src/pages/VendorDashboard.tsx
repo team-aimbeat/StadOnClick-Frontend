@@ -519,41 +519,48 @@ const VendorDashboard = () => {
               />
             </div>
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-                <p className="text-sm font-semibold text-slate-800">
-                  Lead pipeline
-                </p>
-                <p className="text-[11px] text-slate-500">Last 7 days</p>
-                <div className="mt-2 space-y-1.5">
-                  {(
-                    ["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]
-                  ).map((status) => {
-                    const count = pipelineCounts[status];
-                    const total = vendorLeads.length || 1;
-                    const width = Math.max((count / total) * 100, 8);
-                    const colorMap: Record<LeadStatus, string> = {
-                      NEW: "bg-blue-500",
-                      CONTACTED: "bg-amber-500",
-                      CONVERTED: "bg-emerald-500",
-                      LOST: "bg-slate-400",
-                    };
-                    return (
-                      <div key={status} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                          <span>{status}</span>
-                          <span>{count}</span>
-                        </div>
-                        <div className="h-1.5 w-full rounded-full bg-white">
-                          <div
-                            className={`h-1.5 rounded-full ${colorMap[status]}`}
-                            style={{ width: `${width}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+  <div className="mb-3">
+    <p className="text-sm font-semibold text-slate-800">Lead pipeline</p>
+    <p className="text-[11px] text-slate-500">Last 7 days</p>
+  </div>
+
+  <div className="grid grid-cols-2 gap-2">
+    {(
+      ["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]
+    ).map((status) => {
+      const count = pipelineCounts[status];
+      const total = vendorLeads.length || 1;
+      const percentage = Math.round((count / total) * 100);
+
+      const colorMap: Record<LeadStatus, string> = {
+        NEW: "bg-blue-100 text-blue-700",
+        CONTACTED: "bg-amber-100 text-amber-700",
+        CONVERTED: "bg-emerald-100 text-emerald-700",
+        LOST: "bg-red-200 text-red-700",
+      };
+
+      return (
+        <div
+          key={status}
+          className={`rounded-md p-2 ${colorMap[status]}`}
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-wide">
+            {status}
+          </p>
+
+          <div className="mt-1 flex items-end justify-between">
+            <span className="text-lg font-bold">{count}</span>
+            <span className="text-[10px] font-medium">
+              {percentage}%
+            </span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
                 <p className="text-sm font-semibold text-slate-800">
                   Operations

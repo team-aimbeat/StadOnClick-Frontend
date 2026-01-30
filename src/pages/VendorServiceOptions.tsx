@@ -7,6 +7,11 @@ import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
 import { useMockLoader } from "@/lib/useMockLoader";
+import {
+  useCreateRuleMutation,
+  useCreateSlotMutation,
+  useGetServiceOfferingsQuery,
+} from "@/services/vendorOfferingsApi";
 
 type Slot = {
   id: string;
@@ -75,6 +80,11 @@ const VendorServiceOptions = () => {
   const [visibility, setVisibility] = useState(service.visibility);
   const [media, setMedia] = useState(service.media);
   const [message, setMessage] = useState("");
+  const [slotDraft, setSlotDraft] = useState({
+    startTime: new Date().toISOString().slice(0, 16),
+    capacity: 1,
+  });
+  const [ruleDraft, setRuleDraft] = useState({ type: "", value: "" });
 
   useEffect(() => {
     dispatch(setPageTitle(`Service Options – ${service.name}`));
@@ -86,15 +96,103 @@ const VendorServiceOptions = () => {
     setSlots(service.slots);
     setVisibility(service.visibility);
     setMedia(service.media);
+    setSlotDraft({
+      startTime: new Date().toISOString().slice(0, 16),
+      capacity: 1,
+    });
+    setRuleDraft({ type: "", value: "" });
   }, [service]);
+
+  const serviceIdParam = serviceId ?? service.id;
+  const {
+    data: offerings = [],
+    isFetching: isFetchingOfferings,
+  } = useGetServiceOfferingsQuery(serviceIdParam, {
+    skip: !serviceIdParam,
+  });
+  const primaryOffering = offerings[0];
+
+  const displaySlots = useMemo<Slot[]>(() => {
+    if (primaryOffering?.slots?.length) {
+      return primaryOffering.slots.map((slot) => ({
+        id: slot.id,
+        label: formatSlotLabel(slot.startTime, slot.endTime),
+        status: slot.status === "OPEN" ? "available" : "blocked",
+      }));
+    }
+
+    return service.slots;
+  }, [primaryOffering, service.slots]);
 
   const slotSummary = useMemo(
     () => ({
-      available: slots.filter((slot) => slot.status === "available").length,
-      blocked: slots.filter((slot) => slot.status === "blocked").length,
+      available: displaySlots.filter((slot) => slot.status === "available").length,
+      blocked: displaySlots.filter((slot) => slot.status === "blocked").length,
+      total: displaySlots.length,
     }),
-    [slots]
+    [displaySlots]
   );
+
+  useEffect(() => {
+    setSlots(displaySlots);
+  }, [displaySlots]);
+
+  const ruleList = primaryOffering?.rules ?? [];
+  const [createSlot, { isLoading: creatingSlot }] = useCreateSlotMutation();
+  const [createRule, { isLoading: creatingRule }] = useCreateRuleMutation();
+
+  const handleCreateSlot = async () => {
+    if (!primaryOffering) {
+      setMessage("Awaiting an offering before publishing slots.");
+      return;
+    }
+
+    if (!slotDraft.startTime) {
+      setMessage("Pick a start time for the slot.");
+      return;
+    }
+
+    try {
+      await createSlot({
+        offeringId: primaryOffering.id,
+        startTime: new Date(slotDraft.startTime).toISOString(),
+        capacity: slotDraft.capacity,
+      }).unwrap();
+
+      setMessage("Slot published");
+      setSlotDraft((prev) => ({ ...prev, capacity: 1 }));
+    } catch (error) {
+      setMessage("Failed to publish slot. Try again.");
+    }
+  };
+
+  const handleCreateRule = async () => {
+    if (!primaryOffering) {
+      setMessage("Create an offering before adding rules.");
+      return;
+    }
+
+    const type = ruleDraft.type.trim();
+    const value = ruleDraft.value.trim();
+
+    if (!type || !value) {
+      setMessage("Rule type and value are required.");
+      return;
+    }
+
+    try {
+      await createRule({
+        offeringId: primaryOffering.id,
+        ruleType: type,
+        value,
+      }).unwrap();
+
+      setRuleDraft({ type: "", value: "" });
+      setMessage("Rule saved");
+    } catch (error) {
+      setMessage("Failed to save rule");
+    }
+  };
 
   const toggleVisibility = () => {
     setVisibility((prev) => {
@@ -112,17 +210,6 @@ const VendorServiceOptions = () => {
     });
   };
 
-  const addSlot = () => {
-    setSlots((prev) => [
-      ...prev,
-      {
-        id: `slot-${prev.length + 1}`,
-        label: `New Slot ${prev.length + 1} · 08:00 AM`,
-        status: "available",
-      },
-    ]);
-    setMessage("Slot added");
-  };
 
   const archiveService = () => {
     setMessage("Service archived. Customers will see it as inactive.");
@@ -211,17 +298,51 @@ const VendorServiceOptions = () => {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 md:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-              Availability & slots
-            </p>
-            <button
-              type="button"
-              onClick={addSlot}
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300"
-            >
-              Add slot
-            </button>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Availability & slots
+              </p>
+              {isFetchingOfferings && (
+                <p className="text-[11px] text-slate-400">Syncing offering data…</p>
+              )}
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="flex flex-col gap-1 text-[11px] text-slate-500">
+                Start time
+                <input
+                  type="datetime-local"
+                  value={slotDraft.startTime}
+                  onChange={(event) =>
+                    setSlotDraft((prev) => ({ ...prev, startTime: event.target.value }))
+                  }
+                  className="rounded-full border border-slate-200 px-3 py-1 text-xs focus:border-blue-500"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-[11px] text-slate-500">
+                Capacity
+                <input
+                  type="number"
+                  min={1}
+                  value={slotDraft.capacity}
+                  onChange={(event) =>
+                    setSlotDraft((prev) => ({
+                      ...prev,
+                      capacity: Math.max(1, Number(event.target.value)),
+                    }))
+                  }
+                  className="w-20 rounded-full border border-slate-200 px-3 py-1 text-xs focus:border-blue-500"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleCreateSlot}
+                disabled={creatingSlot}
+                className="rounded-full bg-blue-600 px-4 py-1.5 text-[11px] font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+              >
+                {creatingSlot ? "Publishing…" : "Publish slot"}
+              </button>
+            </div>
           </div>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
@@ -231,7 +352,7 @@ const VendorServiceOptions = () => {
               Blocked · {slotSummary.blocked}
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-              Total · {slots.length}
+              Total · {slotSummary.total}
             </div>
           </div>
           <div className="mt-3 space-y-2 text-xs text-slate-700">
@@ -349,6 +470,51 @@ const VendorServiceOptions = () => {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Rules</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-[1.2fr_1.2fr_auto]">
+          <input
+            type="text"
+            value={ruleDraft.type}
+            onChange={(event) => setRuleDraft((prev) => ({ ...prev, type: event.target.value }))}
+            placeholder="Rule type"
+            className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-xs focus:border-blue-500 focus:ring focus:ring-blue-200/50"
+          />
+          <input
+            type="text"
+            value={ruleDraft.value}
+            onChange={(event) => setRuleDraft((prev) => ({ ...prev, value: event.target.value }))}
+            placeholder="Value"
+            className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-xs focus:border-blue-500 focus:ring focus:ring-blue-200/50"
+          />
+          <button
+            type="button"
+            onClick={handleCreateRule}
+            disabled={creatingRule}
+            className="rounded-2xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-blue-700 disabled:opacity-60"
+          >
+            {creatingRule ? "Saving…" : "Save rule"}
+          </button>
+        </div>
+        <div className="mt-4 space-y-2 text-xs text-slate-700">
+          {ruleList.length > 0 ? (
+            ruleList.map((rule) => (
+              <div
+                key={rule.id}
+                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2"
+              >
+                <span className="font-semibold text-slate-900">{rule.ruleType}</span>
+                <span className="text-slate-500">{rule.value}</span>
+              </div>
+            ))
+          ) : (
+            <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs text-slate-500">
+              No rules yet. Rules keep your offerings consistent.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
         <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Delete / Archive</p>
         <p className="mt-2 text-sm text-slate-700">
           Archiving keeps the service in your draft library and removes it from live listings.
@@ -364,5 +530,29 @@ const VendorServiceOptions = () => {
     </DashboardContainer>
   );
 };
+
+function formatSlotLabel(startTime: string, endTime?: string | null) {
+  const start = new Date(startTime);
+  if (Number.isNaN(start.getTime())) {
+    return "Unknown slot";
+  }
+
+  const startLabel = start.toLocaleString("en-US", {
+    weekday: "short",
+    hour: "numeric",
+    minute: "numeric",
+  });
+
+  if (!endTime) {
+    return startLabel;
+  }
+
+  const end = new Date(endTime);
+  const endLabel = Number.isNaN(end.getTime())
+    ? "Unknown"
+    : end.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric" });
+
+  return `${startLabel} · ${endLabel}`;
+}
 
 export default VendorServiceOptions;
