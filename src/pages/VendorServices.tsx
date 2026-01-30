@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useAppSelector } from "@/app/hooks";
 import { toast } from "react-hot-toast";
 import { HiOutlinePlus, HiOutlineTrash, HiOutlinePlusCircle } from "react-icons/hi2";
 
 import { DashboardContainer } from "@/components/dashboard";
+import { LocationPicker } from "@/components/forms/LocationPicker";
 import type { ServiceMasterCategory } from "@/services/serviceCategoriesApi";
 import {
   useGetMasterCategoriesQuery,
@@ -153,6 +154,57 @@ type VendorServiceDetails = {
   longitude: string;
 };
 
+type RefundPolicyType = "NO_REFUND" | "PARTIAL_BEFORE_WINDOW";
+
+type RefundPolicyForm = {
+  type: RefundPolicyType;
+  windowHours: string;
+};
+
+const defaultRefundPolicy: RefundPolicyForm = {
+  type: "PARTIAL_BEFORE_WINDOW",
+  windowHours: "48",
+};
+
+type MasterServiceCardProps = {
+  service: ServiceMasterCategory;
+  isSelected: boolean;
+  visual: { src: string; alt: string };
+  onSelect: (id: string) => void;
+};
+
+const MasterServiceCard = React.memo(function MasterServiceCard({
+  service,
+  isSelected,
+  visual,
+  onSelect,
+}: MasterServiceCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(service.id)}
+      className={`flex h-full w-full flex-col gap-3 rounded-[24px] border bg-white px-3 py-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
+        ${isSelected ? "border-blue-500" : "border-slate-200 hover:border-slate-300"}`}
+      aria-pressed={isSelected}
+    >
+      <div className="h-32 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100">
+        <img
+          src={visual.src}
+          alt={visual.alt}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          fetchPriority="low"
+        />
+      </div>
+      <div className="space-y-0.5 px-1">
+        <p className="truncate text-base font-semibold text-slate-900">{service.name}</p>
+        <p className="truncate text-[11px] text-slate-500">{service.slug}</p>
+      </div>
+    </button>
+  );
+});
+
 const VendorServices = () => {
   const [selectedMasterServiceId, setSelectedMasterServiceId] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
@@ -182,6 +234,8 @@ const VendorServices = () => {
   const [createdServiceId, setCreatedServiceId] = useState<string | null>(null);
   const [isCreatingService, setIsCreatingService] = useState(false);
   const [showListing, setShowListing] = useState(true);
+  const [selectedMasterForQuery, setSelectedMasterForQuery] = useState("");
+  const [isMasterFetchPending, startMasterTransition] = useTransition();
 
   const { data: profileStatus } = useGetVendorProfileStatusQuery();
   const dynamicVendorId = profileStatus?.id;
@@ -205,6 +259,8 @@ const VendorServices = () => {
   const [vendorServiceErrors, setVendorServiceErrors] = useState<
     Record<string, string>
   >({});
+  const [refundPolicy, setRefundPolicy] =
+    useState<RefundPolicyForm>(defaultRefundPolicy);
   const [vendorServiceStep, setVendorServiceStep] = useState<StepState>("idle");
   const [vendorServiceError, setVendorServiceError] = useState<string | null>(
     null,
@@ -226,7 +282,7 @@ const VendorServices = () => {
     data: categoryOptions = [],
     isFetching: isCategoryFetching,
     isError: categoryError,
-  } = useGetServiceCategoriesByMasterQuery(selectedMasterServiceId, {
+  } = useGetServiceCategoriesByMasterQuery(selectedMasterForQuery, {
     skip: !selectedMasterServiceId,
   });
 
@@ -462,9 +518,22 @@ const VendorServices = () => {
     } else if (Number.isNaN(Number(vendorServiceDetails.longitude))) {
       errors.longitude = "Enter a valid longitude.";
     }
+
+    if (!refundPolicy.type) {
+      errors.refundPolicy = "Select a refund policy.";
+    } else {
+      const windowHours = Number(refundPolicy.windowHours);
+
+      if (refundPolicy.type !== "NO_REFUND") {
+        if (Number.isNaN(windowHours) || windowHours <= 0) {
+          errors.refundPolicy = "Enter a valid cutoff window (hours) greater than 0.";
+        }
+      }
+    }
+
     setVendorServiceErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [vendorServiceDetails]);
+  }, [refundPolicy.type, refundPolicy.windowHours, vendorServiceDetails]);
 
   const handleVendorServiceDetailChange = (
     field: keyof VendorServiceDetails,
@@ -474,6 +543,18 @@ const VendorServices = () => {
     setVendorServiceErrors((prev) => {
       const next = { ...prev };
       delete next[field];
+      return next;
+    });
+  };
+
+  const handleRefundPolicyChange = (
+    field: keyof RefundPolicyForm,
+    value: string,
+  ) => {
+    setRefundPolicy((prev) => ({ ...prev, [field]: value }));
+    setVendorServiceErrors((prev) => {
+      const next = { ...prev };
+      delete next.refundPolicy;
       return next;
     });
   };
@@ -504,6 +585,10 @@ const VendorServices = () => {
     try {
       // 1. Create Service if not exists
       if (!currentServiceId) {
+        const parsedWindowHours =
+          refundPolicy.type === "NO_REFUND"
+            ? null
+            : Number(refundPolicy.windowHours);
         const vendorServicePayload = {
           vendorId: dynamicVendorId,
           categoryId: selectedCategoryId,
@@ -512,6 +597,10 @@ const VendorServices = () => {
           terms: vendorServiceDetails.terms.trim(),
           latitude: Number(vendorServiceDetails.latitude),
           longitude: Number(vendorServiceDetails.longitude),
+          refundPolicy: {
+            type: refundPolicy.type,
+            windowHours: parsedWindowHours,
+          },
         };
 
         const createdVendorService = await createVendorService(vendorServicePayload).unwrap();
@@ -556,6 +645,7 @@ const VendorServices = () => {
       setEnableRules(false);
       setSlotFields({ ...slotInitialState });
       setRuleFields({ ...ruleInitialState });
+      setRefundPolicy(defaultRefundPolicy);
       setShowListing(true);
       refetchServices();
     } catch (error) {
@@ -639,7 +729,7 @@ const VendorServices = () => {
             {vendorServices.map((service) => (
               <div
                 key={service.id}
-                className="group relative rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:shadow-md"
+                className="group relative rounded-3xl border border-slate-100 bg-white p-5 transition"
               >
                 <div className="mb-4 flex items-center justify-between">
                   {service.categoryId && (
@@ -724,7 +814,7 @@ const VendorServices = () => {
         </button>
       </div>
 
-      <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-100 bg-white p-6">
         <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr] items-start">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
@@ -769,39 +859,21 @@ const VendorServices = () => {
                 </div>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr">
-                  {masterServiceOptions.map((service) => {
-                    const isSelected = service.id === selectedMasterServiceId;
-                    const visual = masterServiceVisuals[service.slug];
-                    const imageSrc = visual?.src ?? well;
-                    const imageAlt = visual?.alt ?? service.name;
-                    return (
-                      <button
-                        key={service.id}
-                        type="button"
-                        onClick={() => setSelectedMasterServiceId(service.id)}
-                        className={`flex h-full w-full flex-col gap-3 rounded-[24px] border bg-white px-3 py-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
-                    ${isSelected ? "border-blue-500 shadow-[0_12px_30px_rgba(59,130,246,0.15)]" : "border-slate-200 hover:border-slate-300"}`}
-                        aria-pressed={isSelected}
-                      >
-                        <div className="h-32 overflow-hidden rounded-[18px] border border-slate-200 bg-slate-100">
-                          <img
-                            src={imageSrc}
-                            alt={imageAlt}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                          />
-                        </div>
-                        <div className="space-y-0.5 px-1">
-                          <p className="truncate text-base font-semibold text-slate-900">
-                            {service.name}
-                          </p>
-                          <p className="truncate text-[11px] text-slate-500">
-                            {service.slug}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
+                {masterServiceOptions.map((service) => {
+                  const isSelected = service.id === selectedMasterServiceId;
+                  const visual = masterServiceVisuals[service.slug];
+                  const imageSrc = visual?.src ?? well;
+                  const imageAlt = visual?.alt ?? service.name;
+                  return (
+                    <MasterServiceCard
+                      key={service.id}
+                      service={service}
+                      isSelected={isSelected}
+                      visual={{ src: imageSrc, alt: imageAlt }}
+                      onSelect={handleSelectMaster}
+                    />
+                  );
+                })}
                 </div>
               )}
             </div>
@@ -813,7 +885,7 @@ const VendorServices = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6">
           <form
             className="space-y-6"
             onSubmit={handleCreateOffering}
@@ -863,6 +935,8 @@ const VendorServices = () => {
                                 alt={imageAlt}
                                 className="h-full w-full object-cover"
                                 loading="lazy"
+                                decoding="async"
+                                fetchPriority="low"
                               />
                             </div>
                             <div>
@@ -923,27 +997,61 @@ const VendorServices = () => {
                   }
                   className="rounded-xl border px-3 py-2 text-sm"
                 />
-
-                <input
-                  type="text"
-                  placeholder="Latitude *"
-                  value={vendorServiceDetails.latitude}
-                  onChange={(e) =>
-                    handleVendorServiceDetailChange("latitude", e.target.value)
-                  }
-                  className="rounded-xl border px-3 py-2 text-sm"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Longitude *"
-                  value={vendorServiceDetails.longitude}
-                  onChange={(e) =>
-                    handleVendorServiceDetailChange("longitude", e.target.value)
-                  }
-                  className="rounded-xl border px-3 py-2 text-sm"
-                />
               </div>
+
+              <LocationPicker
+                value={{
+                  lat: vendorServiceDetails.latitude
+                    ? Number(vendorServiceDetails.latitude)
+                    : null,
+                  lng: vendorServiceDetails.longitude
+                    ? Number(vendorServiceDetails.longitude)
+                    : null,
+                }}
+                onChange={({ lat, lng }) => {
+                  handleVendorServiceDetailChange("latitude", String(lat));
+                  handleVendorServiceDetailChange("longitude", String(lng));
+                }}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lat">
+                    Latitude (optional manual entry)
+                  </label>
+                  <input
+                    id="manual-lat"
+                    type="number"
+                    step="0.000001"
+                    min="-90"
+                    max="90"
+                    value={vendorServiceDetails.latitude}
+                    onChange={(e) => handleVendorServiceDetailChange("latitude", e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                    placeholder="e.g. 28.6139"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lng">
+                    Longitude (optional manual entry)
+                  </label>
+                  <input
+                    id="manual-lng"
+                    type="number"
+                    step="0.000001"
+                    min="-180"
+                    max="180"
+                    value={vendorServiceDetails.longitude}
+                    onChange={(e) => handleVendorServiceDetailChange("longitude", e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                    placeholder="e.g. 77.2090"
+                  />
+                </div>
+              </div>
+              {(vendorServiceErrors.latitude || vendorServiceErrors.longitude) && (
+                <p className="text-xs text-rose-600">
+                  {vendorServiceErrors.latitude || vendorServiceErrors.longitude}
+                </p>
+              )}
 
               <textarea
                 placeholder="Service description *"
@@ -963,6 +1071,96 @@ const VendorServices = () => {
                 className="min-h-[70px] w-full rounded-xl border px-3 py-2 text-sm"
               />
 
+              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      Refund policy
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Define how cancellations are refunded for this service.
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Master-level
+                  </span>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 hover:border-blue-500">
+                    <input
+                      type="radio"
+                      name="refund-policy"
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      value="PARTIAL_BEFORE_WINDOW"
+                      checked={refundPolicy.type === "PARTIAL_BEFORE_WINDOW"}
+                      onChange={() =>
+                        handleRefundPolicyChange("type", "PARTIAL_BEFORE_WINDOW")
+                      }
+                    />
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        Refund before cutoff (platform keeps commission)
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Refund applies if cancelled in time; platform commission is always kept.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 hover:border-blue-500">
+                    <input
+                      type="radio"
+                      name="refund-policy"
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      value="NO_REFUND"
+                      checked={refundPolicy.type === "NO_REFUND"}
+                      onChange={() => handleRefundPolicyChange("type", "NO_REFUND")}
+                    />
+                    <div>
+                      <p className="font-semibold text-slate-900">No refunds</p>
+                      <p className="text-xs text-slate-500">
+                        Cancellations are not refunded.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {refundPolicy.type !== "NO_REFUND" ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-1 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-600">
+                        Cutoff window (hours before start) *
+                      </span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={refundPolicy.windowHours}
+                        onChange={(event) =>
+                          handleRefundPolicyChange("windowHours", event.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                        placeholder="e.g. 48"
+                      />
+                    </label>
+
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-3 text-xs text-slate-600">
+                      <p className="font-semibold text-slate-800">
+                        Refund percent is set by the platform admin; platform commission is non-refundable.
+                      </p>
+                      <p className="mt-1">
+                        When a refund applies, the platform&apos;s global rule decides the refund percentage and
+                        the commission kept; vendors cannot override it.
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+
+                {vendorServiceErrors.refundPolicy && (
+                  <p className="text-xs text-rose-600">{vendorServiceErrors.refundPolicy}</p>
+                )}
+              </div>
+
               <button
                 type="button"
                 disabled={isCreatingService || !!createdServiceId}
@@ -971,18 +1169,30 @@ const VendorServices = () => {
                     setGeneralError("Complete vendor service details first.");
                     return;
                   }
+                  if (!dynamicVendorId) {
+                    setGeneralError("Unable to resolve vendor account. Please sign in again.");
+                    return;
+                  }
 
                   try {
                     setIsCreatingService(true);
 
+                    const parsedWindowHours =
+                      refundPolicy.type === "NO_REFUND"
+                        ? null
+                        : Number(refundPolicy.windowHours);
                     const payload = {
-                      vendorId: "e6f6ce15-ff9f-40da-b1c8-88afd9aee225",
+                      vendorId: dynamicVendorId,
                       categoryId: selectedCategoryId,
                       title: vendorServiceDetails.title.trim(),
                       description: vendorServiceDetails.description.trim(),
                       terms: vendorServiceDetails.terms.trim(),
                       latitude: Number(vendorServiceDetails.latitude),
                       longitude: Number(vendorServiceDetails.longitude),
+                      refundPolicy: {
+                        type: refundPolicy.type,
+                        windowHours: parsedWindowHours,
+                      },
                     };
 
                     const created = await createVendorService(payload).unwrap();
@@ -1346,7 +1556,7 @@ const StepStatus = ({
   error,
   onRetry,
 }: StepStatusProps) => (
-  <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+  <div className="rounded-2xl border border-slate-100 bg-white p-4">
     <div className="flex items-start justify-between gap-3">
       <div>
         <p className="text-sm font-semibold text-slate-900">{title}</p>
@@ -1397,13 +1607,16 @@ const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
     : ["Choose a service", "Ready when you are"];
 
   return (
-    <div className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-200/80">
+    <div className="w-full max-w-md rounded-3xl border border-slate-100 bg-white p-4">
       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
         <div className="h-48 overflow-hidden rounded-2xl bg-slate-100">
           <img
             src={heroImage}
             alt={visual?.alt ?? heroLabel}
             className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
           />
         </div>
         <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
@@ -1438,3 +1651,9 @@ const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
 };
 
 export default VendorServices;
+  const handleSelectMaster = useCallback((id: string) => {
+    setSelectedMasterServiceId(id);
+    startMasterTransition(() => {
+      setSelectedMasterForQuery(id);
+    });
+  }, []);

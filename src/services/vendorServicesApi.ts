@@ -1,15 +1,33 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "@/app/services/baseApi";
 
+export type RefundPolicyType =
+  | "NO_REFUND"
+  | "PARTIAL_BEFORE_WINDOW";
+
+export type RefundPolicyInput = {
+  type: RefundPolicyType;
+  /**
+   * Cutoff window before service start (in hours) within which the policy applies.
+   * Required for PARTIAL_BEFORE_WINDOW.
+   */
+  windowHours?: number | null;
+  /**
+   * Percent of the booking amount to refund (0-100).
+   * Required for PARTIAL_BEFORE_WINDOW.
+   */
+  refundPercent?: number | null;
+};
+
 export type VendorServiceEntity = {
   longitude: any;
   latitude: any;
- 
   id: string;
   name: string;
   description: string;
   status: "DRAFT" | "LIVE" | "PAUSED";
   category?: any;
+  refundPolicy?: RefundPolicyInput | null;
 };
 
 export interface CreateVendorServicePayload {
@@ -19,6 +37,7 @@ export interface CreateVendorServicePayload {
   description: string;
   latitude: number;
   longitude: number;
+  refundPolicy: RefundPolicyInput;
 }
 
 export const vendorServicesApi = createApi({
