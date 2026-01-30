@@ -19,44 +19,8 @@ type ReviewCard = {
   location: string
 }
 
-const reviewCards: ReviewCard[] = [
-  {
-    id: "review-1",
-    name: "Nitya Shah",
-    initials: "NS",
-    role: "Wellness editor",
-    rating: 5,
-    text: "The team choreographed every detail—translating my tired body into a soft, glowing ritual. The facilities felt bespoke.",
-    date: "Apr 22, 2025",
-    location: "Birmingham, AL",
-  },
-  {
-    id: "review-2",
-    name: "Lara Bennett",
-    initials: "LB",
-    role: "Beauty therapist",
-    rating: 4.9,
-    text: "Bookended by calming lounges and curated playlists, the massage and facial pairings are a perfect unwind.",
-    date: "Mar 13, 2025",
-    location: "Homewood, AL",
-  },
-  {
-    id: "review-3",
-    name: "Amelia Soto",
-    initials: "AS",
-    role: "Studio founder",
-    rating: 4.8,
-    text: "Signature therapists kept my skin radiant the whole week, and the studio was spotless from lobby to treatment room.",
-    date: "Jan 17, 2025",
-    location: "Mountain Brook, AL",
-  },
-]
 
-const metricHighlights = [
-  { label: "Ambiance", value: 4.8 },
-  { label: "Cleanliness", value: 4.7 },
-  { label: "Service flow", value: 4.9 },
-]
+
 
 const starBreakdown = [
   { label: "5 ⭐", percent: 72 },
@@ -71,6 +35,7 @@ import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
 import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
 import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
 import { Button } from "@/components/ui/button"
+import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge"
 import { LocationMap } from "@/components/marketplace/Map/LocationMap"
 
@@ -182,32 +147,10 @@ export default function ServiceDetail() {
                   </button>
                 </div>
               </div>
-              <div className="grid gap-5 lg:grid-cols-[1.50fr_0.9fr]">
-                <div className="aspect-[4/3] w-full overflow-hidden">
-                  <img
-                    src={galleryImages[0]}
-                    alt={`${service.name} hero`}
-                    className="h-full w-full  rounded-2xl"
-                  />
-                </div>
-                <div className="flex flex-col gap-4">
-                  {galleryImages.slice(1).map((image) => (
-                    <div
-                      key={image}
-                      className="relative h-57 w-full overflow-hidden  bg-slate-100 "
-                    >
-                      <img
-                        src={image}
-                        alt={`${service.name} gallery`}
-                        className="h-full w-full object-cover rounded-2xl"
-                      />
-                    </div>
-                  ))}
-           <button className="absolute mt-[420px]  borderright-96 rounded-2xl bg-white px-4 py-2 text-sm font-semibold hover:bg-white">
-          See all photos
-        </button>
-                </div>
-              </div>
+              <ServiceGallery 
+                galleryImages={galleryImages} 
+                serviceName={service.name} 
+              />
               <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 {service.status && (
                   <span className="rounded-full border border-slate-200 px-3 py-1">
@@ -281,7 +224,7 @@ export default function ServiceDetail() {
                       ${offering.salePrice}
                     </span>
                     <button className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-600">
-                      Reserve
+                      Book
                     </button>
                   </div>
                 </div>
