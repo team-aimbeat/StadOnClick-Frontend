@@ -2,6 +2,9 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "@/app/services/baseApi";
 
 export type VendorServiceEntity = {
+  longitude: any;
+  latitude: any;
+ 
   id: string;
   name: string;
   description: string;

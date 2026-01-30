@@ -72,6 +72,7 @@ import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
 import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { LocationMap } from "@/components/marketplace/Map/LocationMap"
 
 const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
 
@@ -156,13 +157,13 @@ export default function ServiceDetail() {
                   <h1 className="text-3xl font-semibold text-slate-900">
                     {service.name}
                   </h1>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                    <div className="flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-600">
-                      <Star className="h-4 w-4" />
+                  <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-black">
+                    <div className="flex items-center gap-1 rounded-full px-3 py-1 font-bold ">
+                      <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
                       {(reviews && reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0")}
                     </div>
-                    <span className="text-xs text-slate-400">
-                      ({reviews?.length || 0} verified guest reviews)
+                    <span className="text-xs text-black">
+                      ({reviews?.length || 0}+ verified guest reviews)
                     </span>
                   </div>
                 </div>
@@ -567,28 +568,35 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        <div className="space-y-5 rounded-3xl bg-white p-8 ">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-900">
-              About the spa
-            </h2>
-            <span className="text-sm font-semibold text-blue-600">
-              Directions
-            </span>
-          </div>
-          <p className="text-sm leading-relaxed text-slate-500">
-            {service.description ??
-              "An elevated wellness studio delivering tailored rituals, smart touches, and seamless reservations."}
-          </p>
-          <div className="overflow-hidden rounded-3xl border border-slate-200">
-            <iframe
-              title={`Map for ${service.name}`}
-              src="https://www.openstreetmap.org/export/embed.html?bbox=-86.7551%2C33.5122%2C-86.7475%2C33.5061&layer=mapnik"
-              className="h-64 w-full"
-              loading="lazy"
-            />
-          </div>
-        </div>
+       <div className="space-y-5 rounded-3xl bg-white p-8">
+  <div className="flex items-center justify-between">
+    <h2 className="text-xl font-semibold text-slate-900">
+      About the spa
+    </h2>
+
+    <a
+      href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm font-semibold text-blue-600 hover:underline"
+    >
+      Directions
+    </a>
+  </div>
+
+  <p className="text-sm leading-relaxed text-slate-500">
+    {service.description ??
+      "An elevated wellness studio delivering tailored rituals, smart touches, and seamless reservations."}
+  </p>
+
+  <LocationMap
+    lat={19.136326}
+
+    lng={72.827660}
+    name={service.name}
+  />
+</div>
+
       </div>
     </section>
   )
