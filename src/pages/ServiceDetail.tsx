@@ -299,7 +299,7 @@ export default function ServiceDetail() {
       href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-sm font-semibold text-blue-600 hover:underline"
+      className="text-sm  font-semibold text-blue-600 hover:underline"
     >
       Directions
     </a>

@@ -8,19 +8,18 @@ type MapProps = {
 
 export function LocationMap({ lat, lng, name }: MapProps) {
   return (
-    <div className="h-64 w-full overflow-hidden rounded-3xl border border-slate-200">
+    <div className="h-64 w-full overflow-hidden relative rounded-3xl border border-slate-200">
       <MapContainer
         center={[lat, lng]}
-        zoom={15}
-        scrollWheelZoom={false}
-        className="h-full w-full"
+        zoom={12}
+        scrollWheelZoom={true}
+        className="h-full w-full "
       >
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <Marker position={[lat, lng]}>
+        <Marker  position={[lat, lng]}>
           <Popup>
          {name}
           </Popup>
