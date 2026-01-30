@@ -2419,3 +2419,9 @@
 .collapsible-vertical.toggle-sidebar .sidebar ul > h2 svg {
   display: none;
 }
+
+@layer base {
+  .leaflet-container {
+    z-index: 0 !important;
+  }
+}
