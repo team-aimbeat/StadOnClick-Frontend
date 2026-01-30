@@ -1,10 +1,11 @@
-import { Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
+import { BadgeCheck, BadgeCheckIcon, Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
 import { services } from "@/data/services"
 import salon1 from "@/assets/images/salon1.png"
 import salon2 from "@/assets/images/salon2.png"
 import salon3 from "@/assets/images/salon3.png"
+import verify from "@/assets/images/check_in.png"
 
 
 type ReviewCard = {
@@ -312,6 +313,126 @@ export default function ServiceDetail() {
             </div>
           </div>
         </div>
+
+<div className="max-w-[800px]">
+          {/* Highlights & Amenities Section */}
+          <div className="space-y-6 rounded-3xl bg-white p-8">
+            <h2 className="text-2xl font-bold text-slate-900">Highlights & Amenities</h2>
+            <div className="flex flex-wrap gap-4">
+              {["AC Rooms", "Parking Available", "Family Friendly"].map((amenity) => (
+                <div
+                  key={amenity}
+                  className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white px-6 py-4 shadow-sm transition hover:shadow-md"
+                >
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="text-[15px] font-medium text-slate-700">{amenity}</span>
+                </div>
+              ))}
+            </div>
+         
+             {/* Menu Preview Section */}
+        <div className="space-y-4 rounded-3xl bg-white p-8">
+          <h3 className="text-xl font-bold text-slate-900">Menu Preview</h3>
+          <p className="text-sm text-slate-500">View uploaded menu photos from the restaurant</p>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="min-w-[100px] shrink-0">
+                <img
+                  src={galleryImages[i % galleryImages.length]}
+                  alt={`Menu preview ${i}`}
+                  className="h-48 w-full rounded-2xl object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+  
+         </div>
+
+
+        </div>
+
+
+<div className="max-w-[800px]">
+              {/* Trust/Feature Banner */}
+          <div className="rounded-3xl bg-white p-8">
+            <div className="grid grid-cols-4 gap-8">
+              {[
+                {
+                  icon: <BadgeCheck  className="h-6 w-6 text-emerald-500" />,
+                  title: "Verified Providers",
+                  desc: "Trusted & quality-checked",
+                },
+                {
+                  icon: (
+                    <svg
+                      className="h-6 w-6 text-blue-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                  ),
+                  title: "Secure Payments",
+                  desc: "Protected transactions",
+                },
+                {
+                  icon: (
+                    <svg
+                      className="h-6 w-6 text-purple-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  ),
+                  title: "Easy Rescheduling",
+                  desc: "Change plans easily",
+                },
+                {
+                  icon: (
+                    <svg
+                      className="h-6 w-6 text-orange-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  ),
+                  title: "Customer Support",
+                  desc: "We're here to help",
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center text-center">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center">
+                    {item.icon}
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
+                  <p className="text-[12px] text-slate-500">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+</div>
+        
 
         <div className="space-y-5 rounded-3xl bg-white p-8 ">
           <div className="flex items-center justify-between">
