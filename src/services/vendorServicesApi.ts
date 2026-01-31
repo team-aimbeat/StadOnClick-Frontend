@@ -1,15 +1,34 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "@/app/services/baseApi";
 
+export type RefundPolicyType =
+  | "NO_REFUND"
+  | "PARTIAL_BEFORE_WINDOW";
+
+export type RefundPolicyInput = {
+  type: RefundPolicyType;
+  /**
+   * Cutoff window before service start (in hours) within which the policy applies.
+   * Required for PARTIAL_BEFORE_WINDOW.
+   */
+  windowHours?: number | null;
+  /**
+   * Percent of the booking amount to refund (0-100).
+   * Required for PARTIAL_BEFORE_WINDOW.
+   */
+  refundPercent?: number | null;
+};
+
 export type VendorServiceEntity = {
   longitude: any;
   latitude: any;
- 
   id: string;
-  name: string;
+  title: string;
   description: string;
   status: "DRAFT" | "LIVE" | "PAUSED";
   category?: any;
+  refundPolicy?: RefundPolicyInput | null;
+  terms?: string | null;
 };
 
 export interface CreateVendorServicePayload {
@@ -19,6 +38,16 @@ export interface CreateVendorServicePayload {
   description: string;
   latitude: number;
   longitude: number;
+  refundPolicy: RefundPolicyInput;
+}
+
+export interface UpdateVendorServicePayload {
+  id: string;
+  title?: string;
+  description?: string;
+  terms?: string;
+  status?: "DRAFT" | "LIVE" | "PAUSED";
+  refundPolicy?: RefundPolicyInput;
 }
 
 export const vendorServicesApi = createApi({
@@ -32,15 +61,26 @@ export const vendorServicesApi = createApi({
         body,
       }),
     }),
+    updateVendorService: builder.mutation<VendorServiceEntity, UpdateVendorServicePayload>({
+      query: ({ id, ...body }) => ({
+        url: `/vendor/vendor-services/${id}`,
+        method: "PUT",
+        body,
+      }),
+    }),
     getVendorServices: builder.query<VendorServiceEntity[], string>({
       query: (vendorId) => `/vendor/vendor-services/${vendorId}`,
       transformResponse: (response: any[]) =>
         response.map((s: any) => ({
           id: s.id,
-          name: s.title,
+          title: s.title,
           description: s.description,
           status: s.status,
           category: s.category,
+          latitude: s.latitude,
+          longitude: s.longitude,
+          terms: s.terms,
+          refundPolicy: s.refundPolicy,
         })),
     }),
     getVendorProfileStatus: builder.query<any, void>({
@@ -51,6 +91,7 @@ export const vendorServicesApi = createApi({
 
 export const {
   useCreateVendorServiceMutation,
+  useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
   useGetVendorProfileStatusQuery,
 } = vendorServicesApi;

@@ -1,9 +1,11 @@
+import { useState } from "react"
 import appleIcon from "@/assets/icons/apple.png"
 import facebookIcon from "@/assets/icons/facebook.png"
 import googleIcon from "@/assets/icons/google.png"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Eye, EyeOff } from "lucide-react"
 import type { FieldErrors, UseFormRegister } from "react-hook-form"
 
 type SocialIcon = {
@@ -35,13 +37,15 @@ export function StepLogin({
   errorMessage,
   isValid = false,
 }: Props) {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
       <div className="space-y-2">
         <Label className="text-sm font-medium text-slate-800">Email</Label>
         <Input
           type="email"
-          className="h-12 rounded-lg border border-slate-200 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
+          className="h-12 rounded-lg border border-slate-200 py-3 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
           placeholder="you@example.com"
           {...register("email")}
         />
@@ -60,12 +64,23 @@ export function StepLogin({
             Forgot password?
           </button>
         </div>
-        <Input
-          type="password"
-          className="h-12 rounded-lg border border-slate-200 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
-          placeholder="********"
-          {...register("password")}
-        />
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            className="h-12 rounded-lg border border-slate-200 py-3 pr-12 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
+            placeholder="********"
+            autoComplete="current-password"
+            {...register("password")}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute inset-y-0 right-2 inline-flex items-center justify-center rounded-md px-2 text-slate-500 transition hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-200"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
         {errors.password?.message ? (
           <p className="text-sm text-red-600">{String(errors.password.message)}</p>
         ) : null}
@@ -116,7 +131,6 @@ export function StepLogin({
 
       <Button
         className="h-[52px] w-full max-w-[480px] mx-auto text-[16px]"
-     
         onClick={onSubmit}
       >
         {loading ? "Signing in..." : "Continue"}
