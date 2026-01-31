@@ -1,4 +1,11 @@
-﻿import React, { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+﻿import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useForm, useFieldArray } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -207,6 +214,8 @@ const MasterServiceCard = React.memo(function MasterServiceCard({
 });
 
 const VendorServices = () => {
+  const wizardScrollRef = useRef<HTMLDivElement | null>(null);
+  const [pendingScrollToWizard, setPendingScrollToWizard] = useState(false);
   const [selectedMasterServiceId, setSelectedMasterServiceId] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedExistingOfferingId, setSelectedExistingOfferingId] =
@@ -247,6 +256,18 @@ const VendorServices = () => {
       setSelectedMasterForQuery(id);
     });
   }, [startMasterTransition]);
+
+  useEffect(() => {
+    if (!showListing && pendingScrollToWizard) {
+      requestAnimationFrame(() => {
+        wizardScrollRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+      setPendingScrollToWizard(false);
+    }
+  }, [pendingScrollToWizard, showListing]);
 
   const { data: profileStatus } = useGetVendorProfileStatusQuery();
   const dynamicVendorId = profileStatus?.id;
@@ -294,7 +315,7 @@ const VendorServices = () => {
     isFetching: isCategoryFetching,
     isError: categoryError,
   } = useGetServiceCategoriesByMasterQuery(selectedMasterForQuery, {
-    skip: !selectedMasterServiceId,
+    skip: !selectedMasterForQuery,
   });
 
   const {
@@ -374,6 +395,16 @@ const VendorServices = () => {
 
   useEffect(() => {
     if (!selectedMasterServiceId) return;
+
+    // When managing an existing service, keep the prefilled selections intact
+    // and ensure the category query uses the correct master id.
+    if (createdServiceId) {
+      if (!selectedMasterForQuery) {
+        setSelectedMasterForQuery(selectedMasterServiceId);
+      }
+      return;
+    }
+
     setSelectedCategoryId("");
     setSelectedExistingOfferingId("");
     setEnableSlots(false);
@@ -392,7 +423,7 @@ const VendorServices = () => {
     setLastCreatedOfferingId(null);
     setCurrentStep(1);
     setHighestStep(1);
-  }, [selectedMasterServiceId]);
+  }, [createdServiceId, selectedMasterForQuery, selectedMasterServiceId]);
 
   useEffect(() => {
     if (!selectedExistingOfferingId) return;
@@ -781,6 +812,7 @@ const VendorServices = () => {
               setShowListing(false);
               setCreatedServiceId(null);
               reset();
+              setPendingScrollToWizard(true);
             }}
             className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700"
           >
@@ -832,12 +864,12 @@ const VendorServices = () => {
                   </div>
                   <button
                     type="button"
-                    className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    className="group inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-blue-600 transition-colors duration-200 hover:text-blue-700"
                     onClick={() => {
                       setShowListing(false);
                       setCreatedServiceId(service.id);
                       setSelectedCategoryId(service.category?.id ?? "");
-                      setSelectedMasterServiceId(service.category?.masterCategoryId ?? "");
+                      handleSelectMaster(service.category?.masterCategoryId ?? "");
                       setVendorServiceDetails({
                         title: service.title ?? "",
                         description: service.description ?? "",
@@ -857,10 +889,14 @@ const VendorServices = () => {
                           : defaultRefundPolicy,
                       );
                       setHighestStep(4);
-                      setCurrentStep(3);
+                      setCurrentStep(2);
+                      setPendingScrollToWizard(true);
                     }}
                   >
-                    Manage Service →
+                    <span>Manage Service</span>
+                    <span className="transition-transform duration-200 group-hover:translate-x-1">
+                      →
+                    </span>
                   </button>
                 </div>
               </div>
@@ -891,7 +927,7 @@ const VendorServices = () => {
   }
 
   return (
-    <DashboardContainer className="space-y-6 pb-16">
+    <DashboardContainer ref={wizardScrollRef} className="space-y-6 pb-16">
       {/* wizard content */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
@@ -902,7 +938,7 @@ const VendorServices = () => {
             Create Offerings
           </h1>
           <p className="text-sm text-slate-500">
-            Move step by step: master service → category → details → offerings.
+            Move step by step: master service ? category ? details ? offerings.
           </p>
         </div>
         <button
@@ -1863,3 +1899,4 @@ const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
 };
 
 export default VendorServices;
+
