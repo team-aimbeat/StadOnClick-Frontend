@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "@/app/services/baseApi";
 
 export type Coupon = {
   code: string;
@@ -34,20 +35,16 @@ const mapToCoupon = (payload: VendorCouponResponse): Coupon => ({
   maxUses: Number(payload.uses) || 0,
   expiry: new Date(payload.validTill).toISOString().split("T")[0],
   status: payload.Status,
-  preview: `${payload.title} · ${payload.value}% off`,
+  preview: `${payload.title} - ${payload.value}% off`,
 });
-
-const DEFAULT_VENDOR_ID = import.meta.env.VITE_VENDOR_ID ?? "40ea7f68-95d4-4588-82e0-916d56a24272";
 
 export const vendorcouponsApi = createApi({
   reducerPath: "couponsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Coupons"],
   endpoints: (builder) => ({
     getCoupons: builder.query<Coupon[], void>({
-      query: () => "/vendor/coupons/",
+      query: () => "/vendor/coupons",
       transformResponse: (response: CouponsResponse) =>
         response.data.map(mapToCoupon),
       providesTags: ["Coupons"],
@@ -58,7 +55,6 @@ export const vendorcouponsApi = createApi({
         url: "/vendor/coupons",
         method: "POST",
         body: {
-          vendorId: DEFAULT_VENDOR_ID,
           code: body.code,
           title: body.title,
           discountType: "PERCENT",
@@ -73,10 +69,20 @@ export const vendorcouponsApi = createApi({
         mapToCoupon(response.data),
       invalidatesTags: ["Coupons"],
     }),
+    disableCoupon: builder.mutation<Coupon, string>({
+      query: (code) => ({
+        url: `/vendor/coupons/${code}/deactivate`,
+        method: "PATCH",
+      }),
+      transformResponse: (response: { data: VendorCouponResponse }) =>
+        mapToCoupon(response.data),
+      invalidatesTags: ["Coupons"],
+    }),
   }),
 });
 
 export const {
   useGetCouponsQuery,
   useCreateCouponMutation,
+  useDisableCouponMutation,
 } = vendorcouponsApi;

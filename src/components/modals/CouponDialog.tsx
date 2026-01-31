@@ -1,5 +1,9 @@
 import * as React from "react";
 import { HiOutlineXMark } from "react-icons/hi2";
+import dayjs, { Dayjs } from "dayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 import {
   Dialog,
@@ -39,6 +43,7 @@ export function CouponDialog({ open, onOpenChange, onSubmit }: Props) {
     expiry: "",
   });
   const [error, setError] = React.useState<string>();
+  const today = React.useMemo(() => dayjs().startOf("day"), []);
 
   React.useEffect(() => {
     if (!open) {
@@ -64,6 +69,16 @@ export function CouponDialog({ open, onOpenChange, onSubmit }: Props) {
 
     if (values.discount <= 0 || values.minOrder < 0 || values.maxUses <= 0) {
       setError("Numeric values must be positive.");
+      return;
+    }
+
+    const expiryDate = dayjs(values.expiry).endOf("day");
+    if (!expiryDate.isValid()) {
+      setError("Please choose a valid expiry date.");
+      return;
+    }
+    if (expiryDate.isBefore(today, "day")) {
+      setError("Expiry date must be today or later.");
       return;
     }
 
@@ -149,12 +164,27 @@ export function CouponDialog({ open, onOpenChange, onSubmit }: Props) {
           </div>
           <div>
             <Label htmlFor="coupon-expiry">Expiry</Label>
-            <Input
-              id="coupon-expiry"
-              type="date"
-              value={values.expiry}
-              onChange={(event) => setValues({ ...values, expiry: event.target.value })}
-            />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                value={values.expiry ? dayjs(values.expiry) : null}
+                onChange={(value: Dayjs | null) =>
+                  setValues({
+                    ...values,
+                    expiry: value ? value.startOf("day").format("YYYY-MM-DD") : "",
+                  })
+                }
+                minDate={today}
+                format="YYYY-MM-DD"
+                slotProps={{
+                  textField: {
+                    id: "coupon-expiry",
+                    fullWidth: true,
+                    size: "small",
+                  },
+                  popper: { disablePortal: true },
+                }}
+              />
+            </LocalizationProvider>
           </div>
           {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
         </form>
