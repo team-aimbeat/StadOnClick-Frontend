@@ -72,13 +72,25 @@ const formatSlotSeats = (slot: VendorSlot) => {
   return `${remaining} / ${capacity} seats`
 }
 
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "SEK",
+  minimumFractionDigits: 0,
+})
+
+const formatCurrency = (value: number) => currencyFormatter.format(value)
+
+type CartItem = {
+  offering: VendorOffering
+  quantity: number
+}
+
 const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
 
 export default function ServiceDetail() {
   const navigate = useNavigate()
   const { serviceSlug } = useParams<{ serviceSlug?: string }>()
-  // const userId = useAppSelector((state) => state.auth.user?.id)
-  const userId="68860cd0-0e7c-49fc-9b1d-dc84e1e41b76"
+  const userId = useAppSelector((state) => state.auth.user?.id)
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
 
   const [userRating, setUserRating] = useState(0)
@@ -97,6 +109,9 @@ export default function ServiceDetail() {
     : "Pick a date"
   const [isBookingModalOpen, setBookingModalOpen] = useState(false)
   const [bookedOffering, setBookedOffering] = useState<VendorOffering | null>(null)
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [promoCode, setPromoCode] = useState("")
+  const [promoDiscount, setPromoDiscount] = useState(0)
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
     if (!bookedOffering) return []
     const slots = bookedOffering.slots ?? []
@@ -110,10 +125,64 @@ export default function ServiceDetail() {
   const selectedSlot = bookingSlotOptions.find((slot) => slot.id === selectedSlotId)
   const requiresSlot = bookedOffering?.usesSlots ?? true
 
-  const handleOpenBooking = (offering: VendorOffering) => {
+  const addOfferingToCart = (offering: VendorOffering) => {
+    setCartItems((prev) => {
+      if (prev.some((item) => item.offering.id === offering.id)) {
+        return prev
+      }
+      return [...prev, { offering, quantity: 1 }]
+    })
+  }
+
+  const updateCartQuantity = (offeringId: string, delta: number) => {
+    setCartItems((prev) =>
+      prev
+        .map((item) => {
+          if (item.offering.id !== offeringId) return item
+          const nextQuantity = Math.max(item.quantity + delta, 1)
+          return { ...item, quantity: nextQuantity }
+        })
+        .filter((item) => item.quantity > 0)
+    )
+  }
+
+  const handleRemoveCartItem = (offeringId: string) =>
+    setCartItems((prev) => prev.filter((item) => item.offering.id !== offeringId))
+
+  const cartSubtotal = cartItems.reduce(
+    (sum, item) => sum + item.offering.salePrice * item.quantity,
+    0
+  )
+  const cartTaxRate = 0.12
+  const cartTaxes = cartSubtotal * cartTaxRate
+  const cartDiscount = promoDiscount
+  const cartTotal = cartSubtotal + cartTaxes - cartDiscount
+
+  const handleApplyPromo = () => {
+    if (!promoCode.trim()) return
+    // placeholder: future validation can adjust discount
+    setPromoDiscount(100)
+    alert(`Promo "${promoCode}" applied.`)
+  }
+
+  const openBookingModal = (offering: VendorOffering) => {
     setBookedOffering(offering)
     setSelectedSlotId(null)
     setBookingModalOpen(true)
+  }
+
+  const handleBookClick = (offering: VendorOffering) => {
+    const slots = offering.slots ?? []
+    const slotCount = slots.length
+    const requiresSlot = offering.usesSlots
+
+    if (requiresSlot && slotCount === 0) {
+      alert("Slots are unavailable for this service at the moment.")
+      return
+    }
+
+    addOfferingToCart(offering)
+    openBookingModal(offering)
   }
 
   const handleCloseBooking = () => {
@@ -148,6 +217,14 @@ export default function ServiceDetail() {
       console.error("Failed to create order:", error)
       alert("We could not save the booking. Please try again.")
     }
+  }
+
+  const handleProceedToBooking = () => {
+    if (cartItems.length === 0) {
+      alert("Add at least one service to your order before booking.")
+      return
+    }
+    openBookingModal(cartItems[0].offering)
   }
 
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
@@ -219,7 +296,7 @@ export default function ServiceDetail() {
 
   return (
     <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 lg:px-8 ">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 ">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -228,7 +305,7 @@ export default function ServiceDetail() {
           <ChevronLeft className="h-4 w-4" />
           Back to services
         </button>
-        <div className="rounded-3xl bg-white p-8 ">
+        <div className="rounded-3xl p-8 ">
           <div className="grid gap-6 lg:grid-cols-[0.fr_1.5fr]">
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -299,8 +376,9 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-5 rounded-3xl bg-white p-8 ">
+        <div className="grid gap-6 grid-cols-5">
+          <div className="col-span-3">
+                <div className="space-y-5 rounded-3xl bg-white p-8 ">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">
@@ -333,7 +411,16 @@ export default function ServiceDetail() {
           <div className="mt-5">
             {activeTab === "services" ? (
               <div className="space-y-4">
-                {offerings?.map((offering) => (
+                {offerings?.map((offering) => {
+                  const slotCount = offering.slots?.length ?? 0
+                  const requiresSlot = offering.usesSlots
+                  const buttonLabel = requiresSlot
+                    ? slotCount > 0
+                      ? "Book"
+                      : "Slots unavailable"
+                    : "Add to order"
+                  const isSlotUnavailable = requiresSlot && slotCount === 0
+                  return (
                   <div
                     key={offering.id}
                     className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
@@ -352,15 +439,19 @@ export default function ServiceDetail() {
                         ${offering.salePrice}
                       </span>
                       <button
-                        className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-600"
+                        className={`rounded-full px-3 py-1 text-xs font-semibold text-white transition ${
+                          isSlotUnavailable ? "bg-slate-300 cursor-not-allowed opacity-60" : "bg-blue-500 hover:bg-blue-600"
+                        }`}
                         type="button"
-                        onClick={() => handleOpenBooking(offering)}
+                        disabled={isSlotUnavailable}
+                        onClick={() => handleBookClick(offering)}
                       >
-                        Book
+                        {buttonLabel}
                       </button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
@@ -375,30 +466,154 @@ export default function ServiceDetail() {
             )}
           </div>
         </div>
+          </div>
+    
+     <div className="col-span-2">
+           <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Your order</h3>
+                <p className="text-xs text-slate-500">
+                  Added services appear here. Adjust quantity anytime.
+                </p>
+              </div>
+              <span className="text-xs text-slate-400">
+                {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+              </span>
+            </div>
+            {cartItems.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Choose a service from the list to start your booking.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <div
+                    key={item.offering.id}
+                    className="flex items-start justify-between gap-4"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.offering.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {item.offering.description ?? "Premium experience"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCartItem(item.offering.id)}
+                        className="mt-2 text-xs font-semibold text-blue-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {formatCurrency(item.offering.salePrice)} per person
+                      </p>
+                      <div className="mt-2 flex items-center justify-end gap-2 rounded-full  px-2 py-1">
+                        <button
+                          type="button"
+                          className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                          onClick={() => updateCartQuantity(item.offering.id, -1)}
+                        >
+                          −
+                        </button>
+                        <span className="text-sm font-semibold text-slate-900">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                          onClick={() => updateCartQuantity(item.offering.id, 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-slate-900">Wallet & promo</h4>
+              <p className="text-xs text-slate-500">
+                Apply discount or use StadOnClick wallet balance.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  placeholder="Enter promo code"
+                  className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                />
+                <Button
+                  variant={'default'}
+                  onClick={handleApplyPromo}
+                  disabled={!promoCode.trim()}
+          className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
+                     
+              >
+                  Apply
+                </Button>
+              </div>
+            </div>
 
-       <div className="space-y-5 rounded-3xl bg-white max-w-[600px]  max-h-[380px] p-8">
-  <div className="flex items-center justify-between">
-    <h2 className="text-xl font-semibold text-slate-900">
-      About the spa
-    </h2>
+            <div className="border-t border-dashed border-slate-200 pt-4">
+            <div className="flex items-center justify-between text-sm text-slate-500">
+              <span>Subtotal</span>
+              <span className="text-slate-900">{formatCurrency(cartSubtotal)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-slate-500">
+                <span>Taxes</span>
+                <span className="text-slate-900">{formatCurrency(cartTaxes)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-slate-500">
+                <span>Discount</span>
+                <span className="text-emerald-600">
+                  −{formatCurrency(cartDiscount)}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
+                <span>Total</span>
+                <span>{formatCurrency(cartTotal)}</span>
+              </div>
+            </div>
+            <Button
+              onClick={handleProceedToBooking}
+              className="w-full"
+              disabled={cartItems.length === 0}
+            >
+              Proceed to booking
+            </Button>
+          </div>
+     </div>
+        </div>
 
-    <a
-      href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-sm  font-semibold text-blue-600 hover:underline"
-    >
-      Directions
-    </a>
-  </div>
+    <div className="space-y-5">
+          <div className="space-y-5 rounded-3xl bg-white max-w-[600px] max-h-[380px] p-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-slate-900">
+                About the spa
+              </h2>
 
-  <LocationMap
-    lat={19.136326}
+              <a
+                href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-blue-600 hover:underline"
+              >
+                Directions
+              </a>
+            </div>
 
-    lng={72.827660}
-    name={service.name}
-  />
-</div>
+            <LocationMap
+              lat={19.136326}
+              lng={72.827660}
+              name={service.name}
+            />
+          </div>
        
         </div>
 

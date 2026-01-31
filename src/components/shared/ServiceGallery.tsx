@@ -24,7 +24,7 @@ export const ServiceGallery: React.FC<ServiceGalleryProps> = ({
       {/* Gallery Grid */}
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         {/* Left: Main Image */}
-        <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-sm transition hover:shadow-md">
+        <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-100 shadow-sm transition hover:shadow-md">
           <img
             src={mainImages[0]}
             alt={`${serviceName} main`}
@@ -37,7 +37,7 @@ export const ServiceGallery: React.FC<ServiceGalleryProps> = ({
           {mainImages.slice(1, 3).map((image, idx) => (
             <div
               key={idx}
-              className="group relative h-[220px] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-sm transition hover:shadow-md"
+              className="group relative h-[230px] w-full overflow-hidden rounded-xl bg-slate-100 shadow-sm transition hover:shadow-md"
             >
               <img
                 src={image}

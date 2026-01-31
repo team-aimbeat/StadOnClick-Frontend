@@ -37,7 +37,7 @@ const mapToCoupon = (payload: VendorCouponResponse): Coupon => ({
   preview: `${payload.title} · ${payload.value}% off`,
 });
 
-const DEFAULT_VENDOR_ID = import.meta.env.VITE_VENDOR_ID ?? "40ea7f68-95d4-4588-82e0-916d56a24272";
+const DEFAULT_VENDOR_ID = import.meta.env.VITE_VENDOR_ID ?? "e6f6ce15-ff9f-40da-b1c8-88afd9aee225";
 
 export const vendorcouponsApi = createApi({
   reducerPath: "couponsApi",
