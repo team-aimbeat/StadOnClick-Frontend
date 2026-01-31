@@ -8,12 +8,14 @@ type TitleBreadCrumbsProps = {
   title: string;
   breadCrumbTitle: string;
   className?: string;
+  subtitle?: string;
 };
 
 const TitleBreadCrumbs: React.FC<TitleBreadCrumbsProps> = ({
   title,
   breadCrumbTitle,
   className,
+  subtitle,
 }) => {
   const crumbs = breadCrumbTitle
     .split("/")
@@ -28,7 +30,7 @@ const TitleBreadCrumbs: React.FC<TitleBreadCrumbsProps> = ({
           {title}
         </h1>
         <p className="mt-0.5 text-xs text-slate-500">
-          Overview and key insights
+          {subtitle ?? "Overview and key insights"}
         </p>
       </div>
 
