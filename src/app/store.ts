@@ -9,6 +9,7 @@ import { vendorOfferingsApi } from "@/services/vendorOfferingsApi";
 import { serviceCategoriesApi } from "@/services/serviceCategoriesApi";
 import { serviceMediaApi } from "@/services/serviceMediaApi";
 import { vendorServicesApi } from "@/services/vendorServicesApi";
+import { vendorOrdersApi } from "@/services/vendorOrdersApi";
 import { adminVendorApi } from "@/features/admin/vendors/api/vendorsApi";
 import { bookingsApi } from "@/services/bookingsApi";
 import { vendorcouponsApi } from "@/services/vendoiCouponsApi";
@@ -40,6 +41,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [preferencesApi.reducerPath]: preferencesApi.reducer,
     [vendorOfferingsApi.reducerPath]: vendorOfferingsApi.reducer,
+    [vendorOrdersApi.reducerPath]: vendorOrdersApi.reducer,
     [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
     [serviceMediaApi.reducerPath]: serviceMediaApi.reducer,
     [vendorServicesApi.reducerPath]: vendorServicesApi.reducer,
@@ -71,6 +73,7 @@ export const store = configureStore({
       .concat(serviceCategoriesApi.middleware)
       .concat(serviceMediaApi.middleware)
       .concat(vendorServicesApi.middleware)
+      .concat(vendorOrdersApi.middleware)
       .concat(adminVendorApi.middleware)
       .concat(bookingsApi.middleware)
       .concat(vendorcouponsApi.middleware)
