@@ -592,7 +592,7 @@ export default function ServiceDetail() {
         </div>
 
     <div className="space-y-5">
-          <div className="space-y-5 rounded-3xl bg-white max-w-[600px] max-h-[380px] p-8">
+          <div className="space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-900">
                 About the spa

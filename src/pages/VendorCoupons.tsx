@@ -163,8 +163,6 @@ const VendorCoupons = () => {
   }}
 />
               <div className="flex w-35 flex-col items-center  justify-between  bg-slate-100 px-3 py-4 text-center font-black text-slate-900">
-
-
                 <span className="text-[10px] uppercase tracking-[0.4em]">SHOPPING COUPON</span>
                 <span className="text-4xl leading-none">{activeCoupon?.discount ?? 0}%</span>
                 <span className="text-[11px] uppercase tracking-[0.4em] text-slate-500">OFF</span>
