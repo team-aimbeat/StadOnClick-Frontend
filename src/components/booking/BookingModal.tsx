@@ -59,18 +59,7 @@ export function BookingModal({
           </div>
         
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Selected date</p>
-            <p className="text-sm font-semibold text-slate-900">{formattedSelectedDate}</p>
-            <p className="text-[11px] text-slate-400">{selectedDateIso}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Time slot</p>
-            <p className="text-sm font-semibold text-slate-900">{selectedSlot?.label || "Pick a slot"}</p>
-            <p className="text-[11px] text-slate-400">{selectedSlot?.seats}</p>
-          </div>
-        </div>
+       
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-3xl border border-slate-100 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Calendar</p>
@@ -83,7 +72,19 @@ export function BookingModal({
             />
           </div>
           <div className="rounded-3xl border border-slate-100 p-5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between bg-slate-100">
+                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Selected date</p>
+            <p className="text-sm font-semibold text-slate-900">{formattedSelectedDate}</p>
+            <p className="text-[11px] text-slate-400">{selectedDateIso}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Time slot</p>
+            <p className="text-sm font-semibold text-slate-900">{selectedSlot?.label || "Pick a slot"}</p>
+            <p className="text-[11px] text-slate-400">{selectedSlot?.seats}</p>
+          </div>
+        </div>
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Time slots</p>
                 {requiresSlot && (
                   <div className="flex flex-wrap gap-2">
