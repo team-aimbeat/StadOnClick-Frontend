@@ -37,7 +37,7 @@ export const ServiceGallery: React.FC<ServiceGalleryProps> = ({
           {mainImages.slice(1, 3).map((image, idx) => (
             <div
               key={idx}
-              className="group relative h-[230px] w-full overflow-hidden rounded-xl bg-slate-100 shadow-sm transition hover:shadow-md"
+              className="group relative h-[275px] w-full overflow-hidden rounded-xl bg-slate-100 shadow-sm transition hover:shadow-md"
             >
               <img
                 src={image}

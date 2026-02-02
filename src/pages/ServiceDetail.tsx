@@ -245,7 +245,11 @@ export default function ServiceDetail() {
   const { data: vendorServices, isLoading: servicesLoading } = useGetVendorServicesQuery(VENDOR_ID)
 
   // Find the specific service matching the slug
-  const service = vendorServices?.find((s) => s.name.toLowerCase().replace(/ /g, '-') === serviceSlug) || vendorServices?.[0]
+  const service = vendorServices?.find((s) =>
+    typeof s.name === 'string'
+      ? s.name.toLowerCase().replace(/ /g, '-') === serviceSlug
+      : false
+  ) || vendorServices?.[0]
   const serviceId = service?.id
 
   // 2. Fetch Media (isolated)
@@ -308,16 +312,16 @@ export default function ServiceDetail() {
 
   return (
     <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 ">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 ">
         <button
           type="button"
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 mt-4" />
           Back to services
         </button>
-        <div className="rounded-3xl p-8 ">
+        <div className="rounded-xl ">
           <div className="grid gap-6 lg:grid-cols-[0.fr_1.5fr]">
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
