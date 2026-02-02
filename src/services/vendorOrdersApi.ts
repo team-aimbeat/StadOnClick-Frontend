@@ -69,6 +69,7 @@ export interface CreateOrderResponse {
 export const vendorOrdersApi = createApi({
   reducerPath: "vendorOrdersApi",
   baseQuery: baseQueryWithReauth,
+  tagTypes: ["VendorOffering"],
   endpoints: (builder) => ({
     createOrder: builder.mutation<CreateOrderResponse, CreateOrderPayload>({
       query: (body) => ({
@@ -76,6 +77,11 @@ export const vendorOrdersApi = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags: (result, error, { items }) =>
+        items.map((item) => ({
+          type: "VendorOffering" as const,
+          id: item.offeringId,
+        })),
     }),
     applyCoupon: builder.mutation<ApplyCouponResponse, ApplyCouponPayload>({
       query: (body) => ({

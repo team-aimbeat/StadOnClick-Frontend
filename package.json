@@ -38,6 +38,7 @@
     "i18next": "^25.7.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.562.0",
+    "luxon": "^3.7.2",
     "react": "^19.2.0",
     "react-animate-height": "^3.2.3",
     "react-day-picker": "^9.13.0",
