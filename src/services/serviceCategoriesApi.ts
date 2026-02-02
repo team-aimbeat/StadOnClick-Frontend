@@ -73,5 +73,6 @@ export const serviceCategoriesApi = createApi({
 export const {
   useGetMasterCategoriesQuery,
   useGetServiceCategoriesByMasterQuery,
+  useLazyGetServiceCategoriesByMasterQuery,
   useListServiceCategoriesQuery,
 } = serviceCategoriesApi;

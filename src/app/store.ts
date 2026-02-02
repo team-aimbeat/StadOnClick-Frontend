@@ -24,6 +24,7 @@ import { systemHealthApi } from "@/features/systemHealth/systemHealthApi";
 import { vendorKycApi } from "@/services/vendorKycApi";
 import { leadsApi } from "@/features/leads/api/leadsApi";
 import { vendorNotificationsApi } from "@/features/vendorNotifications/api/vendorNotificationsApi";
+import { accountApi } from "@/features/account/api/accountApi";
 import { adminKycApi } from "@/services/adminKycApi";
 import { vendorWalletApi } from "@/features/vendorWallet/api/walletApi";
 import { vendorStripeApi } from "@/features/vendorStripe/api/vendorStripeApi";
@@ -60,6 +61,7 @@ export const store = configureStore({
     [leadsApi.reducerPath]: leadsApi.reducer,
     [vendorNotificationsApi.reducerPath]: vendorNotificationsApi.reducer,
     [userNotificationsApi.reducerPath]: userNotificationsApi.reducer,
+    [accountApi.reducerPath]: accountApi.reducer,
        [adminKycApi.reducerPath]: adminKycApi .reducer,
     [vendorWalletApi.reducerPath]: vendorWalletApi.reducer,
     [vendorStripeApi.reducerPath]: vendorStripeApi.reducer,
@@ -90,6 +92,7 @@ export const store = configureStore({
       .concat(leadsApi.middleware)
       .concat(vendorNotificationsApi.middleware)
       .concat(userNotificationsApi.middleware)
+      .concat(accountApi.middleware)
       .concat(adminKycApi.middleware)
       .concat(vendorWalletApi.middleware)
       .concat(vendorStripeApi.middleware)

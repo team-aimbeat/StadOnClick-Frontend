@@ -11,6 +11,7 @@ export function AuthBootstrap({ children }: PropsWithChildren) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppSelector((state) => state.auth.user);
+  const isBootstrapping = useAppSelector((state) => state.auth.isBootstrapping);
   const [refreshSession] = useRefreshMutation();
 
   const { data, isLoading, isFetching, isSuccess, isError } = useGetMeQuery();
@@ -33,15 +34,24 @@ export function AuthBootstrap({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!user) return;
-    const path = location.pathname;
-    const isAdminAuthEntry = path === "/admin/sign-in" || path === "/admin";
-    const isLegacyModerator = path.startsWith("/moderator");
-    if (!isAdminAuthEntry && !isLegacyModerator) return;
-    const target = getPostLoginRoute(user.roles ?? []);
-    if (target && target !== path) {
-      navigate(target, { replace: true });
-    }
-  }, [location.pathname, navigate, user]);
+      const path = location.pathname;
+
+      if (user.status && user.status !== "ACTIVE") {
+        if (isBootstrapping) return;
+        if (!path.startsWith("/sign-up")) {
+          navigate("/sign-up?step=4", { replace: true });
+        }
+        return;
+      }
+
+      const isAdminAuthEntry = path === "/admin/sign-in" || path === "/admin";
+      const isLegacyModerator = path.startsWith("/moderator");
+      if (!isAdminAuthEntry && !isLegacyModerator) return;
+      const target = getPostLoginRoute(user.roles ?? []);
+      if (target && target !== path) {
+        navigate(target, { replace: true });
+      }
+  }, [location.pathname, navigate, user, isBootstrapping]);
 
   useEffect(() => {
     if (!user || typeof window === "undefined") {

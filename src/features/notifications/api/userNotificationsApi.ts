@@ -27,6 +27,8 @@ type NotificationsResponse = {
   meta: NotificationsMeta;
 };
 
+type UnreadCountResponse = { data: { count: number } } | { count: number };
+
 type GetNotificationsArgs = {
   page?: number;
   limit?: number;
@@ -59,8 +61,14 @@ export const userNotificationsApi = createApi({
           : [{ type: "UserNotifications", id: "LIST" }],
     }),
 
-    getUnreadCount: builder.query<{ count: number }, void>({
+    getUnreadCount: builder.query<UnreadCountResponse, void>({
       query: () => ({ url: "/notifications/unread-count", method: "GET" }),
+      transformResponse: (response: { data: { count: number } } | { count: number }) => {
+        if ('count' in response) {
+          return response;
+        }
+        return response;
+      },
       providesTags: [{ type: "UserNotificationsUnread", id: "COUNT" }],
     }),
 
