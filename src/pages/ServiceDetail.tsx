@@ -741,7 +741,7 @@ export default function ServiceDetail() {
               {["AC Rooms", "Parking Available", "Family Friendly"].map((amenity) => (
                 <div
                   key={amenity}
-                  className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white px-6 py-4 shadow-sm transition hover:shadow-md"
+                  className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4"
                 >
                   <div className="h-2 w-2 rounded-full bg-emerald-500" />
                   <span className="text-[15px] font-medium text-slate-700">{amenity}</span>
