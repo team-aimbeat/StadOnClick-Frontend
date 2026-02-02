@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Inbox, Search } from "lucide-react";
 
@@ -258,7 +258,7 @@ export default function ModeratorEscalationsInbox() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200/80 bg-white/95 p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/95 p-5 shadow-sm">
           {!hasSelection ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-slate-500">
               <Inbox className="h-6 w-6 text-slate-400" />
@@ -322,7 +322,7 @@ export default function ModeratorEscalationsInbox() {
 
               <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                       Summary
                     </p>
@@ -332,7 +332,7 @@ export default function ModeratorEscalationsInbox() {
                   </div>
 
                   {ticketSnapshot ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                         Ticket context
                       </p>
@@ -361,7 +361,7 @@ export default function ModeratorEscalationsInbox() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                       Metadata
                     </p>
@@ -390,7 +390,7 @@ export default function ModeratorEscalationsInbox() {
                   </div>
 
                   {escalation?.resolutionSummary ? (
-                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm text-emerald-800">
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5 text-sm text-emerald-800">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">
                         Resolution summary
                       </p>
@@ -441,3 +441,5 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+

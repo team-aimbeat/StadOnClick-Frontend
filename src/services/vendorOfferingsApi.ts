@@ -119,6 +119,16 @@ export const vendorOfferingsApi = createApi({
         { type: "VendorOffering", id: offeringId },
       ],
     }),
+
+    deleteServiceOfferings: builder.mutation<{ count: number }, string>({
+      query: (serviceId) => ({
+        url: `/vendor/offerings/service/${serviceId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, serviceId) => [
+        { type: "VendorOffering", id: serviceId },
+      ],
+    }),
   }),
 });
 
@@ -127,4 +137,5 @@ export const {
   useCreateOfferingMutation,
   useCreateSlotMutation,
   useCreateRuleMutation,
+  useDeleteServiceOfferingsMutation,
 } = vendorOfferingsApi;

@@ -24,11 +24,18 @@ export function normalizeApiError(
       }
       return acc
     }, {} as Record<string, string>)
-
+    
   const formError =
     apiError?.data?.errors?.formErrors?.[0] ||
     apiError?.data?.message ||
     (apiError as any)?.error
+
+  // Hide internal ORM/schema leaks from end users
+  const isPrismaLeak =
+    typeof formError === "string" &&
+    (/prisma/i.test(formError) ||
+      /Unknown argument/i.test(formError) ||
+      /Invalid `prisma\./i.test(formError))
 
   const firstFieldError = fieldErrors ? Object.values(fieldErrors)[0] : undefined
   const isRateLimited = apiError?.status === 429
@@ -37,6 +44,10 @@ export function normalizeApiError(
   return {
     fieldErrors: fieldErrors ?? {},
     formError,
-    toastMessage: rateLimitMessage || formError || firstFieldError || fallbackMessage,
+    toastMessage:
+      rateLimitMessage ||
+      (isPrismaLeak ? undefined : formError) ||
+      firstFieldError ||
+      fallbackMessage,
   }
 }

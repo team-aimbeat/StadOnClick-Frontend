@@ -29,6 +29,8 @@ import { vendorWalletApi } from "@/features/vendorWallet/api/walletApi";
 import { vendorStripeApi } from "@/features/vendorStripe/api/vendorStripeApi";
 import { adminFinanceApi } from "@/features/admin/finance/api/adminFinanceApi";
 import { adminBookingsApi } from "@/features/admin/bookings/api/adminBookingsApi";
+import { vendorSponsorshipsApi } from "@/features/vendorSponsorships/api/vendorSponsorships.api";
+import { adminSponsorshipsApi } from "@/features/adminSponsorships/api/adminSponsorships.api";
 import { serviceReviewsApi } from "@/services/serviceReviewsApi";
 
 export const store = configureStore({
@@ -63,6 +65,8 @@ export const store = configureStore({
     [vendorStripeApi.reducerPath]: vendorStripeApi.reducer,
     [adminFinanceApi.reducerPath]: adminFinanceApi.reducer,
     [adminBookingsApi.reducerPath]: adminBookingsApi.reducer,
+    [vendorSponsorshipsApi.reducerPath]: vendorSponsorshipsApi.reducer,
+    [adminSponsorshipsApi.reducerPath]: adminSponsorshipsApi.reducer,
     [serviceReviewsApi.reducerPath]: serviceReviewsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -91,6 +95,8 @@ export const store = configureStore({
       .concat(vendorStripeApi.middleware)
       .concat(adminFinanceApi.middleware)
       .concat(adminBookingsApi.middleware)
+      .concat(vendorSponsorshipsApi.middleware)
+      .concat(adminSponsorshipsApi.middleware)
       .concat(serviceReviewsApi.middleware),
 });
 

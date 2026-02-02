@@ -70,10 +70,12 @@ import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
+import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
-import AppLayout from "@/components/Layout/AppLayout";
-import AdminLayout from "@/components/Layout/AdminLayout";
-import VendorLayout from "@/components/Layout/VendorLayout";
+import AppLayout from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import VendorLayout from "@/components/layout/VendorLayout";
+
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
@@ -264,6 +266,11 @@ const appRouter = createBrowserRouter([
           {
             path: "finance/payouts",
             element: <AdminPayoutsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "finance/sponsorship-plans",
+            element: <AdminSponsorshipPlansPage />,
             errorElement: <ErrorPage />,
           },
           {
