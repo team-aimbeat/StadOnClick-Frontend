@@ -61,7 +61,7 @@ export function BookingModal({
         </div>
        
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-3xl border border-slate-100 p-5">
+          <div className="rounded-3xl border border-slate-200 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Calendar</p>
             <DayPicker
               mode="single"
@@ -72,26 +72,24 @@ export function BookingModal({
             />
           </div>
           <div className="rounded-3xl border border-slate-100 p-5">
-              <div className="flex items-center justify-between bg-slate-100">
-                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Selected date</p>
-            <p className="text-sm font-semibold text-slate-900">{formattedSelectedDate}</p>
-            <p className="text-[11px] text-slate-400">{selectedDateIso}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Time slot</p>
-            <p className="text-sm font-semibold text-slate-900">{selectedSlot?.label || "Pick a slot"}</p>
-            <p className="text-[11px] text-slate-400">{selectedSlot?.seats}</p>
-          </div>
-        </div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Time slots</p>
+            <div className="flex items-start justify-between gap-6 border-b border-slate-100 pb-4">
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400">Selected date</p>
+                <p className="text-sm font-semibold text-slate-900">{formattedSelectedDate}</p>
+              </div>
+              <div className="space-y-1 text-right">
+                <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400">Time slot</p>
+                <p className="text-sm font-semibold  text-slate-900">{selectedSlot?.label || "Pick a slot"}</p>
+                <p className="text-[11px] text-slate-400">{selectedSlot?.seats}</p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400">Time slots</p>
                 {requiresSlot && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 justify-end">
                     {slotStatusLegend.map((status) => (
                       <span
                         key={status}
-                        className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${slotStatusMeta[status].badgeClass}`}
+                        className={`rounded-full border px-3 py-1 text-[10px] font-semibold ${slotStatusMeta[status].badgeClass}`}
                       >
                         {slotStatusMeta[status].label}
                       </span>
@@ -99,9 +97,10 @@ export function BookingModal({
                   </div>
                 )}
               </div>
-              {requiresSlot ? (
-                showSlotGrid ? (
-                  <div className="mt-4 grid gap-3 grid-cols-3">
+            </div>
+            {requiresSlot ? (
+              showSlotGrid ? (
+                  <div className="mt-4 grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {slotOptions.map((slot) => {
                       const statusInfo = slotStatusMeta[slot.status]
                       const isSelected = selectedSlotId === slot.id
@@ -117,7 +116,7 @@ export function BookingModal({
                             slot.status === "unavailable"
                               ? "cursor-not-allowed opacity-60"
                               : "hover:border-blue-300"
-                          }`}
+                          } w-full`}
                         >
                           <span className="text-sm font-semibold text-current">{slot.label}</span>
                           <span className="text-[11px] text-slate-500">{slot.seats}</span>

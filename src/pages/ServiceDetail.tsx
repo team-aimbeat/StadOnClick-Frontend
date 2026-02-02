@@ -1,6 +1,6 @@
 import { BadgeCheck, Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import salon1 from "@/assets/images/salon1.png"
 import salon2 from "@/assets/images/salon2.png"
 import salon3 from "@/assets/images/salon3.png"
@@ -12,15 +12,18 @@ import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
 import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
 import {
   useGetServiceOfferingsQuery,
+  useLazyGetOfferingSlotsQuery,
   VendorOffering,
   VendorSlot,
 } from "@/services/vendorOfferingsApi"
+import { DateTime } from "luxon"
 import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
 import { useApplyCouponMutation, useCreateOrderMutation } from "@/services/vendorOrdersApi"
 import { Button } from "@/components/ui/button"
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge"
 import { LocationMap } from "@/components/marketplace/Map/LocationMap"
+import toast from "react-hot-toast"
 
 
 type ReviewCard = {
@@ -42,16 +45,25 @@ const starBreakdown = [
   { label: "1 ⭐", percent: 1 },
 ]
 
-const slotTimeFormatter = new Intl.DateTimeFormat("default", {
-  hour: "2-digit",
-  minute: "2-digit",
-})
+const STOCKHOLM_TIMEZONE = "Europe/Stockholm"
 
 const formatSlotLabel = (start: string, end?: string | null) => {
-  const startLabel = slotTimeFormatter.format(new Date(start))
+  const formatTime = (value: string) =>
+    DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE).toFormat("HH:mm")
+
+  const startLabel = formatTime(start)
   if (!end) return startLabel
-  const endLabel = slotTimeFormatter.format(new Date(end))
+  const endLabel = formatTime(end)
   return `${startLabel} - ${endLabel}`
+}
+
+const getStockholmDateKey = (value?: Date | string) => {
+  if (!value) return ""
+  const dt =
+    typeof value === "string"
+      ? DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE)
+      : DateTime.fromJSDate(value).setZone(STOCKHOLM_TIMEZONE)
+  return dt.toISODate()
 }
 
 const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
@@ -100,7 +112,11 @@ export default function ServiceDetail() {
   const [activeTab, setActiveTab] = useState<"services" | "description">("services")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => new Date())
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
-  const selectedDateIso = selectedDate?.toISOString().split("T")[0] ?? ""
+  const selectedDateIso = selectedDate
+    ? DateTime.fromJSDate(selectedDate)
+        .setZone(STOCKHOLM_TIMEZONE, { keepLocalTime: true })
+        .toISODate()
+    : ""
   const formattedSelectedDate = selectedDate
     ? new Intl.DateTimeFormat("default", {
         weekday: "short",
@@ -124,18 +140,41 @@ export default function ServiceDetail() {
     setAppliedCoupon(null)
     setCouponError(null)
   }
+  const [fetchOfferingSlots, { data: fetchedSlots }] = useLazyGetOfferingSlotsQuery()
+
+  useEffect(() => {
+    if (bookedOffering) {
+      fetchOfferingSlots({
+        offeringId: bookedOffering.id,
+        vendorId: VENDOR_ID,
+      })
+    }
+  }, [bookedOffering, fetchOfferingSlots])
+
+  const slotsForBookedOffering = useMemo(
+    () => (bookedOffering ? fetchedSlots ?? bookedOffering.slots ?? [] : []),
+    [bookedOffering, fetchedSlots],
+  )
+
+  const slotsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return slotsForBookedOffering
+    return slotsForBookedOffering.filter((slot) => {
+      const slotDate = getStockholmDateKey(slot.startTime)
+      return slotDate === selectedDateIso
+    })
+  }, [slotsForBookedOffering, selectedDateIso, selectedDate])
+
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
-    if (!bookedOffering) return []
-    const slots = bookedOffering.slots ?? []
-    return slots.map((slot) => ({
+    return slotsForSelectedDate.map((slot) => ({
       id: slot.id,
       label: formatSlotLabel(slot.startTime, slot.endTime),
       status: determineSlotStatus(slot),
       seats: formatSlotSeats(slot),
     }))
-  }, [bookedOffering])
+  }, [slotsForSelectedDate])
   const selectedSlot = bookingSlotOptions.find((slot) => slot.id === selectedSlotId)
-  const requiresSlot = bookedOffering?.usesSlots ?? false
+  const requiresSlot =
+    (bookedOffering?.usesSlots ?? false) || slotsForBookedOffering.length > 0
 
   const addOrUpdateCartItem = (offering: VendorOffering, slotId: string | null) => {
     resetCoupon()
@@ -180,7 +219,7 @@ export default function ServiceDetail() {
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return
     if (cartItems.length === 0) {
-      alert("Add services to your cart before applying a coupon.")
+      toast.success("Add services to your cart before applying a coupon.")
       return
     }
 
@@ -194,7 +233,7 @@ export default function ServiceDetail() {
       setCouponDiscount(response.data.discount)
       setAppliedCoupon(response.data.coupon)
       setCouponError(null)
-      alert(`Coupon ${response.data.coupon.code} applied`)
+      toast.success(`Coupon ${response.data.coupon.code} applied`)
     } catch (error: any) {
       resetCoupon()
       setCouponError(
@@ -212,14 +251,19 @@ export default function ServiceDetail() {
   const handleBookClick = (offering: VendorOffering) => {
     const slots = offering.slots ?? []
     const slotCount = slots.length
-    const requiresSlot = offering.usesSlots
+    const requiresSlot = offering.usesSlots || slotCount > 0
 
-    if (requiresSlot && slotCount === 0) {
-      alert("Slots are unavailable for this service at the moment.")
+    if (requiresSlot) {
+      if (slotCount === 0) {
+        toast.success("Slots are unavailable for this service at the moment.")
+        return
+      }
+      openBookingModal(offering)
       return
     }
 
-    openBookingModal(offering)
+    addOrUpdateCartItem(offering, null)
+    toast.success("Added service to your cart. Checkout when ready.")
   }
 
   const handleCloseBooking = () => {
@@ -231,7 +275,7 @@ export default function ServiceDetail() {
   const handleConfirmBooking = () => {
     if (!bookedOffering) return
     if (requiresSlot && !selectedSlot) {
-      alert("Please choose a slot before confirming.")
+      toast.success("Please choose a slot before confirming.")
       return
     }
 
@@ -239,17 +283,17 @@ export default function ServiceDetail() {
       bookedOffering,
       requiresSlot ? selectedSlot?.id ?? null : null
     )
-    alert("Added service to your cart. Checkout when ready.")
+    toast.success("Added service to your cart. Checkout when ready.")
     handleCloseBooking()
   }
 
   const handleCheckoutCart = async () => {
     if (cartItems.length === 0) {
-      alert("Add at least one service to your order before booking.")
+      toast.success("Add at least one service to your order before booking.")
       return
     }
     if (!userId) {
-      alert("Sign in to confirm a booking before proceeding.")
+      toast.success("Sign in to confirm a booking before proceeding.")
       return
     }
 
@@ -265,7 +309,7 @@ export default function ServiceDetail() {
         promoCode: appliedCoupon?.code || undefined,
       }).unwrap()
 
-      alert(
+      toast.success(
         `Order confirmed (${formatCurrency(order.summary.total)}). We will notify the vendor shortly.`
       )
       setCartItems([])
@@ -273,7 +317,7 @@ export default function ServiceDetail() {
       resetCoupon()
     } catch (error) {
       console.error("Failed to create order:", error)
-      alert("We could not save the booking. Please try again.")
+      toast.success("We could not save the booking. Please try again.")
     }
   }
 
@@ -301,11 +345,11 @@ export default function ServiceDetail() {
   const handleSubmitReview = async () => {
     if (!serviceId) return
     if (userRating === 0) {
-      alert("Please select a rating")
+      toast.success("Please select a rating")
       return
     }
     if (!userComment.trim()) {
-      alert("Please enter a comment")
+      toast.success("Please enter a comment")
       return
     }
 
@@ -317,10 +361,10 @@ export default function ServiceDetail() {
       }).unwrap()
       setUserRating(0)
       setUserComment("")
-      alert("Review submitted successfully!")
+      toast.success("Review submitted successfully!")
     } catch (err) {
       console.error("Failed to submit review:", err)
-      alert("Failed to submit review. Please try again.")
+      toast.success("Failed to submit review. Please try again.")
     }
   }
 
@@ -465,13 +509,13 @@ export default function ServiceDetail() {
             {activeTab === "services" ? (
               <div className="space-y-4">
                 {offerings?.map((offering) => {
-                  const slotCount = offering.slots?.length ?? 0
-                  const requiresSlot = offering.usesSlots
-                  const buttonLabel = requiresSlot
-                    ? slotCount > 0
-                      ? "Book"
-                      : "Slots unavailable"
-                    : "Book"
+                   const slotCount = offering.slots?.length ?? 0
+                   const requiresSlot = offering.usesSlots || slotCount > 0
+                   const buttonLabel = requiresSlot
+                     ? slotCount > 0
+                       ? "Book"
+                       : "Slots unavailable"
+                     : "Add to cart"
                   const isSlotUnavailable = requiresSlot && slotCount === 0
                   return (
                   <div
