@@ -418,7 +418,7 @@ export default function ServiceDetail() {
                     ? slotCount > 0
                       ? "Book"
                       : "Slots unavailable"
-                    : "Add to order"
+                    : "Book"
                   const isSlotUnavailable = requiresSlot && slotCount === 0
                   return (
                   <div
@@ -438,11 +438,11 @@ export default function ServiceDetail() {
                       <span className="text-lg font-bold text-slate-900">
                         ${offering.salePrice}
                       </span>
-                      <button
-                        className={`rounded-full px-3 py-1 text-xs font-semibold text-white transition ${
-                          isSlotUnavailable ? "bg-slate-300 cursor-not-allowed opacity-60" : "bg-blue-500 hover:bg-blue-600"
+                      <button 
+                        className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
+                          isSlotUnavailable ? "bg-slate-300 cursor-not-allowed opacity-60" : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
                         }`}
-                        type="button"
+     
                         disabled={isSlotUnavailable}
                         onClick={() => handleBookClick(offering)}
                       >
