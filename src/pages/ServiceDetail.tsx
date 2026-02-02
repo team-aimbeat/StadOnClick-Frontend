@@ -83,6 +83,7 @@ const formatCurrency = (value: number) => currencyFormatter.format(value)
 type CartItem = {
   offering: VendorOffering
   quantity: number
+  slotId: string | null
 }
 
 const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
@@ -111,7 +112,6 @@ export default function ServiceDetail() {
   const [bookedOffering, setBookedOffering] = useState<VendorOffering | null>(null)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [promoCode, setPromoCode] = useState("")
-  const [promoDiscount, setPromoDiscount] = useState(0)
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
     if (!bookedOffering) return []
     const slots = bookedOffering.slots ?? []
@@ -123,14 +123,17 @@ export default function ServiceDetail() {
     }))
   }, [bookedOffering])
   const selectedSlot = bookingSlotOptions.find((slot) => slot.id === selectedSlotId)
-  const requiresSlot = bookedOffering?.usesSlots ?? true
+  const requiresSlot = bookedOffering?.usesSlots ?? false
 
-  const addOfferingToCart = (offering: VendorOffering) => {
+  const addOrUpdateCartItem = (offering: VendorOffering, slotId: string | null) => {
     setCartItems((prev) => {
-      if (prev.some((item) => item.offering.id === offering.id)) {
-        return prev
+      const exists = prev.find((item) => item.offering.id === offering.id)
+      if (exists) {
+        return prev.map((item) =>
+          item.offering.id === offering.id ? { ...item, slotId: slotId ?? item.slotId } : item
+        )
       }
-      return [...prev, { offering, quantity: 1 }]
+      return [...prev, { offering, quantity: 1, slotId }]
     })
   }
 
@@ -155,14 +158,12 @@ export default function ServiceDetail() {
   )
   const cartTaxRate = 0.12
   const cartTaxes = cartSubtotal * cartTaxRate
-  const cartDiscount = promoDiscount
-  const cartTotal = cartSubtotal + cartTaxes - cartDiscount
+  const cartDiscount = 0
+  const cartTotal = cartSubtotal + cartTaxes
 
   const handleApplyPromo = () => {
     if (!promoCode.trim()) return
-    // placeholder: future validation can adjust discount
-    setPromoDiscount(100)
-    alert(`Promo "${promoCode}" applied.`)
+    alert(`Promo code "${promoCode.trim()}" will be validated at checkout.`)
   }
 
   const openBookingModal = (offering: VendorOffering) => {
@@ -181,7 +182,6 @@ export default function ServiceDetail() {
       return
     }
 
-    addOfferingToCart(offering)
     openBookingModal(offering)
   }
 
@@ -191,40 +191,52 @@ export default function ServiceDetail() {
     setBookedOffering(null)
   }
 
-  const handleConfirmBooking = async () => {
+  const handleConfirmBooking = () => {
     if (!bookedOffering) return
     if (requiresSlot && !selectedSlot) {
       alert("Please choose a slot before confirming.")
       return
     }
 
+    addOrUpdateCartItem(
+      bookedOffering,
+      requiresSlot ? selectedSlot?.id ?? null : null
+    )
+    alert("Added service to your cart. Checkout when ready.")
+    handleCloseBooking()
+  }
+
+  const handleCheckoutCart = async () => {
+    if (cartItems.length === 0) {
+      alert("Add at least one service to your order before booking.")
+      return
+    }
     if (!userId) {
       alert("Sign in to confirm a booking before proceeding.")
       return
     }
 
     try {
-      await createOrder({
+      const order = await createOrder({
         userId,
         vendorId: VENDOR_ID,
-        offeringId: bookedOffering.id,
-        slotId: requiresSlot ? selectedSlot?.id ?? null : null,
-        quantity: 1,
+        items: cartItems.map((item) => ({
+          offeringId: item.offering.id,
+          quantity: item.quantity,
+          slotId: item.slotId ?? undefined,
+        })),
+        promoCode: promoCode.trim() || undefined,
       }).unwrap()
-      alert("Your booking is confirmed—we will notify the vendor shortly.")
-      handleCloseBooking()
+
+      alert(
+        `Order confirmed (${formatCurrency(order.summary.total)}). We will notify the vendor shortly.`
+      )
+      setCartItems([])
+      setPromoCode("")
     } catch (error) {
       console.error("Failed to create order:", error)
       alert("We could not save the booking. Please try again.")
     }
-  }
-
-  const handleProceedToBooking = () => {
-    if (cartItems.length === 0) {
-      alert("Add at least one service to your order before booking.")
-      return
-    }
-    openBookingModal(cartItems[0].offering)
   }
 
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
@@ -581,11 +593,11 @@ export default function ServiceDetail() {
               </div>
             </div>
             <Button
-              onClick={handleProceedToBooking}
+              onClick={handleCheckoutCart}
               className="w-full"
-              disabled={cartItems.length === 0}
+              disabled={cartItems.length === 0 || isCreatingOrder}
             >
-              Proceed to booking
+              {isCreatingOrder ? "Processing..." : "Confirm booking"}
             </Button>
           </div>
      </div>

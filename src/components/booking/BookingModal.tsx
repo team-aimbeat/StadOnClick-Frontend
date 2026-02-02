@@ -136,7 +136,7 @@ export function BookingModal({
         </div>
         <div className="mt-6">
           <p className="text-sm text-slate-500">
-            By confirming, we will reserve the slot for {bookedOfferingName || serviceName} and notify the vendor.
+            Confirming adds {bookedOfferingName || serviceName} to your cart and holds any selected slot while you finish checkout.
           </p>
         </div>
         <div className="mt-6 flex items-center justify-between gap-3">
@@ -153,7 +153,7 @@ export function BookingModal({
             disabled={confirmDisabled}
             className="rounded-2xl bg-blue-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isLoading ? "Booking..." : "Confirm Booking"}
+            {isLoading ? "Adding..." : "Add to cart"}
           </button>
         </div>
       </div>

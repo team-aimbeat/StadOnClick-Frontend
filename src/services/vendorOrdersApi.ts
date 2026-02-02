@@ -1,22 +1,48 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "@/app/services/baseApi";
 
+export interface CreateOrderItemPayload {
+  offeringId: string;
+  quantity: number;
+  slotId?: string | null;
+}
+
 export interface CreateOrderPayload {
   userId: string;
   vendorId: string;
-  offeringId: string;
-  slotId?: string | null;
-  quantity?: number;
+  items: CreateOrderItemPayload[];
+  promoCode?: string;
 }
 
 export interface CreateOrderResponse {
   message: string;
   data: {
-    id: string;
+    orderId: string;
     status: string;
-    totalFinal: number;
     currency: string;
+    vendorId: string;
+    userId: string;
     createdAt: string;
+    summary: {
+      subtotal: number;
+      tax: number;
+      discount: number;
+      total: number;
+    };
+    items: Array<{
+      id: string;
+      offeringId: string;
+      quantity: number;
+      slotId: string | null;
+      pricePerUnit: number;
+      totalPrice: number;
+      orderNumber: string;
+    }>;
+    coupon?: {
+      code: string;
+      discountType: string;
+      value: number;
+    } | null;
   };
 }
 
