@@ -25,9 +25,17 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
+import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clearAuth } from "@/features/auth/authSlice";
 import { useLogoutMutation } from "@/features/auth/api/authApi";
+import {
+  useGetNotificationsQuery,
+  useGetUnreadCountQuery,
+  useMarkAllReadMutation,
+  useMarkNotificationReadMutation,
+  type UserNotificationItem,
+} from "@/features/notifications/api/userNotificationsApi";
 
 type Category = {
   label: string;
@@ -41,11 +49,6 @@ type CartPreviewItem = {
   title: string;
   detail: string;
   price: string;
-};
-
-type NotificationItem = {
-  title: string;
-  time: string;
 };
 
 const searchCategories = [
@@ -77,21 +80,6 @@ const cartPreviewItems: CartPreviewItem[] = [
   },
 ];
 
-const notificationItems: NotificationItem[] = [
-  {
-    title: "Curated local moments just dropped",
-    time: "2h ago",
-  },
-  {
-    title: "Download the companion app for offline use",
-    time: "Yesterday",
-  },
-  {
-    title: "Live chat is now available 24/7",
-    time: "Just now",
-  },
-];
-
 const cartPreviewSubtotal = cartPreviewItems.reduce(
   (total, item) =>
     total + Number(item.price.replace(/[^0-9.]/g, "")),
@@ -117,6 +105,21 @@ export default function UserHeader() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [logout, { isLoading: isSigningOut }] = useLogoutMutation();
+
+  const {
+    data: notificationsResponse,
+    isFetching: isNotificationsFetching,
+    error: notificationsError,
+  } = useGetNotificationsQuery({ page: 1, limit: 5 }, { skip: !user });
+  const { data: unreadResponse } = useGetUnreadCountQuery(undefined, { skip: !user });
+  const [markNotificationRead] = useMarkNotificationReadMutation();
+  const [markAllRead, { isLoading: isMarkAllReadLoading }] = useMarkAllReadMutation();
+  const notificationsList = (notificationsResponse?.data ?? []) as UserNotificationItem[];
+  const fallbackUnreadCount = notificationsList.filter((notification) => !notification.readAt).length;
+  const unreadCount = unreadResponse?.data?.count ?? fallbackUnreadCount;
+  const isEmptyNotifications = !notificationsList.length && !isNotificationsFetching;
+  const isNotificationsLoading = isNotificationsFetching && !notificationsList.length;
+  const notificationsBadge = unreadCount > 0 ? String(unreadCount) : undefined;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -306,15 +309,38 @@ export default function UserHeader() {
     setProfileMenuOpen(false);
   };
 
-  const menuItems = [
-    { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
+  const menuItems = useMemo(
+    () => [
+      { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
+      {
+        label: "Notifications",
+        icon: <Bell className="h-4 w-4" />,
+        meta: notificationsBadge,
+      },
+    ],
+    [notificationsBadge],
+  );
 
-    {
-      label: "Notifications",
-      icon: <Bell className="h-4 w-4" />,
-      meta: "1",
-    },
-  ];
+  const handleNotificationSelect = async (notification: UserNotificationItem) => {
+    if (!notification.readAt) {
+      try {
+        await markNotificationRead(notification.id).unwrap();
+      } catch {
+        /* ignore */
+      }
+    }
+
+    setNotificationsMenuOpen(false);
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!unreadCount) return;
+    try {
+      await markAllRead().unwrap();
+    } catch {
+      /* ignore */
+    }
+  };
 
   const utilityLinks = [
     "Curated local moments",
@@ -447,7 +473,7 @@ export default function UserHeader() {
               <IconButton
                 icon={<Bell className="h-5 w-5 text-slate-500" />}
                 label="Alerts"
-                badge="9"
+                badge={notificationsBadge}
                 onClick={() => {
                   setNotificationsMenuOpen((prev) => !prev);
                   setCartMenuOpen(false);
@@ -469,25 +495,78 @@ export default function UserHeader() {
                       </div>
                       <button
                         type="button"
-                        className="text-xs font-semibold text-slate-400 transition hover:text-slate-700"
+                        className="text-xs font-semibold text-slate-500 transition hover:text-slate-900 disabled:text-slate-300"
+                        disabled={!unreadCount || isMarkAllReadLoading}
+                        onClick={handleMarkAllRead}
                       >
-                        Mark read
+                        Mark all read
                       </button>
                     </div>
-                    <ul className="mt-4 space-y-3 text-sm text-slate-600">
-                      {notificationItems.map((item) => (
-                        <li key={item.title} className="flex gap-3">
-                          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-sky-500"></span>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-900">
-                              {item.title}
-                            </p>
-                            <p className="text-xs text-slate-500">{item.time}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                  </div>
+                  <div className="border-t border-slate-100 bg-white">
+                    {notificationsError ? (
+                      <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
+                        Unable to load notifications
+                      </div>
+                    ) : isNotificationsLoading ? (
+                      <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
+                        Loading notifications…
+                      </div>
+                    ) : notificationsList.length ? (
+                      <ul className="max-h-[360px] space-y-2 overflow-auto px-2 py-2">
+                        {notificationsList.map((notification) => {
+                          const isUnread = !notification.readAt;
+                          return (
+                            <li key={notification.id}>
+                              <button
+                                type="button"
+                                onClick={() => handleNotificationSelect(notification)}
+                                className={cn(
+                                  "flex w-full items-start justify-between gap-3 rounded-2xl px-4 py-3 text-left transition",
+                                  isUnread
+                                    ? "bg-slate-50 hover:bg-slate-100"
+                                    : "bg-white hover:bg-slate-50",
+                                )}
+                              >
+                                <div className="flex flex-1 flex-col gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-semibold text-slate-900 truncate">
+                                      {notification.title}
+                                    </p>
+                                    {isUnread ? (
+                                      <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                                    ) : null}
+                                  </div>
+                                  {notification.body ? (
+                                    <p className="text-xs text-slate-500">
+                                      {notification.body}
+                                    </p>
+                                  ) : null}
+                                </div>
+                                <span className="text-[11px] text-slate-400">
+                                  {formatRelativeTime(notification.createdAt)}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center text-xs text-slate-500">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                          <Bell className="h-6 w-6" strokeWidth={1.8} />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          You're all caught up
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          We will keep you posted.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="border-t border-slate-100 px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
                       {utilityLinks.map((link) => (
                         <button
                           key={link}
@@ -680,6 +759,20 @@ function IconButton({ icon, label, badge, onClick }: IconButtonProps) {
       <span className="sr-only">{label}</span>
     </button>
   );
+}
+
+function formatRelativeTime(iso?: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const diffSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diffSeconds < 45) return "Just now";
+  if (diffSeconds < 3600) return `${Math.max(1, Math.floor(diffSeconds / 60))}m`;
+  if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`;
+  if (diffSeconds < 172800) return "Yesterday";
+
+  return date.toLocaleDateString();
 }
 
 

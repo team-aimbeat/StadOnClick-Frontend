@@ -18,6 +18,7 @@ import { adminStaffApi } from "@/features/admin/staff/adminStaffApi";
 import { supportApi } from "@/features/support/supportApi";
 import supportRealtimeReducer from "@/features/support/supportRealtimeSlice";
 import notificationsReducer from "@/features/notifications/notificationsSlice";
+import { userNotificationsApi } from "@/features/notifications/api/userNotificationsApi";
 import { escalationApi } from "@/features/escalations/escalationApi";
 import { systemHealthApi } from "@/features/systemHealth/systemHealthApi";
 import { vendorKycApi } from "@/services/vendorKycApi";
@@ -58,6 +59,7 @@ export const store = configureStore({
     [vendorKycApi.reducerPath]: vendorKycApi.reducer,
     [leadsApi.reducerPath]: leadsApi.reducer,
     [vendorNotificationsApi.reducerPath]: vendorNotificationsApi.reducer,
+    [userNotificationsApi.reducerPath]: userNotificationsApi.reducer,
        [adminKycApi.reducerPath]: adminKycApi .reducer,
     [vendorWalletApi.reducerPath]: vendorWalletApi.reducer,
     [vendorStripeApi.reducerPath]: vendorStripeApi.reducer,
@@ -76,7 +78,7 @@ export const store = configureStore({
       .concat(serviceMediaApi.middleware)
       .concat(vendorServicesApi.middleware)
       .concat(adminVendorApi.middleware)
-      .concat(bookingsApi.middleware)
+    .concat(bookingsApi.middleware)
       .concat(vendorcouponsApi.middleware)
       .concat(vendorKycApi.middleware)
       .concat(adminLeadPlansApi.middleware)
@@ -87,6 +89,7 @@ export const store = configureStore({
       .concat(systemHealthApi.middleware)
       .concat(leadsApi.middleware)
       .concat(vendorNotificationsApi.middleware)
+      .concat(userNotificationsApi.middleware)
       .concat(adminKycApi.middleware)
       .concat(vendorWalletApi.middleware)
       .concat(vendorStripeApi.middleware)
