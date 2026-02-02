@@ -14,7 +14,27 @@ export interface CreateOrderPayload {
   promoCode?: string;
 }
 
+export interface ApplyCouponPayload {
+  vendorId: string;
+  promoCode: string;
+  subtotal: number;
+}
+
+export interface ApplyCouponResponse {
+  message: string;
+  data: {
+    discount: number;
+    totalAfterDiscount: number;
+    coupon: {
+      code: string;
+      discountType: string;
+      value: number;
+    };
+  };
+}
+
 export interface CreateOrderResponse {
+  summary: any;
   message: string;
   data: {
     orderId: string;
@@ -57,7 +77,14 @@ export const vendorOrdersApi = createApi({
         body,
       }),
     }),
+    applyCoupon: builder.mutation<ApplyCouponResponse, ApplyCouponPayload>({
+      query: (body) => ({
+        url: "/vendor/orders/validate-coupon",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useCreateOrderMutation } = vendorOrdersApi;
+export const { useCreateOrderMutation, useApplyCouponMutation } = vendorOrdersApi;

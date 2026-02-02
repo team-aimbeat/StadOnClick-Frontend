@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import {
   useCreateCouponMutation,
@@ -43,8 +43,8 @@ const VendorCoupons = () => {
 
   const { data: coupons = [], isLoading, isError, error, refetch } = useGetCouponsQuery();
   const { data: profileStatus } = useGetVendorProfileStatusQuery();
-  const vendorId = profileStatus?.id;
-
+    const vendorId = useAppSelector((state) => state.auth.user?.id)
+console.log(vendorId)
   const [createCoupon] = useCreateCouponMutation();
   const [disableCoupon] = useDisableCouponMutation();
   const [previewCouponCode, setPreviewCouponCode] = useState<string>();

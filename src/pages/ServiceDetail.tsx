@@ -4,7 +4,6 @@ import { useMemo, useState } from "react"
 import salon1 from "@/assets/images/salon1.png"
 import salon2 from "@/assets/images/salon2.png"
 import salon3 from "@/assets/images/salon3.png"
-import verify from "@/assets/images/check_in.png"
 import { BookingModal } from "@/components/booking/BookingModal"
 import { slotStatusLegend, slotStatusMeta, SlotOption, SlotStatus } from "@/components/booking/slotData"
 import { useAppSelector } from "@/app/hooks"
@@ -17,7 +16,7 @@ import {
   VendorSlot,
 } from "@/services/vendorOfferingsApi"
 import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
-import { useCreateOrderMutation } from "@/services/vendorOrdersApi"
+import { useApplyCouponMutation, useCreateOrderMutation } from "@/services/vendorOrdersApi"
 import { Button } from "@/components/ui/button"
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge"
@@ -93,6 +92,7 @@ export default function ServiceDetail() {
   const { serviceSlug } = useParams<{ serviceSlug?: string }>()
   const userId = useAppSelector((state) => state.auth.user?.id)
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
+  const [applyCoupon, { isLoading: isApplyingCoupon }] = useApplyCouponMutation()
 
   const [userRating, setUserRating] = useState(0)
   const [userComment, setUserComment] = useState("")
@@ -112,6 +112,18 @@ export default function ServiceDetail() {
   const [bookedOffering, setBookedOffering] = useState<VendorOffering | null>(null)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [promoCode, setPromoCode] = useState("")
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string
+    discountType: string
+    value: number
+  } | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  const resetCoupon = () => {
+    setCouponDiscount(0)
+    setAppliedCoupon(null)
+    setCouponError(null)
+  }
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
     if (!bookedOffering) return []
     const slots = bookedOffering.slots ?? []
@@ -126,6 +138,7 @@ export default function ServiceDetail() {
   const requiresSlot = bookedOffering?.usesSlots ?? false
 
   const addOrUpdateCartItem = (offering: VendorOffering, slotId: string | null) => {
+    resetCoupon()
     setCartItems((prev) => {
       const exists = prev.find((item) => item.offering.id === offering.id)
       if (exists) {
@@ -138,6 +151,7 @@ export default function ServiceDetail() {
   }
 
   const updateCartQuantity = (offeringId: string, delta: number) => {
+    resetCoupon()
     setCartItems((prev) =>
       prev
         .map((item) => {
@@ -149,8 +163,10 @@ export default function ServiceDetail() {
     )
   }
 
-  const handleRemoveCartItem = (offeringId: string) =>
+  const handleRemoveCartItem = (offeringId: string) => {
+    resetCoupon()
     setCartItems((prev) => prev.filter((item) => item.offering.id !== offeringId))
+  }
 
   const cartSubtotal = cartItems.reduce(
     (sum, item) => sum + item.offering.salePrice * item.quantity,
@@ -158,12 +174,33 @@ export default function ServiceDetail() {
   )
   const cartTaxRate = 0.12
   const cartTaxes = cartSubtotal * cartTaxRate
-  const cartDiscount = 0
+  const cartDiscount = couponDiscount
   const cartTotal = cartSubtotal + cartTaxes
 
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     if (!promoCode.trim()) return
-    alert(`Promo code "${promoCode.trim()}" will be validated at checkout.`)
+    if (cartItems.length === 0) {
+      alert("Add services to your cart before applying a coupon.")
+      return
+    }
+
+    try {
+      const response = await applyCoupon({
+        vendorId: VENDOR_ID,
+        promoCode: promoCode.trim(),
+        subtotal: cartSubtotal,
+      }).unwrap()
+
+      setCouponDiscount(response.data.discount)
+      setAppliedCoupon(response.data.coupon)
+      setCouponError(null)
+      alert(`Coupon ${response.data.coupon.code} applied`)
+    } catch (error: any) {
+      resetCoupon()
+      setCouponError(
+        error?.data?.message || error?.error || "Coupon is not valid for this cart",
+      )
+    }
   }
 
   const openBookingModal = (offering: VendorOffering) => {
@@ -225,7 +262,7 @@ export default function ServiceDetail() {
           quantity: item.quantity,
           slotId: item.slotId ?? undefined,
         })),
-        promoCode: promoCode.trim() || undefined,
+        promoCode: appliedCoupon?.code || undefined,
       }).unwrap()
 
       alert(
@@ -233,6 +270,7 @@ export default function ServiceDetail() {
       )
       setCartItems([])
       setPromoCode("")
+      resetCoupon()
     } catch (error) {
       console.error("Failed to create order:", error)
       alert("We could not save the booking. Please try again.")
@@ -308,7 +346,6 @@ export default function ServiceDetail() {
     PAUSED: "bg-red-100 text-red-700",
     LIVE: "bg-green-100 text-green-700",
   }
-
 
   return (
     <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
@@ -567,13 +604,32 @@ export default function ServiceDetail() {
                 <Button
                   variant={'default'}
                   onClick={handleApplyPromo}
-                  disabled={!promoCode.trim()}
-          className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
-                     
-              >
-                  Apply
+                  disabled={!promoCode.trim() || isApplyingCoupon}
+                  className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
+                >
+                  {isApplyingCoupon ? "Checking..." : "Apply"}
                 </Button>
               </div>
+              {couponError && (
+                <p className="text-xs font-semibold text-red-600">{couponError}</p>
+              )}
+              {appliedCoupon && (
+                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+                  <span>
+                    Coupon {appliedCoupon.code} applied ({appliedCoupon.discountType === "FLAT" ? formatCurrency(appliedCoupon.value) : `${appliedCoupon.value}%`})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetCoupon()
+                      setPromoCode("")
+                    }}
+                    className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="border-t border-dashed border-slate-200 pt-4">
