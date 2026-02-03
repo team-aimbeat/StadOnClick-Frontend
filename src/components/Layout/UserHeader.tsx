@@ -1,22 +1,6 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import {
-  Activity,
-  Bell,
-  Box,
-  ChevronRight,
-  Coffee,
-  Gift,
-  Heart,
-  Home,
-  Leaf,
-  MapPin,
-  Plane,
-  ShoppingCart,
-  Sparkles,
-  Ticket,
-  UserRound,
-  X,
-} from "lucide-react";
+import { Bell, Bookmark, ChevronRight, Heart, ShoppingBag, ShoppingCart, Sparkles, UserRound, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   useEffect,
   useMemo,
@@ -25,27 +9,28 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
+import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clearAuth } from "@/features/auth/authSlice";
 import { useLogoutMutation } from "@/features/auth/api/authApi";
-
-type Category = {
-  label: string;
-  to: string;
-  icon: ReactNode;
-  subTitle?: string;
-  subItems?: string[][];
-};
+import {
+  useGetNotificationsQuery,
+  useGetUnreadCountQuery,
+  useMarkAllReadMutation,
+  useMarkNotificationReadMutation,
+  type UserNotificationItem,
+} from "@/features/notifications/api/userNotificationsApi";
+import {
+  useGetMasterCategoriesQuery,
+  useLazyGetServiceCategoriesByMasterQuery,
+  type ServiceCategory,
+} from "@/services/serviceCategoriesApi";
+import { plannedCategories } from "@/data/vendorServiceCategories";
 
 type CartPreviewItem = {
   title: string;
   detail: string;
   price: string;
-};
-
-type NotificationItem = {
-  title: string;
-  time: string;
 };
 
 const searchCategories = [
@@ -77,21 +62,6 @@ const cartPreviewItems: CartPreviewItem[] = [
   },
 ];
 
-const notificationItems: NotificationItem[] = [
-  {
-    title: "Curated local moments just dropped",
-    time: "2h ago",
-  },
-  {
-    title: "Download the companion app for offline use",
-    time: "Yesterday",
-  },
-  {
-    title: "Live chat is now available 24/7",
-    time: "Just now",
-  },
-];
-
 const cartPreviewSubtotal = cartPreviewItems.reduce(
   (total, item) =>
     total + Number(item.price.replace(/[^0-9.]/g, "")),
@@ -99,26 +69,47 @@ const cartPreviewSubtotal = cartPreviewItems.reduce(
 );
 
 const navLinkBase =
-  "relative flex items-center gap-1 text-xs sm:text-sm whitespace-nowrap font-semibold text-slate-700 transition-colors duration-200";
+  "group relative inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 " +
+  "hover:-translate-y-[1px] hover:bg-blue-50/60 hover:text-blue-700 hover:shadow-sm " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2 " +
+  "after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[2px] after:rounded-full after:bg-blue-600 after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:content-[''] " +
+  "hover:after:scale-x-100";
 
 export default function UserHeader() {
-  const [hovered, setHovered] = useState<string | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const cartRef = useRef<HTMLDivElement | null>(null);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
+  const reduceMotion = useReducedMotion();
 
   const [cartMenuOpen, setCartMenuOpen] = useState(false);
   const [notificationsMenuOpen, setNotificationsMenuOpen] = useState(false);
-  const [showHeaderSearch, setShowHeaderSearch] = useState(false);
   const [query, setQuery] = useState("");
+  const anyMenuOpen = profileMenuOpen || cartMenuOpen || notificationsMenuOpen;
 
   const user = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [logout, { isLoading: isSigningOut }] = useLogoutMutation();
 
+  const {
+    data: notificationsResponse,
+    isFetching: isNotificationsFetching,
+    error: notificationsError,
+  } = useGetNotificationsQuery({ page: 1, limit: 5 }, { skip: !user });
+  const { data: unreadResponse } = useGetUnreadCountQuery(undefined, { skip: !user });
+  const [markNotificationRead] = useMarkNotificationReadMutation();
+  const [markAllRead, { isLoading: isMarkAllReadLoading }] = useMarkAllReadMutation();
+  const notificationsList = (notificationsResponse?.data ?? []) as UserNotificationItem[];
+  const fallbackUnreadCount = notificationsList.filter((notification) => !notification.readAt).length;
+  const unreadCount = unreadResponse?.count ?? fallbackUnreadCount;
+  const isEmptyNotifications = !notificationsList.length && !isNotificationsFetching;
+  const isNotificationsLoading = isNotificationsFetching && !notificationsList.length;
+  const notificationsBadge = unreadCount > 0 ? String(unreadCount) : undefined;
+
   useEffect(() => {
+    if (!anyMenuOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
 
@@ -146,17 +137,7 @@ export default function UserHeader() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowHeaderSearch(window.scrollY > 320);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [anyMenuOpen]);
 
   const categoryLookup = useMemo(() => {
     const lookup = new Map<string, string>();
@@ -176,80 +157,98 @@ export default function UserHeader() {
     });
   };
 
-  const categories = useMemo<Category[]>(
-    () => [
-      {
-        label: "New Year Sale",
-        to: "/marketplace?tag=new-year",
-        icon: <Sparkles className="h-4 w-4 text-yellow-500" />,
-      },
-      {
-        label: "Beauty & Spas",
-        to: "/marketplace/beauty",
-        icon: <Leaf className="h-4 w-4 text-pink-500" />,
-        subTitle: "Beauty & Spas",
-        subItems: [
-          [
-            "Massage",
-            "Hair Removal",
-            "Face & Skin Care",
-            "Cosmetic Procedures",
-          ],
-          ["Spas", "Hair & Styling", "Health & Fitness", "Weight Loss"],
-          ["Nail Salons", "Dental", "Brows & Lashes", "Tanning"],
-        ],
-      },
-      {
-        label: "Things To Do",
-        to: "/marketplace/things-to-do",
-        icon: <Activity className="h-4 w-4 text-purple-500" />,
-      },
-      {
-        label: "Auto & Home",
-        to: "/marketplace/auto-home",
-        icon: <Home className="h-4 w-4 text-amber-500" />,
-      },
-      {
-        label: "Food & Drink",
-        to: "/marketplace/food",
-        icon: <Coffee className="h-4 w-4 text-orange-500" />,
-      },
-      {
-        label: "Gifts",
-        to: "/marketplace/gifts",
-        icon: <Gift className="h-4 w-4 text-rose-500" />,
-      },
-      {
-        label: "Local",
-        to: "/marketplace/local",
-        icon: <MapPin className="h-4 w-4 text-sky-500" />,
-      },
-      {
-        label: "Travel",
-        to: "/marketplace/travel",
-        icon: <Plane className="h-4 w-4 text-indigo-500" />,
-      },
-      {
-        label: "Goods",
-        to: "/marketplace/goods",
-        icon: <Box className="h-4 w-4 text-yellow-500" />,
-      },
-      {
-        label: "Coupons",
-        to: "/marketplace/coupons",
-        icon: <Ticket className="h-4 w-4 text-violet-500" />,
-      },
-    ],
+  const [hoveredMasterSlug, setHoveredMasterSlug] = useState<string | null>(null);
+  const [subCategoryCache, setSubCategoryCache] = useState<Record<string, ServiceCategory[]>>({});
+  const [isSubCategoriesLoading, setIsSubCategoriesLoading] = useState(false);
+  const [popoverTop, setPopoverTop] = useState(0);
+  const navContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const { data: masterCategories = [] } = useGetMasterCategoriesQuery();
+  const [fetchCategoriesForMaster] = useLazyGetServiceCategoriesByMasterQuery();
+
+  const plannedCategoryMap = useMemo(
+    () => new Map(plannedCategories.map((category) => [category.slug, category])),
     []
   );
 
-  const beautyCategory = categories.find((c) => c.label === "Beauty & Spas");
+  const hoveredMaster = hoveredMasterSlug
+    ? masterCategories.find((master) => master.slug === hoveredMasterSlug)
+    : undefined;
+  const hoveredMasterId = hoveredMaster?.id ?? null;
 
+  useEffect(() => {
+    if (!hoveredMasterId || subCategoryCache[hoveredMasterId]) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsSubCategoriesLoading(true);
+
+    fetchCategoriesForMaster(hoveredMasterId)
+      .unwrap()
+      .then((result: any) => {
+        if (!cancelled) {
+          setSubCategoryCache((prev) => ({
+            ...prev,
+            [hoveredMasterId]: result,
+          }));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSubCategoryCache((prev) => ({ ...prev, [hoveredMasterId]: [] }));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsSubCategoriesLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hoveredMasterId, fetchCategoriesForMaster, subCategoryCache]);
+
+  const hoveredPlannedCategory = hoveredMasterSlug
+    ? plannedCategoryMap.get(hoveredMasterSlug)
+    : undefined;
+  const hoveredSubCategories = hoveredMasterId
+    ? subCategoryCache[hoveredMasterId] ?? []
+    : [];
+  const HoveredIcon = hoveredPlannedCategory?.icon;
+  const megaMenuImageSrc =
+    hoveredPlannedCategory?.imageOptimized ?? hoveredPlannedCategory?.image;
+  const megaMenuImageSrcSet =
+    hoveredPlannedCategory?.imageOptimized && hoveredPlannedCategory?.image
+      ? `${hoveredPlannedCategory.imageOptimized} 640w, ${hoveredPlannedCategory.image} 1280w`
+      : undefined;
+  const subcategoryColumns = useMemo(() => {
+    // Only split when we have enough items to justify 2 columns; otherwise it
+    // creates a lot of dead space in the left panel.
+    const useTwoColumns = hoveredSubCategories.length > 10;
+    if (!useTwoColumns) {
+      return [hoveredSubCategories, []] as const;
+    }
+
+    const midpoint = Math.ceil(hoveredSubCategories.length / 2);
+    return [
+      hoveredSubCategories.slice(0, midpoint),
+      hoveredSubCategories.slice(midpoint),
+    ] as const;
+  }, [hoveredSubCategories]);
+  const [firstColumn, secondColumn] = subcategoryColumns;
+  const hasSecondSubcategoryColumn = secondColumn.length > 0;
   const handleHover = (
     _event: ReactMouseEvent<HTMLAnchorElement>,
-    label: string
+    slug: string
   ) => {
-    setHovered(label);
+    const containerRect = navContainerRef.current?.getBoundingClientRect();
+    if (containerRect) {
+      setPopoverTop(containerRect.height);
+    }
+
+    setHoveredMasterSlug(slug);
   };
 
   const accountName = useMemo(() => {
@@ -306,21 +305,80 @@ export default function UserHeader() {
     setProfileMenuOpen(false);
   };
 
-  const menuItems = [
-    { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
+  const menuItems = useMemo(
+    () => [
+      { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
+      {
+        label: "Notifications",
+        icon: <Bell className="h-4 w-4" />,
+        meta: notificationsBadge,
+      },
+    ],
+    [notificationsBadge],
+  );
 
-    {
-      label: "Notifications",
-      icon: <Bell className="h-4 w-4" />,
-      meta: "1",
-    },
-  ];
+  const handleNotificationSelect = async (notification: UserNotificationItem) => {
+    if (!notification.readAt) {
+      try {
+        await markNotificationRead(notification.id).unwrap();
+      } catch {
+        /* ignore */
+      }
+    }
+
+    setNotificationsMenuOpen(false);
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!unreadCount) return;
+    try {
+      await markAllRead().unwrap();
+    } catch {
+      /* ignore */
+    }
+  };
 
   const utilityLinks = [
     "Curated local moments",
     "Download the companion app",
     "24/7 help on live chat",
   ];
+
+  const dropdownMotion = useMemo(() => {
+    if (reduceMotion) {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.12 },
+      };
+    }
+
+    return {
+      initial: { opacity: 0, y: 10, scale: 0.98 },
+      animate: { opacity: 1, y: 0, scale: 1 },
+      exit: { opacity: 0, y: 10, scale: 0.98 },
+      transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const },
+    };
+  }, [reduceMotion]);
+
+  const megaMenuMotion = useMemo(() => {
+    if (reduceMotion) {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.12 },
+      };
+    }
+
+    return {
+      initial: { opacity: 0, y: 8 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: 8 },
+      transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] as const },
+    };
+  }, [reduceMotion]);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
@@ -335,18 +393,18 @@ export default function UserHeader() {
             </div>
             <div className="leading-tight">
               
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
+              <p className="text-sm font-semibold tracking-tight text-slate-500">
                 StadOnClick
               </p>
-              <p className="text-base font-semibold tracking-[0.1em] text-slate-900">
+              <p className="text-base font-semibold tracking-tight text-slate-900">
                 Discover Sweden
               </p>
             </div>
           </Link>
 
           <div className="flex-1">
-            {showHeaderSearch ? (
-              <div className="mx-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5">
+    
+              <div className="mx-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 transition-all duration-200 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100">
                 <input
                   type="search"
                   placeholder="Search salons, gyms, restaurants, events..."
@@ -366,16 +424,12 @@ export default function UserHeader() {
                   Search
                 </button>
               </div>
-            ) : (
-              <div className="text-xs font-medium uppercase tracking-[0.4em] text-slate-500">
-                Curated experiences. Local hosts. No filter needed.
-              </div>
-            )}
+            
           </div>
 
           <div className="flex items-center gap-3">
             <IconButton
-              icon={<Heart className="h-5 w-5 text-slate-500" />}
+              icon={<Bookmark className="h-5 w-5 text-slate-500" />}
               label="Wishlist"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -386,7 +440,7 @@ export default function UserHeader() {
             />
             <div ref={cartRef} className="relative">
               <IconButton
-                icon={<ShoppingCart className="h-5 w-5 text-slate-500" />}
+                icon={<ShoppingBag className="h-5 w-5 text-slate-500" />}
                 label="Cart"
                 badge="3"
                 onClick={() => {
@@ -396,62 +450,67 @@ export default function UserHeader() {
                 }}
               />
 
-              {cartMenuOpen && (
-                <div className="absolute right-0 top-full z-40 mt-2 w-[320px] rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)]">
-                  <div className="px-5 py-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          Shopping cart
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Ready when you are
-                        </p>
+              <AnimatePresence>
+                {cartMenuOpen ? (
+                  <motion.div
+                    {...dropdownMotion}
+                    className="absolute right-0 top-full z-40 mt-2 w-[320px] origin-top-right rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)] will-change-transform"
+                  >
+                    <div className="px-5 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            Shopping cart
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Ready when you are
+                          </p>
+                        </div>
+                        <span className="text-xs font-semibold text-sky-500">
+                          {cartPreviewItems.length} items
+                        </span>
                       </div>
-                      <span className="text-xs font-semibold text-sky-500">
-                        {cartPreviewItems.length} items
-                      </span>
-                    </div>
-                    <div className="mt-4 space-y-3">
-                      {cartPreviewItems.map((item) => (
-                        <div
-                          key={item.title}
-                          className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 px-3 py-2"
-                        >
-                          <div className="flex flex-col">
+                      <div className="mt-4 space-y-3">
+                        {cartPreviewItems.map((item) => (
+                          <div
+                            key={item.title}
+                            className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 px-3 py-2"
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold text-slate-900">
+                                {item.title}
+                              </span>
+                              <span className="text-xs text-slate-500">
+                                {item.detail}
+                              </span>
+                            </div>
                             <span className="text-sm font-semibold text-slate-900">
-                              {item.title}
-                            </span>
-                            <span className="text-xs text-slate-500">
-                              {item.detail}
+                              {item.price}
                             </span>
                           </div>
-                          <span className="text-sm font-semibold text-slate-900">
-                            {item.price}
-                          </span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                        <Link
+                          to="/cart"
+                          className="text-sky-600 transition hover:text-sky-900"
+                        >
+                          View cart
+                        </Link>
+                        <span className="text-xs font-semibold text-slate-500">
+                          Subtotal ${cartPreviewSubtotal.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-                      <Link
-                        to="/cart"
-                        className="text-sky-600 transition hover:text-sky-900"
-                      >
-                        View cart
-                      </Link>
-                      <span className="text-xs font-semibold text-slate-500">
-                        Subtotal ${cartPreviewSubtotal.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </div>
             <div ref={notificationsRef} className="relative">
               <IconButton
                 icon={<Bell className="h-5 w-5 text-slate-500" />}
                 label="Alerts"
-                badge="9"
+                badge={notificationsBadge}
                 onClick={() => {
                   setNotificationsMenuOpen((prev) => !prev);
                   setCartMenuOpen(false);
@@ -459,8 +518,12 @@ export default function UserHeader() {
                 }}
               />
 
-              {notificationsMenuOpen && (
-                <div className="absolute right-0 top-full z-40 mt-2 w-[320px] rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)]">
+              <AnimatePresence>
+                {notificationsMenuOpen ? (
+                  <motion.div
+                    {...dropdownMotion}
+                    className="absolute right-0 top-full z-40 mt-2 w-[320px] origin-top-right rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)] will-change-transform"
+                  >
                   <div className="px-5 py-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -473,25 +536,78 @@ export default function UserHeader() {
                       </div>
                       <button
                         type="button"
-                        className="text-xs font-semibold text-slate-400 transition hover:text-slate-700"
+                        className="text-xs font-semibold text-slate-500 transition hover:text-slate-900 disabled:text-slate-300"
+                        disabled={!unreadCount || isMarkAllReadLoading}
+                        onClick={handleMarkAllRead}
                       >
-                        Mark read
+                        Mark all read
                       </button>
                     </div>
-                    <ul className="mt-4 space-y-3 text-sm text-slate-600">
-                      {notificationItems.map((item) => (
-                        <li key={item.title} className="flex gap-3">
-                          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-sky-500"></span>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-900">
-                              {item.title}
-                            </p>
-                            <p className="text-xs text-slate-500">{item.time}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                  </div>
+                  <div className="border-t border-slate-100 bg-white">
+                    {notificationsError ? (
+                      <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
+                        Unable to load notifications
+                      </div>
+                    ) : isNotificationsLoading ? (
+                      <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
+                        Loading notifications...
+                      </div>
+                    ) : notificationsList.length ? (
+                      <ul className="max-h-[360px] space-y-2 overflow-auto px-2 py-2">
+                        {notificationsList.map((notification) => {
+                          const isUnread = !notification.readAt;
+                          return (
+                            <li key={notification.id}>
+                              <button
+                                type="button"
+                                onClick={() => handleNotificationSelect(notification)}
+                                className={cn(
+                                  "flex w-full items-start justify-between gap-3 rounded-2xl px-4 py-3 text-left transition",
+                                  isUnread
+                                    ? "bg-slate-50 hover:bg-slate-100"
+                                    : "bg-white hover:bg-slate-50",
+                                )}
+                              >
+                                <div className="flex flex-1 flex-col gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-semibold text-slate-900 truncate">
+                                      {notification.title}
+                                    </p>
+                                    {isUnread ? (
+                                      <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                                    ) : null}
+                                  </div>
+                                  {notification.body ? (
+                                    <p className="text-xs text-slate-500">
+                                      {notification.body}
+                                    </p>
+                                  ) : null}
+                                </div>
+                                <span className="text-[11px] text-slate-400">
+                                  {formatRelativeTime(notification.createdAt)}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center text-xs text-slate-500">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                          <Bell className="h-6 w-6" strokeWidth={1.8} />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          You're all caught up
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          We will keep you posted.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="border-t border-slate-100 px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
                       {utilityLinks.map((link) => (
                         <button
                           key={link}
@@ -503,8 +619,9 @@ export default function UserHeader() {
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </div>
             {user ? (
               <div ref={profileRef} className="relative">
@@ -519,8 +636,12 @@ export default function UserHeader() {
                   <span className="sr-only">{accountName}</span>
                 </button>
 
-                {profileMenuOpen && (
-                  <div className="absolute z-50 -right-[190%] mt-2 w-75 rounded-3xl border  bg-white shadow-[0_45px_90px_rgba(15,23,42,0.18)]">
+                <AnimatePresence>
+                  {profileMenuOpen ? (
+                    <motion.div
+                      {...dropdownMotion}
+                      className="absolute z-50 -right-[190%] mt-2 w-75 origin-top-right rounded-3xl border bg-white shadow-[0_45px_90px_rgba(15,23,42,0.18)] will-change-transform"
+                    >
                     <div className="flex items-center justify-between px-5 py-4 border-b border-sky-100">
                       <p className="text-sm font-semibold text-slate-900">
                         Hi, {greetingName}!
@@ -582,8 +703,9 @@ export default function UserHeader() {
                         Sign Out
                       </button>
                     </div>
-                  </div>
-                )}
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </div>
             ) : (
               <a
@@ -599,62 +721,169 @@ export default function UserHeader() {
       </div>
 
       <div className="border-t border-[#e6e6e6] bg-white shadow-sm">
-        <div className="relative" onMouseLeave={() => setHovered(null)}>
-          <div className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 overflow-x-auto px-4 py-3 sm:px-6">
-            {categories.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onMouseEnter={(event) => handleHover(event, item.label)}
-                className={({ isActive }) =>
-                  `${navLinkBase} ${
-                    isActive
-                      ? "text-blue-700"
-                      : "text-slate-700 hover:text-blue-600"
-                  }`
-                }
-              >
-                <span className="text-yellow-500">{item.icon}</span>
-                {item.label}
-              </NavLink>
-            ))}
+        <div className="relative" onMouseLeave={() => setHoveredMasterSlug(null)}>
+          <div
+            ref={navContainerRef}
+            className="relative mx-auto flex w-full max-w-8xl flex-wrap items-center justify-center gap-6 overflow-x-auto px-4 py-2 sm:px-6"
+          >
+            {masterCategories.map((master) => {
+              const planned = plannedCategoryMap.get(master.slug);
+              const IconComponent = planned?.icon;
+              const isHovered = hoveredMasterSlug === master.slug;
+              return (
+                <NavLink
+                  key={master.slug}
+                  to={`/services/${master.slug}`}
+                  onMouseEnter={(event) => handleHover(event, master.slug)}
+                  className={({ isActive }) =>
+                    cn(
+                      navLinkBase,
+                      (isActive || isHovered) && "bg-blue-50/60 text-blue-700 after:scale-x-100",
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={cn(
+                          "inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 transition-colors duration-200",
+                          (isActive || isHovered) && "bg-blue-100/70",
+                          !(isActive || isHovered) && "group-hover:bg-blue-100/70",
+                        )}
+                      >
+                        {IconComponent ? (
+                          <IconComponent
+                            className={cn(
+                              "h-4 w-4 text-slate-500 transition-colors duration-200 group-hover:text-blue-700",
+                              (isActive || isHovered) && "text-blue-700",
+                            )}
+                          />
+                        ) : (
+                          <Sparkles
+                            className={cn(
+                              "h-4 w-4 text-slate-500 transition-colors duration-200 group-hover:text-blue-700",
+                              (isActive || isHovered) && "text-blue-700",
+                            )}
+                          />
+                        )}
+                      </span>
+                      {master.name}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
           </div>
 
-          {hovered === "Beauty & Spas" && beautyCategory?.subItems && (
-            <div className=" absolute right-1/2 z-40  w-[520px]  rounded-3xl border border-sky-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.15)]">
-              <div className="px-8 py-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {beautyCategory.subTitle}
-                  </h3>
-                  <button
-                    className="text-sm font-semibold text-slate-500 hover:text-slate-900"
-                    onClick={() => setHovered(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-6 text-sm text-slate-600">
-                  {beautyCategory.subItems.slice(0, 2).map((col, colIndex) => (
-                    <ul key={colIndex} className="space-y-2">
-                      {col.map((entry) => (
-                        <li key={entry}>
-                          <Link
-                            to={`/marketplace/beauty?category=${encodeURIComponent(
-                              entry
-                            )}`}
-                            className="hover:text-blue-600 transition-colors"
-                          >
-                            {entry}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  ))}
+          <AnimatePresence>
+            {hoveredMaster ? (
+              <motion.div
+                key={hoveredMaster.slug}
+                {...megaMenuMotion}
+                className="absolute left-0 right-0 z-40 will-change-transform"
+                style={{ top: popoverTop }}
+              >
+              <div className="mx-auto w-full max-w-7xl overflow-hidden border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+                <div
+                  className={cn(
+                    "grid grid-cols-1",
+                    hasSecondSubcategoryColumn
+                      ? "md:grid-cols-[420px_1fr]"
+                      : "md:grid-cols-[340px_1fr]",
+                  )}
+                >
+                  <div className="px-8 py-8">
+                    <p className="text-xs font-semibold text-slate-500">
+                      Subcategories
+                    </p>
+
+                    {isSubCategoriesLoading && !hoveredSubCategories.length ? (
+                      <p className="mt-4 text-sm text-slate-500">
+                        Loading...
+                      </p>
+                    ) : hoveredSubCategories.length ? (
+                      <div
+                        className={cn(
+                          "mt-5 grid gap-x-8",
+                          hasSecondSubcategoryColumn ? "grid-cols-2" : "grid-cols-1",
+                        )}
+                      >
+                        <div className="space-y-3">
+                          {firstColumn.map((category) => (
+                            <Link
+                              key={category.id}
+                              to={`/services/${category.slug}`}
+                              className={cn(
+                                "group relative flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-900 transition-all duration-200",
+                                "before:absolute before:left-3 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-slate-200 before:content-['']",
+                                "pl-7 hover:-translate-y-[1px] hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
+                                "hover:before:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2",
+                              )}
+                            >
+                              <span className="truncate">{category.name}</span>
+                              <ChevronRight className="h-4 w-4 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
+                            </Link>
+                          ))}
+                        </div>
+                        {hasSecondSubcategoryColumn ? (
+                          <div className="space-y-3">
+                            {secondColumn.map((category) => (
+                              <Link
+                                key={category.id}
+                                to={`/services/${category.slug}`}
+                                className={cn(
+                                  "group relative flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-900 transition-all duration-200",
+                                  "before:absolute before:left-3 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-slate-200 before:content-['']",
+                                  "pl-7 hover:-translate-y-[1px] hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
+                                  "hover:before:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2",
+                                )}
+                              >
+                                <span className="truncate">{category.name}</span>
+                                <ChevronRight className="h-4 w-4 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
+                              </Link>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-sm text-slate-500">
+                        No subcategories available.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="relative min-h-[420px] bg-slate-100">
+                    {megaMenuImageSrc ? (
+                      <img
+                        src={megaMenuImageSrc}
+                        srcSet={megaMenuImageSrcSet}
+                        sizes="(min-width: 768px) 60vw, 100vw"
+                        alt={`${hoveredMaster.name} cover`}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        decoding="async"
+                        loading="eager"
+                      />
+                    ) : null}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-black/0" />
+                    <div className="absolute bottom-6 left-6 flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-900">
+                        {HoveredIcon ? (
+                          <HoveredIcon className="h-4 w-4" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 text-yellow-500" />
+                        )}
+                      </div>
+                      <p className="text-base font-semibold text-white drop-shadow">
+                        {hoveredMaster.name}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       </div>
     </header>
@@ -673,7 +902,7 @@ function IconButton({ icon, label, badge, onClick }: IconButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-white p-2 text-blue-700 transition hover:border-yellow-400"
+      className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-white p-2 text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2"
     >
       {icon}
       {badge ? (
@@ -684,6 +913,20 @@ function IconButton({ icon, label, badge, onClick }: IconButtonProps) {
       <span className="sr-only">{label}</span>
     </button>
   );
+}
+
+function formatRelativeTime(iso?: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const diffSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diffSeconds < 45) return "Just now";
+  if (diffSeconds < 3600) return `${Math.max(1, Math.floor(diffSeconds / 60))}m`;
+  if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`;
+  if (diffSeconds < 172800) return "Yesterday";
+
+  return date.toLocaleDateString();
 }
 
 

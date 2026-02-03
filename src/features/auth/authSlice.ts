@@ -10,6 +10,8 @@ export type AuthUser = {
   displayName: string;
   roles: string[];
   profileImageUrl: string | null;
+  status: string;
+  hasPassword: boolean;
 };
 
 type AuthState = {

@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "@/app/services/baseApi";
 import type { BasicProfileRequest } from "../types/basicProfile.types";
 import type { City } from "../types/city.types";
+import type { AuthUser } from "../auth/authSlice";
 
 export const authApi = createApi({
   reducerPath: "authApi",
@@ -40,7 +41,10 @@ export const authApi = createApi({
       }),
     }),
 
-    completeProfile: builder.mutation<any, BasicProfileRequest>({
+    completeProfile: builder.mutation<
+      { user: AuthUser; accessToken: string; refreshToken: string },
+      BasicProfileRequest
+    >({
       query: (body) => ({
         url: "/auth/basic-profile",
         method: "POST",
@@ -48,7 +52,7 @@ export const authApi = createApi({
       }),
     }),
 
-    getMe: builder.query<{ user: any }, void>({
+    getMe: builder.query<{ user: AuthUser }, void>({
       query: () => ({
         url: "/auth/me",
         method: "GET",
@@ -56,7 +60,7 @@ export const authApi = createApi({
       providesTags: ["User"],
     }),
 
-    login: builder.mutation<any, { email: string; password: string }>({
+    login: builder.mutation<{ user: AuthUser }, { email: string; password: string }>({
       query: (body) => ({
         url: "/auth/login",
         method: "POST",

@@ -11,7 +11,6 @@ import Home from "@/pages/Home";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
 import ServiceDetail from "@/pages/ServiceDetail";
-import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import Kyc from "@/pages/Kyc";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
@@ -71,8 +70,10 @@ import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
+import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import AppLayout from "@/components/layout/AppLayout";
+import WeekendActivities from "@/pages/WeekendActivities";
 import AdminLayout from "@/components/layout/AdminLayout";
 import VendorLayout from "@/components/layout/VendorLayout";
 
@@ -119,6 +120,15 @@ const appRouter = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: "/restaurants",
+            element: <RestaurantMarketplace />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/weekend-activities",
+            element: <WeekendActivities />,
+          },
+          {
             path: "/wishlist",
             element: <Wishlist />,
           },
@@ -127,11 +137,6 @@ const appRouter = createBrowserRouter([
             element: <About />,
           },
 
-          {
-            path: "/marketplace/restaurants",
-            element: <RestaurantMarketplace />,
-            errorElement: <ErrorPage />,
-          },
           {
             path: "/services/:serviceSlug",
             element: <ServiceDetail />,

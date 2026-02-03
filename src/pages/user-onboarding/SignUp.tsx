@@ -9,10 +9,11 @@ import { StepPersonalize } from "@/components/shared/user-onboarding/StepPersona
 import bgImage2 from "@/assets/user-onboarding/user-onboarding-2.png";
 import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png";
 import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png";
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { setUser } from "@/features/auth/authSlice";
 import {
+  authApi,
   useSendOtpMutation,
   useVerifyOtpMutation,
   useCompleteProfileMutation,
@@ -24,6 +25,7 @@ import { useForm, useFormState } from "react-hook-form";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import type { BasicProfileRequest } from "@/features/auth/types/basicProfile.types";
 import type { City } from "@/features/auth/types/city.types";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type FormValues = {
   phone: string;
@@ -46,7 +48,16 @@ type FormValues = {
 
 export default function SignUp() {
   const dispatch = useAppDispatch();
-  const [step, setStep] = useState(1);
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const initialStep = (() => {
+    const queryValue = Number(new URLSearchParams(location.search).get("step"));
+    if (!Number.isNaN(queryValue) && queryValue >= 4) return 4;
+    if (!Number.isNaN(queryValue) && queryValue >= 1 && queryValue <= 3) return queryValue;
+    return 1;
+  })();
+  const [step, setStep] = useState(initialStep);
 
   const { register, handleSubmit, control, setError, clearErrors, watch, setValue } = useForm<FormValues>({
     mode: "onChange",
@@ -81,6 +92,15 @@ export default function SignUp() {
   const [onboardingSessionId, setOnboardingSessionId] = useState<string | null>(
     null
   );
+
+  const handlePersonalizationComplete = () => {
+    dispatch(authApi.util.invalidateTags(["User"]));
+    if (currentUser) {
+      dispatch(setUser({ ...currentUser, status: "ACTIVE" }));
+    }
+    navigate("/", { replace: true });
+  };
+
 
   const handleSendOtp = useCallback(
     async (data: FormValues) => {
@@ -264,6 +284,13 @@ export default function SignUp() {
     register("termsAccepted");
   }, [register]);
 
+  useEffect(() => {
+    const queryValue = Number(new URLSearchParams(location.search).get("step"));
+    if (!Number.isNaN(queryValue) && queryValue >= 4) {
+      setStep((prev) => Math.max(prev, 4));
+    }
+  }, [location.search]);
+
   const getBackgroundImage = () => {
     switch (step) {
       case 1:
@@ -349,8 +376,8 @@ export default function SignUp() {
 
         {step === 4 && (
           <StepPersonalize
-            onNext={() => setStep(4)}
-            onSkip={() => setStep(4)}
+            onNext={handlePersonalizationComplete}
+            onSkip={handlePersonalizationComplete}
           />
         )}
       </OnboardingFormCard>

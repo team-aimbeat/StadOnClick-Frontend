@@ -18,12 +18,21 @@ import travel from "@/assets/Images/travel.jpg"
 import home from "@/assets/Images/home.jpg"
 import food from "@/assets/Images/food.jpg"
 import wash from "@/assets/Images/wash.jpg"
+import wellSm from "@/assets/Images/optimized/well-sm.jpg"
+import familySm from "@/assets/Images/optimized/family-sm.jpg"
+import learnSm from "@/assets/Images/optimized/learn-sm.jpg"
+import wellnessSm from "@/assets/Images/optimized/wellness-sm.jpg"
+import travelSm from "@/assets/Images/optimized/travel-sm.jpg"
+import homeSm from "@/assets/Images/optimized/home-sm.jpg"
+import foodSm from "@/assets/Images/optimized/food-sm.jpg"
+import washSm from "@/assets/Images/optimized/wash-sm.jpg"
 
 export type VendorServiceCategory = {
   name: string
   slug: string
   icon: IconType
   image: string
+  imageOptimized?: string
   highlights: string[]
   subcategories: string[]
   accent?: string
@@ -35,6 +44,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "experiences-activities",
     icon: HiOutlineSparkles,
     image: well,
+    imageOptimized: wellSm,
     highlights: [
       "Events around the city",
       "Concerts & Live Shows",
@@ -56,6 +66,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "health-wellness",
     icon: HiOutlineHeart,
     image: wellness,
+    imageOptimized: wellnessSm,
     highlights: [
       "Gym & fitness studios",
       "Yoga / meditation classes",
@@ -75,6 +86,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "kids-family",
     icon: HiOutlineUsers,
     image: family,
+    imageOptimized: familySm,
     highlights: [
       "Kids events",
       "Kids play areas & activities",
@@ -93,6 +105,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "learning-skill-development",
     icon: HiOutlineAcademicCap,
     image: learn,
+    imageOptimized: learnSm,
     highlights: [
       "Driving classes",
       "Workshops & short courses",
@@ -111,6 +124,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "home-personal-services",
     icon: HiOutlineHomeModern,
     image: wash,
+    imageOptimized: washSm,
     highlights: [
       "House help services",
       "Cleaning & car wash",
@@ -130,6 +144,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "travel-transportation",
     icon: HiOutlineMap,
     image: travel,
+    imageOptimized: travelSm,
     highlights: [
       "Cab services",
       "Ferry, bus & train information",
@@ -146,6 +161,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "food-leisure",
     icon: HiOutlineGlobeAlt,
     image: food,
+    imageOptimized: foodSm,
     highlights: [
       "Eateries & hotspots",
       "Cafes & restaurants",
@@ -162,6 +178,7 @@ export const plannedCategories: VendorServiceCategory[] = [
     slug: "real-estate-local-support",
     icon: HiOutlineBuildingOffice2,
     image: home,
+    imageOptimized: homeSm,
     highlights: [
       "Property brokers",
       "Local business listings",

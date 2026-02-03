@@ -1,19 +1,18 @@
-import { useEffect } from "react"
-import { useAppDispatch } from "@/app/hooks"
-import { setPageTitle } from "@/features/Layout/themeConfigSlice"
-import RestaurantExplorer from "@/components/marketplace/RestaurantExplorer"
+import { useEffect } from "react";
+import { useAppDispatch } from "@/app/hooks";
+import { setPageTitle } from "@/features/Layout/themeConfigSlice";
+import ServicesExplorer from "@/components/marketplace/ServicesExplorer";
 
 export default function RestaurantMarketplace() {
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(setPageTitle("Restaurants"))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    dispatch(setPageTitle("Restaurants"));
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900">
-      <RestaurantExplorer />
+      <ServicesExplorer />
     </div>
-  )
+  );
 }

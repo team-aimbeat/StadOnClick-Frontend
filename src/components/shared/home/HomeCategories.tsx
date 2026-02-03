@@ -20,57 +20,54 @@ type CategoryCard = {
 
 const categories: CategoryCard[] = [
   {
-    category: "Spa",
+    category: "Health & Wellness",
     image: salon,
-    author: "Alina Fraser",
-    title: "Hair Spa in Sweden",
-    description: "Deep nourishment, relaxing care, and healthy shine.",
-    location: "Pokbechi, Chicago, IL, USA",
-    price: "₹220",
-    slug: "salon-deals",
+    author: "Top picks",
+    title: "Studios, yoga, and spa escapes",
+    description: "Gym, yoga, meditation, massage and spa services.",
+    location: "Stockholm, SE",
+    price: "From $25",
+    slug: "health-wellness",
   },
   {
-    category: "Restro",
+    category: "Food & Leisure",
     image: Restro,
-    author: "Alina Fraser",
-    title: "Everyday Dining Spot",
-    description: "Comfort food, great taste, and a welcoming atmosphere.",
-    location: "MBS, Dhaka",
-    price: "₹550",
-    slug: "buffet-deals",
-    restaurantSlug: "serenity-bistro",
+    author: "Local favorites",
+    title: "Cafes, restaurants, and hotspots",
+    description: "Eateries, cafes, and weekend markets to explore.",
+    location: "Stockholm, SE",
+    price: "From $15",
+    slug: "food-leisure",
   },
   {
-    category: "Hotel",
+    category: "Travel & Transportation",
     image: hotel,
-    author: "Eva Martin",
-    title: "Comfortable Hotel Stay",
-    description: "Modern amenities, peaceful comfort, and friendly service.",
-    location: "The Square, NK, USA",
-    price: "₹250",
-    slug: "restaurant-deals",
+    author: "On the go",
+    title: "Cab, ferry, bus, and courier",
+    description: "Transportation and logistics around the city.",
+    location: "Stockholm, SE",
+    price: "From $10",
+    slug: "travel-transportation",
   },
   {
-    category: "Beauty",
+    category: "Kids & Family",
     image: beauty,
-    author: "Kian Bailey",
-    title: "Luxury Beauty Experience",
-    description:
-      "Expert treatments with relaxing ambience and flawless results.",
-    location: "The Square, NK, USA",
-    price: "₹50",
-    slug: "buffet-deals",
+    author: "Family time",
+    title: "Kids events and play activities",
+    description: "Play areas, hobby classes, and birthday parties.",
+    location: "Stockholm, SE",
+    price: "From $12",
+    slug: "kids-family",
   },
   {
-    category: "Wedding",
+    category: "Experiences & Activities",
     image: wedding,
-    author: "Ava Patel",
-    title: "Premium Wedding Glam",
-    description:
-      "Expert artistry with refined elegance and lasting beauty.",
-    location: "The Square, NK, USA",
-    price: "₹180",
-    slug: "new-deals",
+    author: "Explore",
+    title: "Tours, museums, concerts, and more",
+    description: "City events, attractions, and places to visit.",
+    location: "Stockholm, SE",
+    price: "From $8",
+    slug: "experiences-activities",
   },
 ]
 
@@ -87,16 +84,16 @@ export default function HomeCategories() {
           {categories.map((card) => (
             <article
               key={card.title}
-            className="group cursor-pointer overflow-hidden rounded-sm border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="group cursor-pointer overflow-hidden rouded-sm border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
             onClick={() => {
-              if (card.restaurantSlug) {
-                navigate("/marketplace/restaurants")
+              if (card.slug) {
+                navigate(`/marketplace?category=${card.slug}`)
                 return
               }
               navigate(`/marketplace?category=${card.slug}`)
             }}
             >
-              <div className="relative h-[160px]">
+              <div className="relative h-40">
                 <img
                   src={card.image}
                   alt={card.title}
