@@ -24,15 +24,6 @@ const sidebarSections = [
   { id: "preview", label: "Preview" },
 ];
 
-const checklist = [
-  { label: "Add business description", done: true },
-  { label: "Upload KYC documents", done: false },
-  { label: "Connect Stripe payouts", done: false },
-  { label: "Publish 3+ services", done: true },
-  { label: "Respond to new leads", done: true },
-  { label: "Share recent photos", done: false },
-];
-
 const VendorProfile = () => {
   const dispatch = useAppDispatch();
   const [activeSection, setActiveSection] = useState("info");
@@ -142,6 +133,25 @@ const VendorProfile = () => {
     ];
   }, [profileData, serviceOverview]);
 
+  const completenessItems = useMemo(() => {
+    const profile = profileData?.data;
+
+    if (!profile) {
+      return [];
+    }
+
+    const servicesCount = profile._count?.services ?? 1;
+
+    return [
+      { label: "Add business details", done: Boolean(profile.description?.trim()) },
+      { label: "Upload KYC documents", done: profile.kycStatus !== "NOT_SUBMITTED" },
+      { label: "Connect Stripe payouts", done: profile.payoutsEnabled },
+      { label: "Publish  services", done: servicesCount >= 1 },
+      { label: "Respond to new leads", done: profile.totalBookings > 0 },
+      { label: "Share recent photos", done: Boolean(profile.seoImageKey) },
+    ];
+  }, [profileData]);
+
   if (loading || isLoadingProfile) {
     return (
       <DashboardContainer className="py-10">
@@ -200,10 +210,10 @@ const VendorProfile = () => {
               Profile completeness
             </p>
             <div className="space-y-3 text-sm">
-              {checklist.map((item) => (
+              {completenessItems.map((item) => (
                 <div key={item.label} className="flex items-center gap-2.5">
                   {item.done ? (
-                    <HiOutlineCheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <HiOutlineCheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                   ) : (
                     <HiOutlineClock className="w-5 h-5 text-amber-400 flex-shrink-0" />
                   )}

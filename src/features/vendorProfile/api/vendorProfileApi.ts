@@ -31,6 +31,7 @@ export interface VendorProfile {
   seoTitle: string | null;
   seoDescription: string | null;
   seoKeywords: string[];
+  seoImageKey: string | null;
   stripeAccountId: string | null;
   payoutsEnabled: boolean;
   chargesEnabled: boolean;
@@ -40,6 +41,9 @@ export interface VendorProfile {
   ratingCount: number;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    services: number;
+  };
 }
 
 export interface VendorProfileResponse {
