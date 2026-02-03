@@ -1,11 +1,29 @@
-import { BadgeCheck, BadgeCheckIcon, Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
+import { BadgeCheck, Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
-import { useState } from "react"
-import { services } from "@/data/services"
+import { useEffect, useMemo, useState } from "react"
 import salon1 from "@/assets/images/salon1.png"
 import salon2 from "@/assets/images/salon2.png"
 import salon3 from "@/assets/images/salon3.png"
-import verify from "@/assets/images/check_in.png"
+import { BookingModal } from "@/components/booking/BookingModal"
+import { slotStatusLegend, slotStatusMeta, SlotOption, SlotStatus } from "@/components/booking/slotData"
+import { useAppSelector } from "@/app/hooks"
+
+import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
+import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
+import {
+  useGetServiceOfferingsQuery,
+  useLazyGetOfferingSlotsQuery,
+  VendorOffering,
+  VendorSlot,
+} from "@/services/vendorOfferingsApi"
+import { DateTime } from "luxon"
+import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
+import { useApplyCouponMutation, useCreateOrderMutation } from "@/services/vendorOrdersApi"
+import { Button } from "@/components/ui/button"
+import { ServiceGallery } from "@/components/shared/ServiceGallery";
+import { Badge } from "@/components/ui/badge"
+import { LocationMap } from "@/components/marketplace/Map/LocationMap"
+import toast from "react-hot-toast"
 
 
 type ReviewCard = {
@@ -19,45 +37,6 @@ type ReviewCard = {
   location: string
 }
 
-const reviewCards: ReviewCard[] = [
-  {
-    id: "review-1",
-    name: "Nitya Shah",
-    initials: "NS",
-    role: "Wellness editor",
-    rating: 5,
-    text: "The team choreographed every detail—translating my tired body into a soft, glowing ritual. The facilities felt bespoke.",
-    date: "Apr 22, 2025",
-    location: "Birmingham, AL",
-  },
-  {
-    id: "review-2",
-    name: "Lara Bennett",
-    initials: "LB",
-    role: "Beauty therapist",
-    rating: 4.9,
-    text: "Bookended by calming lounges and curated playlists, the massage and facial pairings are a perfect unwind.",
-    date: "Mar 13, 2025",
-    location: "Homewood, AL",
-  },
-  {
-    id: "review-3",
-    name: "Amelia Soto",
-    initials: "AS",
-    role: "Studio founder",
-    rating: 4.8,
-    text: "Signature therapists kept my skin radiant the whole week, and the studio was spotless from lobby to treatment room.",
-    date: "Jan 17, 2025",
-    location: "Mountain Brook, AL",
-  },
-]
-
-const metricHighlights = [
-  { label: "Ambiance", value: 4.8 },
-  { label: "Cleanliness", value: 4.7 },
-  { label: "Service flow", value: 4.9 },
-]
-
 const starBreakdown = [
   { label: "5 ⭐", percent: 72 },
   { label: "4 ⭐", percent: 17 },
@@ -66,23 +45,281 @@ const starBreakdown = [
   { label: "1 ⭐", percent: 1 },
 ]
 
-import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
-import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
-import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
-import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { LocationMap } from "@/components/marketplace/Map/LocationMap"
+const STOCKHOLM_TIMEZONE = "Europe/Stockholm"
+
+const formatSlotLabel = (start: string, end?: string | null) => {
+  const formatTime = (value: string) =>
+    DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE).toFormat("HH:mm")
+
+  const startLabel = formatTime(start)
+  if (!end) return startLabel
+  const endLabel = formatTime(end)
+  return `${startLabel} - ${endLabel}`
+}
+
+const getStockholmDateKey = (value?: Date | string) => {
+  if (!value) return ""
+  const dt =
+    typeof value === "string"
+      ? DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE)
+      : DateTime.fromJSDate(value).setZone(STOCKHOLM_TIMEZONE)
+  return dt.toISODate()
+}
+
+const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
+  if (slot.status !== "OPEN") {
+    return "unavailable"
+  }
+
+  const capacity = Math.max(slot.capacity ?? 1, 1)
+  const remaining = Math.max(slot.remaining ?? 0, 0)
+  const threshold = Math.max(1, Math.ceil(capacity * 0.25))
+  return remaining <= threshold ? "few" : "available"
+}
+
+const formatSlotSeats = (slot: VendorSlot) => {
+  const capacity = Math.max(slot.capacity ?? 0, 0)
+  const remaining = Math.max(slot.remaining ?? 0, 0)
+  return `${remaining} / ${capacity} seats`
+}
+
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "SEK",
+  minimumFractionDigits: 0,
+})
+
+const formatCurrency = (value: number) => currencyFormatter.format(value)
+
+type CartItem = {
+  offering: VendorOffering
+  quantity: number
+  slotId: string | null
+}
 
 const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
 
 export default function ServiceDetail() {
   const navigate = useNavigate()
   const { serviceSlug } = useParams<{ serviceSlug?: string }>()
+  const userId = useAppSelector((state) => state.auth.user?.id)
+  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
+  const [applyCoupon, { isLoading: isApplyingCoupon }] = useApplyCouponMutation()
 
   const [userRating, setUserRating] = useState(0)
   const [userComment, setUserComment] = useState("")
   const [hoverRating, setHoverRating] = useState(0)
+  const [activeTab, setActiveTab] = useState<"services" | "description">("services")
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => new Date())
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
+  const selectedDateIso = selectedDate
+    ? DateTime.fromJSDate(selectedDate)
+        .setZone(STOCKHOLM_TIMEZONE, { keepLocalTime: true })
+        .toISODate()
+    : ""
+  const formattedSelectedDate = selectedDate
+    ? new Intl.DateTimeFormat("default", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+    }).format(selectedDate)
+    : "Pick a date"
+  const [isBookingModalOpen, setBookingModalOpen] = useState(false)
+  const [bookedOffering, setBookedOffering] = useState<VendorOffering | null>(null)
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [promoCode, setPromoCode] = useState("")
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string
+    discountType: string
+    value: number
+  } | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  const resetCoupon = () => {
+    setCouponDiscount(0)
+    setAppliedCoupon(null)
+    setCouponError(null)
+  }
+  const [fetchOfferingSlots, { data: fetchedSlots }] = useLazyGetOfferingSlotsQuery()
+
+  useEffect(() => {
+    if (bookedOffering) {
+      fetchOfferingSlots({
+        offeringId: bookedOffering.id,
+        vendorId: VENDOR_ID,
+      })
+    }
+  }, [bookedOffering, fetchOfferingSlots])
+
+  const slotsForBookedOffering = useMemo(
+    () => (bookedOffering ? fetchedSlots ?? bookedOffering.slots ?? [] : []),
+    [bookedOffering, fetchedSlots],
+  )
+
+  const slotsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return slotsForBookedOffering
+    return slotsForBookedOffering.filter((slot) => {
+      const slotDate = getStockholmDateKey(slot.startTime)
+      return slotDate === selectedDateIso
+    })
+  }, [slotsForBookedOffering, selectedDateIso, selectedDate])
+
+  const bookingSlotOptions = useMemo<SlotOption[]>(() => {
+    return slotsForSelectedDate.map((slot) => ({
+      id: slot.id,
+      label: formatSlotLabel(slot.startTime, slot.endTime),
+      status: determineSlotStatus(slot),
+      seats: formatSlotSeats(slot),
+    }))
+  }, [slotsForSelectedDate])
+  const selectedSlot = bookingSlotOptions.find((slot) => slot.id === selectedSlotId)
+  const requiresSlot =
+    (bookedOffering?.usesSlots ?? false) || slotsForBookedOffering.length > 0
+
+  const addOrUpdateCartItem = (offering: VendorOffering, slotId: string | null) => {
+    resetCoupon()
+    setCartItems((prev) => {
+      const exists = prev.find((item) => item.offering.id === offering.id)
+      if (exists) {
+        return prev.map((item) =>
+          item.offering.id === offering.id ? { ...item, slotId: slotId ?? item.slotId } : item
+        )
+      }
+      return [...prev, { offering, quantity: 1, slotId }]
+    })
+  }
+
+  const updateCartQuantity = (offeringId: string, delta: number) => {
+    resetCoupon()
+    setCartItems((prev) =>
+      prev
+        .map((item) => {
+          if (item.offering.id !== offeringId) return item
+          const nextQuantity = Math.max(item.quantity + delta, 1)
+          return { ...item, quantity: nextQuantity }
+        })
+        .filter((item) => item.quantity > 0)
+    )
+  }
+
+  const handleRemoveCartItem = (offeringId: string) => {
+    resetCoupon()
+    setCartItems((prev) => prev.filter((item) => item.offering.id !== offeringId))
+  }
+
+  const cartSubtotal = cartItems.reduce(
+    (sum, item) => sum + item.offering.salePrice * item.quantity,
+    0
+  )
+  const cartTaxRate = 0.12
+  const cartTaxes = cartSubtotal * cartTaxRate
+  const cartDiscount = couponDiscount
+  const cartTotal = cartSubtotal + cartTaxes
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return
+    if (cartItems.length === 0) {
+      toast.success("Add services to your cart before applying a coupon.")
+      return
+    }
+
+    try {
+      const response = await applyCoupon({
+        vendorId: VENDOR_ID,
+        promoCode: promoCode.trim(),
+        subtotal: cartSubtotal,
+      }).unwrap()
+
+      setCouponDiscount(response.data.discount)
+      setAppliedCoupon(response.data.coupon)
+      setCouponError(null)
+      toast.success(`Coupon ${response.data.coupon.code} applied`)
+    } catch (error: any) {
+      resetCoupon()
+      setCouponError(
+        error?.data?.message || error?.error || "Coupon is not valid for this cart",
+      )
+    }
+  }
+
+  const openBookingModal = (offering: VendorOffering) => {
+    setBookedOffering(offering)
+    setSelectedSlotId(null)
+    setBookingModalOpen(true)
+  }
+
+  const handleBookClick = (offering: VendorOffering) => {
+    const slots = offering.slots ?? []
+    const slotCount = slots.length
+    const requiresSlot = offering.usesSlots || slotCount > 0
+
+    if (requiresSlot) {
+      if (slotCount === 0) {
+        toast.success("Slots are unavailable for this service at the moment.")
+        return
+      }
+      openBookingModal(offering)
+      return
+    }
+
+    addOrUpdateCartItem(offering, null)
+    toast.success("Added service to your cart. Checkout when ready.")
+  }
+
+  const handleCloseBooking = () => {
+    setBookingModalOpen(false)
+    setSelectedSlotId(null)
+    setBookedOffering(null)
+  }
+
+  const handleConfirmBooking = () => {
+    if (!bookedOffering) return
+    if (requiresSlot && !selectedSlot) {
+      toast.success("Please choose a slot before confirming.")
+      return
+    }
+
+    addOrUpdateCartItem(
+      bookedOffering,
+      requiresSlot ? selectedSlot?.id ?? null : null
+    )
+    toast.success("Added service to your cart. Checkout when ready.")
+    handleCloseBooking()
+  }
+
+  const handleCheckoutCart = async () => {
+    if (cartItems.length === 0) {
+      toast.success("Add at least one service to your order before booking.")
+      return
+    }
+    if (!userId) {
+      toast.success("Sign in to confirm a booking before proceeding.")
+      return
+    }
+
+    try {
+      const order = await createOrder({
+        userId,
+        vendorId: VENDOR_ID,
+        items: cartItems.map((item) => ({
+          offeringId: item.offering.id,
+          quantity: item.quantity,
+          slotId: item.slotId ?? undefined,
+        })),
+        promoCode: appliedCoupon?.code || undefined,
+      }).unwrap()
+
+      toast.success(
+        `Order confirmed (${formatCurrency(order.summary.total)}). We will notify the vendor shortly.`
+      )
+      setCartItems([])
+      setPromoCode("")
+      resetCoupon()
+    } catch (error) {
+      console.error("Failed to create order:", error)
+      toast.success("We could not save the booking. Please try again.")
+    }
+  }
 
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
 
@@ -90,7 +327,11 @@ export default function ServiceDetail() {
   const { data: vendorServices, isLoading: servicesLoading } = useGetVendorServicesQuery(VENDOR_ID)
 
   // Find the specific service matching the slug
-  const service = vendorServices?.find((s) => s.name.toLowerCase().replace(/ /g, '-') === serviceSlug) || vendorServices?.[0]
+  const service = vendorServices?.find((s) =>
+    typeof s.name === 'string'
+      ? s.name.toLowerCase().replace(/ /g, '-') === serviceSlug
+      : false
+  ) || vendorServices?.[0]
   const serviceId = service?.id
 
   // 2. Fetch Media (isolated)
@@ -104,11 +345,11 @@ export default function ServiceDetail() {
   const handleSubmitReview = async () => {
     if (!serviceId) return
     if (userRating === 0) {
-      alert("Please select a rating")
+      toast.success("Please select a rating")
       return
     }
     if (!userComment.trim()) {
-      alert("Please enter a comment")
+      toast.success("Please enter a comment")
       return
     }
 
@@ -120,10 +361,10 @@ export default function ServiceDetail() {
       }).unwrap()
       setUserRating(0)
       setUserComment("")
-      alert("Review submitted successfully!")
+      toast.success("Review submitted successfully!")
     } catch (err) {
       console.error("Failed to submit review:", err)
-      alert("Failed to submit review. Please try again.")
+      toast.success("Failed to submit review. Please try again.")
     }
   }
 
@@ -135,21 +376,33 @@ export default function ServiceDetail() {
     return <div className="flex min-h-screen items-center justify-center">Service not found</div>
   }
 
-  const galleryImages = media?.filter(m => m.type === 'IMAGE').map(m => m.signedUrl) || [salon1, salon2, salon3]
+  const galleryImages = media?.filter(m => m.type === "IMAGE").map((m) => m.signedUrl) || [salon1, salon2, salon3]
+  const tabs: { id: "services" | "description"; label: string }[] = [
+    { id: "services", label: "Services" },
+    { id: "description", label: "Description" },
+  ]
+  const serviceDescription =
+    service.description ||
+    "Our team curates a premium experience for every guest—scroll through the service options to choose what fits your visit."
 
+  const statusStyles: Record<string, string> = {
+    DRAFT: "bg-yellow-100 text-yellow-700",
+    PAUSED: "bg-red-100 text-red-700",
+    LIVE: "bg-green-100 text-green-700",
+  }
 
   return (
-    <section className="min-h-screen bg-[#F4F6FA] py-4 text-slate-700 ">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 lg:px-8 ">
+    <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 ">
         <button
           type="button"
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 mt-4" />
           Back to services
         </button>
-        <div className="rounded-3xl bg-white p-8 ">
+        <div className="rounded-xl ">
           <div className="grid gap-6 lg:grid-cols-[0.fr_1.5fr]">
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -182,44 +435,18 @@ export default function ServiceDetail() {
                   </button>
                 </div>
               </div>
-              <div className="grid gap-5 lg:grid-cols-[1.50fr_0.9fr]">
-                <div className="aspect-4/3 w-full overflow-hidden  bg-slate-100 shadow-inner">
-                  <img
-                    src={galleryImages[0]}
-                    alt={`${service.name} hero`}
-                    className="h-full w-full  rounded-2xl"
-                  />
-                </div>
-                <div className="flex flex-col gap-4">
-                  {galleryImages.slice(1).map((image) => (
-                    <div
-                      key={image}
-                      className="relative h-57 w-full overflow-hidden  bg-slate-100 "
-                    >
-                      <img
-                        src={image}
-                        alt={`${service.name} gallery`}
-                        className="h-full w-full object-cover rounded-2xl"
-                      />
-                    </div>
-                  ))}
-           <button className="absolute mt-105 right-96 rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold shadow hover:bg-white">
-          See all photos
-        </button>
-                </div>
-              </div>
+              <ServiceGallery 
+                galleryImages={galleryImages} 
+                serviceName={service.name} 
+              />
               <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 {service.status && (
-                  <span className="rounded-full border border-slate-200 px-3 py-1">
+                  <span className={`rounded-full border border-slate-200 px-3 py-1 text-sm font-semibold ${statusStyles[service.status] ?? "border-slate-200 text-slate-700"}`}>
                     {service.status}
                   </span>
                 )}
-                {/* {service.category && (
-                  <span className="rounded-full border border-slate-200 px-3 py-1">
-                    Category ID: {service.category.id}
-                  </span>
-                )} */}
               </div>
+
             </div>
 
             {/* <div className="space-y-5 rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm">
@@ -246,72 +473,263 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-5 rounded-3xl bg-white p-8 ">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  Services
-                </h2>
+        <div className="grid gap-6 grid-cols-5">
+          <div className="col-span-3">
+                <div className="space-y-5 rounded-3xl bg-white p-8 ">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Services
+              </h2>
+              <p className="text-sm text-slate-500">
+                Choose a ritual that suits your mood
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-slate-500">
+              {offerings?.length || 0} packages
+            </span>
+          </div>
+          <div className="mt-4 flex gap-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  activeTab === tab.id
+                    ? "border-blue-500 bg-blue-50 text-blue-600"
+                    : "border-slate-200 bg-slate-100 text-slate-500"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-5">
+            {activeTab === "services" ? (
+              <div className="space-y-4">
+                {offerings?.map((offering) => {
+                   const slotCount = offering.slots?.length ?? 0
+                   const requiresSlot = offering.usesSlots || slotCount > 0
+                   const buttonLabel = requiresSlot
+                     ? slotCount > 0
+                       ? "Book"
+                       : "Slots unavailable"
+                     : "Add to cart"
+                  const isSlotUnavailable = requiresSlot && slotCount === 0
+                  return (
+                  <div
+                    key={offering.id}
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                  >
+                    <div>
+                      <p className="text-base font-semibold text-slate-900">
+                        {offering.name}
+                      </p>
+                      <p className="text-xs text-slate-500">{offering.id}</p>
+                      <p className="text-xs font-semibold text-slate-400">
+                        Max Qty: {offering.maxQuantity || "N/A"}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-3">
+                      <span className="text-lg font-bold text-slate-900">
+                        ${offering.salePrice}
+                      </span>
+                      <button 
+                        className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
+                          isSlotUnavailable ? "bg-slate-300 cursor-not-allowed opacity-60" : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
+                        }`}
+     
+                        disabled={isSlotUnavailable}
+                        onClick={() => handleBookClick(offering)}
+                      >
+                        {buttonLabel}
+                      </button>
+                    </div>
+                  </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
                 <p className="text-sm text-slate-500">
-                  Choose a ritual that suits your mood
+                  {serviceDescription}
+                </p>
+
+                <p className="text-xs text-slate-400">
+                  {`We keep this experience updated—check the services tab to explore current offerings.`}
                 </p>
               </div>
-              <span className="text-sm font-semibold text-slate-500">
-                {offerings?.length || 0} packages
+            )}
+          </div>
+        </div>
+          </div>
+    
+     <div className="col-span-2">
+           <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Your order</h3>
+                <p className="text-xs text-slate-500">
+                  Added services appear here. Adjust quantity anytime.
+                </p>
+              </div>
+              <span className="text-xs text-slate-400">
+                {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
               </span>
             </div>
-            <div className="space-y-4">
-              {offerings?.map((offering) => (
-                <div
-                  key={offering.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+            {cartItems.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Choose a service from the list to start your booking.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <div
+                    key={item.offering.id}
+                    className="flex items-start justify-between gap-4"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.offering.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {item.offering.description ?? "Premium experience"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCartItem(item.offering.id)}
+                        className="mt-2 text-xs font-semibold text-blue-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {formatCurrency(item.offering.salePrice)} per person
+                      </p>
+                      <div className="mt-2 flex items-center justify-end gap-2 rounded-full  px-2 py-1">
+                        <button
+                          type="button"
+                          className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                          onClick={() => updateCartQuantity(item.offering.id, -1)}
+                        >
+                          −
+                        </button>
+                        <span className="text-sm font-semibold text-slate-900">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                          onClick={() => updateCartQuantity(item.offering.id, 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-slate-900">Wallet & promo</h4>
+              <p className="text-xs text-slate-500">
+                Apply discount or use StadOnClick wallet balance.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  placeholder="Enter promo code"
+                  className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                />
+                <Button
+                  variant={'default'}
+                  onClick={handleApplyPromo}
+                  disabled={!promoCode.trim() || isApplyingCoupon}
+                  className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
                 >
-                  <div>
-                    <p className="text-base font-semibold text-slate-900">
-                      {offering.name}
-                    </p>
-                    <p className="text-xs text-slate-500">{offering.id}</p>
-                    <p className="text-xs font-semibold text-slate-400">
-                      Max Qty: {offering.maxQuantity || "N/A"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-3">
-                    <span className="text-lg font-bold text-slate-900">
-                      ${offering.salePrice}
-                    </span>
-                    <button className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-600">
-                      Reserve
-                    </button>
-                  </div>
+                  {isApplyingCoupon ? "Checking..." : "Apply"}
+                </Button>
+              </div>
+              {couponError && (
+                <p className="text-xs font-semibold text-red-600">{couponError}</p>
+              )}
+              {appliedCoupon && (
+                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+                  <span>
+                    Coupon {appliedCoupon.code} applied ({appliedCoupon.discountType === "FLAT" ? formatCurrency(appliedCoupon.value) : `${appliedCoupon.value}%`})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetCoupon()
+                      setPromoCode("")
+                    }}
+                    className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                  >
+                    Remove
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
+
+            <div className="border-t border-dashed border-slate-200 pt-4">
+            <div className="flex items-center justify-between text-sm text-slate-500">
+              <span>Subtotal</span>
+              <span className="text-slate-900">{formatCurrency(cartSubtotal)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-slate-500">
+                <span>Taxes</span>
+                <span className="text-slate-900">{formatCurrency(cartTaxes)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-slate-500">
+                <span>Discount</span>
+                <span className="text-emerald-600">
+                  −{formatCurrency(cartDiscount)}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
+                <span>Total</span>
+                <span>{formatCurrency(cartTotal)}</span>
+              </div>
+            </div>
+            <Button
+              onClick={handleCheckoutCart}
+              className="w-full"
+              disabled={cartItems.length === 0 || isCreatingOrder}
+            >
+              {isCreatingOrder ? "Processing..." : "Confirm booking"}
+            </Button>
           </div>
+     </div>
+        </div>
 
-       <div className="space-y-5 rounded-3xl bg-white max-w-[600px] p-8">
-  <div className="flex items-center justify-between">
-    <h2 className="text-xl font-semibold text-slate-900">
-      About the spa
-    </h2>
+    <div className="space-y-5">
+          <div className="space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-slate-900">
+                About the spa
+              </h2>
 
-    <a
-      href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-sm  font-semibold text-blue-600 hover:underline"
-    >
-      Directions
-    </a>
-  </div>
+              <a
+                href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-blue-600 hover:underline"
+              >
+                Directions
+              </a>
+            </div>
 
-  <LocationMap
-    lat={19.136326}
-
-    lng={72.827660}
-    name={service.name}
-  />
-</div>
+            <LocationMap
+              lat={19.136326}
+              lng={72.827660}
+              name={service.name}
+            />
+          </div>
        
         </div>
 
@@ -323,7 +741,7 @@ export default function ServiceDetail() {
               {["AC Rooms", "Parking Available", "Family Friendly"].map((amenity) => (
                 <div
                   key={amenity}
-                  className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white px-6 py-4 shadow-sm transition hover:shadow-md"
+                  className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4"
                 >
                   <div className="h-2 w-2 rounded-full bg-emerald-500" />
                   <span className="text-[15px] font-medium text-slate-700">{amenity}</span>
@@ -569,6 +987,26 @@ export default function ServiceDetail() {
 
 
       </div>
+
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        serviceName={service.name}
+        bookedOfferingName={bookedOffering?.name}
+        selectedDate={selectedDate}
+        selectedSlot={selectedSlot}
+        selectedSlotId={selectedSlotId}
+        formattedSelectedDate={formattedSelectedDate}
+        selectedDateIso={selectedDateIso}
+        slotOptions={bookingSlotOptions}
+        slotStatusLegend={slotStatusLegend}
+        slotStatusMeta={slotStatusMeta}
+        requiresSlot={requiresSlot}
+        isLoading={isCreatingOrder}
+        onSelectDate={(date) => setSelectedDate(date)}
+        onSelectSlot={(slotId) => setSelectedSlotId(slotId)}
+        onClose={handleCloseBooking}
+        onConfirm={handleConfirmBooking}
+      />
     </section>
   )
 }

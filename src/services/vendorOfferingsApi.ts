@@ -120,6 +120,23 @@ export const vendorOfferingsApi = createApi({
       ],
     }),
 
+    getOfferingSlots: builder.query<VendorSlot[], { offeringId: string; vendorId?: string }>({
+      query: ({ offeringId, vendorId }) => {
+        const params = vendorId ? `?vendorId=${vendorId}` : "";
+        return `/vendor/slots/offering/${offeringId}${params}`;
+      },
+      providesTags: (result, error, { offeringId }) =>
+        result
+          ? [
+              ...result.map((slot) => ({
+                type: "VendorOffering" as const,
+                id: slot.id,
+              })),
+              { type: "VendorOffering", id: offeringId },
+            ]
+          : [{ type: "VendorOffering", id: offeringId }],
+    }),
+
     deleteServiceOfferings: builder.mutation<{ count: number }, string>({
       query: (serviceId) => ({
         url: `/vendor/offerings/service/${serviceId}`,
@@ -138,4 +155,5 @@ export const {
   useCreateSlotMutation,
   useCreateRuleMutation,
   useDeleteServiceOfferingsMutation,
+  useLazyGetOfferingSlotsQuery,
 } = vendorOfferingsApi;
