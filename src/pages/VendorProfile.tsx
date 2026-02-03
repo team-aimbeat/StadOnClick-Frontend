@@ -7,6 +7,8 @@ import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
 import { useMockLoader } from "@/lib/useMockLoader";
+import { useGetVendorProfileQuery, useUpdateVendorProfileMutation } from "@/features/vendorProfile/api/vendorProfileApi";
+import type { BusinessHour } from "@/features/vendorProfile/api/vendorProfileApi";
 
 const tabs = [
   { id: "info", label: "Profile Info" },
@@ -14,35 +16,6 @@ const tabs = [
   { id: "contact", label: "Contact & Location" },
   { id: "hours", label: "Business Hours" },
   { id: "preview", label: "Preview" },
-];
-
-const profileDetails = {
-  name: "UrbanFix Plumbing & Heating",
-  slug: "urbanfix-plumbing-heating",
-  description: "24/7 emergency plumbing, heating, and water purifier services across Mumbai & Pune with verified technicians.",
-  email: "hello@urbanfix.co",
-  phone: "+91 99230 44519",
-  city: "Mumbai",
-  address: "Unit B-403, Neptune Tower, Lower Parel, Mumbai 400013",
-  tags: ["Emergency servicеs", "Household", "Commercial", "Gas service"],
-};
-
-const seoDraft = {
-  title: "UrbanFix Plumbing & Heating | 24/7 Emergency Support",
-  description:
-    "Trust UrbanFix for plumbing, heating, and healing water systems. Verified vendors, SLAs, and transparent pricing for Mumbai homes.",
-  keywords: ["plumbing", "gas fitting", "water purifier", "emergency services", "UrbanFix"],
-  snippetUrl: "https://stadonclick.com/vendors/urbanfix-plumbing-heating",
-};
-
-const hours = [
-  { day: "Mon", value: "07:00 - 21:00" },
-  { day: "Tue", value: "07:00 - 21:00" },
-  { day: "Wed", value: "07:00 - 21:00" },
-  { day: "Thu", value: "07:00 - 21:00" },
-  { day: "Fri", value: "07:00 - 21:00" },
-  { day: "Sat", value: "08:00 - 22:00" },
-  { day: "Sun", value: "09:00 - 20:00" },
 ];
 
 const checklist = [
@@ -58,9 +31,54 @@ const VendorProfile = () => {
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("info");
   const [savedStatus, setSavedStatus] = useState("");
-  const [indexable, setIndexable] = useState(true);
   const loading = useMockLoader();
   const saveTimerRef = useRef<number | undefined>(undefined);
+
+  // API hooks
+  const { data: profileData, isLoading: isLoadingProfile, error: profileError } = useGetVendorProfileQuery();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateVendorProfileMutation();
+
+  // Local state for editable fields
+  const [businessName, setBusinessName] = useState("");
+  const [description, setDescription] = useState("");
+  const [headquarters, setHeadquarters] = useState("");
+  const [serviceOverview, setServiceOverview] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
+  const [isIndexable, setIsIndexable] = useState(true);
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Initialize form fields when data is loaded
+  useEffect(() => {
+    if (profileData?.data) {
+      const profile = profileData.data;
+      setBusinessName(profile.businessName || "");
+      setDescription(profile.description || "");
+      setHeadquarters(profile.headquarters || "");
+      setServiceOverview(profile.serviceOverview || "");
+      setSeoTitle(profile.seoTitle || "");
+      setSeoDescription(profile.seoDescription || "");
+      setSeoKeywords(profile.seoKeywords || []);
+      setIsIndexable(profile.isIndexable);
+      setContactEmail(profile.contactEmail || "");
+      setContactPhone(profile.contactPhone || "");
+      
+      // Ensure businessHours is always an array
+      const hours = profile.businessHours;
+      if (Array.isArray(hours)) {
+        setBusinessHours(hours);
+      } else if (hours && typeof hours === 'object') {
+        // If it's an object but not an array, try to convert it
+        setBusinessHours([]);
+      } else {
+        setBusinessHours([]);
+      }
+    }
+  }, [profileData]);
 
   useEffect(() => {
     dispatch(setPageTitle("Business Profile"));
@@ -72,26 +90,50 @@ const VendorProfile = () => {
     };
   }, []);
 
-  const handleSave = () => {
-    setSavedStatus("Profile saved");
-    window.clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = window.setTimeout(() => {
-      setSavedStatus("");
-    }, 1800);
+  const handleSave = async () => {
+    try {
+      await updateProfile({
+        businessName,
+        description: description || null,
+        headquarters: headquarters || null,
+        serviceOverview,
+        seoTitle: seoTitle || null,
+        seoDescription: seoDescription || null,
+        seoKeywords,
+        isIndexable,
+        contactEmail: contactEmail || null,
+        contactPhone: contactPhone || null,
+        businessHours: businessHours.length > 0 ? businessHours : undefined,
+      }).unwrap();
+
+      setSavedStatus("Profile saved");
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = window.setTimeout(() => {
+        setSavedStatus("");
+      }, 1800);
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      setSavedStatus("Failed to save");
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = window.setTimeout(() => {
+        setSavedStatus("");
+      }, 1800);
+    }
   };
 
-  const infoFields = useMemo(
-    () => [
-      { label: "Business name", value: profileDetails.name },
-      { label: "StadonClick slug", value: profileDetails.slug },
-      { label: "Headquarters", value: profileDetails.address },
-      { label: "City", value: profileDetails.city },
-      { label: "Services focus", value: profileDetails.tags.join(" • ") },
-    ],
-    []
-  );
+  const infoFields = useMemo(() => {
+    if (!profileData?.data) return [];
+    const profile = profileData.data;
+    return [
+      { label: "Business name", value: profile.businessName },
+      { label: "StadonClick slug", value: profile.slug },
+      { label: "Headquarters", value: profile.headquarters || "Not set" },
+      { label: "City", value: profile.city?.name || "Not set" },
+      { label: "Services focus", value: serviceOverview || "Not set" },
+    ];
+  }, [profileData, serviceOverview]);
 
-  if (loading) {
+  if (loading || isLoadingProfile) {
     return (
       <DashboardContainer className="space-y-4 py-8">
         <div className="space-y-3">
@@ -109,6 +151,18 @@ const VendorProfile = () => {
     );
   }
 
+  if (profileError) {
+    return (
+      <DashboardContainer className="space-y-4 py-8">
+        <TitleBreadCrumbs title="Business Profile" breadCrumbTitle="Vendor / Business Profile" />
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center">
+          <p className="text-sm font-semibold text-red-900">Failed to load profile</p>
+          <p className="text-xs text-red-600 mt-1">Please try refreshing the page</p>
+        </div>
+      </DashboardContainer>
+    );
+  }
+
   return (
     <DashboardContainer className="space-y-5 pb-8">
       <TitleBreadCrumbs title="Business Profile" breadCrumbTitle="Vendor / Business Profile" />
@@ -118,8 +172,8 @@ const VendorProfile = () => {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Identity</p>
-              <h2 className="text-xl font-semibold text-slate-900">{profileDetails.name}</h2>
-              <p className="text-sm font-semibold text-slate-600">{profileDetails.address}</p>
+              <h2 className="text-xl font-semibold text-slate-900">{profileData?.data?.businessName || "Loading..."}</h2>
+              <p className="text-sm font-semibold text-slate-600">{profileData?.data?.headquarters || "Not set"}</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="space-y-1 text-right text-xs font-semibold text-slate-500">
@@ -127,12 +181,12 @@ const VendorProfile = () => {
                 <p>Indexable</p>
               </div>
               <div className="space-y-1">
-                <StatusPill status="PENDING_REVIEW" />
-                <StatusPill status={indexable ? "Active" : "Hidden"} tone={indexable ? "success" : "danger"} size="sm" />
+                <StatusPill status={profileData?.data?.status || "PENDING_REVIEW"} />
+                <StatusPill status={isIndexable ? "Active" : "Hidden"} tone={isIndexable ? "success" : "danger"} size="sm" />
               </div>
             </div>
           </div>
-          <p className="text-sm text-slate-700 leading-relaxed">{profileDetails.description}</p>
+          <p className="text-sm text-slate-700 leading-relaxed">{description || "No description available"}</p>
           <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
             <NavLink
               to="/vendor/services"
@@ -148,7 +202,7 @@ const VendorProfile = () => {
             </NavLink>
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
               <HiOutlineShieldCheck className="h-4 w-4 text-emerald-500" />
-              {profileDetails.email}
+              {contactEmail || "No email set"}
             </span>
           </div>
         </div>
@@ -191,7 +245,7 @@ const VendorProfile = () => {
           ))}
           <button
             type="button"
-            onClick={() => setIndexable((prev) => !prev)}
+            onClick={() => setIsIndexable((prev) => !prev)}
             className="ml-auto rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 sm:ml-0"
           >
             Toggle Indexable
@@ -226,8 +280,8 @@ const VendorProfile = () => {
                   <input
                     type="text"
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                    value={seoDraft.title}
-                    readOnly
+                    value={seoTitle}
+                    onChange={(e) => setSeoTitle(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1 text-sm">
@@ -235,8 +289,8 @@ const VendorProfile = () => {
                   <input
                     type="text"
                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                    value={seoDraft.keywords.join(", ")}
-                    readOnly
+                    value={seoKeywords.join(", ")}
+                    onChange={(e) => setSeoKeywords(e.target.value.split(",").map(k => k.trim()))}
                   />
                 </div>
               </div>
@@ -245,15 +299,15 @@ const VendorProfile = () => {
                 <textarea
                   rows={3}
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                  value={seoDraft.description}
-                  readOnly
+                  value={seoDescription}
+                  onChange={(e) => setSeoDescription(e.target.value)}
                 />
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Preview snippet</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{seoDraft.title}</p>
-                <p className="text-xs text-blue-600">{seoDraft.snippetUrl}</p>
-                <p className="text-sm text-slate-600">{seoDraft.description}</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">{seoTitle || "No title set"}</p>
+                <p className="text-xs text-blue-600">https://stadonclick.com/vendors/{profileData?.data?.slug || ""}</p>
+                <p className="text-sm text-slate-600">{seoDescription || "No description set"}</p>
               </div>
             </div>
           )}
@@ -264,13 +318,13 @@ const VendorProfile = () => {
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Contact</p>
                 <div className="text-sm text-slate-900">
                   <p>
-                    <HiOutlinePhone className="inline h-4 w-4 text-blue-500" /> {profileDetails.phone}
+                    <HiOutlinePhone className="inline h-4 w-4 text-blue-500" /> {contactPhone || "Not set"}
                   </p>
                   <p>
-                  <HiOutlineEnvelope className="inline h-4 w-4 text-emerald-500" /> {profileDetails.email}
+                  <HiOutlineEnvelope className="inline h-4 w-4 text-emerald-500" /> {contactEmail || "Not set"}
                   </p>
                   <p>
-                  <HiOutlineMapPin className="inline h-4 w-4 text-amber-500" /> {profileDetails.city}
+                  <HiOutlineMapPin className="inline h-4 w-4 text-amber-500" /> {profileData?.data?.city?.name || "Not set"}
                   </p>
                 </div>
                 <NavLink
@@ -292,18 +346,68 @@ const VendorProfile = () => {
             </div>
           )}
 
+
           {activeTab === "hours" && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {hours.map((slot) => (
-                <div
-                  key={slot.day}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
-                >
-                  <span>{slot.day}</span>
-                  <span>{slot.value}</span>
-                </div>
-              ))}
-              <div className="col-span-1 sm:col-span-2 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {businessHours && businessHours.length > 0 ? (
+                  businessHours.map((slot: BusinessHour, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    >
+                      <input
+                        type="text"
+                        value={slot.day}
+                        onChange={(e) => {
+                          const updated = [...businessHours];
+                          updated[index] = { ...slot, day: e.target.value };
+                          setBusinessHours(updated);
+                        }}
+                        className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm font-semibold text-slate-900"
+                        placeholder="Mon"
+                      />
+                      <input
+                        type="text"
+                        value={slot.value}
+                        onChange={(e) => {
+                          const updated = [...businessHours];
+                          updated[index] = { ...slot, value: e.target.value };
+                          setBusinessHours(updated);
+                        }}
+                        className="flex-1 rounded-lg border border-slate-300 px-2 py-1 text-sm font-semibold text-slate-900"
+                        placeholder="09:00 - 17:00"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = businessHours.filter((_, i) => i !== index);
+                          setBusinessHours(updated);
+                        }}
+                        className="rounded-lg bg-red-50 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-100"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-1 sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 text-center">
+                    No business hours set. Click "Add Hours" to get started.
+                  </div>
+                )}
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  setBusinessHours([...businessHours, { day: "", value: "" }]);
+                }}
+                className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-100"
+              >
+                + Add Hours
+              </button>
+              
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
                 Add holiday exceptions or block slots before you leave town.
               </div>
             </div>
@@ -314,10 +418,10 @@ const VendorProfile = () => {
               <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Public preview</p>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900">{profileDetails.name}</p>
+                  <p className="text-sm font-semibold text-slate-900">{profileData?.data?.businessName || "Loading..."}</p>
                   <StatusPill status="LIVE" tone="success" size="sm" />
                 </div>
-                <p className="text-sm text-slate-600">{profileDetails.description}</p>
+                <p className="text-sm text-slate-600">{description || "No description available"}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
                   <span>4.6 ★ (188 reviews)</span>
                   <span>Verified</span>
@@ -345,9 +449,10 @@ const VendorProfile = () => {
             <button
               type="button"
               onClick={handleSave}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              disabled={isUpdating}
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save profile
+              {isUpdating ? "Saving..." : "Save profile"}
             </button>
             {savedStatus && <span className="text-emerald-600">{savedStatus}</span>}
           </div>
