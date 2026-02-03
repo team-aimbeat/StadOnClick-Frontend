@@ -68,7 +68,7 @@ const cartPreviewSubtotal = cartPreviewItems.reduce(
 );
 
 const navLinkBase =
-  "relative flex items-center gap-1 text-xs sm:text-sm whitespace-nowrap font-semibold text-slate-700 transition-colors duration-200";
+  "relative whitespace-nowrap py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 transition-colors duration-200";
 
 export default function UserHeader() {
   const profileRef = useRef<HTMLDivElement | null>(null);
@@ -96,7 +96,7 @@ export default function UserHeader() {
   const [markAllRead, { isLoading: isMarkAllReadLoading }] = useMarkAllReadMutation();
   const notificationsList = (notificationsResponse?.data ?? []) as UserNotificationItem[];
   const fallbackUnreadCount = notificationsList.filter((notification) => !notification.readAt).length;
-  const unreadCount = unreadResponse?.data?.count ?? fallbackUnreadCount;
+  const unreadCount = unreadResponse?.count ?? fallbackUnreadCount;
   const isEmptyNotifications = !notificationsList.length && !isNotificationsFetching;
   const isNotificationsLoading = isNotificationsFetching && !notificationsList.length;
   const notificationsBadge = unreadCount > 0 ? String(unreadCount) : undefined;
@@ -162,10 +162,8 @@ export default function UserHeader() {
   const [hoveredMasterSlug, setHoveredMasterSlug] = useState<string | null>(null);
   const [subCategoryCache, setSubCategoryCache] = useState<Record<string, ServiceCategory[]>>({});
   const [isSubCategoriesLoading, setIsSubCategoriesLoading] = useState(false);
-  const [popoverLeft, setPopoverLeft] = useState(0);
   const [popoverTop, setPopoverTop] = useState(0);
   const navContainerRef = useRef<HTMLDivElement | null>(null);
-  const POPOVER_WIDTH = 520;
 
   const { data: masterCategories = [] } = useGetMasterCategoriesQuery();
   const [fetchCategoriesForMaster] = useLazyGetServiceCategoriesByMasterQuery();
@@ -221,34 +219,21 @@ export default function UserHeader() {
     ? subCategoryCache[hoveredMasterId] ?? []
     : [];
   const HoveredIcon = hoveredPlannedCategory?.icon;
-
+  const subcategoryColumns = useMemo(() => {
+    const midpoint = Math.ceil(hoveredSubCategories.length / 2);
+    return [
+      hoveredSubCategories.slice(0, midpoint),
+      hoveredSubCategories.slice(midpoint),
+    ];
+  }, [hoveredSubCategories]);
+  const [firstColumn, secondColumn] = subcategoryColumns;
   const handleHover = (
     event: ReactMouseEvent<HTMLAnchorElement>,
     slug: string
   ) => {
-    const target = event.currentTarget as HTMLElement;
     const containerRect = navContainerRef.current?.getBoundingClientRect();
     if (containerRect) {
-      const targetRect = target.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportRight = viewportWidth - 16;
-      const globalMinLeft = 16;
-      const maxAllowedLeft = viewportRight - POPOVER_WIDTH;
-      const finalGlobalMax = Math.max(maxAllowedLeft, globalMinLeft);
-
-      let desiredLeftGlobal = targetRect.left;
-      if (desiredLeftGlobal + POPOVER_WIDTH > viewportRight) {
-        desiredLeftGlobal = targetRect.right - POPOVER_WIDTH;
-      }
-
-      desiredLeftGlobal = Math.min(desiredLeftGlobal, finalGlobalMax);
-      desiredLeftGlobal = Math.max(desiredLeftGlobal, globalMinLeft);
-
-      const relativeLeft = desiredLeftGlobal - containerRect.left;
-      const maxRelative = Math.max(containerRect.width - POPOVER_WIDTH, 0);
-      setPopoverLeft(Math.min(Math.max(relativeLeft, 0), maxRelative));
-
-      setPopoverTop(containerRect.height + 10);
+      setPopoverTop(containerRect.height);
     }
 
     setHoveredMasterSlug(slug);
@@ -360,10 +345,10 @@ export default function UserHeader() {
             </div>
             <div className="leading-tight">
               
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
+              <p className="text-sm font-semibold tracking-tight text-slate-500">
                 StadOnClick
               </p>
-              <p className="text-base font-semibold tracking-[0.1em] text-slate-900">
+              <p className="text-base font-semibold tracking-tight text-slate-900">
                 Discover Sweden
               </p>
             </div>
@@ -676,31 +661,24 @@ export default function UserHeader() {
         <div className="relative" onMouseLeave={() => setHoveredMasterSlug(null)}>
           <div
             ref={navContainerRef}
-            className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 overflow-x-auto px-4 py-3 sm:px-6"
+            className="relative mx-auto flex w-full max-w-8xl flex-wrap items-center justify-center gap-6 overflow-x-auto px-4 py-2 sm:px-6"
           >
             {masterCategories.map((master) => {
-              const planned = plannedCategoryMap.get(master.slug);
-              const IconComponent = planned?.icon;
+              const isHovered = hoveredMasterSlug === master.slug;
               return (
                 <NavLink
                   key={master.slug}
                   to={`/services/${master.slug}`}
                   onMouseEnter={(event) => handleHover(event, master.slug)}
                   className={({ isActive }) =>
-                    `${navLinkBase} ${
-                      isActive
-                        ? "text-blue-700"
-                        : "text-slate-700 hover:text-blue-600"
-                    }`
+                    cn(
+                      navLinkBase,
+                      (isActive || isHovered) &&
+                        "text-slate-900 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-slate-900 after:content-['']",
+                      !(isActive || isHovered) && "hover:text-slate-900",
+                    )
                   }
                 >
-                  <span className="text-yellow-500">
-                    {IconComponent ? (
-                      <IconComponent className="h-4 w-4 text-yellow-500" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 text-yellow-500" />
-                    )}
-                  </span>
                   {master.name}
                 </NavLink>
               );
@@ -709,85 +687,76 @@ export default function UserHeader() {
 
           {hoveredMaster && (
             <div
-              className="absolute z-40 w-[520px] rounded-xl border border-slate-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.12)]"
-              style={{ left: popoverLeft, top: popoverTop }}
+              className="absolute left-0 right-0 z-40"
+              style={{ top: popoverTop }}
             >
-              <div className="px-6 py-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50 text-blue-600">
-                      {HoveredIcon ? (
-                        <HoveredIcon className="h-4 w-4" />
-                      ) : (
-                        <Sparkles className="h-4 w-4 text-yellow-500" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900">
-                        {hoveredMaster.name}
-                      </h3>
-                      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
-                        master category
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    className="text-sm font-semibold text-slate-500 transition hover:text-slate-900"
-                    onClick={() => setHoveredMasterSlug(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-                <div className="mt-4 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-                  <div>
-                    <p className="text-[10px] font-semibold tracking-[0.3em] text-slate-400">
-                      Sub categories
+              <div className="mx-auto w-full max-w-7xl overflow-hidden border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+                <div className="grid grid-cols-1 md:grid-cols-[420px_1fr]">
+                  <div className="px-10 py-8">
+                    <p className="text-xs font-semibold text-slate-500">
+                      Subcategories
                     </p>
-                    <div className="mt-3 min-h-[150px] text-sm text-slate-700">
-                      {isSubCategoriesLoading && !hoveredSubCategories.length ? (
-                        <p className="text-sm text-slate-500">Loading categories…</p>
-                      ) : hoveredSubCategories.length ? (
-                        <div className="grid grid-cols-2 gap-3">
-                          {hoveredSubCategories.map((category) => (
+
+                    {isSubCategoriesLoading && !hoveredSubCategories.length ? (
+                      <p className="mt-4 text-sm text-slate-500">
+                        Loading...
+                      </p>
+                    ) : hoveredSubCategories.length ? (
+                      <div className="mt-5 grid grid-cols-2 gap-x-10">
+                        <div className="space-y-3">
+                          {firstColumn.map((category) => (
                             <Link
                               key={category.id}
                               to={`/services/${category.slug}`}
-                              className="block rounded-md border border-transparent px-2.5 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                              className="block text-sm font-medium text-slate-900 transition hover:text-slate-700"
                             >
                               {category.name}
                             </Link>
                           ))}
                         </div>
-                      ) : (
-                        <p className="text-sm text-slate-500">No categories available yet.</p>
-                      )}
-                    </div>
-                    {hoveredPlannedCategory?.highlights?.length ? (
-                      <div className="mt-3">
-                        <p className="text-[10px] font-semibold tracking-[0.3em] text-slate-400">
-                          Highlights
-                        </p>
-                        <ul className="mt-2 space-y-1 text-sm text-slate-600">
-                          {hoveredPlannedCategory.highlights.map((item) => (
-                            <li key={item} className="flex items-start gap-2">
-                              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-slate-400" />
-                              <span>{item}</span>
-                            </li>
+                        <div className="space-y-3">
+                          {secondColumn.map((category) => (
+                            <Link
+                              key={category.id}
+                              to={`/services/${category.slug}`}
+                              className="block text-sm font-medium text-slate-900 transition hover:text-slate-700"
+                            >
+                              {category.name}
+                            </Link>
                           ))}
-                        </ul>
+                        </div>
                       </div>
-                    ) : null}
+                    ) : (
+                      <p className="mt-4 text-sm text-slate-500">
+                        No subcategories available.
+                      </p>
+                    )}
                   </div>
-                  {hoveredPlannedCategory?.image ? (
-                    <div className="self-start overflow-hidden rounded-lg border border-slate-200 bg-slate-50 aspect-[16/9]">
+
+                  <div className="relative min-h-[420px] bg-slate-100">
+                    {hoveredPlannedCategory?.image ? (
                       <img
                         src={hoveredPlannedCategory.image}
                         alt={`${hoveredMaster.name} cover`}
-                        className="h-full w-full object-cover"
+                        className="absolute inset-0 h-full w-full object-cover"
                         loading="lazy"
                       />
+                    ) : null}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-black/0" />
+                    <div className="absolute bottom-6 left-6 flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-900">
+                        {HoveredIcon ? (
+                          <HoveredIcon className="h-4 w-4" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 text-yellow-500" />
+                        )}
+                      </div>
+                      <p className="text-base font-semibold text-white drop-shadow">
+                        {hoveredMaster.name}
+                      </p>
                     </div>
-                  ) : null}
+                  </div>
                 </div>
               </div>
             </div>
