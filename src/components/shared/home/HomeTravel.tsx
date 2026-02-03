@@ -16,7 +16,16 @@ const mindItems = [
   { name: "Buffet", image: buffet, slug: "buffet" },
 ];
 
-export default function HomeMind() {
+const kidsFamilyItems = [
+  { name: "Kids Events", image: event, slug: "Kids Events" },
+  { name: "Play Areas", image: spa, slug: "Play Areas" },
+  { name: "Educational", image: yoga, slug: "Educational" },
+  { name: "Activities", image: party, slug: "Activities" },
+  { name: "Hobby Classes", image: salon, slug: "Hobby Classes" },
+  { name: "Birthday Parties", image: event, slug: "Birthday Parties" },
+];
+
+export default function HomeTravel() {
   const navigate = useNavigate();
 
   return (
@@ -36,7 +45,7 @@ export default function HomeMind() {
             >
               {/* Circle with WHITE BORDER */}
               <div
-                className="mx-auto flex h-[147px] w-[147px] items-center justify-center
+                className="mx-auto flex h-36.75 w-36.75 items-center justify-center
                            rounded-full 
                            shadow-md transition-transform duration-300
                            group-hover:scale-105"
@@ -53,6 +62,39 @@ export default function HomeMind() {
               </p>
             </button>
           ))}
+        </div>
+
+        <div className="mt-12">
+          <h3 className="text-[32px] font-semibold text-black sm:text-2xl tracking-wide">
+            Popular for Kids &amp; Family
+          </h3>
+          <div className="mt-6 grid grid-cols-3 gap-6 sm:grid-cols-6">
+            {kidsFamilyItems.map((item) => (
+              <button
+                key={item.slug}
+                type="button"
+                onClick={() => navigate(`/place/${item.slug}`)}
+                className="group text-center"
+              >
+                <div
+                  className="mx-auto flex h-[147px] w-[147px] items-center justify-center
+                           rounded-full 
+                           shadow-md transition-transform duration-300
+                           group-hover:scale-105"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </div>
+
+                <p className="mt-3 text-[17px] font-semibold text-black">
+                  {item.name}
+                </p>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </section>

@@ -12,6 +12,8 @@ import icon5 from "@/assets/icons/s5.png"
 import icon6 from "@/assets/icons/s6.png"
 import icon7 from "@/assets/icons/s7.png"
 import icon8 from "@/assets/icons/s8.png"
+import { useAppDispatch } from "@/app/hooks"
+import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 
 const deals = [
   {
@@ -105,7 +107,7 @@ export default function DealDetail() {
           <img
             src={deal.image}
             alt={deal.title}
-            className="h-[320px] w-full object-cover sm:h-[360px]"
+            className="h-80 w-full object-cover sm:h-90"
           />
           <div className="px-6 py-6 sm:px-8">
             <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl">

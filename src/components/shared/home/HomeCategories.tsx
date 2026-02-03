@@ -87,16 +87,16 @@ export default function HomeCategories() {
           {categories.map((card) => (
             <article
               key={card.title}
-            className="group cursor-pointer overflow-hidden rounded-sm border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="group cursor-pointer overflow-hidden rouded-sm border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
             onClick={() => {
-              if (card.restaurantSlug) {
-                navigate("/marketplace/restaurants")
+              if (card.slug) {
+                navigate(`/marketplace?category=${card.slug}`)
                 return
               }
               navigate(`/marketplace?category=${card.slug}`)
             }}
             >
-              <div className="relative h-[160px]">
+              <div className="relative h-40">
                 <img
                   src={card.image}
                   alt={card.title}

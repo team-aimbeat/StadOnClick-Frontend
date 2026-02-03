@@ -2,10 +2,12 @@ import heroImage from "@/assets/images/event.svg";
 import highlightImage from "@/assets/images/wheel.svg";
 import bowlingImage from "@/assets/images/bowling.svg";
 import waterImage from "@/assets/images/aqua.svg";
+import { useNavigate } from "react-router-dom";
 
 export default function Addvertise() {
+  const navigate = useNavigate();
   return (
-    <section className="mt-20">
+    <section className="mt-10">
       <div className="mx-auto max-w-7xl">
 
         {/* SECTION HEADING */}
@@ -13,16 +15,14 @@ export default function Addvertise() {
           <h3 className="text-[30px] font-bold text-black tracking-wider">
             Weekend Activities & Experiences
           </h3>
-          <p className="mt-2 text-[16px] text-slate-600">
-            Discover fun things to do this weekend around you.
-          </p>
+       
         </div>
 
         {/* MAIN GRID */}
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
 
           {/* LEFT BIG CARD */}
-          <article className="relative min-h-[560px] overflow-hidden  bg-[#E5E5E5]">
+          <article className="relative min-h-140 overflow-hidden bg-[#E5E5E5]">
             <div className="absolute bottom-8 left-8 z-10 max-w-xs">
               <h4 className="text-[28px] font-semibold text-slate-900">
                 Weekend Activities
@@ -32,7 +32,11 @@ export default function Addvertise() {
                 Find top-rated places for friends, couples, and families nearby.
               </p>
 
-              <button className="mt-4 h-[48px] w-[200px] rounded-full border border-slate-300 bg-white text-[14px] font-semibold tracking-widest">
+              <button
+                type="button"
+                onClick={() => navigate("/weekend-activities")}
+                className="mt-4 h-12 w-50 rounded-full border border-slate-300 bg-white text-[14px] font-semibold tracking-widest transition hover:border-slate-400"
+              >
                 Explore Activities
               </button>
             </div>
@@ -40,7 +44,7 @@ export default function Addvertise() {
             <img
               src={heroImage}
               alt="Weekend activity"
-              className="absolute bottom-0 right-0 h-[420px] w-[320px] object-contain"
+              className="absolute bottom-0 right-0 h-105 w-[320px] object-contain"
             />
           </article>
 
@@ -48,7 +52,7 @@ export default function Addvertise() {
           <div className="grid gap-5">
 
             {/* HIGHLIGHT CARD */}
-            <article className="relative min-h-[270px] overflow-hidden  bg-black p-6 text-white">
+            <article className="relative min-h-67.5 overflow-hidden  bg-black p-6 text-white">
               <span className="inline-flex rounded-lg bg-white/10 px-3 py-1 text-[12px] uppercase tracking-widest">
                 Weekend Highlight
               </span>
@@ -61,7 +65,11 @@ export default function Addvertise() {
                   Go-karting, trampoline parks, indoor climbing.
                 </p>
 
-                <button className="mt-4 h-[36px] w-[120px] rounded-full bg-white text-[14px] font-medium text-black">
+                <button
+                  type="button"
+                  onClick={() => navigate("/weekend-activities")}
+                  className="mt-4 h-9 w-30 rounded-full bg-white text-[14px] font-medium text-black transition hover:bg-slate-100"
+                >
                   Explore
                 </button>
               </div>
@@ -78,7 +86,7 @@ export default function Addvertise() {
 
               {/* BOWLING */}
               <article
-                className="relative min-h-[260px] overflow-hidden  bg-cover bg-center p-6 text-white"
+                className="relative min-h-65 overflow-hidden  bg-cover bg-center p-6 text-white"
                 style={{ backgroundImage: `url(${bowlingImage})` }}
               >
                 <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-[12px] uppercase tracking-widest">
@@ -93,7 +101,11 @@ export default function Addvertise() {
                     Bowling · Arcade · VR
                   </p>
 
-                  <button className="mt-3 h-[36px] w-[120px] rounded-full bg-white text-[14px] text-black">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/weekend-activities")}
+                    className="mt-3 h-9 w-30 rounded-full bg-white text-[14px] text-black transition hover:bg-slate-100"
+                  >
                     Explore
                   </button>
                 </div>
@@ -101,7 +113,7 @@ export default function Addvertise() {
 
               {/* WATER PARK */}
               <article
-                className="relative min-h-[260px] overflow-hidden  bg-cover bg-center p-6 text-white"
+                className="relative min-h-65 overflow-hidden  bg-cover bg-center p-6 text-white"
                 style={{ backgroundImage: `url(${waterImage})` }}
               >
                 <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-[12px] uppercase tracking-widest">
@@ -116,7 +128,11 @@ export default function Addvertise() {
                     Slides · Wave pools · Kids zones
                   </p>
 
-                  <button className="mt-3 h-[36px] w-[120px] rounded-full bg-white text-[14px] text-black">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/weekend-activities")}
+                    className="mt-3 h-9 w-30 rounded-full bg-white text-[14px] text-black transition hover:bg-slate-100"
+                  >
                     Explore
                   </button>
                 </div>

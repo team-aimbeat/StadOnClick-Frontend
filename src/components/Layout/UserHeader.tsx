@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, ChevronRight, Heart, ShoppingCart, Sparkles, UserRound, X } from "lucide-react";
+import { Bell, Bookmark, ChevronRight, Heart, ShoppingBag, ShoppingCart, Sparkles, UserRound, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   useEffect,
@@ -429,7 +429,7 @@ export default function UserHeader() {
 
           <div className="flex items-center gap-3">
             <IconButton
-              icon={<Heart className="h-5 w-5 text-slate-500" />}
+              icon={<Bookmark className="h-5 w-5 text-slate-500" />}
               label="Wishlist"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -440,7 +440,7 @@ export default function UserHeader() {
             />
             <div ref={cartRef} className="relative">
               <IconButton
-                icon={<ShoppingCart className="h-5 w-5 text-slate-500" />}
+                icon={<ShoppingBag className="h-5 w-5 text-slate-500" />}
                 label="Cart"
                 badge="3"
                 onClick={() => {
