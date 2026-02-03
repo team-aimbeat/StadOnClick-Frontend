@@ -5,9 +5,10 @@ import HomeCategories from "@/components/shared/home/HomeCategories";
 import HomeMind from "@/components/shared/home/HomeMind";
 import HomeServices from "@/components/shared/home/HomeServices";
 import HomeDiscount from "@/components/shared/home/HomeDiscount";
-import HomeTrendingNow from "@/components/shared/home/HomeTrendingNow";
+import HomeTravel from "@/components/shared/home/HomeTravel";
 // import HomeStudios from "@/components/shared/home/HomeStudios";
 import HomeTrending from "@/components/shared/home/HomeTrending";
+import HomeMovies from "@/components/shared/home/HomeMovies";
 import HomeCoupon from "@/components/shared/home/HomeCoupon";
 import HomeDeal from "@/components/shared/home/HomeDeal";
 import HomeTestimonial from "@/components/shared/home/HomeTestimonial";
@@ -42,7 +43,8 @@ export default function Home() {
         <HomeTrending />
         <HomeCoupon />
         <HomeMind />
-        <HomeTrendingNow />
+        <HomeTravel />
+        <HomeMovies />
                                 <HomeDeal />
 
         {/* <HomeGlowSale /> */}

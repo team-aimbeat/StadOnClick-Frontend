@@ -35,19 +35,19 @@ export const services: Service[] = [
       "A full-service salon specializing in bespoke cuts, creative color, and nurturing treatments.",
     details: [
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
@@ -68,19 +68,19 @@ export const services: Service[] = [
     about: "Modern salon with a focus on technique-driven transformations.",
     details: [
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
@@ -101,19 +101,19 @@ export const services: Service[] = [
     about: "Bright salon that blends luxury styling with a friendly vibe.",
     details: [
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
@@ -134,19 +134,19 @@ export const services: Service[] = [
     about: "An elevated salon where the styling team creates runway-ready looks.",
     details: [
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
@@ -167,19 +167,19 @@ export const services: Service[] = [
     about: "Signature stylists delivering glossy finishes for every occasion.",
     details: [
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
@@ -200,19 +200,19 @@ export const services: Service[] = [
     about: "Modern salon focused on healthy hair and mindful beauty.",
     details: [
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",
       },
       {
-        title: "Haircut with Nikita",
+        title: "Haircut",
         subtitle: "For Nape & Longer Styles",
         duration: "2 hr",
         price: "$200",

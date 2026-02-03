@@ -74,8 +74,8 @@ export default function ServiceDetail() {
 
 
   return (
-    <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 lg:px-8 ">
+    <section className="min-h-screen bg-[#F4F6FA] py-4 text-slate-700 ">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 lg:px-8 ">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -118,7 +118,7 @@ export default function ServiceDetail() {
                 </div>
               </div>
               <div className="grid gap-5 lg:grid-cols-[1.50fr_0.9fr]">
-                <div className="aspect-[4/3] w-full overflow-hidden  bg-slate-100 shadow-inner">
+                <div className="aspect-4/3 w-full overflow-hidden  bg-slate-100 shadow-inner">
                   <img
                     src={galleryImages[0]}
                     alt={`${service.title} hero`}
@@ -138,7 +138,7 @@ export default function ServiceDetail() {
                       />
                     </div>
                   ))}
-           <button className="absolute mt-[420px] right-96 rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold shadow hover:bg-white">
+           <button className="absolute mt-105 right-96 rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold shadow hover:bg-white">
           See all photos
         </button>
                 </div>
@@ -328,7 +328,7 @@ export default function ServiceDetail() {
               <p className="text-lg font-semibold text-slate-900">Write a review</p>
               <textarea
                 placeholder="Tell fellow guests what made your visit special"
-                className="min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 focus:border-blue-400 focus:outline-none"
+                className="min-h-35 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 focus:border-blue-400 focus:outline-none"
               />
               <button className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
                 Submit review

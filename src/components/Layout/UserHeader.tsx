@@ -1,18 +1,18 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
-  Activity,
   Bell,
-  Box,
+  Bookmark,
+  Building,
   ChevronRight,
   Coffee,
+  Compass,
+  Flame,
   Gift,
-  Heart,
-  Home,
-  Leaf,
   MapPin,
+  Package,
   Plane,
-  ShoppingCart,
-  Sparkles,
+  Scissors,
+  ShoppingBag,
   Ticket,
   UserRound,
   X,
@@ -181,12 +181,12 @@ export default function UserHeader() {
       {
         label: "New Year Sale",
         to: "/marketplace?tag=new-year",
-        icon: <Sparkles className="h-4 w-4 text-yellow-500" />,
+        icon: <Flame className="h-4 w-4 text-amber-500" />,
       },
       {
         label: "Beauty & Spas",
         to: "/marketplace/beauty",
-        icon: <Leaf className="h-4 w-4 text-pink-500" />,
+        icon: <Scissors className="h-4 w-4 text-pink-500" />,
         subTitle: "Beauty & Spas",
         subItems: [
           [
@@ -202,12 +202,12 @@ export default function UserHeader() {
       {
         label: "Things To Do",
         to: "/marketplace/things-to-do",
-        icon: <Activity className="h-4 w-4 text-purple-500" />,
+        icon: <Compass className="h-4 w-4 text-purple-500" />,
       },
       {
         label: "Auto & Home",
         to: "/marketplace/auto-home",
-        icon: <Home className="h-4 w-4 text-amber-500" />,
+        icon: <Building className="h-4 w-4 text-amber-500" />,
       },
       {
         label: "Food & Drink",
@@ -232,7 +232,7 @@ export default function UserHeader() {
       {
         label: "Goods",
         to: "/marketplace/goods",
-        icon: <Box className="h-4 w-4 text-yellow-500" />,
+        icon: <Package className="h-4 w-4 text-yellow-500" />,
       },
       {
         label: "Coupons",
@@ -307,7 +307,7 @@ export default function UserHeader() {
   };
 
   const menuItems = [
-    { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
+    { label: "My Wishlist", icon: <Bookmark className="h-4 w-4" /> },
 
     {
       label: "Notifications",
@@ -375,7 +375,7 @@ export default function UserHeader() {
 
           <div className="flex items-center gap-3">
             <IconButton
-              icon={<Heart className="h-5 w-5 text-slate-500" />}
+              icon={<Bookmark className="h-5 w-5 text-slate-500" />}
               label="Wishlist"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -386,7 +386,7 @@ export default function UserHeader() {
             />
             <div ref={cartRef} className="relative">
               <IconButton
-                icon={<ShoppingCart className="h-5 w-5 text-slate-500" />}
+                icon={<ShoppingBag className="h-5 w-5 text-slate-500" />}
                 label="Cart"
                 badge="3"
                 onClick={() => {

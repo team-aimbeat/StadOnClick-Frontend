@@ -1,16 +1,11 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import bannerImage from "@/assets/images/bgsalon.jpg"
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  Star,
-} from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { Service } from "./types"
 import ServicesSidebar from "./ServicesSidebar"
 import EnquiryModal from "./enquiry/EnquiryModal"
+import ServiceCard from "./ServiceCard"
 
 const services: Service[] = [
   {
@@ -195,9 +190,32 @@ const services: Service[] = [
   },
 ]
 
-export default function ServicesExplorer() {
+export type ServicesExplorerProps = {
+  services?: Service[]
+  headerTitle?: string
+  headerDescription?: string
+  bannerImage?: string
+  stats?: { label: string; color: string }[]
+}
+
+const defaultStats = [
+  { label: "24 stylists online now", color: "bg-emerald-400" },
+  { label: "98% booked for this week", color: "bg-sky-400" },
+  { label: "Avg. response under 10 min", color: "bg-amber-400" },
+]
+
+export default function ServicesExplorer({
+  services: providedServices,
+  headerTitle = "Services near you",
+  headerDescription = "Explore and book local services · 132 results",
+  bannerImage: headerBanner = bannerImage,
+  stats,
+}: ServicesExplorerProps = {}) {
   const navigate = useNavigate()
   const [enquiryService, setEnquiryService] = useState<Service | null>(null)
+
+  const activeServices = providedServices ?? services
+  const statRows = stats ?? defaultStats
 
   return (
     <section className="min-h-screen bg-[#F9F9F9] py-8">
@@ -206,33 +224,17 @@ export default function ServicesExplorer() {
 
         <div className="flex-1 space-y-6">
           <header
-            className="space-y-4 rounded-lg px-6 py-10 text-white shadow-lg min-h-[300px]"
+            className="space-y-4 rounded-lg px-6 py-15 text-white shadow-lg min-h-25"
             style={{
-              backgroundImage: ` url(${bannerImage})`,
+              backgroundImage: `url(${headerBanner})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
             <div className="flex items-end justify-between">
               <div>
-                <h1 className="text-[28px] font-bold text-black">
-                  Services near you
-                </h1>
+                <h1 className="text-[28px] font-bold text-black">{headerTitle}</h1>
               </div>
-               {/* <div className="flex flex-wrap items-center gap-3">
-              <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-                Sales
-              </button>
-              <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-                Price
-              </button>
-              <button className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm">
-                Recommended
-              </button>
-              <button className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm">
-                Apply
-              </button>
-            </div>   */}
               <button
                 type="button"
                 className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-300"
@@ -241,125 +243,32 @@ export default function ServicesExplorer() {
                 <ChevronDown className="h-4 w-4" />
               </button>
             </div>
-            <p className="text-[16px] text-black">
-              Explore and book local services • 132 results
-            </p>
+            <p className="text-[16px] text-black">{headerDescription}</p>
 
             <div className="flex flex-wrap gap-4 text-sm text-black">
-              <div className="flex items-center gap-2 rounded-2xl bg-white/40 px-4 py-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                24 stylists online now
-              </div>
-              <div className="flex items-center gap-2 rounded-2xl bg-white/40 px-4 py-2">
-                <span className="h-2 w-2 rounded-full bg-sky-400" />
-                98% booked for this week
-              </div>
-              <div className="flex items-center gap-2 rounded-2xl bg-white/40 px-4 py-2">
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
-                Avg. response under 10 min
-              </div>
+              {statRows.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex items-center gap-2 rounded-2xl bg-white/40 px-4 py-2"
+                >
+                  <span className={`h-2 w-2 rounded-full ${stat.color}`} />
+                  {stat.label}
+                </div>
+              ))}
             </div>
-          </header> 
-           
-
-          <div className="grid gap-6  md:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
-              <article
+          </header>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {activeServices.map((service) => (
+              <ServiceCard
                 key={service.id}
-                className="flex flex-col overflow-hidden rounded-lg  bg-white  transition hover:-translate-y-1 w-[325px] h-[558px] shadow-md"
-              >
-                <div className="relative h-[204px] overflow-hidden">
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    className="h-full w-full object-cover transition duration-500 hover:scale-105"
-                  />
-                  <button
-                    type="button"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-3 p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-[19px] font-bold text-slate-900">
-                        {service.title}
-                      </h3>
-                      <div className="mt-1 flex items-center gap-2 text-[14px] text-slate-500 font-medium">
-                        <MapPin className="h-5 w-5 text-black" />
-                        {service.location}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500">
-                        <Star className="h-4 w-4" />
-                        {service.rating.toFixed(1)}
-                      </span>
-                      {/* <span className="text-[12px] font-semibold text-slate-400">
-                        {service.reviews} reviews
-                      </span> */}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {service.details.map((detail, index) => (
-                      <div
-                        key={`${service.id}-detail-${index}`}
-                        className="flex items-center justify-between rounded-sm  bg-[#F6F6F6] px-4 py-3 w-[283px] h-[68px] "
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {detail.title}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {detail.subtitle}
-                          </p>
-                          <p className="text-xs font-semibold text-slate-400">
-                            {detail.duration}
-                          </p>
-                        </div>
-                        <span className="text-[16px] font-bold text-slate-900">
-                          {detail.price}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/services/${service.slug}`)}
-                        className="min-w-[135px]  rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-                      >
-                        View all services
-                      </button>
-                      <button
-                        type="button"
-                        className="min-w-[135px] rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
-                        onClick={() => setEnquiryService(service)}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          Send Enquiry
-                          <ChevronRight size={16} />
-                        </div>
-                      </button>
-                    </div>
-                </div>
-              </article>
+                service={service}
+                onViewDetails={(item) => navigate(`/services/${item.slug}`)}
+                onEnquiry={(item) => setEnquiryService(item)}
+              />
             ))}
           </div>
         </div>
       </div>
-
       {enquiryService && (
         <EnquiryModal service={enquiryService} onClose={() => setEnquiryService(null)} />
       )}

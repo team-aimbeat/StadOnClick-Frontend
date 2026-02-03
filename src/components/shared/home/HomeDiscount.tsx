@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom"
 import buffetImage from "@/assets/Images/buffet.svg"
 import salonImage from "@/assets/Images/spa.svg"
 import spaImage from "@/assets/Images/salon.svg"
@@ -16,6 +17,7 @@ const offerCards = [
     price: "₹249",
     image: buffetImage,
     bgImage: green,
+    slug: "buffet-deals",
   },
   {
     title: "Salon",
@@ -23,6 +25,7 @@ const offerCards = [
     price: "₹249",
     image: salonImage,
     bgImage: pink,
+    slug: "salon-deals",
   },
   {
     title: "Spa",
@@ -30,6 +33,7 @@ const offerCards = [
     price: "₹249",
     image: spaImage,
     bgImage: blue,
+    slug: "spa-deals",
   },
   {
     title: "Party",
@@ -37,6 +41,7 @@ const offerCards = [
     price: "₹249",
     image: partyImage,
     bgImage: purple,
+    slug: "party-deals",
   },
   {
     title: "Hotels",
@@ -44,16 +49,15 @@ const offerCards = [
     price: "₹249",
     image: activityImage,
     bgImage: green,
+    slug: "hotel-deals",
   },
-
-   
-
 ]
 
 export default function HomeDiscount() {
+  const navigate = useNavigate()
   return (
     <div className="space-y-10 text-start">
-      <section className="mt-2">
+      <section className="mt-10">
         <h2 className="text-[28px] font-semibold text-slate-800 text-start mb-4 -tracking-tight">
           Save big across services
         </h2>
@@ -63,8 +67,16 @@ export default function HomeDiscount() {
           {offerCards.map((card) => (
             <article
               key={card.title}
-              className="relative h-[186px] min-w-[225px] overflow-hidden rounded-3xl bg-cover bg-center p-3 text-left text-white shadow-md"
+              className="relative h-[186px] min-w-[225px] overflow-hidden rounded-3xl bg-cover bg-center p-3 text-left text-white shadow-md transition hover:shadow-lg hover:-translate-y-1 cursor-pointer"
               style={{ backgroundImage: `url(${card.bgImage})` }}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/marketplace?category=${card.slug}`)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  navigate(`/marketplace?category=${card.slug}`)
+                }
+              }}
             >
               <div className="relative z-10">
                 <p className="text-xl tracking-wider font-semibold">{card.title}</p>
@@ -77,11 +89,11 @@ export default function HomeDiscount() {
               <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 text-xs">
                 →
               </div>
-              <div className="absolute h-[97px] overflow-hidden -ml-1">
+              <div className="absolute h-24.25 overflow-hidden -ml-1 ">
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="h-[104px] w-[205px] object-cover"
+                  className="h-32.5 w-51.25 object-cover"
                 />
               </div>
             </article>
