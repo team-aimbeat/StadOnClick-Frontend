@@ -17,6 +17,7 @@ import {
   HiInboxStack,
   HiChatBubbleLeftRight,
   HiBell,
+  HiTag,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import { Activity, Users } from "lucide-react";
@@ -190,10 +191,17 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         icon: HiChartBar,
         children: [
           { label: t("Lead Plans"), to: withBase("leads/plans") },
+          { label: t("Coupons"), to: withBase("coupons") },
           { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
           { label: t("Sponsorship Plans"), to: withBase("finance/sponsorship-plans") },
           { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
         ],
+      },
+      {
+        id: "coupons",
+        label: t("Coupons"),
+        icon: HiTag,
+        to: withBase("coupons"),
       },
       {
         id: "bookings",

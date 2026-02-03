@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom"
 
-import Restro from "@/assets/Images/restro.png"
-import hotel from "@/assets/Images/hotel.png"
-import beauty from "@/assets/Images/beauty.png"
-import salon from "@/assets/Images/hair.png"
-import wedding from "@/assets/Images/wedding.png"
+import event from "@/assets/Images/event.jpg"
+import family from "@/assets/Images/family.jpg"
+import food from "@/assets/Images/food.jpg"
+import travel from "@/assets/Images/travel.jpg"
+import wellness from "@/assets/Images/wellness.jpg"
 
 type CategoryCard = {
   category: string
@@ -21,7 +21,7 @@ type CategoryCard = {
 const categories: CategoryCard[] = [
   {
     category: "Health & Wellness",
-    image: salon,
+    image: wellness,
     author: "Top picks",
     title: "Studios, yoga, and spa escapes",
     description: "Gym, yoga, meditation, massage and spa services.",
@@ -31,7 +31,7 @@ const categories: CategoryCard[] = [
   },
   {
     category: "Food & Leisure",
-    image: Restro,
+    image: food,
     author: "Local favorites",
     title: "Cafes, restaurants, and hotspots",
     description: "Eateries, cafes, and weekend markets to explore.",
@@ -41,7 +41,7 @@ const categories: CategoryCard[] = [
   },
   {
     category: "Travel & Transportation",
-    image: hotel,
+    image: travel,
     author: "On the go",
     title: "Cab, ferry, bus, and courier",
     description: "Transportation and logistics around the city.",
@@ -51,7 +51,7 @@ const categories: CategoryCard[] = [
   },
   {
     category: "Kids & Family",
-    image: beauty,
+    image: family,
     author: "Family time",
     title: "Kids events and play activities",
     description: "Play areas, hobby classes, and birthday parties.",
@@ -61,7 +61,7 @@ const categories: CategoryCard[] = [
   },
   {
     category: "Experiences & Activities",
-    image: wedding,
+    image: event,
     author: "Explore",
     title: "Tours, museums, concerts, and more",
     description: "City events, attractions, and places to visit.",

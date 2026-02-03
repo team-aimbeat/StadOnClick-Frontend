@@ -24,7 +24,7 @@ type Coupon = {
 
 type Props = {
   open: boolean;
-  previewGradient: string;
+  previewGradient?: string;
   coupon?: Coupon;
   onOpenChange: (open: boolean) => void;
 };
@@ -32,7 +32,7 @@ type Props = {
 export function CouponPreviewDialog({
   open,
   coupon,
-  previewGradient,
+  previewGradient = "from-slate-900 to-red-600",
   onOpenChange,
 }: Props) {
   const validUntilLabel = coupon

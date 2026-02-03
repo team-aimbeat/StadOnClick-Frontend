@@ -4,16 +4,17 @@ import party from "@/assets/Images/mind3.jpg"
 import yoga from "@/assets/Images/mind4.jpg"
 import salon from "@/assets/Images/mind5.jpg"
 import event from "@/assets/Images/mind6.jpg"
+import family from "@/assets/Images/family.jpg"
 import { useNavigate } from "react-router-dom"
 
 const mindItems = [
-  { name: "Massage", image: spa, slug: "massage" },
-  { name: "Buffet", image: buffet, slug: "buffet" },
-  { name: "Party night", image: party, slug: "party-night" },
-  { name: "Gym", image: yoga, slug: "gym" },
-  { name: "Haircut", image: salon, slug: "haircut" },
-  { name: "BBQ", image: event, slug: "bbq" },
-  { name: "Buffet", image: buffet, slug: "buffet" },
+  { name: "Massage & Spa Services", image: spa, slug: "massage-spa-services" },
+  { name: "Yoga & Meditation Classes", image: yoga, slug: "yoga-meditation-classes" },
+  { name: "Gym & Fitness Studios", image: salon, slug: "gym-fitness-studios" },
+  { name: "Cafes & Restaurants", image: buffet, slug: "cafes-restaurants" },
+  { name: "Events Around the City", image: event, slug: "events-around-the-city" },
+  { name: "Movie Bookings", image: party, slug: "movie-bookings" },
+  { name: "Kids Play Areas & Activities", image: family, slug: "kids-play-areas-activities" },
 ]
 
 export default function HomeMind() {

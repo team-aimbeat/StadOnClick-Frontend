@@ -1,7 +1,26 @@
-﻿import { useMemo } from "react"
+import { useMemo } from "react"
 import { useParams } from "react-router-dom"
 
 import salonImage from "@/assets/Images/salon (1).png"
+import spaImage from "@/assets/Images/mind1.jpg"
+import yogaImage from "@/assets/Images/mind4.jpg"
+import gymImage from "@/assets/Images/wellness.jpg"
+import cafeImage from "@/assets/Images/Cafe.png"
+import eventImage from "@/assets/Images/event.jpg"
+import movieImage from "@/assets/Images/movie.jpg"
+import familyImage from "@/assets/Images/family.jpg"
+import bowlingImage from "@/assets/Images/bowling.svg"
+import learnImage from "@/assets/Images/learn.jpg"
+import partyImage from "@/assets/Images/party.jpg"
+import footballImage from "@/assets/Images/football.jpg"
+import documentImage from "@/assets/Images/document.png"
+import travel1 from "@/assets/Images/travel1.svg"
+import travel2 from "@/assets/Images/travel2.svg"
+import travel3 from "@/assets/Images/travel3.svg"
+import travel4 from "@/assets/Images/travel4.svg"
+import travel5 from "@/assets/Images/travel5.svg"
+import travel6 from "@/assets/Images/travel6.svg"
+import travelMain from "@/assets/Images/travel.jpg"
 
 const places = {
   haircut: {
@@ -45,6 +64,139 @@ const places = {
     rating: "4.7",
     reviews: "256",
     image: salonImage,
+  },
+  "massage-spa-services": {
+    name: "Massage & Spa Services",
+    location: "Stockholm, SE",
+    rating: "4.8",
+    reviews: "412",
+    image: spaImage,
+  },
+  "yoga-meditation-classes": {
+    name: "Yoga & Meditation Classes",
+    location: "Stockholm, SE",
+    rating: "4.9",
+    reviews: "389",
+    image: yogaImage,
+  },
+  "gym-fitness-studios": {
+    name: "Gym & Fitness Studios",
+    location: "Stockholm, SE",
+    rating: "4.8",
+    reviews: "717",
+    image: gymImage,
+  },
+  "cafes-restaurants": {
+    name: "Cafes & Restaurants",
+    location: "Stockholm, SE",
+    rating: "4.7",
+    reviews: "305",
+    image: cafeImage,
+  },
+  "events-around-the-city": {
+    name: "Events Around the City",
+    location: "Stockholm, SE",
+    rating: "4.6",
+    reviews: "228",
+    image: eventImage,
+  },
+  "movie-bookings": {
+    name: "Movie Bookings",
+    location: "Stockholm, SE",
+    rating: "4.7",
+    reviews: "256",
+    image: movieImage,
+  },
+  "kids-play-areas-activities": {
+    name: "Kids Play Areas & Activities",
+    location: "Stockholm, SE",
+    rating: "4.8",
+    reviews: "198",
+    image: bowlingImage,
+  },
+  "kids-events": {
+    name: "Kids Events",
+    location: "Stockholm, SE",
+    rating: "4.7",
+    reviews: "164",
+    image: familyImage,
+  },
+  "educational-hobby-classes": {
+    name: "Educational & Hobby Classes",
+    location: "Stockholm, SE",
+    rating: "4.8",
+    reviews: "142",
+    image: learnImage,
+  },
+  "birthday-parties-decorations": {
+    name: "Birthday Parties & Decorations",
+    location: "Stockholm, SE",
+    rating: "4.6",
+    reviews: "121",
+    image: partyImage,
+  },
+  "sports-academies-coaching": {
+    name: "Sports Academies & Coaching",
+    location: "Stockholm, SE",
+    rating: "4.8",
+    reviews: "208",
+    image: footballImage,
+  },
+  "workshops-short-courses": {
+    name: "Workshops & Short Courses",
+    location: "Stockholm, SE",
+    rating: "4.7",
+    reviews: "176",
+    image: documentImage,
+  },
+  "cab-services": {
+    name: "Cab Services",
+    location: "Stockholm, SE",
+    rating: "4.6",
+    reviews: "341",
+    image: travel1,
+  },
+  "ferry-bus-train-information": {
+    name: "Ferry, Bus & Train Information",
+    location: "Stockholm, SE",
+    rating: "4.5",
+    reviews: "287",
+    image: travel2,
+  },
+  "courier-services": {
+    name: "Courier Services",
+    location: "Stockholm, SE",
+    rating: "4.6",
+    reviews: "193",
+    image: travel3,
+  },
+  "tourist-buses-boat-tours": {
+    name: "Tourist Buses & Boat Tours",
+    location: "Stockholm, SE",
+    rating: "4.7",
+    reviews: "219",
+    image: travel4,
+  },
+  "tourist-activities-attractions": {
+    name: "Tourist Activities & Attractions",
+    location: "Stockholm, SE",
+    rating: "4.8",
+    reviews: "264",
+    image: travel5,
+  },
+  "museums-exhibitions": {
+    name: "Museums & Exhibitions",
+    location: "Stockholm, SE",
+    rating: "4.9",
+    reviews: "302",
+    image: travel6,
+  },
+  "places-to-visit-near-city": {
+    name: "Places to Visit Near the City",
+    location: "Stockholm, SE",
+    rating: "4.8",
+    reviews: "178",
+    image: travelMain,
   },
 } as const
 

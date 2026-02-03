@@ -44,15 +44,15 @@ export default function Home() {
         <HomeCoupon />
         <HomeMind />
         <HomeTravel />
-        <HomeMovies />
+        {/* <HomeMovies /> */}
                                 <HomeDeal />
 
         {/* <HomeGlowSale /> */}
         <HomeSightseeing />
         {/* <HomeBrowse /> */}
         {/* <HomeTestimonial /> */}
-        <HomeSubscribe />
-        <Blogs/>
+        {/* <HomeSubscribe /> */}
+        {/* <Blogs/> */}
         
       </div>
     </div>
