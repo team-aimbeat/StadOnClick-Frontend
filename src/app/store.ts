@@ -35,6 +35,7 @@ import { adminSponsorshipsApi } from "@/features/adminSponsorships/api/adminSpon
 import { serviceReviewsApi } from "@/services/serviceReviewsApi";
 import { adminCouponsApi } from "@/features/admin/coupons/api/adminCouponsApi";
 import { welcomeCouponsApi } from "@/services/welcomeCouponsApi";
+import { marketplaceApi } from "@/services/marketplaceApi";
 
 export const store = configureStore({
   reducer: {
@@ -71,6 +72,7 @@ export const store = configureStore({
     [adminBookingsApi.reducerPath]: adminBookingsApi.reducer,
     [adminCouponsApi.reducerPath]: adminCouponsApi.reducer,
     [welcomeCouponsApi.reducerPath]: welcomeCouponsApi.reducer,
+    [marketplaceApi.reducerPath]: marketplaceApi.reducer,
     [vendorSponsorshipsApi.reducerPath]: vendorSponsorshipsApi.reducer,
     [adminSponsorshipsApi.reducerPath]: adminSponsorshipsApi.reducer,
     [serviceReviewsApi.reducerPath]: serviceReviewsApi.reducer,
@@ -104,6 +106,7 @@ export const store = configureStore({
       .concat(adminBookingsApi.middleware)
       .concat(adminCouponsApi.middleware)
       .concat(welcomeCouponsApi.middleware)
+      .concat(marketplaceApi.middleware)
       .concat(vendorSponsorshipsApi.middleware)
       .concat(adminSponsorshipsApi.middleware)
       .concat(serviceReviewsApi.middleware),
