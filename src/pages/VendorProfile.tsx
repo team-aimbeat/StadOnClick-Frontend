@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { HiOutlineCheckCircle, HiOutlineClock, HiOutlineEnvelope, HiOutlineMapPin, HiOutlinePhone, HiOutlineShieldCheck } from "react-icons/hi2";
+import {
+  HiOutlineCheckCircle,
+  HiOutlineClock,
+  HiOutlineEnvelope,
+  HiOutlineMapPin,
+  HiOutlinePhone,
+} from "react-icons/hi2";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
@@ -9,8 +15,8 @@ import { useAppDispatch } from "@/app/hooks";
 import { useMockLoader } from "@/lib/useMockLoader";
 import { useGetVendorProfileQuery, useUpdateVendorProfileMutation } from "@/features/vendorProfile/api/vendorProfileApi";
 import type { BusinessHour } from "@/features/vendorProfile/api/vendorProfileApi";
-
-const tabs = [
+import toast from "react-hot-toast";
+const sidebarSections = [
   { id: "info", label: "Profile Info" },
   { id: "seo", label: "SEO & Visibility" },
   { id: "contact", label: "Contact & Location" },
@@ -29,16 +35,12 @@ const checklist = [
 
 const VendorProfile = () => {
   const dispatch = useAppDispatch();
-  const [activeTab, setActiveTab] = useState("info");
-  const [savedStatus, setSavedStatus] = useState("");
+  const [activeSection, setActiveSection] = useState("info");
   const loading = useMockLoader();
-  const saveTimerRef = useRef<number | undefined>(undefined);
 
-  // API hooks
   const { data: profileData, isLoading: isLoadingProfile, error: profileError } = useGetVendorProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateVendorProfileMutation();
 
-  // Local state for editable fields
   const [businessName, setBusinessName] = useState("");
   const [description, setDescription] = useState("");
   const [headquarters, setHeadquarters] = useState("");
@@ -50,9 +52,8 @@ const VendorProfile = () => {
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
+  const [invalidHours, setInvalidHours] = useState<number[]>([]);
 
-  // Initialize form fields when data is loaded
   useEffect(() => {
     if (profileData?.data) {
       const profile = profileData.data;
@@ -66,14 +67,9 @@ const VendorProfile = () => {
       setIsIndexable(profile.isIndexable);
       setContactEmail(profile.contactEmail || "");
       setContactPhone(profile.contactPhone || "");
-      
-      // Ensure businessHours is always an array
       const hours = profile.businessHours;
       if (Array.isArray(hours)) {
         setBusinessHours(hours);
-      } else if (hours && typeof hours === 'object') {
-        // If it's an object but not an array, try to convert it
-        setBusinessHours([]);
       } else {
         setBusinessHours([]);
       }
@@ -84,13 +80,33 @@ const VendorProfile = () => {
     dispatch(setPageTitle("Business Profile"));
   }, [dispatch]);
 
-  useEffect(() => {
-    return () => {
-      window.clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+  const validateBusinessHour = (slot: BusinessHour) =>
+    (slot.day?.trim().length ?? 0) >= 2 && (slot.value?.trim().length ?? 0) >= 2;
+
+  const updateBusinessHour = (index: number, field: keyof BusinessHour, value: string) => {
+    setBusinessHours((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+    setInvalidHours((prev) => prev.filter((i) => i !== index));
+  };
 
   const handleSave = async () => {
+    const invalidIndexes = businessHours.reduce<number[]>((errs, slot, index) => {
+      const isValid = validateBusinessHour(slot);
+      if (!isValid) {
+        errs.push(index);
+      }
+      return errs;
+    }, []);
+
+    if (invalidIndexes.length > 0) {
+      setInvalidHours(invalidIndexes);
+      toast.error("Each business hour entry needs at least 2 characters for day and time.");
+      return;
+    }
+
     try {
       await updateProfile({
         businessName,
@@ -106,18 +122,11 @@ const VendorProfile = () => {
         businessHours: businessHours.length > 0 ? businessHours : undefined,
       }).unwrap();
 
-      setSavedStatus("Profile saved");
-      window.clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = window.setTimeout(() => {
-        setSavedStatus("");
-      }, 1800);
-    } catch (error) {
+      setInvalidHours([]);
+      toast.success("Profile saved");
+    } catch (error: any) {
       console.error("Failed to save profile:", error);
-      setSavedStatus("Failed to save");
-      window.clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = window.setTimeout(() => {
-        setSavedStatus("");
-      }, 1800);
+      toast.error(error?.data?.message || "Failed to save profile");
     }
   };
 
@@ -135,17 +144,17 @@ const VendorProfile = () => {
 
   if (loading || isLoadingProfile) {
     return (
-      <DashboardContainer className="space-y-4 py-8">
-        <div className="space-y-3">
-          <div className="h-8 w-2/5 animate-pulse rounded-full bg-slate-200" />
-          <div className="grid grid-cols-2 gap-3">
-            <div className="h-6 rounded-lg bg-slate-200" />
-            <div className="h-6 rounded-lg bg-slate-200" />
+      <DashboardContainer className="py-10">
+        <div className="animate-pulse space-y-8">
+          <div className="h-8 w-64 bg-slate-200 rounded" />
+          <div className="grid lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-3 space-y-6">
+              <div className="h-64 bg-slate-200 rounded-2xl" />
+            </div>
+            <div className="lg:col-span-9 space-y-6">
+              <div className="h-96 bg-slate-200 rounded-2xl" />
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 rounded-2xl bg-white p-5 shadow-sm">
-          <div className="h-40 rounded-lg bg-slate-100 animate-pulse" />
-          <div className="h-10 rounded-lg bg-slate-100 animate-pulse" />
         </div>
       </DashboardContainer>
     );
@@ -153,313 +162,279 @@ const VendorProfile = () => {
 
   if (profileError) {
     return (
-      <DashboardContainer className="space-y-4 py-8">
-        <TitleBreadCrumbs title="Business Profile" breadCrumbTitle="Vendor / Business Profile" />
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center">
-          <p className="text-sm font-semibold text-red-900">Failed to load profile</p>
-          <p className="text-xs text-red-600 mt-1">Please try refreshing the page</p>
+      <DashboardContainer className="py-10">
+        <div className="rounded-2xl bg-red-50 border border-red-200 p-8 text-center">
+          <p className="text-red-800 font-medium">Failed to load profile data</p>
+          <p className="text-red-600 text-sm mt-2">Please try again or contact support</p>
         </div>
       </DashboardContainer>
     );
   }
 
+  const profile = profileData?.data;
+
   return (
-    <DashboardContainer className="space-y-5 pb-8">
+    <DashboardContainer className="py-8 pb-24">
       <TitleBreadCrumbs title="Business Profile" breadCrumbTitle="Vendor / Business Profile" />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Identity</p>
-              <h2 className="text-xl font-semibold text-slate-900">{profileData?.data?.businessName || "Loading..."}</h2>
-              <p className="text-sm font-semibold text-slate-600">{profileData?.data?.headquarters || "Not set"}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="space-y-1 text-right text-xs font-semibold text-slate-500">
-                <p>Profile review</p>
-                <p>Indexable</p>
-              </div>
-              <div className="space-y-1">
-                <StatusPill status={profileData?.data?.status || "PENDING_REVIEW"} />
-                <StatusPill status={isIndexable ? "Active" : "Hidden"} tone={isIndexable ? "success" : "danger"} size="sm" />
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-slate-700 leading-relaxed">{description || "No description available"}</p>
-          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
-            <NavLink
-              to="/vendor/services"
-              className="rounded-full border border-slate-200 px-3 py-1 uppercase tracking-[0.2em] text-slate-600 hover:border-blue-300 hover:text-blue-600"
-            >
-              View Services
-            </NavLink>
-            <NavLink
-              to="/vendor/media"
-              className="rounded-full border border-slate-200 px-3 py-1 uppercase tracking-[0.2em] text-slate-600 hover:border-blue-300 hover:text-blue-600"
-            >
-              Upload Media
-            </NavLink>
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
-              <HiOutlineShieldCheck className="h-4 w-4 text-emerald-500" />
-              {contactEmail || "No email set"}
-            </span>
-          </div>
-        </div>
-
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile completeness</p>
-          <div className="space-y-2 text-sm font-semibold text-slate-700">
-            {checklist.map((item) => (
-              <div key={item.label} className="flex items-center gap-2">
-                {item.done ? (
-                  <HiOutlineCheckCircle className="h-4 w-4 text-emerald-500" />
-                ) : (
-                  <HiOutlineClock className="h-4 w-4 text-amber-500" />
-                )}
-                <span className={item.done ? "text-slate-900" : "text-slate-500"}>{item.label}</span>
-              </div>
+      <div className="grid lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-3 lg:sticky lg:top-6 h-fit space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            {sidebarSections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`w-full text-left px-5 py-3.5 text-sm font-medium transition-colors ${
+                  activeSection === section.id
+                ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
+                : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {section.label}
+              </button>
             ))}
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            Improving these items can unlock more leads and higher ranking.
+
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-4 font-medium">
+              Profile completeness
+            </p>
+            <div className="space-y-3 text-sm">
+              {checklist.map((item) => (
+                <div key={item.label} className="flex items-center gap-2.5">
+                  {item.done ? (
+                    <HiOutlineCheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                  ) : (
+                    <HiOutlineClock className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                  )}
+                  <span className={item.done ? "text-slate-800" : "text-slate-600"}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-slate-500 leading-relaxed">
+              Completing these steps improves visibility and lead quality.
+            </p>
           </div>
-        </div>
-      </div>
+        </aside>
 
-      <div className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-4 py-3">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                activeTab === tab.id
-                  ? "bg-blue-600 text-white"
-                  : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setIsIndexable((prev) => !prev)}
-            className="ml-auto rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 sm:ml-0"
-          >
-            Toggle Indexable
-          </button>
-        </div>
-
-        <div className="space-y-4 p-4">
-          {activeTab === "info" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {infoFields.map((field) => (
-                  <div key={field.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">{field.label}</p>
-                    <p className="text-sm font-semibold text-slate-900">{field.value}</p>
+        <main className="lg:col-span-9 space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 md:p-8">
+            <div className="pb-6 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Business</p>
+                  <h2 className="text-2xl font-semibold text-slate-900 mt-1">
+                    {profile?.businessName || "Your Business"}
+                  </h2>
+                  <p className="text-sm text-slate-600 mt-1">{profile?.headquarters || "Location not set"}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right text-xs font-medium text-slate-500">
+                    <p>Profile status</p>
+                    <p className="mt-0.5">Search visibility</p>
                   </div>
-                ))}
+                  <div className="space-y-1.5">
+                    <StatusPill status={profile?.status || "PENDING_REVIEW"} />
+               
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-600">
-                <p className="font-semibold text-slate-800">Why this matters</p>
-                <p>
-                  83% of conversions happen because the listing contains a clear description, verified contact and strong media assets.
-                </p>
-              </div>
+
+              <p className="mt-5 text-slate-700 leading-relaxed">{description || "No business description added yet."}</p>
             </div>
-          )}
 
-          {activeTab === "seo" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="space-y-1 text-sm">
-                  <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Title</p>
-                  <input
-                    type="text"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                    value={seoTitle}
-                    onChange={(e) => setSeoTitle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1 text-sm">
-                  <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Keywords</p>
-                  <input
-                    type="text"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                    value={seoKeywords.join(", ")}
-                    onChange={(e) => setSeoKeywords(e.target.value.split(",").map(k => k.trim()))}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1 text-sm">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Description</p>
-                <textarea
-                  rows={3}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                  value={seoDescription}
-                  onChange={(e) => setSeoDescription(e.target.value)}
-                />
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Preview snippet</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{seoTitle || "No title set"}</p>
-                <p className="text-xs text-blue-600">https://stadonclick.com/vendors/{profileData?.data?.slug || ""}</p>
-                <p className="text-sm text-slate-600">{seoDescription || "No description set"}</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "contact" && (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Contact</p>
-                <div className="text-sm text-slate-900">
-                  <p>
-                    <HiOutlinePhone className="inline h-4 w-4 text-blue-500" /> {contactPhone || "Not set"}
-                  </p>
-                  <p>
-                  <HiOutlineEnvelope className="inline h-4 w-4 text-emerald-500" /> {contactEmail || "Not set"}
-                  </p>
-                  <p>
-                  <HiOutlineMapPin className="inline h-4 w-4 text-amber-500" /> {profileData?.data?.city?.name || "Not set"}
-                  </p>
-                </div>
-                <NavLink
-                  to="/vendor/help"
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white"
-                >
-                  Contact support
-                </NavLink>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Location insight</p>
-                <p className="mt-2 text-sm text-slate-700">
-                  Your most viewed areas: Lower Parel, Bandra, Andheri. Show availability near these pincodes to convert more leads.
-                </p>
-                <div className="mt-4 h-32 rounded-2xl bg-gradient-to-br from-blue-50 to-white p-3 text-xs text-slate-500">
-                  Map preview placeholder
-                </div>
-              </div>
-            </div>
-          )}
-
-
-          {activeTab === "hours" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {businessHours && businessHours.length > 0 ? (
-                  businessHours.map((slot: BusinessHour, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-                    >
-                      <input
-                        type="text"
-                        value={slot.day}
-                        onChange={(e) => {
-                          const updated = [...businessHours];
-                          updated[index] = { ...slot, day: e.target.value };
-                          setBusinessHours(updated);
-                        }}
-                        className="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm font-semibold text-slate-900"
-                        placeholder="Mon"
-                      />
-                      <input
-                        type="text"
-                        value={slot.value}
-                        onChange={(e) => {
-                          const updated = [...businessHours];
-                          updated[index] = { ...slot, value: e.target.value };
-                          setBusinessHours(updated);
-                        }}
-                        className="flex-1 rounded-lg border border-slate-300 px-2 py-1 text-sm font-semibold text-slate-900"
-                        placeholder="09:00 - 17:00"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = businessHours.filter((_, i) => i !== index);
-                          setBusinessHours(updated);
-                        }}
-                        className="rounded-lg bg-red-50 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-100"
-                      >
-                        Remove
-                      </button>
+            {activeSection === "info" && (
+              <div className="pt-6 space-y-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {infoFields.map((field) => (
+                    <div key={field.label} className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                      <p className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{field.label}</p>
+                      <p className="mt-1.5 text-sm font-semibold text-slate-900">{field.value}</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-1 sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 text-center">
-                    No business hours set. Click "Add Hours" to get started.
-                  </div>
-                )}
-              </div>
-              
-              <button
-                type="button"
-                onClick={() => {
-                  setBusinessHours([...businessHours, { day: "", value: "" }]);
-                }}
-                className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-100"
-              >
-                + Add Hours
-              </button>
-              
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-                Add holiday exceptions or block slots before you leave town.
-              </div>
-            </div>
-          )}
+                  ))}
+                </div>
 
-          {activeTab === "preview" && (
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Public preview</p>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900">{profileData?.data?.businessName || "Loading..."}</p>
+                <div className="rounded-xl bg-blue-50/40 border border-blue-100 p-5 text-sm text-slate-700">
+                  <p className="font-medium text-slate-800">Why this information matters</p>
+                  <p className="mt-1.5">Clear details help customers find and trust your business faster.</p>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "seo" && (
+              <div className="pt-6 space-y-6">
+                <div className="space-y-5 rounded-xl border border-slate-100 bg-slate-50/50 p-6">
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">SEO Title</label>
+                      <input
+                        type="text"
+                        value={seoTitle}
+                        onChange={(e) => setSeoTitle(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Keywords</label>
+                      <input
+                        type="text"
+                        value={seoKeywords.join(", ")}
+                        onChange={(e) => setSeoKeywords(e.target.value.split(",").map((k) => k.trim()))}
+                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">
+                      Meta Description
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={seoDescription}
+                      onChange={(e) => setSeoDescription(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-[80px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 p-5 bg-white">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Google preview</p>
+                  <p className="font-medium text-blue-700">{seoTitle || "Title not set"}</p>
+                  <p className="text-sm text-green-700">
+                    https://stadonclick.com/vendors/{profile?.slug || "your-slug"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600 line-clamp-2">
+                    {seoDescription || "No description set..."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "contact" && (
+              <div className="pt-6 grid md:grid-cols-2 gap-6">
+                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-6 shadow-sm">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-4 font-medium">Contact Details</p>
+                  <div className="space-y-4 text-sm">
+                    <div className="flex items-center gap-3">
+                      <HiOutlinePhone className="w-5 h-5 text-blue-500" />
+                      <span>{contactPhone || "Not provided"}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                    <HiOutlineEnvelope className="w-5 h-5 text-sky-500" />
+                      <span>{contactEmail || "Not provided"}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <HiOutlineMapPin className="w-5 h-5 text-amber-500" />
+                      <span>{profile?.city?.name || "Location not set"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 p-6 shadow-sm">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-3 font-medium">Location Performance</p>
+                  <p className="text-sm text-slate-700">
+                    Most viewed areas: Lower Parel, Bandra, Andheri. Consider highlighting availability in these zones.
+                  </p>
+                  <div className="mt-5 h-40 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg flex items-center justify-center text-slate-400 text-sm">
+                    Map preview (placeholder)
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "hours" && (
+              <div className="pt-6 space-y-6">
+                <div className="rounded-xl border border-slate-100 p-6 bg-white shadow-sm">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {businessHours.length > 0 ? (
+                      businessHours.map((slot, index) => {
+                        const rowInvalid = invalidHours.includes(index);
+                        return (
+                          <div key={index} className="space-y-1">
+                            <div
+                              className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${
+                                rowInvalid
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-slate-200 bg-slate-50"
+                              }`}
+                            >
+                              <input
+                                value={slot.day}
+                                onChange={(e) => updateBusinessHour(index, "day", e.target.value)}
+                                className="w-20 rounded border border-slate-300 px-3 py-1.5 text-sm"
+                                placeholder="Mon"
+                              />
+                              <input
+                                value={slot.value}
+                                onChange={(e) => updateBusinessHour(index, "value", e.target.value)}
+                                className="flex-1 rounded border border-slate-300 px-3 py-1.5 text-sm"
+                                placeholder="09:00 - 17:00"
+                              />
+                              <button
+                                onClick={() => {
+                                  setBusinessHours(businessHours.filter((_, i) => i !== index));
+                                  setInvalidHours((prev) => prev.filter((i) => i !== index));
+                                }}
+                                className="text-red-600 hover:text-red-700 text-sm font-medium"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            {rowInvalid && (
+                              <p className="text-xs text-red-600">
+                                Day and time must each be at least 2 characters.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="col-span-2 text-center py-8 text-slate-500 text-sm">
+                        No business hours added yet.
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setBusinessHours([...businessHours, { day: "", value: "" }])}
+                    className="mt-5 w-full py-2.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 font-medium text-sm"
+                  >
+                    + Add Hours
+                  </button>
+                </div>
+              </div>
+            )}
+
+          {activeSection === "preview" && (
+            <div className="pt-6">
+              <div className="rounded-xl border border-slate-100 p-6 bg-white shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {profile?.businessName || "Business Name"}
+                  </h3>
                   <StatusPill status="LIVE" tone="success" size="sm" />
                 </div>
-                <p className="text-sm text-slate-600">{description || "No description available"}</p>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-                  <span>4.6 ★ (188 reviews)</span>
-                  <span>Verified</span>
-                  <span>24h response</span>
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <NavLink
-                    to="/vendor/services"
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-500"
-                  >
-                    View services listing →
-                  </NavLink>
-                  <NavLink
-                    to="/vendor/leads"
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-800"
-                  >
-                    See customer conversations →
-                  </NavLink>
-                </div>
+                <p className="text-slate-700">{description || "No description available"}</p>
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-700">
+          <div className="mt-6 border-t border-slate-100 pt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <button
-              type="button"
               onClick={handleSave}
               disabled={isUpdating}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`ml-auto px-8 py-2.5 rounded-xl font-semibold text-white transition ${
+                isUpdating ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              {isUpdating ? "Saving..." : "Save profile"}
+              {isUpdating ? "Saving..." : "Save Changes"}
             </button>
-            {savedStatus && <span className="text-emerald-600">{savedStatus}</span>}
           </div>
         </div>
-      </div>
-    </DashboardContainer>
-  );
+      </main>
+    </div>
+  </DashboardContainer>
+);
 };
 
 export default VendorProfile;
