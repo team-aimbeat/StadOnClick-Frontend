@@ -728,6 +728,12 @@ const VendorDashboard = () => {
                   tone: "slate" as const,
                 },
                 {
+                  label: "Add Offering",
+                  icon: Sparkles,
+                  to: "/vendor/services?addOffering=1",
+                  tone: "blue" as const,
+                },
+                {
                   label: "Request Payout",
                   icon: Wallet2,
                   to: "/vendor/payouts",
