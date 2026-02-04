@@ -1,28 +1,43 @@
-﻿import spa from "@/assets/Images/travel1.svg";
+import spa from "@/assets/Images/travel1.svg";
 import buffet from "@/assets/Images/travel2.svg";
 import party from "@/assets/Images/travel3.svg";
-import yoga from "@/assets/Images/travel3.svg";
-import salon from "@/assets/Images/travel4.svg";
-import event from "@/assets/Images/travel5.svg";
+import yoga from "@/assets/Images/travel4.svg";
+import salon from "@/assets/Images/travel5.svg";
+import event from "@/assets/Images/travel6.svg";
+import travelMain from "@/assets/Images/travel.jpg";
+import bowling from "@/assets/Images/bowling.svg";
+import kidsEvent from "@/assets/Images/event.jpg";
+import partyIcon from "@/assets/Images/party.svg";
+import learn from "@/assets/Images/learn.jpg";
+import football from "@/assets/Images/football.jpg";
+import document from "@/assets/Images/document.png";
 import { useNavigate } from "react-router-dom";
 
 const mindItems = [
-  { name: "Airport Transfers", image: spa, slug: "Airport Transfers" },
-  { name: "Cab Services", image: buffet, slug: "Cab Services" },
-  { name: "Bus", image: party, slug: "Bus" },
-  { name: "Ferry", image: yoga, slug: "Ferry" },
-  { name: "Train Tickets", image: salon, slug: "Train Tickets" },
-  { name: "City Cab", image: event, slug: "City Cab" },
-  { name: "Buffet", image: buffet, slug: "buffet" },
+  { name: "Cab Services", image: spa, slug: "cab-services" },
+  {
+    name: "Ferry, Bus & Train Information",
+    image: buffet,
+    slug: "ferry-bus-train-information",
+  },
+  { name: "Courier Services", image: party, slug: "courier-services" },
+  { name: "Tourist Buses & Boat Tours", image: yoga, slug: "tourist-buses-boat-tours" },
+  {
+    name: "Tourist Activities & Attractions",
+    image: salon,
+    slug: "tourist-activities-attractions",
+  },
+  { name: "Museums & Exhibitions", image: event, slug: "museums-exhibitions" },
+  { name: "Places to Visit Near the City", image: travelMain, slug: "places-to-visit-near-city" },
 ];
 
 const kidsFamilyItems = [
-  { name: "Kids Events", image: event, slug: "Kids Events" },
-  { name: "Play Areas", image: spa, slug: "Play Areas" },
-  { name: "Educational", image: yoga, slug: "Educational" },
-  { name: "Activities", image: party, slug: "Activities" },
-  { name: "Hobby Classes", image: salon, slug: "Hobby Classes" },
-  { name: "Birthday Parties", image: event, slug: "Birthday Parties" },
+  { name: "Kids Events", image: kidsEvent, slug: "kids-events" },
+  { name: "Kids Play Areas & Activities", image: bowling, slug: "kids-play-areas-activities" },
+  { name: "Educational & Hobby Classes", image: learn, slug: "educational-hobby-classes" },
+  { name: "Birthday Parties & Decorations", image: partyIcon, slug: "birthday-parties-decorations" },
+  { name: "Sports Academies & Coaching", image: football, slug: "sports-academies-coaching" },
+  { name: "Workshops & Short Courses", image: document, slug: "workshops-short-courses" },
 ];
 
 export default function HomeTravel() {

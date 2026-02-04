@@ -120,6 +120,7 @@ export function MediaUploadDialog({
       const media = await uploadServiceMedia({
         serviceId,
         file,
+        title: title.trim(),
       }).unwrap();
 
       onUploaded?.(media);

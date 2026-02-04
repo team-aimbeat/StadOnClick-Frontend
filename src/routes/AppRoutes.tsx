@@ -70,6 +70,7 @@ import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
+import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import AppLayout from "@/components/layout/AppLayout";
@@ -228,6 +229,11 @@ const appRouter = createBrowserRouter([
           {
             path: "leads/plans",
             element: <LeadPlansPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "coupons",
+            element: <AdminCouponsPage />,
             errorElement: <ErrorPage />,
           },
           {

@@ -20,6 +20,7 @@ export type RefundPolicyInput = {
 };
 
 export type VendorServiceEntity = {
+  name: string;
   longitude: any;
   latitude: any;
   id: string;
@@ -48,6 +49,9 @@ export interface UpdateVendorServicePayload {
   description?: string;
   terms?: string;
   status?: "DRAFT" | "LIVE" | "PAUSED";
+  latitude?: number;
+  longitude?: number;
+  categoryId?: string;
   refundPolicy?: RefundPolicyInput;
 }
 

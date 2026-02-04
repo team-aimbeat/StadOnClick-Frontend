@@ -1,14 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { HiOutlineCheckCircle, HiOutlineClock, HiOutlineEnvelope, HiOutlineMapPin, HiOutlinePhone, HiOutlineShieldCheck } from "react-icons/hi2";
+import {
+  HiOutlineCheckCircle,
+  HiOutlineClock,
+  HiOutlineEnvelope,
+  HiOutlineMapPin,
+  HiOutlinePhone,
+} from "react-icons/hi2";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
 import { useMockLoader } from "@/lib/useMockLoader";
-
-const tabs = [
+import { useGetVendorProfileQuery, useUpdateVendorProfileMutation } from "@/features/vendorProfile/api/vendorProfileApi";
+import type { BusinessHour } from "@/features/vendorProfile/api/vendorProfileApi";
+import toast from "react-hot-toast";
+const sidebarSections = [
   { id: "info", label: "Profile Info" },
   { id: "seo", label: "SEO & Visibility" },
   { id: "contact", label: "Contact & Location" },
@@ -16,345 +24,427 @@ const tabs = [
   { id: "preview", label: "Preview" },
 ];
 
-const profileDetails = {
-  name: "UrbanFix Plumbing & Heating",
-  slug: "urbanfix-plumbing-heating",
-  description: "24/7 emergency plumbing, heating, and water purifier services across Mumbai & Pune with verified technicians.",
-  email: "hello@urbanfix.co",
-  phone: "+91 99230 44519",
-  city: "Mumbai",
-  address: "Unit B-403, Neptune Tower, Lower Parel, Mumbai 400013",
-  tags: ["Emergency servicеs", "Household", "Commercial", "Gas service"],
-};
-
-const seoDraft = {
-  title: "UrbanFix Plumbing & Heating | 24/7 Emergency Support",
-  description:
-    "Trust UrbanFix for plumbing, heating, and healing water systems. Verified vendors, SLAs, and transparent pricing for Mumbai homes.",
-  keywords: ["plumbing", "gas fitting", "water purifier", "emergency services", "UrbanFix"],
-  snippetUrl: "https://stadonclick.com/vendors/urbanfix-plumbing-heating",
-};
-
-const hours = [
-  { day: "Mon", value: "07:00 - 21:00" },
-  { day: "Tue", value: "07:00 - 21:00" },
-  { day: "Wed", value: "07:00 - 21:00" },
-  { day: "Thu", value: "07:00 - 21:00" },
-  { day: "Fri", value: "07:00 - 21:00" },
-  { day: "Sat", value: "08:00 - 22:00" },
-  { day: "Sun", value: "09:00 - 20:00" },
-];
-
-const checklist = [
-  { label: "Add business description", done: true },
-  { label: "Upload KYC documents", done: false },
-  { label: "Connect Stripe payouts", done: false },
-  { label: "Publish 3+ services", done: true },
-  { label: "Respond to new leads", done: true },
-  { label: "Share recent photos", done: false },
-];
-
 const VendorProfile = () => {
   const dispatch = useAppDispatch();
-  const [activeTab, setActiveTab] = useState("info");
-  const [savedStatus, setSavedStatus] = useState("");
-  const [indexable, setIndexable] = useState(true);
+  const [activeSection, setActiveSection] = useState("info");
   const loading = useMockLoader();
-  const saveTimerRef = useRef<number | undefined>(undefined);
+
+  const { data: profileData, isLoading: isLoadingProfile, error: profileError } = useGetVendorProfileQuery();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateVendorProfileMutation();
+
+  const [businessName, setBusinessName] = useState("");
+  const [description, setDescription] = useState("");
+  const [headquarters, setHeadquarters] = useState("");
+  const [serviceOverview, setServiceOverview] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
+  const [isIndexable, setIsIndexable] = useState(true);
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
+  const [invalidHours, setInvalidHours] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (profileData?.data) {
+      const profile = profileData.data;
+      setBusinessName(profile.businessName || "");
+      setDescription(profile.description || "");
+      setHeadquarters(profile.headquarters || "");
+      setServiceOverview(profile.serviceOverview || "");
+      setSeoTitle(profile.seoTitle || "");
+      setSeoDescription(profile.seoDescription || "");
+      setSeoKeywords(profile.seoKeywords || []);
+      setIsIndexable(profile.isIndexable);
+      setContactEmail(profile.contactEmail || "");
+      setContactPhone(profile.contactPhone || "");
+      const hours = profile.businessHours;
+      if (Array.isArray(hours)) {
+        setBusinessHours(hours);
+      } else {
+        setBusinessHours([]);
+      }
+    }
+  }, [profileData]);
 
   useEffect(() => {
     dispatch(setPageTitle("Business Profile"));
   }, [dispatch]);
 
-  useEffect(() => {
-    return () => {
-      window.clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+  const validateBusinessHour = (slot: BusinessHour) =>
+    (slot.day?.trim().length ?? 0) >= 2 && (slot.value?.trim().length ?? 0) >= 2;
 
-  const handleSave = () => {
-    setSavedStatus("Profile saved");
-    window.clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = window.setTimeout(() => {
-      setSavedStatus("");
-    }, 1800);
+  const updateBusinessHour = (index: number, field: keyof BusinessHour, value: string) => {
+    setBusinessHours((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+    setInvalidHours((prev) => prev.filter((i) => i !== index));
   };
 
-  const infoFields = useMemo(
-    () => [
-      { label: "Business name", value: profileDetails.name },
-      { label: "StadonClick slug", value: profileDetails.slug },
-      { label: "Headquarters", value: profileDetails.address },
-      { label: "City", value: profileDetails.city },
-      { label: "Services focus", value: profileDetails.tags.join(" • ") },
-    ],
-    []
-  );
+  const handleSave = async () => {
+    const invalidIndexes = businessHours.reduce<number[]>((errs, slot, index) => {
+      const isValid = validateBusinessHour(slot);
+      if (!isValid) {
+        errs.push(index);
+      }
+      return errs;
+    }, []);
 
-  if (loading) {
+    if (invalidIndexes.length > 0) {
+      setInvalidHours(invalidIndexes);
+      toast.error("Each business hour entry needs at least 2 characters for day and time.");
+      return;
+    }
+
+    try {
+      await updateProfile({
+        businessName,
+        description: description || null,
+        headquarters: headquarters || null,
+        serviceOverview,
+        seoTitle: seoTitle || null,
+        seoDescription: seoDescription || null,
+        seoKeywords,
+        isIndexable,
+        contactEmail: contactEmail || null,
+        contactPhone: contactPhone || null,
+        businessHours: businessHours.length > 0 ? businessHours : undefined,
+      }).unwrap();
+
+      setInvalidHours([]);
+      toast.success("Profile saved");
+    } catch (error: any) {
+      console.error("Failed to save profile:", error);
+      toast.error(error?.data?.message || "Failed to save profile");
+    }
+  };
+
+  const infoFields = useMemo(() => {
+    if (!profileData?.data) return [];
+    const profile = profileData.data;
+    return [
+      { label: "Business name", value: profile.businessName },
+      { label: "StadonClick slug", value: profile.slug },
+      { label: "Headquarters", value: profile.headquarters || "Not set" },
+      { label: "City", value: profile.city?.name || "Not set" },
+      { label: "Services focus", value: serviceOverview || "Not set" },
+    ];
+  }, [profileData, serviceOverview]);
+
+  const completenessItems = useMemo(() => {
+    const profile = profileData?.data;
+
+    if (!profile) {
+      return [];
+    }
+
+    const servicesCount = profile._count?.services ?? 1;
+
+    return [
+      { label: "Add business details", done: Boolean(profile.description?.trim()) },
+      { label: "Upload KYC documents", done: profile.kycStatus !== "NOT_SUBMITTED" },
+      { label: "Connect Stripe payouts", done: profile.payoutsEnabled },
+      { label: "Publish  services", done: servicesCount >= 1 },
+      { label: "Respond to new leads", done: profile.totalBookings > 0 },
+      { label: "Share recent photos", done: Boolean(profile.seoImageKey) },
+    ];
+  }, [profileData]);
+
+  if (loading || isLoadingProfile) {
     return (
-      <DashboardContainer className="space-y-4 py-8">
-        <div className="space-y-3">
-          <div className="h-8 w-2/5 animate-pulse rounded-full bg-slate-200" />
-          <div className="grid grid-cols-2 gap-3">
-            <div className="h-6 rounded-lg bg-slate-200" />
-            <div className="h-6 rounded-lg bg-slate-200" />
+      <DashboardContainer className="py-10">
+        <div className="animate-pulse space-y-8">
+          <div className="h-8 w-64 bg-slate-200 rounded" />
+          <div className="grid lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-3 space-y-6">
+              <div className="h-64 bg-slate-200 rounded-2xl" />
+            </div>
+            <div className="lg:col-span-9 space-y-6">
+              <div className="h-96 bg-slate-200 rounded-2xl" />
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 rounded-2xl bg-white p-5 shadow-sm">
-          <div className="h-40 rounded-lg bg-slate-100 animate-pulse" />
-          <div className="h-10 rounded-lg bg-slate-100 animate-pulse" />
         </div>
       </DashboardContainer>
     );
   }
 
+  if (profileError) {
+    return (
+      <DashboardContainer className="py-10">
+        <div className="rounded-2xl bg-red-50 border border-red-200 p-8 text-center">
+          <p className="text-red-800 font-medium">Failed to load profile data</p>
+          <p className="text-red-600 text-sm mt-2">Please try again or contact support</p>
+        </div>
+      </DashboardContainer>
+    );
+  }
+
+  const profile = profileData?.data;
+
   return (
-    <DashboardContainer className="space-y-5 pb-8">
+    <DashboardContainer className="py-8 pb-24">
       <TitleBreadCrumbs title="Business Profile" breadCrumbTitle="Vendor / Business Profile" />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Identity</p>
-              <h2 className="text-xl font-semibold text-slate-900">{profileDetails.name}</h2>
-              <p className="text-sm font-semibold text-slate-600">{profileDetails.address}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="space-y-1 text-right text-xs font-semibold text-slate-500">
-                <p>Profile review</p>
-                <p>Indexable</p>
-              </div>
-              <div className="space-y-1">
-                <StatusPill status="PENDING_REVIEW" />
-                <StatusPill status={indexable ? "Active" : "Hidden"} tone={indexable ? "success" : "danger"} size="sm" />
-              </div>
-            </div>
-          </div>
-          <p className="text-sm text-slate-700 leading-relaxed">{profileDetails.description}</p>
-          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
-            <NavLink
-              to="/vendor/services"
-              className="rounded-full border border-slate-200 px-3 py-1 uppercase tracking-[0.2em] text-slate-600 hover:border-blue-300 hover:text-blue-600"
-            >
-              View Services
-            </NavLink>
-            <NavLink
-              to="/vendor/media"
-              className="rounded-full border border-slate-200 px-3 py-1 uppercase tracking-[0.2em] text-slate-600 hover:border-blue-300 hover:text-blue-600"
-            >
-              Upload Media
-            </NavLink>
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
-              <HiOutlineShieldCheck className="h-4 w-4 text-emerald-500" />
-              {profileDetails.email}
-            </span>
-          </div>
-        </div>
-
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Profile completeness</p>
-          <div className="space-y-2 text-sm font-semibold text-slate-700">
-            {checklist.map((item) => (
-              <div key={item.label} className="flex items-center gap-2">
-                {item.done ? (
-                  <HiOutlineCheckCircle className="h-4 w-4 text-emerald-500" />
-                ) : (
-                  <HiOutlineClock className="h-4 w-4 text-amber-500" />
-                )}
-                <span className={item.done ? "text-slate-900" : "text-slate-500"}>{item.label}</span>
-              </div>
+      <div className="grid lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-3 lg:sticky lg:top-6 h-fit space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            {sidebarSections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`w-full text-left px-5 py-3.5 text-sm font-medium transition-colors ${
+                  activeSection === section.id
+                ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
+                : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {section.label}
+              </button>
             ))}
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            Improving these items can unlock more leads and higher ranking.
-          </div>
-        </div>
-      </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-4 py-3">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                activeTab === tab.id
-                  ? "bg-blue-600 text-white"
-                  : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setIndexable((prev) => !prev)}
-            className="ml-auto rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 sm:ml-0"
-          >
-            Toggle Indexable
-          </button>
-        </div>
-
-        <div className="space-y-4 p-4">
-          {activeTab === "info" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {infoFields.map((field) => (
-                  <div key={field.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">{field.label}</p>
-                    <p className="text-sm font-semibold text-slate-900">{field.value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-sm text-slate-600">
-                <p className="font-semibold text-slate-800">Why this matters</p>
-                <p>
-                  83% of conversions happen because the listing contains a clear description, verified contact and strong media assets.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "seo" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="space-y-1 text-sm">
-                  <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Title</p>
-                  <input
-                    type="text"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                    value={seoDraft.title}
-                    readOnly
-                  />
-                </div>
-                <div className="space-y-1 text-sm">
-                  <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Keywords</p>
-                  <input
-                    type="text"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                    value={seoDraft.keywords.join(", ")}
-                    readOnly
-                  />
-                </div>
-              </div>
-              <div className="space-y-1 text-sm">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-slate-500">Description</p>
-                <textarea
-                  rows={3}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900"
-                  value={seoDraft.description}
-                  readOnly
-                />
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Preview snippet</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{seoDraft.title}</p>
-                <p className="text-xs text-blue-600">{seoDraft.snippetUrl}</p>
-                <p className="text-sm text-slate-600">{seoDraft.description}</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "contact" && (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Contact</p>
-                <div className="text-sm text-slate-900">
-                  <p>
-                    <HiOutlinePhone className="inline h-4 w-4 text-blue-500" /> {profileDetails.phone}
-                  </p>
-                  <p>
-                  <HiOutlineEnvelope className="inline h-4 w-4 text-emerald-500" /> {profileDetails.email}
-                  </p>
-                  <p>
-                  <HiOutlineMapPin className="inline h-4 w-4 text-amber-500" /> {profileDetails.city}
-                  </p>
-                </div>
-                <NavLink
-                  to="/vendor/help"
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white"
-                >
-                  Contact support
-                </NavLink>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Location insight</p>
-                <p className="mt-2 text-sm text-slate-700">
-                  Your most viewed areas: Lower Parel, Bandra, Andheri. Show availability near these pincodes to convert more leads.
-                </p>
-                <div className="mt-4 h-32 rounded-2xl bg-gradient-to-br from-blue-50 to-white p-3 text-xs text-slate-500">
-                  Map preview placeholder
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "hours" && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {hours.map((slot) => (
-                <div
-                  key={slot.day}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
-                >
-                  <span>{slot.day}</span>
-                  <span>{slot.value}</span>
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-4 font-medium">
+              Profile completeness
+            </p>
+            <div className="space-y-3 text-sm">
+              {completenessItems.map((item) => (
+                <div key={item.label} className="flex items-center gap-2.5">
+                  {item.done ? (
+                    <HiOutlineCheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <HiOutlineClock className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                  )}
+                  <span className={item.done ? "text-slate-800" : "text-slate-600"}>{item.label}</span>
                 </div>
               ))}
-              <div className="col-span-1 sm:col-span-2 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-                Add holiday exceptions or block slots before you leave town.
-              </div>
             </div>
-          )}
+            <p className="mt-4 text-xs text-slate-500 leading-relaxed">
+              Completing these steps improves visibility and lead quality.
+            </p>
+          </div>
+        </aside>
 
-          {activeTab === "preview" && (
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Public preview</p>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900">{profileDetails.name}</p>
+        <main className="lg:col-span-9 space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 md:p-8">
+            <div className="pb-6 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Business</p>
+                  <h2 className="text-2xl font-semibold text-slate-900 mt-1">
+                    {profile?.businessName || "Your Business"}
+                  </h2>
+                  <p className="text-sm text-slate-600 mt-1">{profile?.headquarters || "Location not set"}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right text-xs font-medium text-slate-500">
+                    <p>Profile status</p>
+                    <p className="mt-0.5">Search visibility</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <StatusPill status={profile?.status || "PENDING_REVIEW"} />
+               
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-5 text-slate-700 leading-relaxed">{description || "No business description added yet."}</p>
+            </div>
+
+            {activeSection === "info" && (
+              <div className="pt-6 space-y-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {infoFields.map((field) => (
+                    <div key={field.label} className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                      <p className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{field.label}</p>
+                      <p className="mt-1.5 text-sm font-semibold text-slate-900">{field.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-xl bg-blue-50/40 border border-blue-100 p-5 text-sm text-slate-700">
+                  <p className="font-medium text-slate-800">Why this information matters</p>
+                  <p className="mt-1.5">Clear details help customers find and trust your business faster.</p>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "seo" && (
+              <div className="pt-6 space-y-6">
+                <div className="space-y-5 rounded-xl border border-slate-100 bg-slate-50/50 p-6">
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">SEO Title</label>
+                      <input
+                        type="text"
+                        value={seoTitle}
+                        onChange={(e) => setSeoTitle(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Keywords</label>
+                      <input
+                        type="text"
+                        value={seoKeywords.join(", ")}
+                        onChange={(e) => setSeoKeywords(e.target.value.split(",").map((k) => k.trim()))}
+                        className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">
+                      Meta Description
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={seoDescription}
+                      onChange={(e) => setSeoDescription(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-[80px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 p-5 bg-white">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Google preview</p>
+                  <p className="font-medium text-blue-700">{seoTitle || "Title not set"}</p>
+                  <p className="text-sm text-green-700">
+                    https://stadonclick.com/vendors/{profile?.slug || "your-slug"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600 line-clamp-2">
+                    {seoDescription || "No description set..."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "contact" && (
+              <div className="pt-6 grid md:grid-cols-2 gap-6">
+                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-6 shadow-sm">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-4 font-medium">Contact Details</p>
+                  <div className="space-y-4 text-sm">
+                    <div className="flex items-center gap-3">
+                      <HiOutlinePhone className="w-5 h-5 text-blue-500" />
+                      <span>{contactPhone || "Not provided"}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                    <HiOutlineEnvelope className="w-5 h-5 text-sky-500" />
+                      <span>{contactEmail || "Not provided"}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <HiOutlineMapPin className="w-5 h-5 text-amber-500" />
+                      <span>{profile?.city?.name || "Location not set"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-100 p-6 shadow-sm">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-3 font-medium">Location Performance</p>
+                  <p className="text-sm text-slate-700">
+                    Most viewed areas: Lower Parel, Bandra, Andheri. Consider highlighting availability in these zones.
+                  </p>
+                  <div className="mt-5 h-40 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg flex items-center justify-center text-slate-400 text-sm">
+                    Map preview (placeholder)
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === "hours" && (
+              <div className="pt-6 space-y-6">
+                <div className="rounded-xl border border-slate-100 p-6 bg-white shadow-sm">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {businessHours.length > 0 ? (
+                      businessHours.map((slot, index) => {
+                        const rowInvalid = invalidHours.includes(index);
+                        return (
+                          <div key={index} className="space-y-1">
+                            <div
+                              className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${
+                                rowInvalid
+                                  ? "border-red-300 bg-red-50"
+                                  : "border-slate-200 bg-slate-50"
+                              }`}
+                            >
+                              <input
+                                value={slot.day}
+                                onChange={(e) => updateBusinessHour(index, "day", e.target.value)}
+                                className="w-20 rounded border border-slate-300 px-3 py-1.5 text-sm"
+                                placeholder="Mon"
+                              />
+                              <input
+                                value={slot.value}
+                                onChange={(e) => updateBusinessHour(index, "value", e.target.value)}
+                                className="flex-1 rounded border border-slate-300 px-3 py-1.5 text-sm"
+                                placeholder="09:00 - 17:00"
+                              />
+                              <button
+                                onClick={() => {
+                                  setBusinessHours(businessHours.filter((_, i) => i !== index));
+                                  setInvalidHours((prev) => prev.filter((i) => i !== index));
+                                }}
+                                className="text-red-600 hover:text-red-700 text-sm font-medium"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            {rowInvalid && (
+                              <p className="text-xs text-red-600">
+                                Day and time must each be at least 2 characters.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="col-span-2 text-center py-8 text-slate-500 text-sm">
+                        No business hours added yet.
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setBusinessHours([...businessHours, { day: "", value: "" }])}
+                    className="mt-5 w-full py-2.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 hover:bg-blue-100 font-medium text-sm"
+                  >
+                    + Add Hours
+                  </button>
+                </div>
+              </div>
+            )}
+
+          {activeSection === "preview" && (
+            <div className="pt-6">
+              <div className="rounded-xl border border-slate-100 p-6 bg-white shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {profile?.businessName || "Business Name"}
+                  </h3>
                   <StatusPill status="LIVE" tone="success" size="sm" />
                 </div>
-                <p className="text-sm text-slate-600">{profileDetails.description}</p>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-                  <span>4.6 ★ (188 reviews)</span>
-                  <span>Verified</span>
-                  <span>24h response</span>
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <NavLink
-                    to="/vendor/services"
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-500"
-                  >
-                    View services listing →
-                  </NavLink>
-                  <NavLink
-                    to="/vendor/leads"
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-800"
-                  >
-                    See customer conversations →
-                  </NavLink>
-                </div>
+                <p className="text-slate-700">{description || "No description available"}</p>
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-700">
+          <div className="mt-6 border-t border-slate-100 pt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <button
-              type="button"
               onClick={handleSave}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              disabled={isUpdating}
+              className={`ml-auto px-8 py-2.5 rounded-xl font-semibold text-white transition ${
+                isUpdating ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              Save profile
+              {isUpdating ? "Saving..." : "Save Changes"}
             </button>
-            {savedStatus && <span className="text-emerald-600">{savedStatus}</span>}
           </div>
         </div>
-      </div>
-    </DashboardContainer>
-  );
+      </main>
+    </div>
+  </DashboardContainer>
+);
 };
 
 export default VendorProfile;

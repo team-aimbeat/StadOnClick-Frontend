@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, MapPin, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, Clock, MapPin, Star } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Service } from "./types"
 
 type ServiceCardProps = {
@@ -12,29 +13,116 @@ export default function ServiceCard({
   onViewDetails,
   onEnquiry,
 }: ServiceCardProps) {
+  const images = useMemo(() => {
+    const list =
+      service.images && service.images.length > 0 ? service.images : [service.image]
+    return list.filter(Boolean)
+  }, [service.image, service.images])
+  const imagesKey = useMemo(() => images.join("|"), [images])
+
+  const loopImages = useMemo(() => {
+    if (images.length <= 1) return images
+    return [images[images.length - 1]!, ...images, images[0]!]
+  }, [images])
+
+  const [activeImageIndex, setActiveImageIndex] = useState(images.length > 1 ? 1 : 0)
+  const [transitionEnabled, setTransitionEnabled] = useState(true)
+  const isAnimatingRef = useRef(false)
+  const snapRafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    setTransitionEnabled(false)
+    setActiveImageIndex(images.length > 1 ? 1 : 0)
+    if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
+    snapRafRef.current = window.requestAnimationFrame(() => {
+      setTransitionEnabled(true)
+      isAnimatingRef.current = false
+    })
+
+    return () => {
+      if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
+      snapRafRef.current = null
+    }
+  }, [imagesKey])
+
+  const showPrev = () => {
+    if (images.length <= 1) return
+    if (isAnimatingRef.current) return
+    isAnimatingRef.current = true
+    setActiveImageIndex((prev) => prev - 1)
+  }
+
+  const showNext = () => {
+    if (images.length <= 1) return
+    if (isAnimatingRef.current) return
+    isAnimatingRef.current = true
+    setActiveImageIndex((prev) => prev + 1)
+  }
+
+  const handleCarouselTransitionEnd = () => {
+    if (images.length <= 1) return
+
+    // [cloneLast, ...realImages, cloneFirst]
+    if (activeImageIndex === 0) {
+      setTransitionEnabled(false)
+      setActiveImageIndex(images.length)
+      if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
+      snapRafRef.current = window.requestAnimationFrame(() => {
+        setTransitionEnabled(true)
+        isAnimatingRef.current = false
+      })
+      return
+    }
+
+    if (activeImageIndex === images.length + 1) {
+      setTransitionEnabled(false)
+      setActiveImageIndex(1)
+      if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
+      snapRafRef.current = window.requestAnimationFrame(() => {
+        setTransitionEnabled(true)
+        isAnimatingRef.current = false
+      })
+      return
+    }
+
+    isAnimatingRef.current = false
+  }
+
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition hover:-translate-y-1 shadow-md w-81.25 h-139.5">
+    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-139.5">
       <div className="relative h-51 overflow-hidden">
-        <img
-          src={service.image}
-          alt={service.title}
-          className="h-full w-full object-cover transition duration-500 hover:scale-105"
-        />
+        <div
+          className={`flex h-full w-full transform-gpu will-change-transform ${transitionEnabled ? "transition-transform duration-500 ease-out" : ""}`}
+          style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
+          onTransitionEnd={handleCarouselTransitionEnd}
+        >
+          {loopImages.map((src, index) => (
+            <div key={`${index}-${src}`} className="h-full w-full shrink-0">
+              <img src={src} alt={service.title} className="h-full w-full object-cover" />
+            </div>
+          ))}
+        </div>
         <button
           type="button"
-          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10"
+          aria-label="Previous image"
+          disabled={images.length <= 1}
+          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10 transition-transform hover:bg-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-40"
+          onClick={showPrev}
         >
         
           <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           type="button"
-          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10"
+          aria-label="Next image"
+          disabled={images.length <= 1}
+          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10 transition-transform hover:bg-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-40"
+          onClick={showNext}
         >
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
-      <div className="flex flex-col gap-3 p-5">
+      <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-[19px] font-bold text-slate-900">{service.title}</h3>
@@ -51,23 +139,36 @@ export default function ServiceCard({
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 flex-1">
           {service.details.map((detail, index) => (
             <div
               key={`${service.id}-detail-${index}`}
-              className="flex items-center justify-between rounded-sm bg-[#F6F6F6] px-4 py-3 w-70.75 h-17"
+              className="w-70.75 rounded-sm bg-[#F6F6F6] px-4 py-3 h-17 transform-gpu transition-transform duration-200 hover:scale-[1.01]"
             >
-              <div>
-                <p className="text-sm font-semibold text-slate-900">{detail.title}</p>
-                <p className="text-xs text-slate-500">{detail.subtitle}</p>
-                <p className="text-xs font-semibold text-slate-400">{detail.duration}</p>
+              {detail.subtitle ? (
+                <p className="text-xs font-medium text-slate-500">{detail.subtitle}</p>
+              ) : null}
+
+              <div className="mt-0.5 flex items-baseline justify-between gap-3">
+                <p className="min-w-0 text-sm font-black leading-snug text-slate-900">
+                  {detail.title}
+                </p>
+                <span className="shrink-0 text-[18px] font-black text-slate-900">
+                  {detail.price}
+                </span>
               </div>
-              <span className="text-[16px] font-bold text-slate-900">{detail.price}</span>
+
+              {detail.duration ? (
+                <div className="mt-1 flex items-center gap-2 text-xs font-medium text-slate-500">
+                  <Clock className="h-4 w-4" />
+                  <span>{detail.duration}</span>
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
 
-        <div className="flex gap-2 pt-1">
+        <div className="mt-auto flex gap-2 pt-1">
           <button
             type="button"
             onClick={() => onViewDetails(service)}

@@ -1,5 +1,7 @@
 
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+
+import { baseQueryWithReauth } from '@/app/services/baseApi';
 
 export interface ServiceMedia {
   id: string;
@@ -12,9 +14,7 @@ export interface ServiceMedia {
 
 export const serviceMediaApi = createApi({
   reducerPath: 'serviceMediaApi',
-   baseQuery: fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['ServiceMedia'],
   endpoints: (builder) => ({
     getServiceMedia: builder.query<ServiceMedia[], string>({

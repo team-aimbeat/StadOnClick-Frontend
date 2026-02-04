@@ -1,8 +1,9 @@
 import { Check, Search, Star } from "lucide-react";
-import { useState, type ChangeEvent } from "react";
+import { useMemo, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
 import filterIcon from "@/assets/icons/filter.svg";
 import mapImage from "@/assets/Images/map.png";
 import couponImage from "@/assets/Images/coupon2.png";
+import { useGetWelcomeCouponsQuery, type WelcomeCoupon } from "@/services/welcomeCouponsApi";
 
 const highlightFilters = [
   { label: "4.5", icon: <Star className="h-3 w-3 text-amber-500" /> },
@@ -10,50 +11,103 @@ const highlightFilters = [
   { label: "Nearby" },
 ];
 const categories = [
-  { label: "Hair & salon", count: 23 },
-  { label: "Spa & wellness", count: 18 },
-  { label: "Fitness", count: 14 },
-  { label: "Events", count: 12 },
-  { label: "Vacation", count: 9 },
+  { id: "Hair & salon", label: "Hair & salon", count: 23 },
+  { id: "Spa & wellness", label: "Spa & wellness", count: 18 },
+  { id: "Fitness", label: "Fitness", count: 14 },
+  { id: "Events", label: "Events", count: 12 },
+  { id: "Vacation", label: "Vacation", count: 9 },
 ];
 
 const locations = [
-  { label: "Stockholms", count: 23 },
-  { label: "Gothenburg", count: 18 },
-  { label: "Malmo", count: 14 },
-  { label: "Kalmar", count: 12 },
-  { label: "Uppsala", count: 9 },
+  { id: "Stockholms", label: "Stockholms", count: 23 },
+  { id: "Gothenburg", label: "Gothenburg", count: 18 },
+  { id: "Malmo", label: "Malmo", count: 14 },
+  { id: "Kalmar", label: "Kalmar", count: 12 },
+  { id: "Uppsala", label: "Uppsala", count: 9 },
 ];
 
-export default function ServicesSidebar() {
+export type ServicesSidebarFilterItem = {
+  id: string;
+  label: string;
+  count: number;
+};
+
+export type ServicesSidebarProps = {
+  categories?: ServicesSidebarFilterItem[];
+  locations?: ServicesSidebarFilterItem[];
+  selectedCategoryIds?: string[];
+  selectedLocationIds?: string[];
+  onToggleCategory?: (categoryId: string) => void;
+  onToggleLocation?: (locationId: string) => void;
+  ratingMin?: number;
+  onToggleRatingMin?: () => void;
+  priceRange?: { min: number; max: number };
+  onPriceRangeChange?: Dispatch<SetStateAction<{ min: number; max: number }>>;
+  onApplyPrice?: () => void;
+  onResetPrice?: () => void;
+  onClearAll?: () => void;
+};
+
+const formatWelcomeCouponLabel = (coupon: WelcomeCoupon) => {
+  if (coupon.title) return coupon.title;
+
+  const base = coupon.discountType === "FLAT" ? `₹${coupon.value}` : `${coupon.value}%`;
+  const suffix = coupon.onlyNewCustomers ? "off first booking" : "off";
+  return `${base} ${suffix}`;
+};
+
+export default function ServicesSidebar({
+  categories: providedCategories,
+  locations: providedLocations,
+  selectedCategoryIds: controlledCategoryIds,
+  selectedLocationIds: controlledLocationIds,
+  onToggleCategory,
+  onToggleLocation,
+  ratingMin,
+  onToggleRatingMin,
+  priceRange: controlledPriceRange,
+  onPriceRangeChange,
+  onApplyPrice,
+  onResetPrice,
+  onClearAll,
+}: ServicesSidebarProps) {
   const PRICE_MIN = 0;
   const PRICE_MAX = 500;
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([
-    "Hair & salon",
-  ]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([
-    "Stockholms",
-  ]);
-  const [priceRange, setPriceRange] = useState({
+  const resolvedCategories = providedCategories ?? categories;
+  const resolvedLocations = providedLocations ?? locations;
+
+  const [categorySearch, setCategorySearch] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+
+  const [uncontrolledCategoryIds, setUncontrolledCategoryIds] = useState<string[]>(() =>
+    categories[0] ? [categories[0].id] : []
+  );
+  const [uncontrolledLocationIds, setUncontrolledLocationIds] = useState<string[]>(() =>
+    locations[0] ? [locations[0].id] : []
+  );
+  const [uncontrolledPriceRange, setUncontrolledPriceRange] = useState({
     min: PRICE_MIN,
     max: PRICE_MAX,
   });
 
-  const toggleCategory = (label: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(label)
-        ? prev.filter((category) => category !== label)
-        : [...prev, label]
-    );
+  const selectedCategoryIds = controlledCategoryIds ?? uncontrolledCategoryIds;
+  const selectedLocationIds = controlledLocationIds ?? uncontrolledLocationIds;
+
+  const priceRange = controlledPriceRange ?? uncontrolledPriceRange;
+  const setPriceRange = onPriceRangeChange ?? setUncontrolledPriceRange;
+
+  const toggleSelected = (ids: string[], id: string) =>
+    ids.includes(id) ? ids.filter((entry) => entry !== id) : [...ids, id];
+
+  const toggleCategory = (id: string) => {
+    if (onToggleCategory) return onToggleCategory(id);
+    setUncontrolledCategoryIds((prev) => toggleSelected(prev, id));
   };
 
-  const toggleLocation = (label: string) => {
-    setSelectedLocations((prev) =>
-      prev.includes(label)
-        ? prev.filter((location) => location !== label)
-        : [...prev, label]
-    );
+  const toggleLocation = (id: string) => {
+    if (onToggleLocation) return onToggleLocation(id);
+    setUncontrolledLocationIds((prev) => toggleSelected(prev, id));
   };
 
   const handleRangeInput =
@@ -71,8 +125,40 @@ export default function ServicesSidebar() {
   };
 
   const handleResetPrice = () => {
-    setPriceRange({ min: PRICE_MIN, max: PRICE_MAX });
+    if (onResetPrice) {
+      onResetPrice();
+      return;
+    }
+    setUncontrolledPriceRange({ min: PRICE_MIN, max: PRICE_MAX });
   };
+
+  const handleClearAll = () => {
+    if (onClearAll) {
+      onClearAll();
+      return;
+    }
+
+    setUncontrolledCategoryIds([]);
+    setUncontrolledLocationIds([]);
+    setUncontrolledPriceRange({ min: PRICE_MIN, max: PRICE_MAX });
+  };
+
+  const filteredCategories = useMemo(() => {
+    const q = categorySearch.trim().toLowerCase();
+    if (!q) return resolvedCategories;
+    return resolvedCategories.filter((item) => item.label.toLowerCase().includes(q));
+  }, [categorySearch, resolvedCategories]);
+
+  const filteredLocations = useMemo(() => {
+    const q = locationSearch.trim().toLowerCase();
+    if (!q) return resolvedLocations;
+    return resolvedLocations.filter((item) => item.label.toLowerCase().includes(q));
+  }, [locationSearch, resolvedLocations]);
+
+  const { data: welcomeCoupons = [] } = useGetWelcomeCouponsQuery({ limit: 1 });
+  const welcomeCoupon = welcomeCoupons[0];
+  const couponCode = welcomeCoupon?.code ?? "NEW1000";
+  const couponLabel = welcomeCoupon ? formatWelcomeCouponLabel(welcomeCoupon) : "₹1000 off first booking";
 
   return (
     <aside className="hidden w-84 flex-col gap-6 rounded-lg bg-white p-5 shadow-lg shadow-slate-900/5 backdrop-blur lg:flex">
@@ -84,6 +170,7 @@ export default function ServicesSidebar() {
         <button
           type="button"
           className="text-[12px] font-medium tracking-wide text-[#3289FF]"
+          onClick={handleClearAll}
         >
           Clear all
         </button>
@@ -103,6 +190,11 @@ export default function ServicesSidebar() {
             <span
               key={filter.label}
               className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-1 text-xs font-semibold text-slate-600 shadow-sm"
+              onClick={
+                filter.label === "4.5" && onToggleRatingMin ? () => onToggleRatingMin() : undefined
+              }
+              role={filter.label === "4.5" ? "button" : undefined}
+              aria-pressed={filter.label === "4.5" ? ratingMin === 4.5 : undefined}
             >
               {filter.icon}
               {filter.label}
@@ -118,11 +210,11 @@ export default function ServicesSidebar() {
         <div className="mt-3 flex items-center gap-5">
           <div className="flex flex-col text-xs text-slate-500">
             <span>Use code</span>
-            <span className="font-semibold text-sky-500">NEW1000</span>
+            <span className="font-semibold text-sky-500">{couponCode}</span>
           </div>
           <div className="flex flex-col gap-2 ml-4">
             <div className="text-[13px] font-semibold text-nowrap text-slate-900">
-              ₹1000 off first booking
+              {couponLabel}
             </div>
             <button
               type="button"
@@ -144,17 +236,19 @@ export default function ServicesSidebar() {
           <input
             type="search"
             placeholder="Search category"
+            value={categorySearch}
+            onChange={(event) => setCategorySearch(event.target.value)}
             className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
           />
         </div>
 
         <div className="rounded-xl bg-[#F9F9F9] p-3">
           <div className="flex flex-col max-h-[210px] gap-2 overflow-y-auto">
-            {categories.map((category) => {
-              const isSelected = selectedCategories.includes(category.label);
+            {filteredCategories.map((category) => {
+              const isSelected = selectedCategoryIds.includes(category.id);
               return (
                 <label
-                  key={category.label}
+                  key={category.id}
                   className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-medium text-slate-900 transition ${
                     isSelected
                       ? "border-sky-200 bg-white shadow-sm"
@@ -164,7 +258,7 @@ export default function ServicesSidebar() {
                   <input
                     type="checkbox"
                     checked={isSelected}
-                    onChange={() => toggleCategory(category.label)}
+                    onChange={() => toggleCategory(category.id)}
                     className="sr-only"
                     aria-label={`Filter by ${category.label}`}
                   />
@@ -202,17 +296,19 @@ export default function ServicesSidebar() {
           <input
             type="search"
             placeholder="Search location"
+            value={locationSearch}
+            onChange={(event) => setLocationSearch(event.target.value)}
             className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
           />
         </div>
 
         <div className="rounded-xl bg-[#F9F9F9] p-3">
           <div className="flex flex-col max-h-[210px] gap-2 overflow-y-auto">
-            {locations.map((location) => {
-              const isSelected = selectedLocations.includes(location.label);
+            {filteredLocations.map((location) => {
+              const isSelected = selectedLocationIds.includes(location.id);
               return (
                 <label
-                  key={location.label}
+                  key={location.id}
                   className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-medium text-slate-900 transition ${
                     isSelected
                       ? "border-sky-200 bg-white shadow-sm"
@@ -222,7 +318,7 @@ export default function ServicesSidebar() {
                   <input
                     type="checkbox"
                     checked={isSelected}
-                    onChange={() => toggleLocation(location.label)}
+                    onChange={() => toggleLocation(location.id)}
                     className="sr-only"
                     aria-label={`Filter by ${location.label}`}
                   />
@@ -313,7 +409,11 @@ export default function ServicesSidebar() {
           </div>
 
           <div className="space-y-2">
-            <button className="w-full rounded-xl w-[277px] h-[36px] bg-[#1D76FF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600">
+            <button
+              type="button"
+              onClick={onApplyPrice}
+              className="w-full rounded-xl w-[277px] h-[36px] bg-[#1D76FF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
+            >
               Apply
             </button>
             <button

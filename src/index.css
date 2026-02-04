@@ -2493,3 +2493,9 @@
     transform: translateY(0);
   }
 }
+
+@layer base {
+  .leaflet-container {
+    z-index: 0 !important;
+  }
+}
