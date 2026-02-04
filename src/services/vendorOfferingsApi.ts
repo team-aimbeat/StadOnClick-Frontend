@@ -40,6 +40,7 @@ type RawVendorOffering = VendorOffering & {
 export interface CreateOfferingPayload {
   serviceId: string;
   name: string;
+  description: string;
   basePrice: number;
   salePrice: number;
   maxQuantity?: number | null;

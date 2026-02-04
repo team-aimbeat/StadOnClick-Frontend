@@ -58,6 +58,8 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
     slug: slugify(service.title),
     details: (service.offeringsPreview ?? []).map((offering) => ({
       title: offering.name,
+      subtitle: offering.description ?? undefined,
+      duration: offering.durationLabel ?? undefined,
       price: formatMoney(offering.salePrice ?? offering.basePrice, offering.currency ?? "INR"),
       compareAtPrice:
         offering.basePrice > offering.salePrice

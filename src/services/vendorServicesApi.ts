@@ -49,6 +49,9 @@ export interface UpdateVendorServicePayload {
   description?: string;
   terms?: string;
   status?: "DRAFT" | "LIVE" | "PAUSED";
+  latitude?: number;
+  longitude?: number;
+  categoryId?: string;
   refundPolicy?: RefundPolicyInput;
 }
 

@@ -9,6 +9,7 @@ export type MarketplaceServiceOfferingPreview = {
   basePrice: number;
   salePrice: number;
   currency: string;
+  durationLabel?: string | null;
 };
 
 export type MarketplaceService = {

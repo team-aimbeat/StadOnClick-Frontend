@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import {
   HiOutlineArrowDown,
   HiOutlineArrowUp,
@@ -16,6 +15,10 @@ import {
   useDeleteServiceMediaMutation,
   useGetServiceMediaQuery,
 } from "@/services/serviceMediaApi";
+import {
+  useGetVendorProfileStatusQuery,
+  useGetVendorServicesQuery,
+} from "@/services/vendorServicesApi";
 import { MediaUploadDialog } from "@/components/modals/MediaUploadDialog";
 import { ConfirmDeleteDialog } from "@/components/modals/ConfirmDeleteDialog";
 
@@ -39,7 +42,6 @@ const mapToMediaItem = (media: ServiceMedia, fallbackIndex: number): MediaItem =
 
 const VendorMedia = () => {
   const dispatch = useAppDispatch();
-  const { serviceId } = useParams<{ serviceId: string }>();
 
   const [items, setItems] = useState<MediaItem[]>([]);
   const [message, setMessage] = useState("");
@@ -47,8 +49,25 @@ const VendorMedia = () => {
   const [deletingMediaId, setDeletingMediaId] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmingMediaId, setConfirmingMediaId] = useState<string | null>(null);
-  const resolvedServiceId =
-    serviceId ?? "64e3564c-072f-4a5f-b9b9-b0546ac1c554";
+
+  const { data: vendorProfile, isLoading: isVendorLoading } =
+    useGetVendorProfileStatusQuery();
+  const vendorId = vendorProfile?.id as string | undefined;
+
+  const { data: vendorServices = [], isLoading: isServicesLoading } =
+    useGetVendorServicesQuery(vendorId!, {
+      skip: !vendorId,
+    });
+
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedServiceId && vendorServices.length > 0) {
+      setSelectedServiceId(vendorServices[0].id);
+    }
+  }, [selectedServiceId, vendorServices]);
+
+  const resolvedServiceId = selectedServiceId;
   const [deleteServiceMedia] = useDeleteServiceMediaMutation();
 
   useEffect(() => {
@@ -60,7 +79,9 @@ const VendorMedia = () => {
     isLoading,
     isError,
     error,
-  } = useGetServiceMediaQuery(resolvedServiceId);
+  } = useGetServiceMediaQuery(resolvedServiceId!, {
+    skip: !resolvedServiceId,
+  });
 
   useEffect(() => {
     if (!data) return;
@@ -123,6 +144,11 @@ const VendorMedia = () => {
   };
 
   const deleteMedia = async (id: string) => {
+    if (!resolvedServiceId) {
+      setMessage("Please select a service first.");
+      return;
+    }
+
     setDeletingMediaId(id);
     setMessage("");
 
@@ -155,7 +181,7 @@ const VendorMedia = () => {
     setConfirmingMediaId(null);
   };
 
-  if (isLoading) {
+  if (isVendorLoading || isServicesLoading || isLoading) {
     return (
       <DashboardContainer className="space-y-4 pt-8">
         <div className="h-8 w-1/4 animate-pulse rounded-full bg-slate-200" />
@@ -188,6 +214,29 @@ const VendorMedia = () => {
         breadCrumbTitle="Vendor / Photos & Media"
       />
 
+      {vendorServices.length > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+          <p className="text-xs font-semibold text-slate-600">Select service</p>
+          <select
+            value={resolvedServiceId ?? ""}
+            onChange={(e) => setSelectedServiceId(e.target.value)}
+            className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm"
+          >
+            {vendorServices.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {!resolvedServiceId && vendorServices.length === 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+          Create a service first, then you can upload media for it.
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-semibold text-slate-700">
           Gallery ({items.length}/12)
@@ -196,6 +245,7 @@ const VendorMedia = () => {
         <button
           type="button"
           onClick={handleUploadButton}
+          disabled={!resolvedServiceId}
           className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-1 text-xs font-semibold text-slate-700 hover:border-blue-300"
         >
           <HiOutlineCloud className="h-6 w-6" />
@@ -203,12 +253,14 @@ const VendorMedia = () => {
         </button>
       </div>
 
-      <MediaUploadDialog
-        open={isUploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        serviceId={resolvedServiceId}
-        onUploaded={handleMediaUploaded}
-      />
+      {resolvedServiceId && (
+        <MediaUploadDialog
+          open={isUploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          serviceId={resolvedServiceId}
+          onUploaded={handleMediaUploaded}
+        />
+      )}
 
       <ConfirmDeleteDialog
         open={confirmDialogOpen}
