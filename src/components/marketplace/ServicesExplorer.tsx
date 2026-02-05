@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import bannerImage from "@/assets/images/bgsalon.jpg"
 import { ChevronDown } from "lucide-react"
+import { slugifyServiceTitle } from "@/utils/slugify"
 import { Service } from "./types"
 import ServicesSidebar from "./ServicesSidebar"
 import EnquiryModal from "./enquiry/EnquiryModal"
@@ -17,14 +18,6 @@ const PAGE_SIZE = 18
 const PRICE_MIN = 0
 const PRICE_MAX = 500
 const DEFAULT_RATING_FILTER = 4.5
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
 
 const formatMoney = (amount: number, currency: string) => {
   try {
@@ -55,7 +48,7 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
     reviews: service.ratingCount,
     image: images[0] ?? bannerImage,
     images,
-    slug: slugify(service.title),
+    slug: slugifyServiceTitle(service.title),
     details: (service.offeringsPreview ?? []).map((offering) => ({
       title: offering.name,
       subtitle: offering.description ?? undefined,

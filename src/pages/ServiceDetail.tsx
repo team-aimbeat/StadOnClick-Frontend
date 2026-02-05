@@ -9,6 +9,7 @@ import { slotStatusLegend, slotStatusMeta, SlotOption, SlotStatus } from "@/comp
 import { useAppSelector } from "@/app/hooks"
 
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
+import { useListMarketplaceServicesQuery } from "@/services/marketplaceApi"
 import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
 import {
   useGetServiceOfferingsQuery,
@@ -24,6 +25,7 @@ import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge"
 import { LocationMap } from "@/components/marketplace/Map/LocationMap"
 import toast from "react-hot-toast"
+import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify"
 
 
 type ReviewCard = {
@@ -97,8 +99,6 @@ type CartItem = {
   slotId: string | null
 }
 
-const VENDOR_ID = "bb2fa60c-570c-429c-bead-47d7f8b7bfc5"
-
 export default function ServiceDetail() {
   const navigate = useNavigate()
   const { serviceSlug } = useParams<{ serviceSlug?: string }>()
@@ -142,11 +142,29 @@ export default function ServiceDetail() {
   }
   const [fetchOfferingSlots, { data: fetchedSlots }] = useLazyGetOfferingSlotsQuery()
 
+    const slugSearchQuery = serviceSlug ? slugToSearchQuery(serviceSlug) : undefined
+  const marketplaceParams = slugSearchQuery
+    ? { q: slugSearchQuery, limit: 12, offset: 0 }
+    : undefined
+
+  const { data: marketplaceList, isLoading: marketplaceLoading } = useListMarketplaceServicesQuery(
+    marketplaceParams,
+    { skip: !serviceSlug },
+  )
+
+  const matchedMarketplaceService = useMemo(() => {
+    if (!serviceSlug || !marketplaceList?.data) return undefined
+    return marketplaceList.data.find((row) => slugifyServiceTitle(row.title) === serviceSlug)
+  }, [marketplaceList?.data, serviceSlug])
+
+  const vendorId = matchedMarketplaceService?.vendorId
+  console.log('yaha he meri Id',vendorId)
+
   useEffect(() => {
     if (bookedOffering) {
       fetchOfferingSlots({
         offeringId: bookedOffering.id,
-        vendorId: VENDOR_ID,
+        vendorId:vendorId,
       })
     }
   }, [bookedOffering, fetchOfferingSlots])
@@ -225,7 +243,7 @@ export default function ServiceDetail() {
 
     try {
       const response = await applyCoupon({
-        vendorId: VENDOR_ID,
+        vendorId: vendorId,
         promoCode: promoCode.trim(),
         subtotal: cartSubtotal,
       }).unwrap()
@@ -300,7 +318,7 @@ export default function ServiceDetail() {
     try {
       const order = await createOrder({
         userId,
-        vendorId: VENDOR_ID,
+        vendorId: vendorId,
         items: cartItems.map((item) => ({
           offeringId: item.offering.id,
           quantity: item.quantity,
@@ -323,15 +341,22 @@ export default function ServiceDetail() {
 
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
 
-  // 1. Fetch vendor services list (scoped by vendorId)
-  const { data: vendorServices, isLoading: servicesLoading } = useGetVendorServicesQuery(VENDOR_ID)
 
-  // Find the specific service matching the slug
-  const service = vendorServices?.find((s) =>
-    typeof s.name === 'string'
-      ? s.name.toLowerCase().replace(/ /g, '-') === serviceSlug
-      : false
-  ) || vendorServices?.[0]
+  const {
+    data: vendorServices,
+    isLoading: servicesLoading,
+  } = useGetVendorServicesQuery(vendorId ?? "", {
+    skip: !vendorId,
+  })
+
+  const slugMatchedService =
+    serviceSlug && vendorServices
+      ? vendorServices.find(
+          (item) =>
+            typeof item.title === "string" && slugifyServiceTitle(item.title) === serviceSlug,
+        )
+      : undefined
+  const service = slugMatchedService ?? vendorServices?.[0]
   const serviceId = service?.id
 
   // 2. Fetch Media (isolated)
@@ -368,7 +393,7 @@ export default function ServiceDetail() {
     }
   }
 
-  if (servicesLoading || mediaLoading || offeringsLoading || reviewsLoading) {
+  if (marketplaceLoading || servicesLoading || mediaLoading || offeringsLoading || reviewsLoading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>
   }
 
@@ -408,7 +433,7 @@ export default function ServiceDetail() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold text-slate-900">
-                    {service.name}
+                    {service.title}
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-black">
                     <div className="flex items-center gap-1 rounded-full px-3 py-1 font-bold ">
@@ -437,7 +462,7 @@ export default function ServiceDetail() {
               </div>
               <ServiceGallery 
                 galleryImages={galleryImages} 
-                serviceName={service.name} 
+                serviceName={service.title} 
               />
               <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 {service.status && (
@@ -711,7 +736,7 @@ export default function ServiceDetail() {
           <div className="space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-900">
-                About the spa
+                {service.title}'s Location
               </h2>
 
               <a
@@ -725,9 +750,9 @@ export default function ServiceDetail() {
             </div>
 
             <LocationMap
-              lat={19.136326}
-              lng={72.827660}
-              name={service.name}
+              lat={service.latitude}
+              lng={service.longitude}
+              name={service.title}
             />
           </div>
        
@@ -990,7 +1015,7 @@ export default function ServiceDetail() {
 
       <BookingModal
         isOpen={isBookingModalOpen}
-        serviceName={service.name}
+        serviceName={service.title}
         bookedOfferingName={bookedOffering?.name}
         selectedDate={selectedDate}
         selectedSlot={selectedSlot}
