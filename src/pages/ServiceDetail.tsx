@@ -97,7 +97,7 @@ type CartItem = {
   slotId: string | null
 }
 
-const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
+const VENDOR_ID = "bb2fa60c-570c-429c-bead-47d7f8b7bfc5"
 
 export default function ServiceDetail() {
   const navigate = useNavigate()
