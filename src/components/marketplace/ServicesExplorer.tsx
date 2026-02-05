@@ -40,16 +40,18 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
       ? [service.thumbnailUrl]
       : []
 
-  return {
-    id: service.id,
-    title: service.vendorName || service.title,
-    location: service.cityName ?? "—",
-    rating: service.ratingAvg,
-    reviews: service.ratingCount,
-    image: images[0] ?? bannerImage,
-    images,
-    slug: slugifyServiceTitle(service.title),
-    details: (service.offeringsPreview ?? []).map((offering) => ({
+    return {
+      id: service.id,
+      title: service.vendorName || service.title,
+      location: service.cityName ?? "—",
+      rating: service.ratingAvg,
+      reviews: service.ratingCount,
+      image: images[0] ?? bannerImage,
+      images,
+      slug: slugifyServiceTitle(service.title),
+      categoryName: service.categoryName ?? "—",
+      categoryId: service.categoryId,
+      details: (service.offeringsPreview ?? []).map((offering) => ({
       title: offering.name,
       subtitle: offering.description ?? undefined,
       duration: offering.durationLabel ?? undefined,

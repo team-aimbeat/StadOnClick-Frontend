@@ -53,6 +53,7 @@ export const store = configureStore({
     [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
     [serviceMediaApi.reducerPath]: serviceMediaApi.reducer,
     [vendorServicesApi.reducerPath]: vendorServicesApi.reducer,
+    [leadsApi.reducerPath]: leadsApi.reducer,
     [adminVendorApi.reducerPath]: adminVendorApi.reducer,
     [bookingsApi.reducerPath]: bookingsApi.reducer,
     [vendorcouponsApi.reducerPath]: vendorcouponsApi.reducer,
@@ -64,7 +65,6 @@ export const store = configureStore({
     [escalationApi.reducerPath]: escalationApi.reducer,
     [systemHealthApi.reducerPath]: systemHealthApi.reducer,
     [vendorKycApi.reducerPath]: vendorKycApi.reducer,
-    [leadsApi.reducerPath]: leadsApi.reducer,
     [vendorNotificationsApi.reducerPath]: vendorNotificationsApi.reducer,
     [userNotificationsApi.reducerPath]: userNotificationsApi.reducer,
     [accountApi.reducerPath]: accountApi.reducer,
@@ -89,6 +89,7 @@ export const store = configureStore({
       .concat(serviceCategoriesApi.middleware)
       .concat(serviceMediaApi.middleware)
       .concat(vendorServicesApi.middleware)
+      .concat(leadsApi.middleware)
       .concat(vendorOrdersApi.middleware)
       .concat(adminVendorApi.middleware)
     .concat(bookingsApi.middleware)
@@ -100,7 +101,6 @@ export const store = configureStore({
       .concat(supportApi.middleware)
       .concat(escalationApi.middleware)
       .concat(systemHealthApi.middleware)
-      .concat(leadsApi.middleware)
       .concat(vendorNotificationsApi.middleware)
       .concat(userNotificationsApi.middleware)
       .concat(accountApi.middleware)

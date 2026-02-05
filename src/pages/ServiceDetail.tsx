@@ -1,4 +1,4 @@
-import { BadgeCheck, Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
+import { BadgeCheck, Check, ChevronLeft, Heart, MapIcon, MapPin, MapPinIcon, Share2, Star } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useEffect, useMemo, useState } from "react"
 import salon1 from "@/assets/images/salon1.png"
@@ -38,14 +38,6 @@ type ReviewCard = {
   date: string
   location: string
 }
-
-const starBreakdown = [
-  { label: "5 ⭐", percent: 72 },
-  { label: "4 ⭐", percent: 17 },
-  { label: "3 ⭐", percent: 7 },
-  { label: "2 ⭐", percent: 3 },
-  { label: "1 ⭐", percent: 1 },
-]
 
 const STOCKHOLM_TIMEZONE = "Europe/Stockholm"
 
@@ -158,8 +150,9 @@ export default function ServiceDetail() {
   }, [marketplaceList?.data, serviceSlug])
 
   const vendorId = matchedMarketplaceService?.vendorId
-  console.log('yaha he meri Id',vendorId)
-
+  const serviceCity = matchedMarketplaceService?.cityName ?? "—"
+  const rules = matchedMarketplaceService?.offeringsPreview ?? "—"
+console.log(rules)
   useEffect(() => {
     if (bookedOffering) {
       fetchOfferingSlots({
@@ -367,19 +360,51 @@ export default function ServiceDetail() {
 
   const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(serviceId ?? "", { skip: !serviceId })
 
+  const starBreakdown = useMemo(() => {
+    const list = reviews ?? []
+    const total = list.length
+    if (total === 0) {
+      return [5, 4, 3, 2, 1].map((rating) => ({
+        label: `${rating} ⭐`,
+        percent: 0,
+      }))
+    }
+    return [5, 4, 3, 2, 1].map((rating) => {
+      const count = list.filter((review) => review.rating === rating).length
+      const percent = Math.round((count / total) * 100)
+      return {
+        label: `${rating} ⭐`,
+        percent,
+      }
+    })
+  }, [reviews])
+
+  const descriptionRules = useMemo(() => {
+    const seen = new Map<string, { label: string; value?: string | null }>()
+    for (const offering of offerings ?? []) {
+      for (const rule of offering.rules ?? []) {
+        const key = `${rule.ruleType}:${rule.value ?? ""}`
+        if (!seen.has(key)) {
+          seen.set(key, {
+            label: formatRuleLabel(rule.ruleType),
+            value: rule.value ?? null,
+          })
+        }
+      }
+    }
+    return Array.from(seen.values())
+  }, [offerings])
+
   const handleSubmitReview = async () => {
     if (!serviceId) return
     if (userRating === 0) {
       toast.success("Please select a rating")
       return
     }
-    if (!userComment.trim()) {
-      toast.success("Please enter a comment")
-      return
-    }
 
     try {
       await createReview({
+        userId,
         serviceId,
         rating: userRating,
         comment: userComment,
@@ -436,6 +461,10 @@ export default function ServiceDetail() {
                     {service.title}
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-black">
+                    <div className="flex">
+                    <MapPinIcon className="h-5 w-5 "/>
+                  <div className="ml-2 font-semibold">{serviceCity}</div>
+                    </div>
                     <div className="flex items-center gap-1 rounded-full px-3 py-1 font-bold ">
                       <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
                       {(reviews && reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0")}
@@ -576,15 +605,36 @@ export default function ServiceDetail() {
                 })}
               </div>
             ) : (
-              <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">
-                  {serviceDescription}
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  {`We keep this experience updated—check the services tab to explore current offerings.`}
-                </p>
-              </div>
+            <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+              <p className="text-sm text-slate-500">
+                {serviceDescription}              {offerings.rules}   
+              </p>
+              <p className="text-xs text-slate-400">
+                {`We keep this experience updated—check the services tab to explore current offerings.`}
+              </p>
+              {descriptionRules.length > 0 && (
+                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-900">Service rules</p>
+                    <span className="text-xs font-medium text-slate-400">{descriptionRules.length} total</span>
+                  </div>
+                  <div className="space-y-1">
+                    {descriptionRules.map((rule) => (
+                      <div
+                        key={`${rule.label}-${rule.value}`}
+                        className="flex flex-wrap items-center gap-1 text-[13px] font-medium text-slate-500"
+                      >
+                        <span className="text-slate-700">{rule.label}</span>
+                        {rule.value ? (
+                          <span className="text-slate-400">—</span>
+                        ) : null}
+                        {rule.value ? <span>{rule.value}</span> : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             )}
           </div>
         </div>
@@ -994,6 +1044,8 @@ export default function ServiceDetail() {
               </div>
 
               <textarea
+                value={userComment}
+                onChange={(evt) => setUserComment(evt.target.value)}
                 placeholder="Tell fellow guests what made your visit special"
                 className="min-h-35 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 focus:border-blue-400 focus:outline-none"
               />

@@ -123,18 +123,21 @@ export default function ServiceCard({
         </button>
       </div>
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-[19px] font-bold text-slate-900">{service.title}</h3>
-            <div className="mt-1 flex items-center gap-2 text-[14px] text-slate-500 font-medium">
-              <MapPin className="h-5 w-5 text-black" />
-              {service.location}
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-[19px] font-bold text-slate-900">{service.title}</h3>
+              <div className="mt-1 text-sm font-semibold text-blue-600">
+                {service.categoryName}
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-[14px] text-slate-500 font-medium">
+                <MapPin className="h-5 w-5 text-black font-semibold" />
+                {service.location}
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500">
-              <Star className="h-4 w-4" />
-              {service.rating.toFixed(1)}
+            <div className="flex flex-col items-end">
+              <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500">
+                     <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
+                {service.rating.toFixed(1)}
             </span>
           </div>
         </div>
@@ -145,9 +148,6 @@ export default function ServiceCard({
               key={`${service.id}-detail-${index}`}
               className="w-70.75 rounded-sm bg-[#F6F6F6] px-4 py-3 h-17 transform-gpu transition-transform duration-200 hover:scale-[1.01]"
             >
-              {detail.subtitle ? (
-                <p className="text-xs font-medium text-slate-500">{detail.subtitle}</p>
-              ) : null}
 
               <div className="mt-0.5 flex items-baseline justify-between gap-3">
                 <p className="min-w-0 text-sm font-black leading-snug text-slate-900">
