@@ -15,6 +15,7 @@ import { bookingsApi } from "@/services/bookingsApi";
 import { vendorcouponsApi } from "@/services/vendoiCouponsApi";
 import { adminLeadPlansApi } from "@/features/adminLeads/api/adminLeadPlans.api";
 import { vendorLeadSubscriptionsApi } from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
+import { ordersApi } from "@/services/ordersApi";
 import { adminStaffApi } from "@/features/admin/staff/adminStaffApi";
 import { supportApi } from "@/features/support/supportApi";
 import supportRealtimeReducer from "@/features/support/supportRealtimeSlice";
@@ -50,6 +51,7 @@ export const store = configureStore({
     [preferencesApi.reducerPath]: preferencesApi.reducer,
     [vendorOfferingsApi.reducerPath]: vendorOfferingsApi.reducer,
     [vendorOrdersApi.reducerPath]: vendorOrdersApi.reducer,
+    [ordersApi.reducerPath]: ordersApi.reducer,
     [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
     [serviceMediaApi.reducerPath]: serviceMediaApi.reducer,
     [vendorServicesApi.reducerPath]: vendorServicesApi.reducer,
@@ -91,6 +93,7 @@ export const store = configureStore({
       .concat(vendorServicesApi.middleware)
       .concat(leadsApi.middleware)
       .concat(vendorOrdersApi.middleware)
+      .concat(ordersApi.middleware)
       .concat(adminVendorApi.middleware)
     .concat(bookingsApi.middleware)
       .concat(vendorcouponsApi.middleware)
