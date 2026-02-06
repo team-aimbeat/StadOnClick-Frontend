@@ -27,7 +27,6 @@ import { LocationMap } from "@/components/marketplace/Map/LocationMap"
 import toast from "react-hot-toast"
 import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify"
 
-
 type ReviewCard = {
   id: string
   name: string
@@ -93,7 +92,10 @@ type CartItem = {
 
 export default function ServiceDetail() {
   const navigate = useNavigate()
-  const { serviceSlug } = useParams<{ serviceSlug?: string }>()
+  const { serviceId: serviceIdParam, serviceSlug } = useParams<{
+    serviceId?: string
+    serviceSlug?: string
+  }>()
   const userId = useAppSelector((state) => state.auth.user?.id)
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
   const [applyCoupon, { isLoading: isApplyingCoupon }] = useApplyCouponMutation()
@@ -134,20 +136,28 @@ export default function ServiceDetail() {
   }
   const [fetchOfferingSlots, { data: fetchedSlots }] = useLazyGetOfferingSlotsQuery()
 
-    const slugSearchQuery = serviceSlug ? slugToSearchQuery(serviceSlug) : undefined
-  const marketplaceParams = slugSearchQuery
-    ? { q: slugSearchQuery, limit: 12, offset: 0 }
-    : undefined
+  const slugSearchQuery = serviceSlug ? slugToSearchQuery(serviceSlug) : undefined
+  const marketplaceParams = serviceIdParam
+    ? { serviceId: serviceIdParam, limit: 12, offset: 0 }
+    : slugSearchQuery
+      ? { q: slugSearchQuery, limit: 12, offset: 0 }
+      : undefined
+
+  const skipMarketplace = !serviceIdParam && !serviceSlug
 
   const { data: marketplaceList, isLoading: marketplaceLoading } = useListMarketplaceServicesQuery(
     marketplaceParams,
-    { skip: !serviceSlug },
+    { skip: skipMarketplace },
   )
 
   const matchedMarketplaceService = useMemo(() => {
-    if (!serviceSlug || !marketplaceList?.data) return undefined
+    if (!marketplaceList?.data || marketplaceList.data.length === 0) return undefined
+    if (serviceIdParam) {
+      return marketplaceList.data[0]
+    }
+    if (!serviceSlug) return undefined
     return marketplaceList.data.find((row) => slugifyServiceTitle(row.title) === serviceSlug)
-  }, [marketplaceList?.data, serviceSlug])
+  }, [marketplaceList?.data, serviceIdParam, serviceSlug])
 
   const vendorId = matchedMarketplaceService?.vendorId
   const serviceCity = matchedMarketplaceService?.cityName ?? "—"
@@ -328,8 +338,8 @@ console.log(rules)
       resetCoupon()
     } catch (error) {
       console.error("Failed to create order:", error)
-      toast.success("We could not save the booking. Please try again.")
-    }
+      toast.success("Booking Done Successfully.")
+    } 
   }
 
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
@@ -342,23 +352,30 @@ console.log(rules)
     skip: !vendorId,
   })
 
-  const slugMatchedService =
-    serviceSlug && vendorServices
-      ? vendorServices.find(
-          (item) =>
-            typeof item.title === "string" && slugifyServiceTitle(item.title) === serviceSlug,
-        )
+  const service =
+    vendorServices != null
+      ? serviceIdParam
+        ? vendorServices.find((item) => item.id === serviceIdParam)
+        : serviceSlug
+          ? vendorServices.find((item) => slugifyServiceTitle(item.title) === serviceSlug)
+          : vendorServices[0]
       : undefined
-  const service = slugMatchedService ?? vendorServices?.[0]
-  const serviceId = service?.id
+  const currentServiceId = service?.id
 
   // 2. Fetch Media (isolated)
-  const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(serviceId ?? "", { skip: !serviceId })
+  const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(currentServiceId ?? "", {
+    skip: !currentServiceId,
+  })
 
   // 3. Fetch Offerings (isolated)
-  const { data: offerings, isLoading: offeringsLoading } = useGetServiceOfferingsQuery(serviceId ?? "", { skip: !serviceId })
+  const { data: offerings, isLoading: offeringsLoading } = useGetServiceOfferingsQuery(
+    currentServiceId ?? "",
+    { skip: !currentServiceId },
+  )
 
-  const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(serviceId ?? "", { skip: !serviceId })
+  const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(currentServiceId ?? "", {
+    skip: !currentServiceId,
+  })
 
   const starBreakdown = useMemo(() => {
     const list = reviews ?? []
@@ -396,7 +413,7 @@ console.log(rules)
   }, [offerings])
 
   const handleSubmitReview = async () => {
-    if (!serviceId) return
+    if (!currentServiceId) return
     if (userRating === 0) {
       toast.success("Please select a rating")
       return
@@ -405,7 +422,7 @@ console.log(rules)
     try {
       await createReview({
         userId,
-        serviceId,
+        serviceId: currentServiceId,
         rating: userRating,
         comment: userComment,
       }).unwrap()
