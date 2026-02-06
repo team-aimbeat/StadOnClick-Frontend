@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, Bookmark, ChevronRight, Heart, ShoppingBag, ShoppingCart, Sparkles, UserRound, X } from "lucide-react";
+import { Bell, Bookmark, ChevronRight, ClipboardList, Heart, ShoppingBag, ShoppingCart, ShoppingCartIcon, Sparkles, UserRound, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   useEffect,
@@ -436,6 +436,16 @@ export default function UserHeader() {
                 setNotificationsMenuOpen(false);
                 setProfileMenuOpen(false);
                 navigate("/wishlist");
+              }}
+            />
+            <IconButton
+              icon={<ShoppingCartIcon  className="h-5 w-5 text-slate-500" />}
+              label="My orders"
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/orders");
               }}
             />
             <div ref={cartRef} className="relative">
