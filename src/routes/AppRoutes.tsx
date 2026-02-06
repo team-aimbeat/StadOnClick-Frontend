@@ -36,6 +36,7 @@ import Support from "@/pages/Support";
 import UserAccount from "@/pages/UserAccount";
 import Wishlist from "@/pages/Wishlist";
 import OrdersPage from "@/pages/Orders";
+import OrderConfirmationPage from "@/pages/OrderConfirmation";
 import VendorPlaceholder from "@/pages/VendorPlaceholder";
 
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
@@ -108,6 +109,10 @@ const appRouter = createBrowserRouter([
           {
             path: "/orders",
             element: <OrdersPage />,
+          },
+          {
+            path: "/orders/confirmation",
+            element: <OrderConfirmationPage />,
           },
           {
             path: "/sign-up",

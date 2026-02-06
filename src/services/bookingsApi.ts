@@ -1,5 +1,6 @@
 import { BookingRow } from "@/pages/BookingsPage";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "@/app/services/baseApi";
 
 type VendorBooking = {
   id: string;
@@ -11,7 +12,7 @@ type VendorBooking = {
     title?: string;
     category?: { name?: string };
   };
-  orderItem?: { priceFinal?: string,orderNumber?:any };
+  orderItem?: { priceFinal?: string; orderNumber?: any };
 };
 
 type VendorBookingsResponse = {
@@ -20,14 +21,18 @@ type VendorBookingsResponse = {
 };
 
 const toBookingRow = (booking: VendorBooking): BookingRow => {
-  const customerName = [booking.user?.firstName, booking.user?.lastName,booking.user?.email]
+  const customerName = [
+    booking.user?.firstName,
+    booking.user?.lastName,
+    booking.user?.email,
+  ]
     .filter(Boolean)
     .join(" ")
     .trim()
     .replace(/\s+/g, " ");
 
   return {
-    id: booking?.orderItem?.orderNumber,
+    id: booking.orderItem?.orderNumber,
     customer: customerName || "Guest",
     service: booking.vendorService?.category?.name ?? "Service",
     status: booking.status,
@@ -41,9 +46,7 @@ const toBookingRow = (booking: VendorBooking): BookingRow => {
 
 export const bookingsApi = createApi({
   reducerPath: "bookingsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL,
-  }),
+  baseQuery: baseQueryWithReauth, // ✅ SAME AS authApi
   tagTypes: ["Bookings"],
   endpoints: (builder) => ({
     getBookings: builder.query<BookingRow[], void>({

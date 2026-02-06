@@ -326,17 +326,31 @@ console.log(rules)
       return
     }
 
-    try {
-      const response = await createCheckoutSession({
-        userId,
-        vendorId,
-        items: cartItems.map((item) => ({
-          offeringId: item.offering.id,
-          quantity: item.quantity,
-          slotId: item.slotId ?? undefined,
-        })),
-        promoCode: appliedCoupon?.code || undefined,
-      }).unwrap()
+  try {
+    const response = await createCheckoutSession({
+      userId,
+      vendorId,
+      items: cartItems.map((item) => ({
+        offeringId: item.offering.id,
+        quantity: item.quantity,
+        slotId: item.slotId ?? undefined,
+      })),
+      promoCode: appliedCoupon?.code || undefined,
+    }).unwrap()
+
+      if (typeof window !== "undefined") {
+        const storagePayload = {
+          orderId: response.data?.orderId ?? null,
+          sessionId: response.data?.sessionId ?? null,
+        }
+
+        if (storagePayload.orderId || storagePayload.sessionId) {
+          window.sessionStorage.setItem(
+            "stadonclick.latestOrderReceipt",
+            JSON.stringify(storagePayload),
+          )
+        }
+      }
 
       setCartItems([])
       setPromoCode("")

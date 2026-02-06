@@ -11,14 +11,6 @@ const currencyFormatter = new Intl.NumberFormat("sv-SE", {
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
 
-const statusTone: Record<string, string> = {
-  PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CONFIRMED: "bg-sky-50 text-sky-700 border-sky-200",
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-  REFUND_REQUESTED: "bg-orange-50 text-orange-700 border-orange-200",
-  REFUNDED: "bg-rose-50 text-rose-700 border-rose-200",
-};
-
 function formatRelativeTime(iso?: string) {
   if (!iso) return "";
   const date = new Date(iso);
@@ -31,6 +23,14 @@ function formatRelativeTime(iso?: string) {
   if (diffSeconds < 172800) return "Yesterday";
   return date.toLocaleDateString();
 }
+
+const badgeTone: Record<string, string> = {
+  PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CONFIRMED: "bg-sky-50 text-sky-700 border-sky-200",
+  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+  REFUND_REQUESTED: "bg-orange-50 text-orange-700 border-orange-200",
+  REFUNDED: "bg-rose-50 text-rose-700 border-rose-200",
+};
 
 export default function OrdersPage() {
   const navigate = useNavigate();
@@ -100,68 +100,73 @@ export default function OrdersPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {groupedByVendor.map((order) => (
-              <div key={order.id} className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div
+                key={order.id}
+                className="rounded-[28px] max-w-[450px] border border-slate-200 bg-white p-6"
+              >
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                      {order.vendor.businessName}
-                    </p>
-                    <div className="mt-1 flex items-center gap-3">
-                      <span className="text-lg font-semibold text-slate-900">
-                        Order #{order.items[0]?.orderNumber ?? order.id.slice(-6)}
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Order</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-xl font-semibold text-slate-900">
+                        {order.items[0]?.orderNumber ?? order.id.slice(-6)}
                       </span>
                       <span
                         className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                          statusTone[order.status] ?? "border-slate-200 bg-slate-50 text-slate-500"
+                          badgeTone[order.status] ?? "border-slate-200 bg-slate-50 text-slate-500"
                         }`}
                       >
                         {order.status.replace(/_/g, " ")}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-500">Placed {formatRelativeTime(order.createdAt)}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-slate-500">Total paid</p>
-                    <p className="text-2xl font-semibold text-slate-900">{formatCurrency(order.totalFinal)}</p>
+                  <div className="text-sm text-slate-500">
+                    <p className="font-semibold text-slate-900">{formatCurrency(order.totalFinal)}</p>
+                    <p>Total paid</p>
                   </div>
                 </div>
+
+                <div className="mb-6 flex flex-wrap gap-3 text-xs text-slate-500">
+                  <span className="rounded-full border border-slate-200 px-3 py-1">From: {order.vendor.businessName}</span>
+                  <span className="rounded-full border border-slate-200 px-3 py-1">Status: {order.status.toLowerCase()}</span>
+                  <span className="rounded-full border border-slate-200 px-3 py-1">Placed {formatRelativeTime(order.createdAt)}</span>
+                </div>
+
                 <div className="space-y-3">
                   {order.items.map((item) => (
                     <div
                       key={item.id}
-                      className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4 md:grid-cols-[1fr_auto]"
+                      className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{item.offering.name}</p>
+                        <p className="text-base font-semibold text-slate-900">{item.offering.name}</p>
                         <p className="text-xs text-slate-500">{item.offering.serviceTitle}</p>
-                        <p className="mt-1 text-sm text-slate-600">
-                          {item.quantity} × {formatCurrency(item.priceFinal)} per unit
+                        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+                          Qty {item.quantity}
                         </p>
-                        {item.slotId ? <p className="text-xs text-slate-500">Slot booked: {item.slotId}</p> : null}
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-slate-500">Line total</p>
-                        <p className="text-lg font-semibold text-slate-900">
-                          {formatCurrency(item.quantity * item.priceFinal)}
-                        </p>
+                      <div className="text-right text-sm text-slate-900">
+                        {formatCurrency(item.priceFinal)}
+                        <p className="text-xs text-slate-500">per unit</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-500">
+
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-slate-200 pt-4 text-sm text-slate-500">
                   <Link
                     to={
                       order.items[0]?.offering.serviceId
                         ? `/service/${order.items[0]?.offering.serviceId}`
                         : "/marketplace"
                     }
-                    className="font-medium text-blue-600 hover:underline"
+                    className="font-semibold text-blue-600 hover:underline"
                   >
                     View service details
                   </Link>
-                  <span>
+                  <span className="font-semibold text-slate-900">
                     {order.items.length} item{order.items.length > 1 ? "s" : ""}
                   </span>
                 </div>
