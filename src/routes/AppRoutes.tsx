@@ -35,6 +35,7 @@ import Teams from "@/pages/Teams";
 import Support from "@/pages/Support";
 import UserAccount from "@/pages/UserAccount";
 import Wishlist from "@/pages/Wishlist";
+import OrdersPage from "@/pages/Orders";
 import VendorPlaceholder from "@/pages/VendorPlaceholder";
 
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
@@ -105,6 +106,10 @@ const appRouter = createBrowserRouter([
             element: <UserAccount />,
           },
           {
+            path: "/orders",
+            element: <OrdersPage />,
+          },
+          {
             path: "/sign-up",
             element: <Signup />,
             errorElement: <ErrorPage />,
@@ -138,6 +143,10 @@ const appRouter = createBrowserRouter([
             element: <About />,
           },
 
+          {
+            path: "/service/:serviceId",
+            element: <ServiceDetail />,
+          },
           {
             path: "/services/:serviceSlug",
             element: <ServiceDetail />,
