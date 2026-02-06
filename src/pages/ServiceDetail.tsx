@@ -19,7 +19,8 @@ import {
 } from "@/services/vendorOfferingsApi"
 import { DateTime } from "luxon"
 import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
-import { useApplyCouponMutation, useCreateOrderMutation } from "@/services/vendorOrdersApi"
+import { useApplyCouponMutation } from "@/services/vendorOrdersApi"
+import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi"
 import { Button } from "@/components/ui/button"
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge"
@@ -97,7 +98,8 @@ export default function ServiceDetail() {
     serviceSlug?: string
   }>()
   const userId = useAppSelector((state) => state.auth.user?.id)
-  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
+  const [createCheckoutSession, { isLoading: isCreatingSession }] =
+    useCreateCheckoutSessionMutation()
   const [applyCoupon, { isLoading: isApplyingCoupon }] = useApplyCouponMutation()
 
   const [userRating, setUserRating] = useState(0)
@@ -313,15 +315,21 @@ console.log(rules)
       toast.success("Add at least one service to your order before booking.")
       return
     }
+
     if (!userId) {
-      toast.success("Sign in to confirm a booking before proceeding.")
+      toast.error("Sign in to confirm a booking before proceeding.")
+      return
+    }
+
+    if (!vendorId) {
+      toast.error("Unable to resolve the vendor for this booking.")
       return
     }
 
     try {
-      const order = await createOrder({
+      const response = await createCheckoutSession({
         userId,
-        vendorId: vendorId,
+        vendorId,
         items: cartItems.map((item) => ({
           offeringId: item.offering.id,
           quantity: item.quantity,
@@ -330,16 +338,21 @@ console.log(rules)
         promoCode: appliedCoupon?.code || undefined,
       }).unwrap()
 
-      toast.success(
-        `Order confirmed (${formatCurrency(order.summary.total)}). We will notify the vendor shortly.`
-      )
       setCartItems([])
       setPromoCode("")
       resetCoupon()
-    } catch (error) {
-      console.error("Failed to create order:", error)
-      toast.success("Booking Done Successfully.")
-    } 
+
+      toast.success("Redirecting you to Stripe checkout…")
+      const redirectUrl = response.data?.sessionUrl
+      if (redirectUrl && typeof window !== "undefined") {
+        window.location.assign(redirectUrl)
+      }
+    } catch (error: any) {
+      console.error("Failed to create checkout session:", error)
+      toast.error(
+        error?.data?.message || error?.error || "Failed to start checkout. Please try again."
+      )
+    }
   }
 
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
@@ -791,9 +804,9 @@ console.log(rules)
             <Button
               onClick={handleCheckoutCart}
               className="w-full"
-              disabled={cartItems.length === 0 || isCreatingOrder}
+              disabled={cartItems.length === 0 || isCreatingSession}
             >
-              {isCreatingOrder ? "Processing..." : "Confirm booking"}
+              {isCreatingSession ? "Processing..." : "Confirm booking"}
             </Button>
           </div>
      </div>
@@ -1095,7 +1108,7 @@ console.log(rules)
         slotStatusLegend={slotStatusLegend}
         slotStatusMeta={slotStatusMeta}
         requiresSlot={requiresSlot}
-        isLoading={isCreatingOrder}
+        isLoading={isCreatingSession}
         onSelectDate={(date) => setSelectedDate(date)}
         onSelectSlot={(slotId) => setSelectedSlotId(slotId)}
         onClose={handleCloseBooking}
