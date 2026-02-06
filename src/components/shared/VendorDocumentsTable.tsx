@@ -233,7 +233,7 @@ const VendorDocumentsTable = ({
         return;
       }
 
-      const vendorId = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225";
+      const vendorId = "e4d97a19-d4f6-4d1e-ab69-ed27b60bd59a";
       try {
         for (const file of files) {
           const formData = new FormData();
