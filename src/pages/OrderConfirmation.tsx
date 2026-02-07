@@ -148,126 +148,126 @@ export default function OrderConfirmationPage() {
       : "StadOnClick customer";
 
   return (
-    <section className="min-h-[calc(100vh-80px)] bg-[#ffe8c9] px-4 py-12">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-[0_25px_50px_rgba(15,23,42,0.12)]">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-800">
-              <CheckCircle className="h-6 w-6" />
+    <section className="min-h-[calc(100vh-80px)] bg-[#ffe8c9] px-2 py-8">
+      <div className="mx-auto w-full max-w-xl">
+        <div className="rounded-[24px] border border-slate-100 bg-white p-6 shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+              <CheckCircle className="h-5 w-5" />
             </div>
-            <p className="text-2xl font-semibold text-slate-900">Thank you for your order!</p>
-            <p className="text-sm text-slate-500">
+            <p className="text-xl font-semibold text-slate-900">Thank you for your order!</p>
+            <p className="text-xs text-slate-500">
               Booking confirmed with {vendor.businessName || "StadOnClick"} - we'll follow up shortly.
             </p>
-            <span className="rounded-full border border-slate-200 bg-emerald-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">
+            <span className="rounded-full border border-slate-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
               {status.replace(/_/g, " ")}
             </span>
           </div>
 
-          <div className="mt-8 grid gap-4 text-xs uppercase tracking-[0.35em] text-slate-400 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-4 text-center">
+          <div className="mt-6 grid gap-3 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3 text-center">
               <p className="text-[0.6rem]">date ordered</p>
-              <p className="mt-2 text-base font-semibold text-slate-900">{formattedDate}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">{formattedDate}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-4 text-center">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3 text-center">
               <p className="text-[0.6rem]">order no.</p>
-              <p className="mt-2 text-base font-semibold text-slate-900">
+              <p className="mt-1 text-sm font-semibold text-slate-900">
                 #{orderNumber ?? receipt.orderId.slice(-6)}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-4 text-center">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3 text-center">
               <p className="text-[0.6rem]">shipping address</p>
-              <p className="mt-2 text-base font-semibold text-slate-900">{shippingAddress}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">{shippingAddress}</p>
             </div>
           </div>
 
-          <div className="mt-8 space-y-4 border-t border-slate-100 pt-6">
+          <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-col justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 sm:flex-row sm:items-center"
+                className="flex flex-col justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:flex-row sm:items-center"
               >
                 <div>
-                  <p className="text-base font-semibold text-slate-900">{item.name}</p>
+                  <p className="text-sm font-semibold text-slate-900">{item.name}</p>
                   {item.serviceTitle && (
-                    <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
                       {item.serviceTitle}
                     </p>
                   )}
-                  <p className="text-sm text-slate-500">Quantity: {item.quantity}</p>
+                  <p className="text-xs text-slate-500">Quantity: {item.quantity}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-base font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-slate-900">
                     {formatCurrency(item.totalPrice)}
                   </p>
-                  <p className="text-xs text-slate-500">per unit {formatCurrency(item.pricePerUnit)}</p>
+                  <p className="text-[11px] text-slate-500">per unit {formatCurrency(item.pricePerUnit)}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="mt-8 grid gap-3 border-t border-slate-100 pt-6 text-sm text-slate-500 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 border-t border-slate-100 pt-4 text-xs text-slate-500 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">summary</p>
-              <p className="mt-1 text-sm text-slate-500">Shipping address: {shippingAddress}</p>
-              <p className="text-sm text-slate-500">Payment method: {payment.paymentMethod}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">summary</p>
+              <p className="mt-1 text-xs text-slate-500">Shipping address: {shippingAddress}</p>
+              <p className="text-xs text-slate-500">Payment method: {payment.paymentMethod}</p>
             </div>
             <div className="space-y-1 text-right text-slate-500">
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-xs">
                 <span>Subtotal</span>
                 <span className="text-slate-900">{formatCurrency(summary.subtotal)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-xs">
                 <span>Taxes</span>
                 <span className="text-slate-900">{formatCurrency(summary.tax)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm text-emerald-600">
+              <div className="flex items-center justify-between text-xs text-emerald-600">
                 <span>Discount</span>
                 <span>-{formatCurrency(summary.discount)}</span>
               </div>
-              <div className="flex items-center justify-between text-lg font-semibold text-slate-900">
+              <div className="flex items-center justify-between text-base font-semibold text-slate-900">
                 <span>Total</span>
                 <span>{formatCurrency(summary.total)}</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 space-y-3 text-center text-sm text-slate-500">
+          <div className="mt-6 space-y-2 text-center text-xs text-slate-500">
             <p>Thank you for shopping with us.</p>
             <p className="font-semibold text-slate-900">{vendor.businessName || "StadOnClick"} Team</p>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
             <div className="flex flex-wrap items-center gap-2">
               {payment.receiptUrl ? (
                 <a
                   href={payment.receiptUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-blue-500 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-blue-500 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
                 >
                   View Stripe receipt
                 </a>
               ) : (
-                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                   Receipt not available from Stripe
                 </span>
               )}
               {payment.receiptNumber && (
-                <span className="text-xs text-slate-500">Receipt #{payment.receiptNumber}</span>
+                <span className="text-[11px] text-slate-500">Receipt #{payment.receiptNumber}</span>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 onClick={() => navigate("/orders")}
-                className="text-sm font-semibold"
+                className="h-8 px-3 text-xs font-semibold"
               >
                 Go to my orders
               </Button>
                 <Link
                   to={`/orders/confirmation?order_id=${receipt.orderId}`}
-                  className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
+                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-slate-400"
                 >
                   Reload receipt
                 </Link>
