@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import bannerImage from "@/assets/images/bgsalon.jpg"
 import { ChevronDown } from "lucide-react"
 import { slugifyServiceTitle } from "@/utils/slugify"
@@ -86,6 +86,7 @@ export default function ServicesExplorer({
   stats,
 }: ServicesExplorerProps = {}) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [enquiryService, setEnquiryService] = useState<Service | null>(null)
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
@@ -101,6 +102,7 @@ export default function ServicesExplorer({
   const [triggerList, listState] = useLazyListMarketplaceServicesQuery()
   const [marketplaceRows, setMarketplaceRows] = useState<MarketplaceService[]>([])
   const [marketplaceTotal, setMarketplaceTotal] = useState<number | undefined>(undefined)
+  const didHydrateCategoryFromQueryRef = useRef(false)
 
   const requestIdRef = useRef(0)
   const inFlightRef = useRef(false)
@@ -255,6 +257,39 @@ export default function ServicesExplorer({
       })),
     [cities, cityCounts],
   )
+
+  const requestedCategoryTokens = useMemo(() => {
+    const rawCategory = searchParams.get("category")
+    const rawCategoryIds = searchParams.get("categoryIds")
+    const merged = [rawCategory, rawCategoryIds].filter(Boolean).join(",")
+    return merged
+      .split(",")
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+  }, [searchParams])
+
+  useEffect(() => {
+    if (didHydrateCategoryFromQueryRef.current) return
+    if (!requestedCategoryTokens.length) {
+      didHydrateCategoryFromQueryRef.current = true
+      return
+    }
+    if (!serviceCategories.length) return
+
+    const selectedIds = serviceCategories
+      .filter((category) => {
+        const id = category.id.toLowerCase()
+        const slug = category.slug.toLowerCase()
+        return requestedCategoryTokens.includes(id) || requestedCategoryTokens.includes(slug)
+      })
+      .map((category) => category.id)
+
+    if (selectedIds.length) {
+      setSelectedCategoryIds(selectedIds)
+    }
+
+    didHydrateCategoryFromQueryRef.current = true
+  }, [requestedCategoryTokens, serviceCategories])
 
   const effectiveHeaderDescription =
     providedServices == null && marketplaceTotal != null
