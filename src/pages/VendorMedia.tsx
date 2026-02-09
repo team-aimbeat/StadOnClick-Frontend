@@ -54,10 +54,12 @@ const VendorMedia = () => {
     useGetVendorProfileStatusQuery();
   const vendorId = vendorProfile?.id as string | undefined;
 
-  const { data: vendorServices = [], isLoading: isServicesLoading } =
-    useGetVendorServicesQuery(vendorId!, {
-      skip: !vendorId,
-    });
+  const {
+    data: vendorServices = [],
+    isLoading: isServicesLoading,
+    isError: isServicesError,
+    error: servicesError,
+  } = useGetVendorServicesQuery(vendorId);
 
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
 
@@ -197,11 +199,13 @@ const VendorMedia = () => {
     );
   }
 
-  if (isError) {
+  if (isError || isServicesError) {
     return (
       <DashboardContainer className="pt-8">
         <p className="text-sm text-red-500">
-          {(error as any)?.data?.message || "Failed to load media"}
+          {(error as any)?.data?.message ||
+            (servicesError as any)?.data?.message ||
+            "Failed to load media"}
         </p>
       </DashboardContainer>
     );
