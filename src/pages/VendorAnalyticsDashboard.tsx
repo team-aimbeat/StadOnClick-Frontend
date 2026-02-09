@@ -31,6 +31,14 @@ import ProfileScoreCard from "@/components/vendor-dashboard/ProfileScoreCard";
 import { cn } from "@/lib/utils";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
+import { useGetVendorLeadsQuery, useUpdateVendorLeadStatusMutation } from "@/features/leads/api/leadsApi";
+import { useGetVendorProfileQuery } from "@/features/vendorProfile/api/vendorProfileApi";
+import { useGetBookingsQuery } from "@/services/bookingsApi";
+import { useGetVendorServicesQuery } from "@/services/vendorServicesApi";
+import { useLazyGetServiceOfferingsQuery, useLazyGetOfferingSlotsQuery } from "@/services/vendorOfferingsApi";
+import { useLazyGetServiceMediaQuery } from "@/services/serviceMediaApi";
+import { useLazyGetServiceReviewsQuery } from "@/services/serviceReviewsApi";
+import { useGetVendorOrdersQuery } from "@/services/ordersApi";
 
 const Skeleton = ({ className }: { className?: string }) => (
   <div className={cn("animate-pulse rounded-md bg-slate-200/80", className)} />
@@ -910,17 +918,292 @@ const VendorAnalyticsDashboard = () => {
   const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["key"]>("overview");
   const [range, setRange] = useState<DateRange>("1y");
-  const [leads, setLeads] = useState<VendorLead[]>(leadsSeed);
-  const [loading, setLoading] = useState(true);
-  const currency = "SEK";
-  const rangeStart = getRangeStart(range);
-  const rangeLabel = formatRangeLabel(rangeStart, now);
+  const [leads, setLeads] = useState<VendorLead[]>([]);
+  const [derivedOfferings, setDerivedOfferings] = useState<ServiceOffering[]>([]);
+  const [derivedSlots, setDerivedSlots] = useState<OfferingSlot[]>([]);
+  const [derivedMedia, setDerivedMedia] = useState<ServiceMedia[]>([]);
+  const [derivedReviews, setDerivedReviews] = useState<Review[]>([]);
+  const [serviceInsightsLoading, setServiceInsightsLoading] = useState(false);
+
+  const { data: vendorProfileResponse, isFetching: isProfileFetching } = useGetVendorProfileQuery();
+  const { data: vendorLeadsResponse, isFetching: isLeadsFetching } = useGetVendorLeadsQuery({
+    page: 1,
+    limit: 100,
+  });
+  const { data: bookingsResponse, isFetching: isBookingsFetching } = useGetBookingsQuery();
+  const { data: vendorOrdersResponse, isFetching: isOrdersFetching } = useGetVendorOrdersQuery();
+  const { data: vendorServicesResponse, isFetching: isServicesFetching } = useGetVendorServicesQuery();
+  const [updateVendorLeadStatus] = useUpdateVendorLeadStatusMutation();
+
+  const [fetchServiceOfferings] = useLazyGetServiceOfferingsQuery();
+  const [fetchOfferingSlots] = useLazyGetOfferingSlotsQuery();
+  const [fetchServiceMedia] = useLazyGetServiceMediaQuery();
+  const [fetchServiceReviews] = useLazyGetServiceReviewsQuery();
+
+  const services = useMemo<VendorService[]>(
+    () =>
+      (vendorServicesResponse ?? []).map((service) => ({
+        id: service.id,
+        title: service.title,
+        status: service.status === "LIVE" ? "LIVE" : "PAUSED",
+      })),
+    [vendorServicesResponse]
+  );
+
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    (vendorServicesResponse ?? []).forEach((service) => {
+      const category = service.category as { id?: string; name?: string } | undefined;
+      if (category?.id && category.name) {
+        map.set(category.id, category.name);
+      }
+    });
+    return map;
+  }, [vendorServicesResponse]);
 
   useEffect(() => {
     dispatch(setPageTitle("Vendor Analytics"));
-    const timer = setTimeout(() => setLoading(false), 650);
-    return () => clearTimeout(timer);
   }, [dispatch]);
+
+  useEffect(() => {
+    const rows = vendorLeadsResponse?.data ?? [];
+    setLeads(
+      rows.map((item) => ({
+        id: item.id,
+        name: item.lead.name,
+        email: item.lead.email ?? undefined,
+        phone: item.lead.phone ?? undefined,
+        serviceTitle: categoryNameById.get(item.lead.categoryId) ?? "Service enquiry",
+        status: item.status,
+        createdAt: item.createdAt,
+      }))
+    );
+  }, [vendorLeadsResponse, categoryNameById]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadServiceInsights = async () => {
+      if (!services.length) {
+        setDerivedOfferings([]);
+        setDerivedSlots([]);
+        setDerivedMedia([]);
+        setDerivedReviews([]);
+        setServiceInsightsLoading(false);
+        return;
+      }
+
+      setServiceInsightsLoading(true);
+
+      const offeringsOut: ServiceOffering[] = [];
+      const slotsOut: OfferingSlot[] = [];
+      const mediaOut: ServiceMedia[] = [];
+      const reviewsOut: Review[] = [];
+
+      for (const service of services) {
+        const [offeringsResult, mediaResult, reviewsResult] = await Promise.allSettled([
+          fetchServiceOfferings(service.id).unwrap(),
+          fetchServiceMedia(service.id).unwrap(),
+          fetchServiceReviews(service.id).unwrap(),
+        ]);
+
+        if (offeringsResult.status === "fulfilled") {
+          const offerings = offeringsResult.value;
+          offerings.forEach((offering) => {
+            offeringsOut.push({
+              id: offering.id,
+              serviceId: offering.serviceId,
+              title: offering.name,
+              isActive: true,
+            });
+          });
+
+          const slotResults = await Promise.allSettled(
+            offerings.map((offering) => fetchOfferingSlots({ offeringId: offering.id }).unwrap())
+          );
+
+          slotResults.forEach((slotResult, idx) => {
+            if (slotResult.status !== "fulfilled") return;
+            const offeringId = offerings[idx]?.id;
+            if (!offeringId) return;
+            slotResult.value.forEach((slot) => {
+              slotsOut.push({
+                id: slot.id,
+                offeringId,
+                startTime: slot.startTime,
+              });
+            });
+          });
+        }
+
+        if (mediaResult.status === "fulfilled") {
+          mediaResult.value.forEach((item: any) => {
+            mediaOut.push({
+              id: item.id,
+              serviceId: item.serviceId ?? service.id,
+              type: item.type,
+              url: item.signedUrl ?? item.url ?? "",
+            });
+          });
+        }
+
+        if (reviewsResult.status === "fulfilled") {
+          reviewsResult.value.forEach((review: any) => {
+            reviewsOut.push({
+              id: review.id,
+              serviceTitle: service.title,
+              rating: Number(review.rating ?? 0),
+              comment: review.comment ?? "",
+              verified: true,
+              createdAt: review.createdAt,
+            });
+          });
+        }
+      }
+
+      if (!cancelled) {
+        setDerivedOfferings(offeringsOut);
+        setDerivedSlots(slotsOut);
+        setDerivedMedia(mediaOut);
+        setDerivedReviews(reviewsOut);
+        setServiceInsightsLoading(false);
+      }
+    };
+
+    loadServiceInsights().catch(() => {
+      if (!cancelled) {
+        setServiceInsightsLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [services, fetchServiceMedia, fetchServiceOfferings, fetchServiceReviews, fetchOfferingSlots]);
+
+  const bookingsSeed = useMemo<ServiceBooking[]>(
+    () =>
+      (bookingsResponse ?? []).map((booking) => ({
+        id: String(booking.id),
+        serviceTitle: booking.service ?? "Service",
+        status: booking.status as BookingStatus,
+        startTime: booking.startTime,
+        createdAt: booking.startTime,
+      })),
+    [bookingsResponse]
+  );
+
+  const ordersSeed = useMemo<Order[]>(
+    () =>
+      (vendorOrdersResponse?.data ?? []).map((order) => {
+        return {
+          id: String(order.id),
+          userId: order.userId || "Guest",
+          totalFinal: Number(order.totalFinal ?? 0),
+          totalDiscount: Number(order.totalDiscount ?? 0),
+          commissionAmount: Number(order.commissionAmount ?? 0),
+          vendorPayoutAmount: Number(order.vendorPayoutAmount ?? 0),
+          status: (order.status as OrderStatus) ?? "PENDING",
+          createdAt: order.createdAt,
+        };
+      }),
+    [vendorOrdersResponse]
+  );
+
+  const serviceOfferings = derivedOfferings;
+  const offeringSlots = derivedSlots;
+  const serviceMedia = derivedMedia;
+  const reviewsSeed = derivedReviews;
+
+  const vendorProfile = useMemo<VendorProfile>(() => {
+    const profile = vendorProfileResponse?.data;
+
+    const normalizedStatus: VendorStatus =
+      profile?.status === "SUSPENDED"
+        ? "SUSPENDED"
+        : profile?.status === "APPROVED" || profile?.status === "ACTIVE"
+        ? "APPROVED"
+        : "PENDING_REVIEW";
+
+    const kycStatus =
+      profile?.kycStatus === "VERIFIED"
+        ? "VERIFIED"
+        : profile?.kycStatus === "PENDING"
+        ? "PENDING"
+        : "NOT_SUBMITTED";
+
+    return {
+      id: profile?.id ?? "",
+      userId: "",
+      businessName: profile?.businessName ?? "Vendor",
+      slug: profile?.slug ?? "vendor",
+      city: profile?.city?.name ?? "",
+      state: profile?.city?.county ?? profile?.city?.municipality ?? "",
+      country: profile?.city?.countryCode ?? "SE",
+      description: profile?.description ?? undefined,
+      organizationNumber: undefined,
+      vatNumber: undefined,
+      contactEmail: profile?.contactEmail ?? undefined,
+      contactPhone: profile?.contactPhone ?? undefined,
+      cityId: profile?.city?.id ?? undefined,
+      cityRelation: profile?.city
+        ? {
+            id: profile.city.id,
+            name: profile.city.name,
+            state: profile.city.county ?? profile.city.municipality ?? undefined,
+            country: profile.city.countryCode,
+          }
+        : undefined,
+      status: normalizedStatus,
+      kycStatus,
+      approvedAt: undefined,
+      suspendedAt: undefined,
+      totalBookings: profile?.totalBookings ?? bookingsSeed.length,
+      totalRevenue: Number(profile?.totalRevenue ?? 0),
+      ratingAvg: Number(profile?.ratingAvg ?? 0),
+      ratingCount: profile?.ratingCount ?? reviewsSeed.length,
+      stripeAccountId: profile?.stripeAccountId ?? undefined,
+      payoutsEnabled: profile?.payoutsEnabled ?? false,
+      chargesEnabled: profile?.chargesEnabled ?? false,
+      stripeOnboardedAt: undefined,
+      seoTitle: profile?.seoTitle ?? undefined,
+      seoDescription: profile?.seoDescription ?? undefined,
+      seoKeywords: profile?.seoKeywords ?? [],
+      seoImageKey: profile?.seoImageKey ?? undefined,
+      isIndexable: profile?.isIndexable ?? false,
+      createdAt: profile?.createdAt ?? undefined,
+      updatedAt: profile?.updatedAt ?? undefined,
+    };
+  }, [vendorProfileResponse, bookingsSeed.length, reviewsSeed.length]);
+
+  const vendorGallery = useMemo<VendorGalleryItem[]>(
+    () =>
+      serviceMedia.map((item, idx) => ({
+        id: item.id,
+        vendorId: vendorProfile.id,
+        type: item.type,
+        fileKey: item.url,
+        title: services.find((service) => service.id === item.serviceId)?.title ?? "Service media",
+        description: undefined,
+        sortOrder: idx,
+        status: "ACTIVE",
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      })),
+    [serviceMedia, services, vendorProfile.id]
+  );
+
+  const loading =
+    isProfileFetching ||
+    isLeadsFetching ||
+    isBookingsFetching ||
+    isOrdersFetching ||
+    isServicesFetching ||
+    serviceInsightsLoading;
+
+  const currency = "SEK";
+  const rangeStart = getRangeStart(range);
+  const rangeLabel = formatRangeLabel(rangeStart, now);
 
   const filteredLeads = useMemo(
     () => leads.filter((lead) => new Date(lead.createdAt) >= getRangeStart(range)),
@@ -929,18 +1212,18 @@ const VendorAnalyticsDashboard = () => {
 
   const filteredOrders = useMemo(
     () => ordersSeed.filter((order) => new Date(order.createdAt) >= getRangeStart(range)),
-    [range]
+    [ordersSeed, range]
   );
 
   const filteredBookings = useMemo(
     () =>
       bookingsSeed.filter((booking) => new Date(booking.createdAt) >= getRangeStart(range)),
-    [range]
+    [bookingsSeed, range]
   );
 
   const filteredReviews = useMemo(
     () => reviewsSeed.filter((review) => new Date(review.createdAt) >= getRangeStart(range)),
-    [range]
+    [reviewsSeed, range]
   );
 
   const leadCounts = useMemo(() => {
@@ -1133,7 +1416,7 @@ const VendorAnalyticsDashboard = () => {
     const missing = checks.filter((check) => !check.passed).map((check) => check.label);
 
     return { score, missing };
-  }, []);
+  }, [offeringSlots.length, reviewsSeed.length, serviceMedia.length, serviceOfferings.length, services, vendorProfile.businessName, vendorProfile.cityId, vendorProfile.contactEmail, vendorProfile.contactPhone, vendorProfile.description, vendorProfile.kycStatus]);
 
   const latestLeadsColumns: TableColumn<VendorLead>[] = [
     {
@@ -1171,13 +1454,24 @@ const VendorAnalyticsDashboard = () => {
           />
           <select
             value={lead.status}
-            onChange={(event) =>
+            onChange={(event) => {
+              const nextStatus = event.target.value as LeadStatus;
+              const previousStatus = lead.status;
+
               setLeads((prev) =>
-                prev.map((item) =>
-                  item.id === lead.id ? { ...item, status: event.target.value as LeadStatus } : item
-                )
-              )
-            }
+                prev.map((item) => (item.id === lead.id ? { ...item, status: nextStatus } : item))
+              );
+
+              void updateVendorLeadStatus({ id: lead.id, status: nextStatus })
+                .unwrap()
+                .catch(() => {
+                  setLeads((prev) =>
+                    prev.map((item) =>
+                      item.id === lead.id ? { ...item, status: previousStatus } : item
+                    )
+                  );
+                });
+            }}
             className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700"
           >
             {(["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]).map((status) => (

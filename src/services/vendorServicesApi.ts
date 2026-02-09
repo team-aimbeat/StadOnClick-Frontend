@@ -73,8 +73,9 @@ export const vendorServicesApi = createApi({
         body,
       }),
     }),
-    getVendorServices: builder.query<VendorServiceEntity[], string>({
-      query: (vendorId) => `/vendor/vendor-services/${vendorId}`,
+    getVendorServices: builder.query<VendorServiceEntity[], string | void>({
+      query: (vendorId) =>
+        vendorId ? `/vendor/vendor-services/${vendorId}` : "/vendor/vendor-services/me",
       transformResponse: (response: any[]) =>
         response.map((s: any) => ({
           id: s.id,

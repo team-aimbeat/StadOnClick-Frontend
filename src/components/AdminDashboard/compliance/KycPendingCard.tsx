@@ -14,8 +14,19 @@ const pendingKyc = [
   },
 ];
 
-const KycPendingCard = () => {
-  const hasItems = pendingKyc.length > 0;
+
+type KycPendingItem = {
+  vendor: string;
+  document: string;
+  submittedAt: string;
+};
+
+type KycPendingCardProps = {
+  items?: KycPendingItem[];
+};
+
+const KycPendingCard = ({ items = pendingKyc }: KycPendingCardProps) => {
+  const hasItems = items.length > 0;
 
   return (
     <AdminCardShell title="KYC Pending" subtitle="Compliance queue">
@@ -28,7 +39,7 @@ const KycPendingCard = () => {
         ]}
       >
         {hasItems ? (
-          pendingKyc.map((kyc) => (
+          items.map((kyc) => (
             <AdminTableRow key={`${kyc.vendor}-${kyc.document}`}>
               <AdminTableCell className="text-sm font-semibold text-slate-900">
                 {kyc.vendor}

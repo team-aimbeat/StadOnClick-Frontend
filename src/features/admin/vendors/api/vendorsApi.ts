@@ -12,12 +12,13 @@ export const adminVendorApi = createApi({
      * GET /admin/vendors/applications
      */
     listVendorApplications: builder.query<
-      { data: VendorApplication[] },
-      void
+      { data: VendorApplication[]; meta?: { total?: number } },
+      { page?: number; limit?: number; sortBy?: string; sortOrder?: "asc" | "desc" } | void
     >({
-      query: () => ({
+      query: (params) => ({
         url: "/admin/vendors/applications",
         method: "GET",
+        params: params ?? {},
       }),
       providesTags: ["AdminVendorApplications"],
     }),
@@ -25,10 +26,14 @@ export const adminVendorApi = createApi({
     /**
      * GET /admin/vendors
      */
-    listAllVendors: builder.query<{ data: Vendor[] }, void>({
-      query: () => ({
+    listAllVendors: builder.query<
+      { data: Vendor[]; meta?: { total?: number } },
+      { page?: number; limit?: number; sortBy?: string; sortOrder?: "asc" | "desc" } | void
+    >({
+      query: (params) => ({
         url: "/admin/vendors",
         method: "GET",
+        params: params ?? {},
       }),
       providesTags: ["AdminVendors"],
     }),
