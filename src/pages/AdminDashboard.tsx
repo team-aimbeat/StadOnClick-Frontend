@@ -349,6 +349,29 @@ const AdminDashboard: React.FC = () => {
       }));
   }, [allBookings]);
 
+  const topRegions = useMemo(() => {
+    const counts = new Map<string, number>();
+    let total = 0;
+
+    for (const booking of allBookings) {
+      const region = booking.vendorProfile?.city?.name ?? booking.vendorProfile?.country ?? "Unknown";
+      const normalized = String(region).trim();
+      if (!normalized) continue;
+      counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+      total += 1;
+    }
+
+    if (!total) return [];
+
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({
+        name,
+        percent: Number(((count / total) * 100).toFixed(2)),
+      }));
+  }, [allBookings]);
+
   const pendingPayoutItems = useMemo(() => {
     const rows = payoutsResponse?.data?.data ?? [];
     return rows.map((row: any) => ({
@@ -456,7 +479,7 @@ const AdminDashboard: React.FC = () => {
               <LeadSourceDistributionCard />
             </DashboardCol>
             <DashboardCol span={6}>
-              <Mapcity />
+              <Mapcity regions={topRegions} />
             </DashboardCol>
             <DashboardCol span={6}>
               <VendorsOverview categories={vendorOverviewCategories} />
