@@ -33,6 +33,36 @@ type OrdersResponse = {
   data: OrderPayload[];
 };
 
+type VendorOrderPayload = {
+  id: string;
+  status: string;
+  userId: string;
+  createdAt: string;
+  currency: string;
+  totalOriginal: number;
+  totalDiscount: number;
+  totalFinal: number;
+  commissionRate: number;
+  commissionAmount: number;
+  vendorPayoutAmount: number;
+  items: Array<{
+    id: string;
+    quantity: number;
+    orderNumber: string;
+    priceFinal: number;
+    offering: {
+      id: string;
+      name: string;
+      serviceTitle: string;
+      serviceId: string | null;
+    };
+  }>;
+};
+
+type VendorOrdersResponse = {
+  data: VendorOrderPayload[];
+};
+
 export type OrderReceiptItem = {
   id: string;
   offeringId: string;
@@ -109,6 +139,10 @@ export const ordersApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ["Order"],
   endpoints: (builder) => ({
+    getVendorOrders: builder.query<VendorOrdersResponse, void>({
+      query: () => "vendor/orders",
+      providesTags: [{ type: "Order", id: "VENDOR_LIST" }],
+    }),
     getMyOrders: builder.query<OrdersResponse, void>({
       query: () => "vendor/orders/me",
       providesTags: (result) =>
@@ -128,4 +162,4 @@ export const ordersApi = createApi({
   }),
 });
 
-export const { useGetMyOrdersQuery, useGetOrderReceiptQuery } = ordersApi;
+export const { useGetVendorOrdersQuery, useGetMyOrdersQuery, useGetOrderReceiptQuery } = ordersApi;

@@ -29,4 +29,8 @@ export const serviceReviewsApi = createApi({
   }),
 });
 
-export const { useGetServiceReviewsQuery, useCreateReviewMutation } = serviceReviewsApi;
+export const {
+  useGetServiceReviewsQuery,
+  useLazyGetServiceReviewsQuery,
+  useCreateReviewMutation,
+} = serviceReviewsApi;
