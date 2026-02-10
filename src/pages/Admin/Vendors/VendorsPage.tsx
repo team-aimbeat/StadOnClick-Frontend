@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { CalendarClock, Star } from "lucide-react";
+import toast from "react-hot-toast";
 import {
   HiOutlineCheckCircle,
   HiOutlineClock,
@@ -19,7 +20,10 @@ import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { ListingPage } from "@/components/shared/ListingPage";
 
-import { useListAllVendorsQuery } from "@/features/admin/vendors/api/vendorsApi";
+import {
+  useListAllVendorsQuery,
+  useUpdateVendorStatusMutation,
+} from "@/features/admin/vendors/api/vendorsApi";
 
 type VendorsPageProps = {
   defaultStatusFilter?: string;
@@ -28,31 +32,27 @@ type VendorsPageProps = {
 };
 
 export type VendorRow = RowData & {
-  id: string; // vendorProfileId
+  id: string;
   userId: string;
-
+  loginEmail?: string;
   businessName: string;
   slug: string;
-
   status: "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
   kycStatus: "NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED";
-
   city?: string;
   country?: string;
-
   contactEmail?: string;
   contactPhone?: string;
-
   payoutsEnabled: boolean;
   chargesEnabled: boolean;
-
   totalBookings: number;
-  totalRevenue: number; // backend Decimal -> UI number
+  totalRevenue: number;
   ratingAvg: number;
   ratingCount: number;
-
   createdAt: string;
 };
+
+const VENDOR_DEMO_PASSWORD = "sahibjitsingh";
 
 const money = new Intl.NumberFormat("en-SE", {
   style: "currency",
@@ -150,23 +150,16 @@ export default function VendorsPage({
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
+  const [updatingVendorId, setUpdatingVendorId] = useState<string | null>(null);
+  const [updateVendorStatus] = useUpdateVendorStatusMutation();
 
   const defaultFilters = useMemo(
     () => (defaultStatusFilter ? { status: defaultStatusFilter } : undefined),
     [defaultStatusFilter],
   );
 
-  // ✅ API Query
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    refetch,
-  } = useListAllVendorsQuery();
+  const { data, isLoading, isFetching, isError } = useListAllVendorsQuery();
 
-  // ✅ Map API -> UI rows
   const vendorRows: VendorRow[] = useMemo(() => {
     const apiRows = data?.data ?? [];
     if (!apiRows.length) return [];
@@ -175,28 +168,21 @@ export default function VendorsPage({
       return {
         id: String(v.id),
         userId: String(v.userId),
-
-        businessName: String(v.businessName ?? "—"),
-        slug: String(v.slug ?? "—"),
-
+        loginEmail: v.user?.email ?? v.contactEmail ?? undefined,
+        businessName: String(v.businessName ?? "-"),
+        slug: String(v.slug ?? "-"),
         status: (v.status ?? "PENDING_REVIEW") as VendorRow["status"],
         kycStatus: (v.kycStatus ?? "NOT_SUBMITTED") as VendorRow["kycStatus"],
-
         city: v.city?.name ?? undefined,
         country: v.country ?? "SE",
-
         contactEmail: v.contactEmail ?? undefined,
         contactPhone: v.contactPhone ?? undefined,
-
         payoutsEnabled: Boolean(v.payoutsEnabled),
         chargesEnabled: Boolean(v.chargesEnabled),
-
         totalBookings: Number(v.totalBookings ?? 0),
         totalRevenue: toNumberSafe(v.totalRevenue),
-
         ratingAvg: Number(v.ratingAvg ?? 0),
         ratingCount: Number(v.ratingCount ?? 0),
-
         createdAt: String(v.createdAt ?? new Date().toISOString()),
       } satisfies VendorRow;
     });
@@ -208,13 +194,25 @@ export default function VendorsPage({
     const suspended = vendorRows.filter((v) => v.status === "SUSPENDED").length;
     const rejected = vendorRows.filter((v) => v.status === "REJECTED").length;
 
-    const grossRevenue = vendorRows.reduce(
-      (sum, v) => sum + (v.totalRevenue ?? 0),
-      0,
-    );
+    const grossRevenue = vendorRows.reduce((sum, v) => sum + (v.totalRevenue ?? 0), 0);
 
     return { active, pending, suspended, rejected, grossRevenue };
   }, [vendorRows]);
+
+  const handleVendorStatusChange = useCallback(
+    async (vendorId: string, status: VendorRow["status"]) => {
+      try {
+        setUpdatingVendorId(vendorId);
+        await updateVendorStatus({ id: vendorId, status }).unwrap();
+        toast.success(`Vendor status updated to ${status.replace("_", " ")}`);
+      } catch (error: any) {
+        toast.error(error?.data?.message || "Failed to update vendor status");
+      } finally {
+        setUpdatingVendorId(null);
+      }
+    },
+    [updateVendorStatus],
+  );
 
   const columns = useMemo<ColumnConfig[]>(
     () => [
@@ -228,10 +226,10 @@ export default function VendorsPage({
           return (
             <div className="flex flex-col">
               <span className="font-semibold text-slate-900">
-                {String(value ?? r.businessName ?? "—")}
+                {String(value ?? r.businessName ?? "-")}
               </span>
               <span className="text-xs font-medium text-slate-500">
-                {(r.city ?? "Unknown city") + " • " + (r.slug ?? "—")}
+                {(r.city ?? "Unknown city") + " | " + (r.slug ?? "-")}
               </span>
             </div>
           );
@@ -298,9 +296,7 @@ export default function VendorsPage({
         title: "Bookings",
         sortable: true,
         render: (value: any) => (
-          <span className="font-semibold text-slate-900">
-            {Number(value ?? 0)}
-          </span>
+          <span className="font-semibold text-slate-900">{Number(value ?? 0)}</span>
         ),
       },
       {
@@ -323,10 +319,8 @@ export default function VendorsPage({
           return (
             <div className="flex items-center gap-1 text-sm font-semibold text-slate-800">
               <Star className="h-4 w-4 text-slate-500" />
-              {r.ratingCount > 0 ? r.ratingAvg.toFixed(1) : "—"}
-              <span className="text-xs font-medium text-slate-500">
-                ({r.ratingCount})
-              </span>
+              {r.ratingCount > 0 ? r.ratingAvg.toFixed(1) : "-"}
+              <span className="text-xs font-medium text-slate-500">({r.ratingCount})</span>
             </div>
           );
         },
@@ -344,7 +338,7 @@ export default function VendorsPage({
                   month: "short",
                   year: "numeric",
                 })
-              : "—"}
+              : "-"}
           </div>
         ),
       },
@@ -353,9 +347,27 @@ export default function VendorsPage({
         title: "Actions",
         render: (_: any, row: RowData) => {
           const r = row as VendorRow;
+          const isUpdating = updatingVendorId === r.id;
 
           return (
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+              <select
+                value={r.status}
+                disabled={isUpdating}
+                onChange={(event) =>
+                  handleVendorStatusChange(
+                    r.id,
+                    event.target.value as VendorRow["status"],
+                  )
+                }
+                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700"
+              >
+                <option value="PENDING_REVIEW">PENDING_REVIEW</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="SUSPENDED">SUSPENDED</option>
+                <option value="REJECTED">REJECTED</option>
+              </select>
+
               <NavLink
                 to={`/admin/vendors/${r.id}`}
                 className="text-blue-600 hover:text-blue-500"
@@ -369,12 +381,21 @@ export default function VendorsPage({
               >
                 Applications
               </NavLink>
+
+              {r.loginEmail ? (
+                <a
+                  href={`/vendor/sign-in?email=${encodeURIComponent(r.loginEmail)}&password=${encodeURIComponent(VENDOR_DEMO_PASSWORD)}`}
+                  className="text-emerald-700 hover:text-emerald-600"
+                >
+                  Vendor Dashboard
+                </a>
+              ) : null}
             </div>
           );
         },
       },
     ],
-    [],
+    [handleVendorStatusChange, updatingVendorId],
   );
 
   const filters = useMemo<FilterConfig[]>(

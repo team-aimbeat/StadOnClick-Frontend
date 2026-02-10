@@ -66,6 +66,20 @@ export const adminVendorApi = createApi({
       }),
       invalidatesTags: ["AdminVendorApplications", "AdminVendors"],
     }),
+    updateVendorStatus: builder.mutation<
+      { success: boolean; vendor: { id: string; status: string } },
+      {
+        id: string;
+        status: "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
+      }
+    >({
+      query: ({ id, status }) => ({
+        url: `/admin/vendors/${id}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["AdminVendors", "AdminVendorApplications"],
+    }),
   }),
 });
 
@@ -74,4 +88,5 @@ export const {
   useListAllVendorsQuery,
   useApproveVendorApplicationMutation,
   useRejectVendorApplicationMutation,
+  useUpdateVendorStatusMutation,
 } = adminVendorApi;
