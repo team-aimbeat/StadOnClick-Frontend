@@ -48,3 +48,4 @@
 }
 
 
+\n.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }\n.hide-scrollbar::-webkit-scrollbar { display: none; }

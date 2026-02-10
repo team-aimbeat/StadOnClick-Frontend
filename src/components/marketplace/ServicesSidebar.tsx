@@ -218,7 +218,7 @@ export default function ServicesSidebar({
             </div>
             <button
               type="button"
-              className="rounded-full bg-blue-500 px-5 py-1 text-sm font-semibold text-white transition hover:bg-blue-600 w-[84px] h-[32px]"
+              className="rounded-full bg-blue-500 px-5 py-1 text-sm font-semibold text-white transition hover:bg-blue-600 w-21 h-8"
             >
               Apply
             </button>
@@ -243,7 +243,7 @@ export default function ServicesSidebar({
         </div>
 
         <div className="rounded-xl bg-[#F9F9F9] p-3">
-          <div className="flex flex-col max-h-[210px] gap-2 overflow-y-auto">
+          <div className="flex flex-col max-h-52.5 gap-2 overflow-y-auto">
             {filteredCategories.map((category) => {
               const isSelected = selectedCategoryIds.includes(category.id);
               return (
@@ -291,6 +291,7 @@ export default function ServicesSidebar({
           <p className="text-[16px] font-medium text-[#333333]">Location</p>
         </div>
 
+
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -303,7 +304,7 @@ export default function ServicesSidebar({
         </div>
 
         <div className="rounded-xl bg-[#F9F9F9] p-3">
-          <div className="flex flex-col max-h-[210px] gap-2 overflow-y-auto">
+          <div className="flex flex-col max-h-52.5 gap-2 overflow-y-auto">
             {filteredLocations.map((location) => {
               const isSelected = selectedLocationIds.includes(location.id);
               return (
@@ -412,13 +413,13 @@ export default function ServicesSidebar({
             <button
               type="button"
               onClick={onApplyPrice}
-              className="w-full rounded-xl w-[277px] h-[36px] bg-[#1D76FF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
+              className="w-full rounded-xl  h-9 bg-[#1D76FF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
             >
               Apply
             </button>
             <button
               type="button"
-              className="w-full rounded-xl w-[277px] h-[36px] border border-slate-300 px-4 py-2 text-sm font-semibold text-[#1D76FF] transition hover:bg-slate-100"
+              className="w-full rounded-xl  h-9 border border-slate-300 px-4 py-2 text-sm font-semibold text-[#1D76FF] transition hover:bg-slate-100"
               onClick={handleResetPrice}
             >
               Reset

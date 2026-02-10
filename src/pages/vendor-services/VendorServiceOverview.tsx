@@ -10,11 +10,20 @@ import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi";
 import type { VendorServiceEntity } from "@/services/vendorServicesApi";
 
 import well from "@/assets/Images/well.jpg";
+import wellSm from "@/assets/Images/optimized/well-sm.jpg";
+import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
+
 import { AddOfferingDialog } from "@/pages/vendor-services/AddOfferingDialog";
 import {
   categoryVisuals,
   masterServiceVisuals,
 } from "@/pages/vendor-services/vendorServicesVisuals";
+
+const fallbackOverviewVisual = (alt: string): Visual => ({
+  src: well,
+  alt,
+  srcSet: `${wellSm} 480w, ${well} 1200w`,
+});
 
 type VendorServiceOverviewProps = {
   service: VendorServiceEntity;
@@ -51,14 +60,17 @@ export function VendorServiceOverview({
     return masterServices?.find((m) => m.id === service.category?.masterCategoryId);
   }, [masterServices, service.category?.masterCategoryId]);
 
-  const masterVisual = masterServiceVisuals[master?.slug ?? ""] ?? {
-    src: well,
-    alt: master?.name ?? "Master service",
-  };
+  const masterVisual =
+    masterServiceVisuals[master?.slug ?? ""] ?? fallbackOverviewVisual(master?.name ?? "Master service");
   const categoryVisual =
     categoryVisuals[service.category?.slug ?? ""] ?? masterVisual;
 
-  const primaryImage = service.media?.[0]?.url ?? categoryVisual.src;
+  const primaryVisual = service.media?.[0]?.url
+    ? {
+        src: service.media[0].url,
+        alt: service.title ?? categoryVisual.alt,
+      }
+    : categoryVisual;
 
   return (
     <DashboardContainer className="space-y-6 pb-16">
@@ -108,11 +120,13 @@ export function VendorServiceOverview({
         <div className="lg:col-span-2 rounded-3xl border border-slate-100 bg-white p-5">
           <div className="mb-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
             <img
-              src={primaryImage}
-              alt={service.title || categoryVisual.alt}
+              src={primaryVisual.src}
+              alt={primaryVisual.alt}
               className="h-56 w-full object-cover"
               loading="lazy"
               decoding="async"
+              srcSet={primaryVisual.srcSet}
+              sizes="(max-width: 1024px) 100vw, 640px"
             />
             <div className="flex flex-wrap items-center gap-2 px-4 py-3 text-xs font-semibold text-slate-600">
               <span className="rounded-full bg-white/80 px-2 py-0.5 text-slate-700">

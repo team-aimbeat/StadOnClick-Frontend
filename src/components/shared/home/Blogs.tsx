@@ -56,7 +56,7 @@ export default function RecentPosts() {
               key={`${profile.name}-${index}`}
               className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition hover:-translate-y-2 hover:shadow-lg"
             >
-              <div className="relative h-[170px]">
+              <div className="relative h-42.5">
                 <img
                   src={profile.cover}
                   alt={`${profile.name} cover`}

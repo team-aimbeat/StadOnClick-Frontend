@@ -144,7 +144,8 @@ const VendorHeader = () => {
 
   const actionBtnClass =
     "group grid h-10 w-10 place-content-center rounded-md mx-2 cursor-pointer border border-gray-200 bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800";
-
+  
+    
   const getFlagUrl = (code: string) =>
     new URL(`../../assets/flags/${code.toUpperCase()}.svg`, import.meta.url)
       .href;
@@ -224,7 +225,7 @@ const VendorHeader = () => {
           px-5 py-3
           bg-white dark:bg-gray-900
           border-b border-gray-200/80 dark:border-gray-800
-          min-h-[60px]
+          min-h-15
         "
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -234,9 +235,9 @@ const VendorHeader = () => {
             aria-label={t("Toggle sidebar") || "Toggle sidebar"}
             onClick={() => dispatch(toggleSidebar())}
           >
-            <Menu className="h-[18px] w-[18px]" strokeWidth={1.8} />
+            <Menu className="h-4.5 w-4.5" strokeWidth={1.8} />
           </button>
-          <div className="hidden w-full max-w-[520px] sm:block">
+          <div className="hidden w-full max-w-130 sm:block">
             <SearchBar />
           </div>
           <div className="sm:hidden">  
@@ -267,7 +268,7 @@ const VendorHeader = () => {
                 />
               }
             >
-              <ul className="grid w-[280px] grid-cols-2 gap-2 px-2 font-semibold text-dark dark:text-white-light/90">
+              <ul className="grid w-70 grid-cols-2 gap-2 px-2 font-semibold text-dark dark:text-white-light/90">
                 {themeConfig.languageList.map(
                   (item: { code: string; name: string }) => (
                     <li key={item.code}>
@@ -304,9 +305,9 @@ const VendorHeader = () => {
               btnClassName={actionBtnClass}
               button={<Mail className="h-5 w-5" strokeWidth={1.8} />}
             >
-              <ul className="w-[320px] text-dark dark:text-white-dark sm:w-[360px]">
+              <ul className="w-[320px] text-dark dark:text-white-dark sm:w-90">
                 <li
-                  className="relative h-[70px] overflow-hidden rounded-t-lg"
+                  className="relative h-17.5 overflow-hidden rounded-t-lg"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <img
@@ -319,7 +320,7 @@ const VendorHeader = () => {
                   </div>
                 </li>
                 <li
-                  className="max-h-[320px] overflow-y-auto divide-y divide-gray-100/80 dark:divide-white/10"
+                  className="max-h-80 overflow-y-auto divide-y divide-gray-100/80 dark:divide-white/10"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {messages.length ? (
@@ -351,7 +352,7 @@ const VendorHeader = () => {
                             {message.time}
                           </span>
                           {message.count ? (
-                            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-white">
+                            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-white">
                               {message.count}
                             </span>
                           ) : null}
@@ -404,7 +405,7 @@ const VendorHeader = () => {
                 <Bell className="h-5 w-5" strokeWidth={1.8} />
               }
             >
-              <ul className="w-[320px] divide-y divide-gray-100/80 text-dark dark:divide-white/10 dark:text-white-dark sm:w-[360px]">
+              <ul className="w-[320px] divide-y divide-gray-100/80 text-dark dark:divide-white/10 dark:text-white-dark sm:w-90">
                 <li onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-between px-5 py-3 font-semibold">
                     <h4 className="text-lg">Notifications</h4>
@@ -416,7 +417,7 @@ const VendorHeader = () => {
                   </div>
                 </li>
                 <li
-                  className="max-h-[320px] overflow-y-auto"
+                  className="max-h-80 overflow-y-auto"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {vendorNotifications.length ? (
@@ -490,7 +491,7 @@ const VendorHeader = () => {
                 />
               }
             >
-               <ul className="w-[230px] font-semibold text-dark dark:text-white-light/90">
+               <ul className="w-57.5 font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img
