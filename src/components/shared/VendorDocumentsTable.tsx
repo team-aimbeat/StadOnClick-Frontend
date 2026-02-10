@@ -30,6 +30,7 @@ import {
 } from "@/services/vendorKycApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import { useGetMeQuery } from "@/features/auth/api/authApi";
+import { constrainedMemory } from "process";
 
 export type VendorProfile = {
   name: string;
@@ -169,7 +170,9 @@ const VendorDocumentsTable = ({
   const authUser = useAppSelector((state) => state.auth.user);
   const hasVendorRole = Boolean(authUser?.roles?.includes("VENDOR"));
   const authVendorId = authUser?.vendorAccess?.vendorId ?? null;
-  const shouldFetchDocuments = Boolean(authUser && hasVendorRole && authVendorId);
+  const shouldFetchDocuments = Boolean(
+    authUser && hasVendorRole && authVendorId,
+  );
 
   const {
     data: documents = [],
@@ -371,6 +374,9 @@ const VendorDocumentsTable = ({
 
   const toolbarSkeleton = isFetching && vendorDocs.length === 0;
   const vendorEmail = user?.email ?? "Vendor";
+  const vendorname = user?.firstName + user.lastName;
+  const phone = user?.phone;
+
 
   const getStatusDotColor = (status: string) => {
     switch (status) {
@@ -413,14 +419,19 @@ const VendorDocumentsTable = ({
               />
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {resolvedVendor.name}
+                  {vendorname}
+                  <span className="ml-2 rounded-full px-2 py-0.5 text-[10px] font-medium ">
+                    {phone}
+                  </span>
                   <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
                     {vendorStatusLabel}
                   </span>
                 </p>
                 <p className="text-xs text-gray-400">
                   Email: {vendorEmail}
-                  {resolvedVendor.location ? ` · ${resolvedVendor.location}` : ""}
+                  {resolvedVendor.location
+                    ? ` · ${resolvedVendor.location}`
+                    : ""}
                 </p>
               </div>
             </div>
