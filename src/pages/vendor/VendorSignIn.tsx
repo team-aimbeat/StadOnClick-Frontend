@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import bgImage5 from "@/assets/user-onboarding/user-onboarding-5.png";
 import { OnboardingLayout } from "@/components/shared/user-onboarding/OnboardingLayout";
 import { OnboardingFormCard } from "@/components/shared/user-onboarding/OnboardingFormCard";
@@ -34,12 +34,11 @@ export default function VendorSignIn() {
   const [login, { isLoading }] = useLoginMutation();
   const [formError, setFormError] = useState<string | undefined>(undefined);
 
-  const { register, handleSubmit, control, setError, clearErrors, watch, setValue } =
+  const { register, handleSubmit, control, setError, clearErrors, watch } =
     useForm<FormValues>({
       mode: "onChange",
       defaultValues: { email: "", password: "" },
     });
-  const [searchParams] = useSearchParams();
 
   const { errors, isSubmitting, isValid } = useFormState({ control });
   const values = watch();
@@ -51,18 +50,6 @@ export default function VendorSignIn() {
   useEffect(() => {
     dispatch(setPageTitle("Vendor Sign in"));
   }, [dispatch]);
-
-  useEffect(() => {
-    const email = searchParams.get("email");
-    const password = searchParams.get("password");
-
-    if (email) {
-      setValue("email", email, { shouldValidate: true });
-    }
-    if (password) {
-      setValue("password", password, { shouldValidate: true });
-    }
-  }, [searchParams, setValue]);
 
   // If already vendor, skip login screen
   useEffect(() => {

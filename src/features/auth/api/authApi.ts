@@ -68,6 +68,24 @@ export const authApi = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+    requestVendorLoginLink: builder.mutation<
+      { success: boolean; token: string; expiresAt: string; loginUrl: string },
+      { email: string }
+    >({
+      query: (body) => ({
+        url: "/auth/request-login-link",
+        method: "POST",
+        body,
+      }),
+    }),
+    autoLogin: builder.mutation<{ success: boolean; user: AuthUser }, { token: string }>({
+      query: ({ token }) => ({
+        url: "/auth/auto-login",
+        method: "GET",
+        params: { token },
+      }),
+      invalidatesTags: ["User"],
+    }),
 
     logout: builder.mutation<void, void>({
       query: () => ({
@@ -105,4 +123,6 @@ export const {
   useRefreshMutation,
   useUploadAvatarMutation,
   useGetMeQuery,
+  useRequestVendorLoginLinkMutation,
+  useAutoLoginMutation,
 } = authApi;

@@ -24,6 +24,7 @@ import {
   useListAllVendorsQuery,
   useUpdateVendorStatusMutation,
 } from "@/features/admin/vendors/api/vendorsApi";
+import { useRequestVendorLoginLinkMutation } from "@/features/auth/api/authApi";
 
 type VendorsPageProps = {
   defaultStatusFilter?: string;
@@ -51,8 +52,6 @@ export type VendorRow = RowData & {
   ratingCount: number;
   createdAt: string;
 };
-
-const VENDOR_DEMO_PASSWORD = "sahibjitsingh";
 
 const money = new Intl.NumberFormat("en-SE", {
   style: "currency",
@@ -151,7 +150,9 @@ export default function VendorsPage({
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
   const [updatingVendorId, setUpdatingVendorId] = useState<string | null>(null);
+  const [requestingLinkVendorId, setRequestingLinkVendorId] = useState<string | null>(null);
   const [updateVendorStatus] = useUpdateVendorStatusMutation();
+  const [requestVendorLoginLink] = useRequestVendorLoginLinkMutation();
 
   const defaultFilters = useMemo(
     () => (defaultStatusFilter ? { status: defaultStatusFilter } : undefined),
@@ -212,6 +213,26 @@ export default function VendorsPage({
       }
     },
     [updateVendorStatus],
+  );
+
+  const handleOpenVendorDashboard = useCallback(
+    async (vendorId: string, email?: string) => {
+      if (!email) {
+        toast.error("Vendor email is missing");
+        return;
+      }
+
+      try {
+        setRequestingLinkVendorId(vendorId);
+        const response = await requestVendorLoginLink({ email }).unwrap();
+        window.location.assign(response.loginUrl);
+      } catch (error: any) {
+        toast.error(error?.data?.message || "Failed to create secure login link");
+      } finally {
+        setRequestingLinkVendorId(null);
+      }
+    },
+    [requestVendorLoginLink],
   );
 
   const columns = useMemo<ColumnConfig[]>(
@@ -348,6 +369,7 @@ export default function VendorsPage({
         render: (_: any, row: RowData) => {
           const r = row as VendorRow;
           const isUpdating = updatingVendorId === r.id;
+          const isRequestingLink = requestingLinkVendorId === r.id;
 
           return (
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
@@ -383,19 +405,21 @@ export default function VendorsPage({
               </NavLink>
 
               {r.loginEmail ? (
-                <a
-                  href={`/vendor/sign-in?email=${encodeURIComponent(r.loginEmail)}&password=${encodeURIComponent(VENDOR_DEMO_PASSWORD)}`}
-                  className="text-emerald-700 hover:text-emerald-600"
+                <button
+                  type="button"
+                  onClick={() => handleOpenVendorDashboard(r.id, r.loginEmail)}
+                  disabled={isRequestingLink}
+                  className="text-emerald-700 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Vendor Dashboard
-                </a>
+                  {isRequestingLink ? "Opening..." : "Vendor Dashboard"}
+                </button>
               ) : null}
             </div>
           );
         },
       },
     ],
-    [handleVendorStatusChange, updatingVendorId],
+    [handleOpenVendorDashboard, handleVendorStatusChange, requestingLinkVendorId, updatingVendorId],
   );
 
   const filters = useMemo<FilterConfig[]>(

@@ -49,6 +49,7 @@ import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import ModeratorProtectedRoute from "./ModeratorProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
+import VendorAutoLogin from "@/pages/vendor/VendorAutoLogin";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
 import AdminNotFound from "@/pages/Admin/AdminNotFound";
@@ -365,6 +366,11 @@ const appRouter = createBrowserRouter([
       {
         path: "/vendor/sign-in",
         element: <VendorSignIn />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/vendor/auto-login",
+        element: <VendorAutoLogin />,
         errorElement: <ErrorPage />,
       },
       {
