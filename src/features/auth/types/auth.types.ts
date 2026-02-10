@@ -8,4 +8,12 @@ export type AuthUser = {
   displayName: string
   roles: string[]
   profileImageUrl: string | null
+  vendorAccess?: {
+    hasVendorProfile: boolean
+    vendorId: string | null
+    isBusinessProfileComplete: boolean
+    lifecycleStatus: "DRAFT" | "ACTIVE" | "SUSPENDED"
+    setupRequired: boolean
+  }
+  nextAction?: string | null
 }

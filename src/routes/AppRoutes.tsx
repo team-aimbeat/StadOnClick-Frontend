@@ -452,6 +452,7 @@ const appRouter = createBrowserRouter([
           },
           { path: "bookings/:bookingId", element: <VendorBookingDetail /> },
           { path: "profile", element: <VendorProfile /> },
+          { path: "business-profile/setup", element: <VendorProfile /> },
           { path: "services", element: <VendorServices /> },
           {
             path: "services/:serviceId/options",

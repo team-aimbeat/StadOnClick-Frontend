@@ -54,9 +54,9 @@ export default function VendorSignIn() {
   // If already vendor, skip login screen
   useEffect(() => {
     if (authUser?.roles?.length && hasVendorAccess(authUser.roles)) {
-      navigate("/vendor/dashboard", { replace: true });
+      navigate(authUser.nextAction || "/vendor/dashboard", { replace: true });
     }
-  }, [authUser?.roles, navigate]);
+  }, [authUser?.nextAction, authUser?.roles, navigate]);
 
   const onSubmit = useCallback(
     async (data: FormValues) => {
@@ -77,7 +77,7 @@ export default function VendorSignIn() {
 
         toast.success("Signed in successfully", { id: "vendor-login-success" });
 
-        navigate("/vendor/dashboard", { replace: true });
+        navigate(user.nextAction || "/vendor/dashboard", { replace: true });
       } catch (err) {
         const { fieldErrors, formError: normalizedFormError, toastMessage } =
           normalizeApiError(err, "Unable to sign in. Please try again.");

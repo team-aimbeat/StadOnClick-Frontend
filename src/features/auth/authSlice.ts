@@ -12,6 +12,14 @@ export type AuthUser = {
   profileImageUrl: string | null;
   status: string;
   hasPassword: boolean;
+  vendorAccess?: {
+    hasVendorProfile: boolean;
+    vendorId: string | null;
+    isBusinessProfileComplete: boolean;
+    lifecycleStatus: "DRAFT" | "ACTIVE" | "SUSPENDED";
+    setupRequired: boolean;
+  };
+  nextAction?: string | null;
 };
 
 type AuthState = {
