@@ -2379,7 +2379,7 @@ const VendorAnalyticsDashboard = () => {
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <SectionHeader title="Gallery" />
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-8">
             {vendorGallery.length ? (
               vendorGallery
                 .slice()
@@ -2418,7 +2418,32 @@ const VendorAnalyticsDashboard = () => {
                     <p className="text-xs text-slate-500">
                       {item.description ?? "No description provided."}
                     </p>
-                    <p className="text-[11px] font-semibold text-slate-600">{item.fileKey}</p>
+                    <div className="mt-2 overflow-hidden rounded-md border border-slate-200 bg-slate-100">
+                      {item.type === "VIDEO" ? (
+                        <video
+                          src={item.fileKey}
+                          controls
+                          className="h-40 w-full object-cover"
+                          preload="metadata"
+                        />
+                      ) : (
+                        <img
+                          src={item.fileKey}
+                          alt={item.title ?? "Gallery image"}
+                          className="h-40 w-full object-cover"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          onError={(event) => {
+                            const target = event.currentTarget;
+                            target.style.display = "none";
+                            if (target.parentElement) {
+                              target.parentElement.innerHTML =
+                                '<div class="flex h-40 items-center justify-center text-xs text-slate-500">Image unavailable</div>';
+                            }
+                          }}
+                        />
+                      )}
+                    </div>
                     {item.thumbnailKey ? (
                       <p className="text-[11px] text-slate-500">Thumb: {item.thumbnailKey}</p>
                     ) : null}

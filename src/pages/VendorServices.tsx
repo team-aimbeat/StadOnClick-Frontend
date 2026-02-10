@@ -28,7 +28,6 @@ import {
   useCreateVendorServiceMutation,
   useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
-  useGetVendorProfileStatusQuery,
   type VendorServiceEntity,
 } from "@/services/vendorServicesApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
@@ -253,16 +252,11 @@ const VendorServices = () => {
     }
   }, [mode, pendingScrollToWizard]);
 
-  const { data: profileStatus } = useGetVendorProfileStatusQuery();
-  const dynamicVendorId = profileStatus?.id;
-
   const {
     data: vendorServices = [],
     isLoading: isServicesLoading,
     refetch: refetchServices,
-  } = useGetVendorServicesQuery(dynamicVendorId!, {
-    skip: !dynamicVendorId,
-  });
+  } = useGetVendorServicesQuery();
   const hasService = vendorServices.length > 0;
 
   const [vendorServiceDetails, setVendorServiceDetails] =
@@ -722,11 +716,6 @@ const VendorServices = () => {
       setGeneralError("Complete the vendor service details before continuing.");
       return;
     }
-    if (!dynamicVendorId) {
-      setGeneralError("Unable to resolve vendor session. Please reauthenticate.");
-      return;
-    }
-
     setGeneralError(null);
     setVendorServiceStep("loading");
     setVendorServiceError(null);
@@ -744,7 +733,6 @@ const VendorServices = () => {
             ? null
             : Number(refundPolicy.windowHours);
         const vendorServicePayload = {
-          vendorId: dynamicVendorId,
           categoryId: selectedCategoryId,
           title: vendorServiceDetails.title.trim(),
           description: vendorServiceDetails.description.trim(),
@@ -813,8 +801,14 @@ const VendorServices = () => {
       refetchServices();
     } catch (error) {
       const normalized = normalizeApiError(error, "Operation failed");
-      setGeneralError(normalized.toastMessage);
-      toast.error(normalized.toastMessage);
+      const vendorContextError =
+        normalized.formError === "VENDOR_CONTEXT_REQUIRED" ||
+        normalized.formError === "VENDOR_NOT_FOUND";
+      const message = vendorContextError
+        ? "Unable to resolve vendor session. Please complete vendor profile setup and sign in again."
+        : normalized.toastMessage;
+      setGeneralError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

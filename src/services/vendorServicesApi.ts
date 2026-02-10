@@ -34,7 +34,6 @@ export type VendorServiceEntity = {
 };
 
 export interface CreateVendorServicePayload {
-  vendorId: string;
   categoryId: string;
   title: string;
   description: string;
