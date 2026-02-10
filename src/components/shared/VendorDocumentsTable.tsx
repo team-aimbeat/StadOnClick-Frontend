@@ -20,8 +20,6 @@ import {
 } from "@/components/ui/select";
 import VendorTable from "./CustomTable";
 import profile7 from "@/assets/images/profile-7.jpeg";
-import profile8 from "@/assets/images/profile-8.jpeg";
-import profile9 from "@/assets/images/profile-9.jpeg";
 
 import {
   useGetVendorKycDocumentsQuery,
@@ -32,7 +30,6 @@ import {
 } from "@/services/vendorKycApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import { useGetMeQuery } from "@/features/auth/api/authApi";
-import { TbActivityHeartbeat } from "react-icons/tb";
 
 export type VendorProfile = {
   name: string;
@@ -108,11 +105,11 @@ const formatDocumentStatus = (
 };
 
 const defaultVendor: VendorProfile = {
-  name: "Malmo Romokare",
-  id: "355657",
+  name: "Vendor",
+  id: "",
   avatar: profile7,
-  location: "Malmo",
-  verified: true,
+  location: "",
+  verified: false,
 };
 
 const mapKycDocuments = (
@@ -171,15 +168,17 @@ const VendorDocumentsTable = ({
 }: VendorDocumentsTableProps) => {
   const authUser = useAppSelector((state) => state.auth.user);
   const hasVendorRole = Boolean(authUser?.roles?.includes("VENDOR"));
-  const shouldFetchDocuments = Boolean(authUser && hasVendorRole);
+  const authVendorId = authUser?.vendorAccess?.vendorId ?? null;
+  const shouldFetchDocuments = Boolean(authUser && hasVendorRole && authVendorId);
 
   const {
     data: documents = [],
     isFetching,
     isError,
     error,
-  } = useGetVendorKycDocumentsQuery(undefined, {
+  } = useGetVendorKycDocumentsQuery(authVendorId ?? undefined, {
     skip: !shouldFetchDocuments,
+    refetchOnMountOrArgChange: true,
   });
   const [uploadVendorKycDocument, { isLoading: isUploading }] =
     useUploadVendorKycDocumentMutation();
@@ -188,18 +187,29 @@ const VendorDocumentsTable = ({
   );
   const [uploadOpen, setUploadOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [activeDoc, setActiveDoc] = useState<VendorDoc | null>(null);
   const [viewDoc, setViewDoc] = useState<VendorDoc | null>(null);
-  const [approveReason, setApproveReason] = useState("");
-  const [approveComment, setApproveComment] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const vendorAvatar = vendor.avatar ?? profile7;
-  const vendorStatusLabel = vendor.verified ? "Verified" : "Pending";
+
+  const { data } = useGetMeQuery();
+  const user = data?.user;
+
+  const resolvedVendor: VendorProfile = useMemo(
+    () => ({
+      id: authVendorId ?? vendor.id,
+      name: user?.displayName || vendor.name || "Vendor",
+      avatar: vendor.avatar ?? user?.profileImageUrl ?? profile7,
+      location: vendor.location ?? "",
+      verified: vendor.verified ?? false,
+    }),
+    [authVendorId, user?.displayName, user?.profileImageUrl, vendor],
+  );
 
   const vendorDocs = useMemo(
-    () => mapKycDocuments(documents, vendor),
-    [documents, vendor],
+    () => mapKycDocuments(documents, resolvedVendor),
+    [documents, resolvedVendor],
   );
+  const vendorStatusLabel = resolvedVendor.verified ? "Verified" : "Pending";
 
   const normalizedQueryError = useMemo(() => {
     if (!isError) return null;
@@ -233,12 +243,10 @@ const VendorDocumentsTable = ({
         return;
       }
 
-      const vendorId = "e4d97a19-d4f6-4d1e-ab69-ed27b60bd59a";
       try {
         for (const file of files) {
           const formData = new FormData();
           formData.append("type", selectedType);
-          formData.append("vendorId", vendorId);
           formData.append("file", file);
           await uploadVendorKycDocument(formData).unwrap();
         }
@@ -270,15 +278,6 @@ const VendorDocumentsTable = ({
       handleUploadFiles(event.dataTransfer.files);
       event.dataTransfer.clearData();
     }
-  };
-
-  const handleApprove = () => {
-    if (!approveReason) {
-      return;
-    }
-    setViewDoc(null);
-    setApproveComment("");
-    setApproveReason("");
   };
 
   const columns = [
@@ -371,15 +370,7 @@ const VendorDocumentsTable = ({
   );
 
   const toolbarSkeleton = isFetching && vendorDocs.length === 0;
-  const { data } = useGetMeQuery();
-  const user = data?.user;
-
-  const VendorProfile: any = {
-    id: user?.id,
-    name: user?.displayName ?? "Vendor",
-    avatar: user?.profileImageUrl ?? profile7,
-    email: user?.email ?? "Vendor",
-  };
+  const vendorEmail = user?.email ?? "Vendor";
 
   const getStatusDotColor = (status: string) => {
     switch (status) {
@@ -416,20 +407,20 @@ const VendorDocumentsTable = ({
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-500">
               <img
-                src={VendorProfile.avatar}
-                alt={VendorProfile.name}
+                src={resolvedVendor.avatar ?? profile7}
+                alt={resolvedVendor.name}
                 className="h-10 w-10 rounded-full border border-gray-200 object-cover"
               />
               <div>
                 <p className="text-sm font-semibold text-gray-900">
-                  {VendorProfile.name}
+                  {resolvedVendor.name}
                   <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
                     {vendorStatusLabel}
                   </span>
                 </p>
                 <p className="text-xs text-gray-400">
-                  Email: {VendorProfile.email}
-                  {VendorProfile.location ? ` · ${VendorProfile.location}` : ""}
+                  Email: {vendorEmail}
+                  {resolvedVendor.location ? ` · ${resolvedVendor.location}` : ""}
                 </p>
               </div>
             </div>
@@ -496,16 +487,16 @@ const VendorDocumentsTable = ({
                   </div>
                   <div className="flex items-center gap-3">
                     <img
-                      src={vendorAvatar}
+                      src={resolvedVendor.avatar ?? vendorAvatar}
                       alt="Vendor profile"
                       className="h-10 w-10 rounded-full object-cover"
                     />
                     <div>
                       <p className="text-sm font-semibold text-gray-900">
-                        {vendor.name}
+                        {resolvedVendor.name}
                       </p>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span>ID: {vendor.id}</span>
+                        <span>ID: {resolvedVendor.id}</span>
                         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
                           {vendorStatusLabel}
                         </span>

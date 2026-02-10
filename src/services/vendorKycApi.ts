@@ -41,7 +41,7 @@ export const vendorKycApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ["VendorKycDocument"],
   endpoints: (builder) => ({
-    getVendorKycDocuments: builder.query<VendorKycDocument[], void>({
+    getVendorKycDocuments: builder.query<VendorKycDocument[], string | void>({
       query: () => "/vendor/kyc/documents",
       providesTags: (result) =>
         result

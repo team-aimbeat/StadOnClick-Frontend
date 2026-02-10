@@ -44,6 +44,12 @@ export function AuthBootstrap({ children }: PropsWithChildren) {
         return;
       }
 
+      const isVendor = (user.roles ?? []).includes("VENDOR");
+      if (isVendor && user.nextAction && path.startsWith("/vendor") && path !== user.nextAction) {
+        navigate(user.nextAction, { replace: true });
+        return;
+      }
+
       const isAdminAuthEntry = path === "/admin/sign-in" || path === "/admin";
       const isLegacyModerator = path.startsWith("/moderator");
       if (!isAdminAuthEntry && !isLegacyModerator) return;
