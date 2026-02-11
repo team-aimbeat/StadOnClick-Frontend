@@ -128,6 +128,9 @@ export default function AdminSignIn() {
           loading={isLoading || isSubmitting}
           errorMessage={formError}
           isValid={canSubmit}
+          emailLabel="Work Email"
+          emailPlaceholder="name@stadonclick.com"
+          passwordPlaceholder="Enter your password"
         />
 
         <div className="mt-4 space-y-2 rounded-xl border border-dashed border-slate-200 p-4 text-center">
