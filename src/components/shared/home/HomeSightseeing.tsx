@@ -3,6 +3,7 @@ import sight2 from "@/assets/Images/sight2.svg"
 import sight3 from "@/assets/Images/sight3.svg"
 import sight4 from "@/assets/Images/sight4.svg"
 import sight5 from "@/assets/Images/sight5.svg"
+import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton"
 
 export default function HomeSightseeing() {
   return (
@@ -21,10 +22,13 @@ export default function HomeSightseeing() {
           </div>
 
           <div className="relative overflow-hidden rounded-2xl shadow-sm">
-            <img
+            <ImageWithSkeleton
               src={sight2}
               alt="City drive"
+              containerClassName="h-[250px] w-full"
               className="h-[250px] w-full object-cover"
+              loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-slate-900/40" />
             <p className="absolute bottom-3 left-3 text-[16px] font-semibold text-white">
@@ -51,20 +55,26 @@ export default function HomeSightseeing() {
 
         {/* CENTER COLUMN */}
         <div className="overflow-hidden rounded-2xl shadow-lg">
-          <img
+          <ImageWithSkeleton
             src={sight5}
             alt="Main scenic view"
+            containerClassName="h-full min-h-[380px] w-full"
             className="h-full min-h-[380px] w-full object-cover "
+            loading="lazy"
+            decoding="async"
           />
         </div>
 
         {/* RIGHT COLUMN */}
         <div className="flex flex-col gap-6">
           <div className="overflow-hidden rounded-2xl shadow-sm">
-            <img
+            <ImageWithSkeleton
               src={sight4}
               alt="Traveler"
+              containerClassName="h-[250px] w-full"
               className="h-[250px] w-full object-cover"
+              loading="lazy"
+              decoding="async"
             />
           </div>
 
