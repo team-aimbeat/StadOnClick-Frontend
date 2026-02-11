@@ -33,5 +33,6 @@ export type BasicProfileRequest = {
   cityId?: string
   profileImageUrl?: string
   marketingConsent?: boolean
+  referralCode?: string
   termsAccepted: true
 }

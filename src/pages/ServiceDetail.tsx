@@ -3,8 +3,6 @@ import {
   Check,
   ChevronLeft,
   Heart,
-  MapIcon,
-  MapPin,
   MapPinIcon,
   Share2,
   Star,

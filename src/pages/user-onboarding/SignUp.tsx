@@ -52,6 +52,8 @@ export default function SignUp() {
   const currentUser = useAppSelector((state) => state.auth.user);
   const location = useLocation();
   const navigate = useNavigate();
+  const referralCodeFromQuery =
+    new URLSearchParams(location.search).get("ref")?.trim().toUpperCase() || undefined;
   const initialStep = (() => {
     const queryValue = Number(new URLSearchParams(location.search).get("step"));
     if (!Number.isNaN(queryValue) && queryValue >= 4) return 4;
@@ -205,6 +207,7 @@ export default function SignUp() {
         cityId: data.cityId || undefined,
         profileImageUrl: data.profileImageUrl || undefined,
         marketingConsent: data.marketingConsent ?? undefined,
+        referralCode: referralCodeFromQuery,
         termsAccepted: true,
       };
 

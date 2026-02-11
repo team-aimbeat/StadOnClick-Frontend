@@ -479,13 +479,18 @@ export default function UserHeader() {
                 setCartMenuOpen(false);
                 setNotificationsMenuOpen(false);
                 setProfileMenuOpen(false);
-                navigate("/affiliate-marketing");
+                if (!user) {
+                  navigate("/sign-in");
+                  return;
+                }
+                const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
+                navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
               }}
               className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2"
-              aria-label="Affiliate Marketing"
+              aria-label="Affiliate Program"
             >
               <Megaphone className="h-4.5 w-4.5 text-slate-500" />
-              <span>Affiliate Marketing</span>
+              <span>Affiliate Program</span>
             </button>
             <div ref={cartRef} className="relative">
               <IconButton

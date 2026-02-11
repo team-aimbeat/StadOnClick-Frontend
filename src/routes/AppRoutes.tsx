@@ -78,6 +78,7 @@ import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import WeekendActivities from "@/pages/WeekendActivities";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
+import AffiliateDashboard from "@/pages/AffiliateDashboard";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AppLayout from "@/components/Layout/AppLayout";
@@ -158,6 +159,10 @@ const appRouter = createBrowserRouter([
           {
             path: "/affiliate-marketing",
             element: <AffiliateMarketing />,
+          },
+          {
+            path: "/affiliate/dashboard",
+            element: <AffiliateDashboard />,
           },
   
           {
