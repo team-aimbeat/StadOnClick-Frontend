@@ -34,7 +34,7 @@ import Dropdown from "../shared/dropdown";
 import SearchBar from "../shared/SearchBar";
 import { clearAuth } from "@/features/auth/authSlice";
 import toast from "react-hot-toast";
-import { useLogoutMutation } from "@/features/auth/api/authApi";
+import { useGetMeQuery, useLogoutMutation } from "@/features/auth/api/authApi";
 import {
   useListVendorNotificationsQuery,
   useMarkAllVendorNotificationsReadMutation,
@@ -68,6 +68,10 @@ const VendorHeader = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
+
+    const { data } = useGetMeQuery();
+    const user = data?.user;
+        const avatar=  user?.profileImageUrl ?? profile7;
 
   useEffect(() => {
     const selector = document.querySelector<HTMLAnchorElement>(
@@ -485,7 +489,7 @@ const VendorHeader = () => {
               button={
                 <img
                   className="h-9 w-9 rounded-full object-cover saturate-50 transition group-hover:saturate-100"
-                  src={profile7}
+                  src={avatar}
                   alt="User avatar"
                 />
               }
@@ -495,7 +499,7 @@ const VendorHeader = () => {
                   <div className="flex items-center px-4 py-4">
                     <img
                       className="h-10 w-10 rounded-md object-cover"
-                      src={profile7}
+                      src={avatar}
                       alt="User avatar"
                     />
                     <div className="ltr:pl-4 rtl:pr-4 truncate">

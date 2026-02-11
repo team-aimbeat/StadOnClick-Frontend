@@ -201,7 +201,7 @@ const VendorDocumentsTable = ({
     () => ({
       id: authVendorId ?? vendor.id,
       name: user?.displayName || vendor.name || "Vendor",
-      avatar: vendor.avatar ?? user?.profileImageUrl ?? profile7,
+      avatar:  user?.profileImageUrl ?? profile7,
       location: vendor.location ?? "",
       verified: vendor.verified ?? false,
     }),
@@ -498,7 +498,7 @@ const VendorDocumentsTable = ({
                   </div>
                   <div className="flex items-center gap-3">
                     <img
-                      src={resolvedVendor.avatar ?? vendorAvatar}
+                      src={vendorAvatar ?? vendorAvatar}
                       alt="Vendor profile"
                       className="h-10 w-10 rounded-full object-cover"
                     />
