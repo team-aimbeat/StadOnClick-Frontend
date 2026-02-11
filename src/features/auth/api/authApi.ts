@@ -2,7 +2,8 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "@/app/services/baseApi";
 import type { BasicProfileRequest } from "../types/basicProfile.types";
 import type { City } from "../types/city.types";
-import type { AuthUser } from "../auth/authSlice";
+import { AuthUser } from "../authSlice";
+
 
 export const authApi = createApi({
   reducerPath: "authApi",

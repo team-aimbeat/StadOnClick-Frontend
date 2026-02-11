@@ -1,191 +1,216 @@
-import { BadgeCheck, Check, ChevronLeft, Heart, MapIcon, MapPin, MapPinIcon, Share2, Star } from "lucide-react"
-import { useNavigate, useParams } from "react-router-dom"
-import { useEffect, useMemo, useState } from "react"
-import salon1 from "@/assets/images/salon1.png"
-import salon2 from "@/assets/images/salon2.png"
-import salon3 from "@/assets/images/salon3.png"
-import { BookingModal } from "@/components/booking/BookingModal"
-import { slotStatusLegend, slotStatusMeta, SlotOption, SlotStatus } from "@/components/booking/slotData"
-import { useAppSelector } from "@/app/hooks"
+import {
+  BadgeCheck,
+  Check,
+  ChevronLeft,
+  Heart,
+  MapIcon,
+  MapPin,
+  MapPinIcon,
+  Share2,
+  Star,
+} from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import salon1 from "@/assets/images/salon1.png";
+import salon2 from "@/assets/images/salon2.png";
+import salon3 from "@/assets/images/salon3.png";
+import { BookingModal } from "@/components/booking/BookingModal";
+import {
+  slotStatusLegend,
+  slotStatusMeta,
+  SlotOption,
+  SlotStatus,
+} from "@/components/booking/slotData";
+import { useAppSelector } from "@/app/hooks";
 
-import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
-import { useListMarketplaceServicesQuery } from "@/services/marketplaceApi"
-import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
+import { useGetVendorServicesQuery } from "@/services/vendorServicesApi";
+import { useListMarketplaceServicesQuery } from "@/services/marketplaceApi";
+import { useGetServiceMediaQuery } from "@/services/serviceMediaApi";
 import {
   useGetServiceOfferingsQuery,
   useLazyGetOfferingSlotsQuery,
   VendorOffering,
   VendorSlot,
-} from "@/services/vendorOfferingsApi"
-import { DateTime } from "luxon"
-import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
-import { useApplyCouponMutation } from "@/services/vendorOrdersApi"
-import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi"
-import { Button } from "@/components/ui/button"
+} from "@/services/vendorOfferingsApi";
+import { DateTime } from "luxon";
+import {
+  useGetServiceReviewsQuery,
+  useCreateReviewMutation,
+} from "@/services/serviceReviewsApi";
+import { useApplyCouponMutation } from "@/services/vendorOrdersApi";
+import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
+import { Button } from "@/components/ui/button";
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
-import { Badge } from "@/components/ui/badge"
-import { LocationMap } from "@/components/marketplace/Map/LocationMap"
-import toast from "react-hot-toast"
-import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify"
+import { Badge } from "@/components/ui/badge";
+import { LocationMap } from "@/components/marketplace/Map/LocationMap";
+import toast from "react-hot-toast";
+import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify";
 
-type ReviewCard = {
-  id: string
-  name: string
-  initials: string
-  role: string
-  rating: number
-  text: string
-  date: string
-  location: string
-}
-
-const STOCKHOLM_TIMEZONE = "Europe/Stockholm"
+const STOCKHOLM_TIMEZONE = "Europe/Stockholm";
 
 const formatSlotLabel = (start: string, end?: string | null) => {
   const formatTime = (value: string) =>
-    DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE).toFormat("HH:mm")
+    DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE).toFormat("HH:mm");
 
-  const startLabel = formatTime(start)
-  if (!end) return startLabel
-  const endLabel = formatTime(end)
-  return `${startLabel} - ${endLabel}`
-}
+  const startLabel = formatTime(start);
+  if (!end) return startLabel;
+  const endLabel = formatTime(end);
+  return `${startLabel} - ${endLabel}`;
+};
 
 const getStockholmDateKey = (value?: Date | string) => {
-  if (!value) return ""
+  if (!value) return "";
   const dt =
     typeof value === "string"
       ? DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE)
-      : DateTime.fromJSDate(value).setZone(STOCKHOLM_TIMEZONE)
-  return dt.toISODate()
-}
+      : DateTime.fromJSDate(value).setZone(STOCKHOLM_TIMEZONE);
+  return dt.toISODate();
+};
 
 const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
   if (slot.status !== "OPEN") {
-    return "unavailable"
+    return "unavailable";
   }
 
-  const capacity = Math.max(slot.capacity ?? 1, 1)
-  const remaining = Math.max(slot.remaining ?? 0, 0)
-  const threshold = Math.max(1, Math.ceil(capacity * 0.25))
-  return remaining <= threshold ? "few" : "available"
-}
+  const capacity = Math.max(slot.capacity ?? 1, 1);
+  const remaining = Math.max(slot.remaining ?? 0, 0);
+  const threshold = Math.max(1, Math.ceil(capacity * 0.25));
+  return remaining <= threshold ? "few" : "available";
+};
 
 const formatSlotSeats = (slot: VendorSlot) => {
-  const capacity = Math.max(slot.capacity ?? 0, 0)
-  const remaining = Math.max(slot.remaining ?? 0, 0)
-  return `${remaining} / ${capacity} seats`
-}
+  const capacity = Math.max(slot.capacity ?? 0, 0);
+  const remaining = Math.max(slot.remaining ?? 0, 0);
+  return `${remaining} / ${capacity} seats`;
+};
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "SEK",
   minimumFractionDigits: 0,
-})
+});
 
-const formatCurrency = (value: number) => currencyFormatter.format(value)
+const formatCurrency = (value: number) => currencyFormatter.format(value);
 
 type CartItem = {
-  offering: VendorOffering
-  quantity: number
-  slotId: string | null
-}
+  offering: VendorOffering;
+  quantity: number;
+  slotId: string | null;
+};
 
 export default function ServiceDetail() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { serviceId: serviceIdParam, serviceSlug } = useParams<{
-    serviceId?: string
-    serviceSlug?: string
-  }>()
-  const userId = useAppSelector((state) => state.auth.user?.id)
-  const [createCheckoutSession, { isLoading: isCreatingSession }] =
-    useCreateCheckoutSessionMutation()
-  const [applyCoupon, { isLoading: isApplyingCoupon }] = useApplyCouponMutation()
+    serviceId?: string;
+    serviceSlug?: string;
+  }>();
+  const userId = useAppSelector((state) => state.auth.user?.id);
 
-  const [userRating, setUserRating] = useState(0)
-  const [userComment, setUserComment] = useState("")
-  const [hoverRating, setHoverRating] = useState(0)
-  const [activeTab, setActiveTab] = useState<"services" | "description">("services")
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => new Date())
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
+  const [createCheckoutSession, { isLoading: isCreatingSession }] =
+    useCreateCheckoutSessionMutation();
+  const [applyCoupon, { isLoading: isApplyingCoupon }] =
+    useApplyCouponMutation();
+
+  const [userRating, setUserRating] = useState(0);
+  const [userComment, setUserComment] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
+  const [activeTab, setActiveTab] = useState<"services" | "description">(
+    "services",
+  );
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    () => new Date(),
+  );
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const selectedDateIso = selectedDate
     ? DateTime.fromJSDate(selectedDate)
         .setZone(STOCKHOLM_TIMEZONE, { keepLocalTime: true })
         .toISODate()
-    : ""
+    : "";
   const formattedSelectedDate = selectedDate
     ? new Intl.DateTimeFormat("default", {
         weekday: "short",
         month: "short",
         day: "numeric",
-    }).format(selectedDate)
-    : "Pick a date"
-  const [isBookingModalOpen, setBookingModalOpen] = useState(false)
-  const [bookedOffering, setBookedOffering] = useState<VendorOffering | null>(null)
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [promoCode, setPromoCode] = useState("")
-  const [couponDiscount, setCouponDiscount] = useState(0)
+      }).format(selectedDate)
+    : "Pick a date";
+  const [isBookingModalOpen, setBookingModalOpen] = useState(false);
+  const [bookedOffering, setBookedOffering] = useState<VendorOffering | null>(
+    null,
+  );
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [promoCode, setPromoCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState<{
-    code: string
-    discountType: string
-    value: number
-  } | null>(null)
-  const [couponError, setCouponError] = useState<string | null>(null)
-  const resetCoupon = () => {
-    setCouponDiscount(0)
-    setAppliedCoupon(null)
-    setCouponError(null)
-  }
-  const [fetchOfferingSlots, { data: fetchedSlots }] = useLazyGetOfferingSlotsQuery()
+    code: string;
+    discountType: string;
+    value: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
-  const slugSearchQuery = serviceSlug ? slugToSearchQuery(serviceSlug) : undefined
+
+  const resetCoupon = () => {
+    setCouponDiscount(0);
+    setAppliedCoupon(null);
+    setCouponError(null);
+    
+    
+  };
+  const [fetchOfferingSlots, { data: fetchedSlots }] =
+    useLazyGetOfferingSlotsQuery();
+
+  const slugSearchQuery = serviceSlug
+    ? slugToSearchQuery(serviceSlug)
+    : undefined;
   const marketplaceParams = serviceIdParam
     ? { serviceId: serviceIdParam, limit: 12, offset: 0 }
     : slugSearchQuery
       ? { q: slugSearchQuery, limit: 12, offset: 0 }
-      : undefined
+      : undefined;
 
-  const skipMarketplace = !serviceIdParam && !serviceSlug
+  const skipMarketplace = !serviceIdParam && !serviceSlug;
 
-  const { data: marketplaceList, isLoading: marketplaceLoading } = useListMarketplaceServicesQuery(
-    marketplaceParams,
-    { skip: skipMarketplace },
-  )
+  const { data: marketplaceList, isLoading: marketplaceLoading } =
+    useListMarketplaceServicesQuery(marketplaceParams, {
+      skip: skipMarketplace,
+    });
 
   const matchedMarketplaceService = useMemo(() => {
-    if (!marketplaceList?.data || marketplaceList.data.length === 0) return undefined
+    if (!marketplaceList?.data || marketplaceList.data.length === 0)
+      return undefined;
     if (serviceIdParam) {
-      return marketplaceList.data[0]
+      return marketplaceList.data[0];
     }
-    if (!serviceSlug) return undefined
-    return marketplaceList.data.find((row) => slugifyServiceTitle(row.title) === serviceSlug)
-  }, [marketplaceList?.data, serviceIdParam, serviceSlug])
+    if (!serviceSlug) return undefined;
+    return marketplaceList.data.find(
+      (row) => slugifyServiceTitle(row.title) === serviceSlug,
+    );
+  }, [marketplaceList?.data, serviceIdParam, serviceSlug]);
 
-  const vendorId = matchedMarketplaceService?.vendorId
-  const serviceCity = matchedMarketplaceService?.cityName ?? "—"
-  const rules = matchedMarketplaceService?.offeringsPreview ?? "—"
-console.log(rules)
+  const vendorId = matchedMarketplaceService?.vendorId;
+  const serviceCity = matchedMarketplaceService?.cityName ?? "—";
+  const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
+  console.log(rules);
   useEffect(() => {
     if (bookedOffering) {
       fetchOfferingSlots({
         offeringId: bookedOffering.id,
-        vendorId:vendorId,
-      })
+        vendorId: vendorId,
+      });
     }
-  }, [bookedOffering, fetchOfferingSlots])
+  }, [bookedOffering, fetchOfferingSlots]);
 
   const slotsForBookedOffering = useMemo(
-    () => (bookedOffering ? fetchedSlots ?? bookedOffering.slots ?? [] : []),
+    () => (bookedOffering ? (fetchedSlots ?? bookedOffering.slots ?? []) : []),
     [bookedOffering, fetchedSlots],
-  )
+  );
 
   const slotsForSelectedDate = useMemo(() => {
-    if (!selectedDate) return slotsForBookedOffering
+    if (!selectedDate) return slotsForBookedOffering;
     return slotsForBookedOffering.filter((slot) => {
-      const slotDate = getStockholmDateKey(slot.startTime)
-      return slotDate === selectedDateIso
-    })
-  }, [slotsForBookedOffering, selectedDateIso, selectedDate])
+      const slotDate = getStockholmDateKey(slot.startTime);
+      return slotDate === selectedDateIso;
+    });
+  }, [slotsForBookedOffering, selectedDateIso, selectedDate]);
 
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
     return slotsForSelectedDate.map((slot) => ({
@@ -193,57 +218,66 @@ console.log(rules)
       label: formatSlotLabel(slot.startTime, slot.endTime),
       status: determineSlotStatus(slot),
       seats: formatSlotSeats(slot),
-    }))
-  }, [slotsForSelectedDate])
-  const selectedSlot = bookingSlotOptions.find((slot) => slot.id === selectedSlotId)
+    }));
+  }, [slotsForSelectedDate]);
+  const selectedSlot = bookingSlotOptions.find(
+    (slot) => slot.id === selectedSlotId,
+  );
   const requiresSlot =
-    (bookedOffering?.usesSlots ?? false) || slotsForBookedOffering.length > 0
+    (bookedOffering?.usesSlots ?? false) || slotsForBookedOffering.length > 0;
 
-  const addOrUpdateCartItem = (offering: VendorOffering, slotId: string | null) => {
-    resetCoupon()
+  const addOrUpdateCartItem = (
+    offering: VendorOffering,
+    slotId: string | null,
+  ) => {
+    resetCoupon();
     setCartItems((prev) => {
-      const exists = prev.find((item) => item.offering.id === offering.id)
+      const exists = prev.find((item) => item.offering.id === offering.id);
       if (exists) {
         return prev.map((item) =>
-          item.offering.id === offering.id ? { ...item, slotId: slotId ?? item.slotId } : item
-        )
+          item.offering.id === offering.id
+            ? { ...item, slotId: slotId ?? item.slotId }
+            : item,
+        );
       }
-      return [...prev, { offering, quantity: 1, slotId }]
-    })
-  }
+      return [...prev, { offering, quantity: 1, slotId }];
+    });
+  };
 
   const updateCartQuantity = (offeringId: string, delta: number) => {
-    resetCoupon()
+    resetCoupon();
     setCartItems((prev) =>
       prev
         .map((item) => {
-          if (item.offering.id !== offeringId) return item
-          const nextQuantity = Math.max(item.quantity + delta, 1)
-          return { ...item, quantity: nextQuantity }
+          if (item.offering.id !== offeringId) return item;
+          const nextQuantity = Math.max(item.quantity + delta, 1);
+          return { ...item, quantity: nextQuantity };
         })
-        .filter((item) => item.quantity > 0)
-    )
-  }
+        .filter((item) => item.quantity > 0),
+    );
+  };
 
   const handleRemoveCartItem = (offeringId: string) => {
-    resetCoupon()
-    setCartItems((prev) => prev.filter((item) => item.offering.id !== offeringId))
-  }
+    resetCoupon();
+    setCartItems((prev) =>
+      prev.filter((item) => item.offering.id !== offeringId),
+    );
+  };
 
   const cartSubtotal = cartItems.reduce(
     (sum, item) => sum + item.offering.salePrice * item.quantity,
-    0
-  )
-  const cartTaxRate = 0.12
-  const cartTaxes = cartSubtotal * cartTaxRate
-  const cartDiscount = couponDiscount
-  const cartTotal = cartSubtotal + cartTaxes
+    0,
+  );
+  const cartTaxRate = 0.12;
+  const cartTaxes = cartSubtotal * cartTaxRate;
+  const cartDiscount = couponDiscount;
+  const cartTotal = cartSubtotal + cartTaxes;
 
   const handleApplyPromo = async () => {
-    if (!promoCode.trim()) return
+    if (!promoCode.trim()) return;
     if (cartItems.length === 0) {
-      toast.success("Add services to your cart before applying a coupon.")
-      return
+      toast.success("Add services to your cart before applying a coupon.");
+      return;
     }
 
     try {
@@ -251,199 +285,206 @@ console.log(rules)
         vendorId: vendorId,
         promoCode: promoCode.trim(),
         subtotal: cartSubtotal,
-      }).unwrap()
+      }).unwrap();
 
-      setCouponDiscount(response.data.discount)
-      setAppliedCoupon(response.data.coupon)
-      setCouponError(null)
-      toast.success(`Coupon ${response.data.coupon.code} applied`)
+      setCouponDiscount(response.data.discount);
+      setAppliedCoupon(response.data.coupon);
+      setCouponError(null);
+      toast.success(`Coupon ${response.data.coupon.code} applied`);
     } catch (error: any) {
-      resetCoupon()
+      resetCoupon();
       setCouponError(
-        error?.data?.message || error?.error || "Coupon is not valid for this cart",
-      )
+        error?.data?.message ||
+          error?.error ||
+          "Coupon is not valid for this cart",
+      );
     }
-  }
+  };
 
   const openBookingModal = (offering: VendorOffering) => {
-    setBookedOffering(offering)
-    setSelectedSlotId(null)
-    setBookingModalOpen(true)
-  }
+    setBookedOffering(offering);
+    setSelectedSlotId(null);
+    setBookingModalOpen(true);
+  };
 
   const handleBookClick = (offering: VendorOffering) => {
-    const slots = offering.slots ?? []
-    const slotCount = slots.length
-    const requiresSlot = offering.usesSlots || slotCount > 0
+    const slots = offering.slots ?? [];
+    const slotCount = slots.length;
+    const requiresSlot = offering.usesSlots || slotCount > 0;
 
     if (requiresSlot) {
       if (slotCount === 0) {
-        toast.success("Slots are unavailable for this service at the moment.")
-        return
+        toast.success("Slots are unavailable for this service at the moment.");
+        return;
       }
-      openBookingModal(offering)
-      return
+      openBookingModal(offering);
+      return;
     }
 
-    addOrUpdateCartItem(offering, null)
-    toast.success("Added service to your cart. Checkout when ready.")
-  }
+    addOrUpdateCartItem(offering, null);
+    toast.success("Added service to your cart. Checkout when ready.");
+  };
 
   const handleCloseBooking = () => {
-    setBookingModalOpen(false)
-    setSelectedSlotId(null)
-    setBookedOffering(null)
-  }
+    setBookingModalOpen(false);
+    setSelectedSlotId(null);
+    setBookedOffering(null);
+  };
 
   const handleConfirmBooking = () => {
-    if (!bookedOffering) return
+    if (!bookedOffering) return;
     if (requiresSlot && !selectedSlot) {
-      toast.success("Please choose a slot before confirming.")
-      return
+      toast.success("Please choose a slot before confirming.");
+      return;
     }
 
     addOrUpdateCartItem(
       bookedOffering,
-      requiresSlot ? selectedSlot?.id ?? null : null
-    )
-    toast.success("Added service to your cart. Checkout when ready.")
-    handleCloseBooking()
-  }
+      requiresSlot ? (selectedSlot?.id ?? null) : null,
+    );
+    toast.success("Added service to your cart. Checkout when ready.");
+    handleCloseBooking();
+  };
 
   const handleCheckoutCart = async () => {
     if (cartItems.length === 0) {
-      toast.success("Add at least one service to your order before booking.")
-      return
+      toast.success("Add at least one service to your order before booking.");
+      return;
     }
 
     if (!userId) {
-      toast.error("Sign in to confirm a booking before proceeding.")
-      return
+      toast.error("Sign in to confirm a booking before proceeding.");
+      return;
     }
 
     if (!vendorId) {
-      toast.error("Unable to resolve the vendor for this booking.")
-      return
+      toast.error("Unable to resolve the vendor for this booking.");
+      return;
     }
 
-  try {
-    const response = await createCheckoutSession({
-      userId,
-      vendorId,
-      items: cartItems.map((item) => ({
-        offeringId: item.offering.id,
-        quantity: item.quantity,
-        slotId: item.slotId ?? undefined,
-      })),
-      promoCode: appliedCoupon?.code || undefined,
-    }).unwrap()
+    try {
+      const response = await createCheckoutSession({
+        userId,
+        vendorId,
+        items: cartItems.map((item) => ({
+          offeringId: item.offering.id,
+          quantity: item.quantity,
+          slotId: item.slotId ?? undefined,
+        })),
+        promoCode: appliedCoupon?.code || undefined,
+      }).unwrap();
 
       if (typeof window !== "undefined") {
         const storagePayload = {
           orderId: response.data?.orderId ?? null,
           sessionId: response.data?.sessionId ?? null,
-        }
+        };
 
         if (storagePayload.orderId || storagePayload.sessionId) {
           window.sessionStorage.setItem(
             "stadonclick.latestOrderReceipt",
             JSON.stringify(storagePayload),
-          )
+          );
         }
       }
 
-      setCartItems([])
-      setPromoCode("")
-      resetCoupon()
+      setCartItems([]);
+      setPromoCode("");
+      resetCoupon();
 
-      toast.success("Redirecting you to Stripe checkout…")
-      const redirectUrl = response.data?.sessionUrl
+      toast.success("Redirecting you to Stripe checkout…");
+      const redirectUrl = response.data?.sessionUrl;
       if (redirectUrl && typeof window !== "undefined") {
-        window.location.assign(redirectUrl)
+        window.location.assign(redirectUrl);
       }
     } catch (error: any) {
-      console.error("Failed to create checkout session:", error)
+      console.error("Failed to create checkout session:", error);
       toast.error(
-        error?.data?.message || error?.error || "Failed to start checkout. Please try again."
-      )
+        error?.data?.message ||
+          error?.error ||
+          "Failed to start checkout. Please try again.",
+      );
     }
-  }
+  };
 
-  const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
+  const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation();
 
-
-  const {
-    data: vendorServices,
-    isLoading: servicesLoading,
-  } = useGetVendorServicesQuery(vendorId ?? "", {
-    skip: !vendorId,
-  })
+  const { data: vendorServices, isLoading: servicesLoading } =
+    useGetVendorServicesQuery(vendorId ?? "", {
+      skip: !vendorId,
+    });
 
   const service =
     vendorServices != null
       ? serviceIdParam
         ? vendorServices.find((item) => item.id === serviceIdParam)
         : serviceSlug
-          ? vendorServices.find((item) => slugifyServiceTitle(item.title) === serviceSlug)
+          ? vendorServices.find(
+              (item) => slugifyServiceTitle(item.title) === serviceSlug,
+            )
           : vendorServices[0]
-      : undefined
-  const currentServiceId = service?.id
+      : undefined;
+  const currentServiceId = service?.id;
 
   // 2. Fetch Media (isolated)
-  const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(currentServiceId ?? "", {
-    skip: !currentServiceId,
-  })
+  const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(
+    currentServiceId ?? "",
+    {
+      skip: !currentServiceId,
+    },
+  );
 
   // 3. Fetch Offerings (isolated)
-  const { data: offerings, isLoading: offeringsLoading } = useGetServiceOfferingsQuery(
-    currentServiceId ?? "",
-    { skip: !currentServiceId },
-  )
+  const { data: offerings, isLoading: offeringsLoading } =
+    useGetServiceOfferingsQuery(currentServiceId ?? "", {
+      skip: !currentServiceId,
+    });
 
-  const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(currentServiceId ?? "", {
-    skip: !currentServiceId,
-  })
+  const { data: reviews, isLoading: reviewsLoading } =
+    useGetServiceReviewsQuery(currentServiceId ?? "", {
+      skip: !currentServiceId,
+    });
 
   const starBreakdown = useMemo(() => {
-    const list = reviews ?? []
-    const total = list.length
+    const list = reviews ?? [];
+    const total = list.length;
     if (total === 0) {
       return [5, 4, 3, 2, 1].map((rating) => ({
         label: `${rating} ⭐`,
         percent: 0,
-      }))
+      }));
     }
     return [5, 4, 3, 2, 1].map((rating) => {
-      const count = list.filter((review) => review.rating === rating).length
-      const percent = Math.round((count / total) * 100)
+      const count = list.filter((review) => review.rating === rating).length;
+      const percent = Math.round((count / total) * 100);
       return {
         label: `${rating} ⭐`,
         percent,
-      }
-    })
-  }, [reviews])
+      };
+    });
+  }, [reviews]);
 
   const descriptionRules = useMemo(() => {
-    const seen = new Map<string, { label: string; value?: string | null }>()
+    const seen = new Map<string, { label: string; value?: string | null }>();
     for (const offering of offerings ?? []) {
       for (const rule of offering.rules ?? []) {
-        const key = `${rule.ruleType}:${rule.value ?? ""}`
+        const key = `${rule.ruleType}:${rule.value ?? ""}`;
         if (!seen.has(key)) {
           seen.set(key, {
             label: formatRuleLabel(rule.ruleType),
             value: rule.value ?? null,
-          })
+          });
         }
       }
     }
-    return Array.from(seen.values())
-  }, [offerings])
+    return Array.from(seen.values());
+  }, [offerings]);
 
   const handleSubmitReview = async () => {
-    if (!currentServiceId) return
+    if (!currentServiceId) return;
     if (userRating === 0) {
-      toast.success("Please select a rating")
-      return
+      toast.success("Please select a rating");
+      return;
     }
 
     try {
@@ -452,38 +493,54 @@ console.log(rules)
         serviceId: currentServiceId,
         rating: userRating,
         comment: userComment,
-      }).unwrap()
-      setUserRating(0)
-      setUserComment("")
-      toast.success("Review submitted successfully!")
+      }).unwrap();
+      setUserRating(0);
+      setUserComment("");
+      toast.success("Review submitted successfully!");
     } catch (err) {
-      console.error("Failed to submit review:", err)
-      toast.success("Failed to submit review. Please try again.")
+      console.error("Failed to submit review:", err);
+      toast.success("Failed to submit review. Please try again.");
     }
-  }
+  };
 
-  if (marketplaceLoading || servicesLoading || mediaLoading || offeringsLoading || reviewsLoading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+  if (
+    marketplaceLoading ||
+    servicesLoading ||
+    mediaLoading ||
+    offeringsLoading ||
+    reviewsLoading
+  ) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!service) {
-    return <div className="flex min-h-screen items-center justify-center">Service not found</div>
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Service not found
+      </div>
+    );
   }
 
-  const galleryImages = media?.filter(m => m.type === "IMAGE").map((m) => m.signedUrl) || [salon1, salon2, salon3]
+  const galleryImages = media
+    ?.filter((m) => m.type === "IMAGE")
+    .map((m) => m.signedUrl) || [salon1, salon2, salon3];
   const tabs: { id: "services" | "description"; label: string }[] = [
     { id: "services", label: "Services" },
     { id: "description", label: "Description" },
-  ]
+  ];
   const serviceDescription =
     service.description ||
-    "Our team curates a premium experience for every guest—scroll through the service options to choose what fits your visit."
+    "Our team curates a premium experience for every guest—scroll through the service options to choose what fits your visit.";
 
   const statusStyles: Record<string, string> = {
     DRAFT: "bg-yellow-100 text-yellow-700",
     PAUSED: "bg-red-100 text-red-700",
     LIVE: "bg-green-100 text-green-700",
-  }
+  };
 
   return (
     <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
@@ -506,12 +563,17 @@ console.log(rules)
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-black">
                     <div className="flex">
-                    <MapPinIcon className="h-5 w-5 "/>
-                  <div className="ml-2 font-semibold">{serviceCity}</div>
+                      <MapPinIcon className="h-5 w-5 " />
+                      <div className="ml-2 font-semibold">{serviceCity}</div>
                     </div>
                     <div className="flex items-center gap-1 rounded-full px-3 py-1 font-bold ">
                       <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
-                      {(reviews && reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0")}
+                      {reviews && reviews.length > 0
+                        ? (
+                            reviews.reduce((acc, r) => acc + r.rating, 0) /
+                            reviews.length
+                          ).toFixed(1)
+                        : "0.0"}
                     </div>
                     <span className="text-xs text-black">
                       ({reviews?.length || 0}+ verified guest reviews)
@@ -533,18 +595,19 @@ console.log(rules)
                   </button>
                 </div>
               </div>
-              <ServiceGallery 
-                galleryImages={galleryImages} 
-                serviceName={service.title} 
+              <ServiceGallery
+                galleryImages={galleryImages}
+                serviceName={service.title}
               />
               <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 {service.status && (
-                  <span className={`rounded-full border border-slate-200 px-3 py-1 text-sm font-semibold ${statusStyles[service.status] ?? "border-slate-200 text-slate-700"}`}>
+                  <span
+                    className={`rounded-full border border-slate-200 px-3 py-1 text-sm font-semibold ${statusStyles[service.status] ?? "border-slate-200 text-slate-700"}`}
+                  >
                     {service.status}
                   </span>
                 )}
               </div>
-
             </div>
 
             {/* <div className="space-y-5 rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm">
@@ -573,260 +636,287 @@ console.log(rules)
 
         <div className="grid gap-6 grid-cols-5">
           <div className="col-span-3">
-                <div className="space-y-5 rounded-3xl bg-white p-8 ">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">
-                Services
-              </h2>
-              <p className="text-sm text-slate-500">
-                Choose a ritual that suits your mood
-              </p>
-            </div>
-            <span className="text-sm font-semibold text-slate-500">
-              {offerings?.length || 0} packages
-            </span>
-          </div>
-          <div className="mt-4 flex gap-3">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  activeTab === tab.id
-                    ? "border-blue-500 bg-blue-50 text-blue-600"
-                    : "border-slate-200 bg-slate-100 text-slate-500"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="mt-5">
-            {activeTab === "services" ? (
-              <div className="space-y-4">
-                {offerings?.map((offering) => {
-                   const slotCount = offering.slots?.length ?? 0
-                   const requiresSlot = offering.usesSlots || slotCount > 0
-                   const buttonLabel = requiresSlot
-                     ? slotCount > 0
-                       ? "Book"
-                       : "Slots unavailable"
-                     : "Add to cart"
-                  const isSlotUnavailable = requiresSlot && slotCount === 0
-                  return (
-                  <div
-                    key={offering.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
-                  >
-                    <div>
-                      <p className="text-base font-semibold text-slate-900">
-                        {offering.name}
-                      </p>
-                      <p className="text-xs text-slate-500">{offering.id}</p>
-                      <p className="text-xs font-semibold text-slate-400">
-                        Max Qty: {offering.maxQuantity || "N/A"}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-3">
-                      <span className="text-lg font-bold text-slate-900">
-                        ${offering.salePrice}
-                      </span>
-                      <button 
-                        className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
-                          isSlotUnavailable ? "bg-slate-300 cursor-not-allowed opacity-60" : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
-                        }`}
-     
-                        disabled={isSlotUnavailable}
-                        onClick={() => handleBookClick(offering)}
-                      >
-                        {buttonLabel}
-                      </button>
-                    </div>
-                  </div>
-                  )
-                })}
-              </div>
-            ) : (
-            <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">
-                {serviceDescription}              {offerings.rules}   
-              </p>
-              <p className="text-xs text-slate-400">
-                {`We keep this experience updated—check the services tab to explore current offerings.`}
-              </p>
-              {descriptionRules.length > 0 && (
-                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-slate-900">Service rules</p>
-                    <span className="text-xs font-medium text-slate-400">{descriptionRules.length} total</span>
-                  </div>
-                  <div className="space-y-1">
-                    {descriptionRules.map((rule) => (
-                      <div
-                        key={`${rule.label}-${rule.value}`}
-                        className="flex flex-wrap items-center gap-1 text-[13px] font-medium text-slate-500"
-                      >
-                        <span className="text-slate-700">{rule.label}</span>
-                        {rule.value ? (
-                          <span className="text-slate-400">—</span>
-                        ) : null}
-                        {rule.value ? <span>{rule.value}</span> : null}
-                      </div>
-                    ))}
-                  </div>
+            <div className="space-y-5 rounded-3xl bg-white p-8 ">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Services
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Choose a ritual that suits your mood
+                  </p>
                 </div>
-              )}
-            </div>
-            )}
-          </div>
-        </div>
-          </div>
-    
-     <div className="col-span-2">
-           <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">Your order</h3>
-                <p className="text-xs text-slate-500">
-                  Added services appear here. Adjust quantity anytime.
-                </p>
-              </div>
-              <span className="text-xs text-slate-400">
-                {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
-              </span>
-            </div>
-            {cartItems.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                Choose a service from the list to start your booking.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.offering.id}
-                    className="flex items-start justify-between gap-4"
-                  >
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {item.offering.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {item.offering.description ?? "Premium experience"}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCartItem(item.offering.id)}
-                        className="mt-2 text-xs font-semibold text-blue-600"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {formatCurrency(item.offering.salePrice)} per person
-                      </p>
-                      <div className="mt-2 flex items-center justify-end gap-2 rounded-full  px-2 py-1">
-                        <button
-                          type="button"
-                          className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
-                          onClick={() => updateCartQuantity(item.offering.id, -1)}
-                        >
-                          −
-                        </button>
-                        <span className="text-sm font-semibold text-slate-900">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
-                          onClick={() => updateCartQuantity(item.offering.id, 1)}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h4 className="text-sm font-semibold text-slate-900">Wallet & promo</h4>
-              <p className="text-xs text-slate-500">
-                Apply discount or use StadOnClick wallet balance.
-              </p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Enter promo code"
-                  className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
-                />
-                <Button
-                  variant={'default'}
-                  onClick={handleApplyPromo}
-                  disabled={!promoCode.trim() || isApplyingCoupon}
-                  className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
-                >
-                  {isApplyingCoupon ? "Checking..." : "Apply"}
-                </Button>
-              </div>
-              {couponError && (
-                <p className="text-xs font-semibold text-red-600">{couponError}</p>
-              )}
-              {appliedCoupon && (
-                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-                  <span>
-                    Coupon {appliedCoupon.code} applied ({appliedCoupon.discountType === "FLAT" ? formatCurrency(appliedCoupon.value) : `${appliedCoupon.value}%`})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetCoupon()
-                      setPromoCode("")
-                    }}
-                    className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-dashed border-slate-200 pt-4">
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>Subtotal</span>
-              <span className="text-slate-900">{formatCurrency(cartSubtotal)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm text-slate-500">
-                <span>Taxes</span>
-                <span className="text-slate-900">{formatCurrency(cartTaxes)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm text-slate-500">
-                <span>Discount</span>
-                <span className="text-emerald-600">
-                  −{formatCurrency(cartDiscount)}
+                <span className="text-sm font-semibold text-slate-500">
+                  {offerings?.length || 0} packages
                 </span>
               </div>
-              <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
-                <span>Total</span>
-                <span>{formatCurrency(cartTotal)}</span>
+              <div className="mt-4 flex gap-3">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      activeTab === tab.id
+                        ? "border-blue-500 bg-blue-50 text-blue-600"
+                        : "border-slate-200 bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-5">
+                {activeTab === "services" ? (
+                  <div className="space-y-4">
+                    {offerings?.map((offering) => {
+                      const slotCount = offering.slots?.length ?? 0;
+                      const requiresSlot = offering.usesSlots || slotCount > 0;
+                      const buttonLabel = requiresSlot
+                        ? slotCount > 0
+                          ? "Book"
+                          : "Slots unavailable"
+                        : "Add to cart";
+                      const isSlotUnavailable = requiresSlot && slotCount === 0;
+                      return (
+                        <div
+                          key={offering.id}
+                          className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                        >
+                          <div>
+                            <p className="text-base font-semibold text-slate-900">
+                              {offering.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {offering.id}
+                            </p>
+                            <p className="text-xs font-semibold text-slate-400">
+                              Max Qty: {offering.maxQuantity || "N/A"}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-3">
+                            <span className="text-lg font-bold text-slate-900">
+                              ${offering.salePrice}
+                            </span>
+                            <button
+                              className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
+                                isSlotUnavailable
+                                  ? "bg-slate-300 cursor-not-allowed opacity-60"
+                                  : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
+                              }`}
+                              disabled={isSlotUnavailable}
+                              onClick={() => handleBookClick(offering)}
+                            >
+                              {buttonLabel}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                    <p className="text-sm text-slate-500">
+                      {serviceDescription} {offerings.rules}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {`We keep this experience updated—check the services tab to explore current offerings.`}
+                    </p>
+                    {descriptionRules.length > 0 && (
+                      <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-semibold text-slate-900">
+                            Service rules
+                          </p>
+                          <span className="text-xs font-medium text-slate-400">
+                            {descriptionRules.length} total
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          {descriptionRules.map((rule) => (
+                            <div
+                              key={`${rule.label}-${rule.value}`}
+                              className="flex flex-wrap items-center gap-1 text-[13px] font-medium text-slate-500"
+                            >
+                              <span className="text-slate-700">
+                                {rule.label}
+                              </span>
+                              {rule.value ? (
+                                <span className="text-slate-400">—</span>
+                              ) : null}
+                              {rule.value ? <span>{rule.value}</span> : null}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-            <Button
-              onClick={handleCheckoutCart}
-              className="w-full"
-              disabled={cartItems.length === 0 || isCreatingSession}
-            >
-              {isCreatingSession ? "Processing..." : "Confirm booking"}
-            </Button>
           </div>
-     </div>
+
+          <div className="col-span-2">
+            <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Your order
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Added services appear here. Adjust quantity anytime.
+                  </p>
+                </div>
+                <span className="text-xs text-slate-400">
+                  {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+                </span>
+              </div>
+              {cartItems.length === 0 ? (
+                <p className="text-sm text-slate-500">
+                  Choose a service from the list to start your booking.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.offering.id}
+                      className="flex items-start justify-between gap-4"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {item.offering.name}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {item.offering.description ?? "Premium experience"}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCartItem(item.offering.id)}
+                          className="mt-2 text-xs font-semibold text-blue-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {formatCurrency(item.offering.salePrice)} per person
+                        </p>
+                        <div className="mt-2 flex items-center justify-end gap-2 rounded-full  px-2 py-1">
+                          <button
+                            type="button"
+                            className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                            onClick={() =>
+                              updateCartQuantity(item.offering.id, -1)
+                            }
+                          >
+                            −
+                          </button>
+                          <span className="text-sm font-semibold text-slate-900">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                            onClick={() =>
+                              updateCartQuantity(item.offering.id, 1)
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h4 className="text-sm font-semibold text-slate-900">
+                  Wallet & promo
+                </h4>
+                <p className="text-xs text-slate-500">
+                  Apply discount or use StadOnClick wallet balance.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    placeholder="Enter promo code"
+                    className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                  />
+                  <Button
+                    variant={"default"}
+                    onClick={handleApplyPromo}
+                    disabled={!promoCode.trim() || isApplyingCoupon}
+                    className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
+                  >
+                    {isApplyingCoupon ? "Checking..." : "Apply"}
+                  </Button>
+                </div>
+                {couponError && (
+                  <p className="text-xs font-semibold text-red-600">
+                    {couponError}
+                  </p>
+                )}
+                {appliedCoupon && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+                    <span>
+                      Coupon {appliedCoupon.code} applied (
+                      {appliedCoupon.discountType === "FLAT"
+                        ? formatCurrency(appliedCoupon.value)
+                        : `${appliedCoupon.value}%`}
+                      )
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetCoupon();
+                        setPromoCode("");
+                      }}
+                      className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-dashed border-slate-200 pt-4">
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>Subtotal</span>
+                  <span className="text-slate-900">
+                    {formatCurrency(cartSubtotal)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>Taxes</span>
+                  <span className="text-slate-900">
+                    {formatCurrency(cartTaxes)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>Discount</span>
+                  <span className="text-emerald-600">
+                    −{formatCurrency(cartDiscount)}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
+                  <span>Total</span>
+                  <span>{formatCurrency(cartTotal)}</span>
+                </div>
+              </div>
+              <Button
+                onClick={handleCheckoutCart}
+                className="w-full"
+                disabled={cartItems.length === 0 || isCreatingSession}
+              >
+                {isCreatingSession ? "Processing..." : "Confirm booking"}
+              </Button>
+            </div>
+          </div>
         </div>
 
-    <div className="space-y-5">
+        <div className="space-y-5">
           <div className="space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-900">
@@ -849,55 +939,58 @@ console.log(rules)
               name={service.title}
             />
           </div>
-       
         </div>
 
-<div className="max-w-[800px]">
+        <div className="max-w-[800px]">
           {/* Highlights & Amenities Section */}
           <div className="space-y-6 rounded-3xl bg-white p-8">
-            <h2 className="text-2xl font-bold text-slate-900">Highlights & Amenities</h2>
+            <h2 className="text-2xl font-bold text-slate-900">
+              Highlights & Amenities
+            </h2>
             <div className="flex flex-wrap gap-4">
-              {["AC Rooms", "Parking Available", "Family Friendly"].map((amenity) => (
-                <div
-                  key={amenity}
-                  className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4"
-                >
-                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-[15px] font-medium text-slate-700">{amenity}</span>
-                </div>
-              ))}
+              {["AC Rooms", "Parking Available", "Family Friendly"].map(
+                (amenity) => (
+                  <div
+                    key={amenity}
+                    className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4"
+                  >
+                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="text-[15px] font-medium text-slate-700">
+                      {amenity}
+                    </span>
+                  </div>
+                ),
+              )}
             </div>
-         
-             {/* Menu Preview Section */}
-        <div className="space-y-4 rounded-3xl bg-white p-8">
-          <h3 className="text-xl font-bold text-slate-900">Menu Preview</h3>
-          <p className="text-sm text-slate-500">View uploaded menu photos from the restaurant</p>
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="min-w-[100px] shrink-0">
-                <img
-                  src={galleryImages[i % galleryImages.length]}
-                  alt={`Menu preview ${i}`}
-                  className="h-48 w-full rounded-2xl object-cover"
-                />
+
+            {/* Menu Preview Section */}
+            <div className="space-y-4 rounded-3xl bg-white p-8">
+              <h3 className="text-xl font-bold text-slate-900">Menu Preview</h3>
+              <p className="text-sm text-slate-500">
+                View uploaded menu photos from the restaurant
+              </p>
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="min-w-[100px] shrink-0">
+                    <img
+                      src={galleryImages[i % galleryImages.length]}
+                      alt={`Menu preview ${i}`}
+                      className="h-48 w-full rounded-2xl object-cover"
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
-  
-         </div>
 
-
-        </div>
-
-
-<div className="max-w-[800px]">
-              {/* Trust/Feature Banner */}
+        <div className="max-w-[800px]">
+          {/* Trust/Feature Banner */}
           <div className="rounded-3xl bg-white p-8">
             <div className="grid grid-cols-4 gap-8">
               {[
                 {
-                  icon: <BadgeCheck  className="h-6 w-6 text-emerald-500" />,
+                  icon: <BadgeCheck className="h-6 w-6 text-emerald-500" />,
                   title: "Verified Providers",
                   desc: "Trusted & quality-checked",
                 },
@@ -959,18 +1052,22 @@ console.log(rules)
                   desc: "We're here to help",
                 },
               ].map((item, idx) => (
-                <div key={idx} className="flex flex-col items-center text-center">
+                <div
+                  key={idx}
+                  className="flex flex-col items-center text-center"
+                >
                   <div className="mb-3 flex h-12 w-12 items-center justify-center">
                     {item.icon}
                   </div>
-                  <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
+                  <h4 className="text-sm font-bold text-slate-900">
+                    {item.title}
+                  </h4>
                   <p className="text-[12px] text-slate-500">{item.desc}</p>
                 </div>
               ))}
             </div>
           </div>
-</div>
-        
+        </div>
 
         <div className="space-y-5 rounded-3xl bg-white p-8 ">
           <div className="flex items-center justify-between">
@@ -986,21 +1083,33 @@ console.log(rules)
             </button>
           </div>
           <div className="grid gap-6 lg:grid-cols-2">
-            {reviews?.map((review) => (
+            {reviews?.map((review) => {
+              const reviewerName =
+                review.user?.nickName?.trim() ||
+                [review.user?.firstName?.trim(), review.user?.lastName?.trim()]
+                  .filter(Boolean)
+                  .join(" ") ||
+                "Anonymous User";
+              const reviewerInitial = reviewerName.charAt(0).toUpperCase();
+
+              return (
               <article
                 key={review.id}
                 className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
               >
                 <div className="flex gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
-                    {review.comment.substring(0, 1).toUpperCase()}
+                    {reviewerInitial}
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <p className="text-[15px] font-bold text-slate-900">
-                        Ananya R.
+                        {reviewerName}
                       </p>
-                      <Badge variant="outline" className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50">
+                      <Badge
+                        variant="outline"
+                        className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
+                      >
                         <Check className="h-3 w-3 stroke-[3px]" />
                         Verified
                       </Badge>
@@ -1026,7 +1135,8 @@ console.log(rules)
                   {new Date(review.createdAt).toLocaleDateString()}
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
           <div className="grid gap-4 lg:grid-cols-[1.0fr_0.9fr]">
             <div className="space-y-3 rounded-2xl border border-slate-100 p-5">
@@ -1035,12 +1145,17 @@ console.log(rules)
               </p>
               <div className="flex items-center gap-3">
                 <p className="text-4xl font-bold text-slate-900">
-                {(reviews && reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0")}
-              </p>
-              <div className="flex flex-col text-sm text-slate-500">
-                <span>Based on {reviews?.length || 0} reviews</span>
-                <span>Let us know what stood out</span>
-              </div>
+                  {reviews && reviews.length > 0
+                    ? (
+                        reviews.reduce((acc, r) => acc + r.rating, 0) /
+                        reviews.length
+                      ).toFixed(1)
+                    : "0.0"}
+                </p>
+                <div className="flex flex-col text-sm text-slate-500">
+                  <span>Based on {reviews?.length || 0} reviews</span>
+                  <span>Let us know what stood out</span>
+                </div>
               </div>
               <div className="space-y-2">
                 {starBreakdown.map((row) => (
@@ -1062,10 +1177,14 @@ console.log(rules)
             </div>
             <div className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-8">
               <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-900">Write a Review</h3>
-                <p className="text-sm font-medium text-slate-500">Your rating</p>
+                <h3 className="text-xl font-bold text-slate-900">
+                  Write a Review
+                </h3>
+                <p className="text-sm font-medium text-slate-500">
+                  Your rating
+                </p>
               </div>
-              
+
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -1104,9 +1223,6 @@ console.log(rules)
             </div>
           </div>
         </div>
-
-
-
       </div>
 
       <BookingModal
@@ -1129,5 +1245,5 @@ console.log(rules)
         onConfirm={handleConfirmBooking}
       />
     </section>
-  )
+  );
 }
