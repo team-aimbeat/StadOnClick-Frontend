@@ -77,6 +77,7 @@ import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import WeekendActivities from "@/pages/WeekendActivities";
+import AffiliateMarketing from "@/pages/AffiliateMarketing";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AppLayout from "@/components/Layout/AppLayout";
@@ -154,7 +155,11 @@ const appRouter = createBrowserRouter([
             path: "/about",
             element: <About />,
           },
-
+          {
+            path: "/affiliate-marketing",
+            element: <AffiliateMarketing />,
+          },
+  
           {
             path: "/service/:serviceId",
             element: <ServiceDetail />,
