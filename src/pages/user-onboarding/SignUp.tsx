@@ -6,9 +6,7 @@ import { StepPhone } from "@/components/shared/user-onboarding/StepPhone";
 import { StepProfile } from "@/components/shared/user-onboarding/StepProfile";
 import { StepOtp } from "@/components/shared/user-onboarding/StepOtp";
 import { StepPersonalize } from "@/components/shared/user-onboarding/StepPersonalize";
-import { StepRole } from "@/components/shared/user-onboarding/StepRole";
 import bgImage2 from "@/assets/user-onboarding/user-onboarding-2.png";
-import bgImage3 from "@/assets/user-onboarding/user-onboarding-3.png";
 import bgImage4 from "@/assets/user-onboarding/user-onboarding-4.png";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
@@ -26,7 +24,6 @@ import { useForm, useFormState } from "react-hook-form";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import type {
   BasicProfileRequest,
-  OnboardingRoleEnum,
 } from "@/features/auth/types/basicProfile.types";
 import type { City } from "@/features/auth/types/city.types";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -48,7 +45,6 @@ type FormValues = {
   profileImageUrl: string;
   marketingConsent: boolean;
   termsAccepted: boolean;
-  role: OnboardingRoleEnum | "";
 };
 
 export default function SignUp() {
@@ -58,8 +54,8 @@ export default function SignUp() {
   const navigate = useNavigate();
   const initialStep = (() => {
     const queryValue = Number(new URLSearchParams(location.search).get("step"));
-    if (!Number.isNaN(queryValue) && queryValue >= 5) return 5;
-    if (!Number.isNaN(queryValue) && queryValue >= 1 && queryValue <= 4) return queryValue;
+    if (!Number.isNaN(queryValue) && queryValue >= 4) return 4;
+    if (!Number.isNaN(queryValue) && queryValue >= 1 && queryValue <= 3) return queryValue;
     return 1;
   })();
   const [step, setStep] = useState(initialStep);
@@ -83,7 +79,6 @@ export default function SignUp() {
       profileImageUrl: "",
       marketingConsent: false,
       termsAccepted: false,
-      role: "",
     },
   });
   const { errors, isSubmitting } = useFormState({ control });
@@ -166,12 +161,6 @@ export default function SignUp() {
         return;
       }
 
-      if (!data.role) {
-        setError("role", { type: "manual", message: "Please select a role." });
-        toast.error("Please select a role.", { id: "role-required" });
-        return;
-      }
-
       if (!data.termsAccepted) {
         setError("termsAccepted", { type: "manual", message: "You must accept the terms." });
         toast.error("Please accept the terms to continue.", { id: "terms-error" });
@@ -216,7 +205,6 @@ export default function SignUp() {
         cityId: data.cityId || undefined,
         profileImageUrl: data.profileImageUrl || undefined,
         marketingConsent: data.marketingConsent ?? undefined,
-        role: data.role,
         termsAccepted: true,
       };
 
@@ -226,7 +214,7 @@ export default function SignUp() {
           dispatch(setUser(response.user as any));
         }
         toast.success("Profile saved", { id: "profile-success" });
-        setStep(5);
+        setStep(4);
       } catch (err) {
         const { fieldErrors, toastMessage } = normalizeApiError(err, "Failed to save profile");
         Object.entries(fieldErrors).forEach(([field, message]) => {
@@ -253,15 +241,10 @@ export default function SignUp() {
         };
       case 3:
         return {
-          title: "Choose your role",
-          subtitle: "Tell us if you are joining as a user or vendor.",
-        };
-      case 4:
-        return {
           title: "Complete your basic profile",
           subtitle: "Just a few quick details to help us personalise your experience.",
         };
-      case 5:
+      case 4:
         return {
           title: "Let's personalize your experience",
           subtitle: "Help us recommend activities that match your preferences.",
@@ -295,13 +278,12 @@ export default function SignUp() {
     register("profileImageUrl");
     register("marketingConsent");
     register("termsAccepted");
-    register("role");
   }, [register]);
 
   useEffect(() => {
     const queryValue = Number(new URLSearchParams(location.search).get("step"));
-    if (!Number.isNaN(queryValue) && queryValue >= 5) {
-      setStep((prev) => Math.max(prev, 5));
+    if (!Number.isNaN(queryValue) && queryValue >= 4) {
+      setStep((prev) => Math.max(prev, 4));
     }
   }, [location.search]);
 
@@ -312,10 +294,8 @@ export default function SignUp() {
       case 2:
         return bgImage2;
       case 3:
-        return bgImage3;
-      case 4:
         return bgImage4;
-      case 5:
+      case 4:
         return bgImage4;
       default:
         return bgImage4;
@@ -324,7 +304,7 @@ export default function SignUp() {
 
   return (
     <OnboardingLayout image={getBackgroundImage()} imageTitle={"Your Hub for Swedish Activity\nExperiences"} imageSubtitle="">
-      <OnboardingFormCard step={step} total={5} title={getTitles().title} subtitle={getTitles().subtitle}>
+      <OnboardingFormCard step={step} total={4} title={getTitles().title} subtitle={getTitles().subtitle}>
         {step === 1 && (
           <StepPhone
             phone={values.phone}
@@ -357,24 +337,6 @@ export default function SignUp() {
         )}
 
         {step === 3 && (
-          <StepRole
-            role={values.role}
-            onSelectRole={(role) => setValue("role", role, { shouldValidate: true })}
-            errors={errors}
-            onBack={() => setStep(2)}
-            onNext={() => {
-              clearErrors("role");
-              if (!values.role) {
-                setError("role", { type: "manual", message: "Please select a role." });
-                toast.error("Please select a role.", { id: "role-required" });
-                return;
-              }
-              setStep(4);
-            }}
-          />
-        )}
-
-        {step === 4 && (
           <StepProfile
             firstName={values.firstName}
             lastName={values.lastName}
@@ -388,10 +350,9 @@ export default function SignUp() {
             confirmPassword={values.confirmPassword}
             marketingConsent={values.marketingConsent}
             termsAccepted={values.termsAccepted}
-            role={values.role}
             setValue={(field, value) => setValue(field as keyof FormValues, value as any, { shouldValidate: true })}
             errors={errors}
-            onBack={() => setStep(3)}
+            onBack={() => setStep(2)}
             onNext={handleSubmit(handleCompleteProfile)}
             loading={completingProfile || isSubmitting}
             cityId={values.cityId}
@@ -401,7 +362,7 @@ export default function SignUp() {
           />
         )}
 
-        {step === 5 && <StepPersonalize onNext={handlePersonalizationComplete} onSkip={handlePersonalizationComplete} />}
+        {step === 4 && <StepPersonalize onNext={handlePersonalizationComplete} onSkip={handlePersonalizationComplete} />}
       </OnboardingFormCard>
     </OnboardingLayout>
   );
