@@ -10,7 +10,7 @@ import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 import { toast } from "react-hot-toast"
 import { useForm, useFormState } from "react-hook-form"
 import { normalizeApiError } from "@/shared/utils/normalizeApiError"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 type FormValues = {
   email: string
@@ -23,7 +23,7 @@ export default function SignIn() {
   const [login, { isLoading }] = useLoginMutation()
   const [formError, setFormError] = useState<string | undefined>(undefined)
 
-  const { register, handleSubmit, control, setError, clearErrors, watch, setValue } = useForm<FormValues>({
+  const { register, handleSubmit, control, setError, clearErrors, watch } = useForm<FormValues>({
     mode: "onChange",
     defaultValues: { email: "", password: "" },
   })
@@ -71,7 +71,7 @@ export default function SignIn() {
         step={1}
         total={4}
         title="Welcome to StadonClick"
-        subtitle="Login to manage services, bookings, and vendors in one place."
+        subtitle="Sign in to manage your bookings, profile, and activity preferences."
         showStepper={false}
       >
         <StepLogin
@@ -90,7 +90,7 @@ export default function SignIn() {
             </a>
           </p>
           <p className="text-xs text-slate-400">
-            It&apos;s quick, secure, and lets you manage bookings and vendors in one place.
+            It&apos;s quick, secure, and helps you manage bookings and account settings in one place.
           </p>
         </div>
       </OnboardingFormCard>
