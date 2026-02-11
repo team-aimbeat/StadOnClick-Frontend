@@ -16,7 +16,10 @@ import { DashboardContainer } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { useGetLeadSubscriptionStatusQuery } from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
+import {
+  useConfirmLeadSubscriptionCheckoutMutation,
+  useGetLeadSubscriptionStatusQuery,
+} from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 
 const BackgroundTexture = () => (
@@ -45,7 +48,8 @@ const InfoItem = ({
 const SubscriptionSuccessPage = () => {
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get("session_id");
+  const sessionId = searchParams.get("session_id") ?? searchParams.get("sessionId");
+  const [confirmCheckout] = useConfirmLeadSubscriptionCheckoutMutation();
 
   const {
     data: status,
@@ -64,6 +68,22 @@ const SubscriptionSuccessPage = () => {
       refetch();
     }
   }, [sessionId, refetch]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const runConfirm = async () => {
+      try {
+        await confirmCheckout({ sessionId }).unwrap();
+      } catch {
+        // Webhook may already have handled this; status query remains source of truth.
+      } finally {
+        refetch();
+      }
+    };
+
+    runConfirm();
+  }, [sessionId, confirmCheckout, refetch]);
 
   const statusErrorMessage = error
     ? normalizeApiError(error, "Unable to load your subscription status.")

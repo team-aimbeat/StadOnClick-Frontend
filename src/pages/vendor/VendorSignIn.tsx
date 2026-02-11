@@ -121,6 +121,10 @@ export default function VendorSignIn() {
           loading={isLoading || isSubmitting}
           errorMessage={formError}
           isValid={canSubmit}
+          emailLabel="Business Email"
+          emailPlaceholder="owner@yourbusiness.com"
+          passwordPlaceholder="Enter your password"
+          portalName="Vendor Portal"
         />
 
         <div className="mt-4 space-y-2 rounded-xl border border-dashed border-slate-200 p-4 text-center">

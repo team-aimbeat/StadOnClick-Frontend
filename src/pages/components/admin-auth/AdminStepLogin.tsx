@@ -12,6 +12,10 @@ type Props = {
   loading?: boolean;
   errorMessage?: string;
   isValid?: boolean;
+  emailLabel?: string;
+  emailPlaceholder?: string;
+  passwordPlaceholder?: string;
+  portalName?: string;
 };
 
 export function AdminStepLogin({
@@ -21,18 +25,25 @@ export function AdminStepLogin({
   loading = false,
   errorMessage,
   isValid = false,
+  emailLabel = "Admin Email",
+  emailPlaceholder = "admin@stadonclick.com",
+  passwordPlaceholder = "Enter your password",
+  portalName = "Admin Portal",
 }: Props) {
   const [showPassword, setShowPassword] = useState(false);
+  const loginInputClassName =
+    "h-12 rounded-lg border border-slate-300 bg-white px-4 py-0 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus-visible:border-[#0b59a2] focus-visible:ring-2 focus-visible:ring-[#0b59a2]/20";
 
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
       {/* Email */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-slate-800">Admin Email</Label>
+        <Label className="text-sm font-medium text-slate-800">{emailLabel}</Label>
         <Input
           type="email"
-          className="h-12 rounded-lg border border-slate-200 py-3 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
-          placeholder="admin@stadonclick.com"
+          className={loginInputClassName}
+          placeholder={emailPlaceholder}
+          autoComplete="email"
           {...register("email")}
         />
         {errors.email?.message ? (
@@ -54,8 +65,8 @@ export function AdminStepLogin({
         <div className="relative">
           <Input
             type={showPassword ? "text" : "password"}
-            className="h-12 rounded-lg border border-slate-200 py-3 pr-12 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
-            placeholder="********"
+            className={`${loginInputClassName} pr-12`}
+            placeholder={passwordPlaceholder}
             autoComplete="current-password"
             {...register("password")}
           />
@@ -92,7 +103,7 @@ export function AdminStepLogin({
 
       {/* No social sign-in */}
       <div className="text-center text-xs text-slate-500">
-        Social login is disabled for Admin Portal.
+        Social login is disabled for {portalName}.
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import learn from "@/assets/Images/learn.jpg";
 import football from "@/assets/Images/football.jpg";
 import document from "@/assets/Images/document.png";
 import { useNavigate } from "react-router-dom";
+import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton";
 
 const mindItems = [
   { name: "Cab Services", image: spa, slug: "cab-services" },
@@ -65,10 +66,14 @@ export default function HomeTravel() {
                            shadow-md transition-transform duration-300
                            group-hover:scale-105"
               >
-                <img
+                <ImageWithSkeleton
                   src={item.image}
                   alt={item.name}
+                  containerClassName="h-full w-full rounded-full"
+                  skeletonClassName="rounded-full"
                   className="h-full w-full rounded-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
 
@@ -97,10 +102,14 @@ export default function HomeTravel() {
                            shadow-md transition-transform duration-300
                            group-hover:scale-105"
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={item.image}
                     alt={item.name}
+                    containerClassName="h-full w-full rounded-full"
+                    skeletonClassName="rounded-full"
                     className="h-full w-full rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
 

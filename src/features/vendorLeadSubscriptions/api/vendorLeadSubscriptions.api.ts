@@ -66,6 +66,18 @@ export const vendorLeadSubscriptionsApi = createApi({
         { type: "VendorLeadSubscription", id: "STATUS" },
       ],
     }),
+
+    confirmLeadSubscriptionCheckout: builder.mutation<
+      LeadSubscriptionStatus,
+      { sessionId: string }
+    >({
+      query: ({ sessionId }) => ({
+        url: "/vendor/lead-subscriptions/confirm",
+        method: "POST",
+        body: { sessionId },
+      }),
+      invalidatesTags: [{ type: "VendorLeadSubscription", id: "STATUS" }],
+    }),
   }),
 });
 
@@ -73,4 +85,5 @@ export const {
   useListLeadPlansQuery,
   useGetLeadSubscriptionStatusQuery,
   usePurchaseLeadSubscriptionMutation,
+  useConfirmLeadSubscriptionCheckoutMutation,
 } = vendorLeadSubscriptionsApi;

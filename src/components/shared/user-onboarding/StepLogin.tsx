@@ -1,5 +1,4 @@
 import { useState } from "react"
-import appleIcon from "@/assets/icons/apple.png"
 import facebookIcon from "@/assets/icons/facebook.png"
 import googleIcon from "@/assets/icons/google.png"
 import { Button } from "@/components/ui/button"
@@ -7,18 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff } from "lucide-react"
 import type { FieldErrors, UseFormRegister } from "react-hook-form"
-
-type SocialIcon = {
-  src: string
-  alt: string
-  href: string
-}
-
-const socialIcons: SocialIcon[] = [
-  { src: facebookIcon, alt: "Facebook", href: "https://www.facebook.com" },
-  { src: appleIcon, alt: "Apple", href: "https://www.apple.com" },
-  { src: googleIcon, alt: "Google", href: "https://www.google.com" },
-]
 
 type Props = {
   register: UseFormRegister<any>
@@ -38,15 +25,18 @@ export function StepLogin({
   isValid = false,
 }: Props) {
   const [showPassword, setShowPassword] = useState(false)
+  const loginInputClassName =
+    "h-12 rounded-lg border border-slate-300 bg-white px-4 py-0 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus-visible:border-[#0b59a2] focus-visible:ring-2 focus-visible:ring-[#0b59a2]/20"
 
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4">
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-slate-800">Email</Label>
+        <Label className="text-sm font-medium text-slate-800">Email address</Label>
         <Input
           type="email"
-          className="h-12 rounded-lg border border-slate-200 py-3 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
-          placeholder="you@example.com"
+          className={loginInputClassName}
+          placeholder="name@email.com"
+          autoComplete="email"
           {...register("email")}
         />
         {errors.email?.message ? (
@@ -67,8 +57,8 @@ export function StepLogin({
         <div className="relative">
           <Input
             type={showPassword ? "text" : "password"}
-            className="h-12 rounded-lg border border-slate-200 py-3 pr-12 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#0b59a2]/30 focus-visible:border-[#0b59a2]"
-            placeholder="********"
+            className={`${loginInputClassName} pr-12`}
+            placeholder="Enter your password"
             autoComplete="current-password"
             {...register("password")}
           />
@@ -131,6 +121,7 @@ export function StepLogin({
 
       <Button
         className="h-[52px] w-full max-w-[480px] mx-auto text-[16px]"
+        disabled={!isValid || loading}
         onClick={onSubmit}
       >
         {loading ? "Signing in..." : "Continue"}
