@@ -50,6 +50,21 @@ export interface VendorProfileResponse {
   data: VendorProfile;
 }
 
+export interface CreateVendorBusinessProfileRequest {
+  businessName: string;
+  description?: string;
+  cityId?: string;
+  headquarters?: string;
+  serviceOverview?: string;
+  businessHours?: BusinessHour[];
+  contactEmail?: string;
+  contactPhone?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
+  isIndexable?: boolean;
+}
+
 export interface UpdateVendorProfileRequest {
   businessName?: string;
   description?: string | null;
@@ -68,6 +83,16 @@ export interface UpdateVendorProfileRequest {
 export interface UpdateVendorProfileResponse {
   success: boolean;
   vendor: VendorProfile;
+}
+
+export interface CreateVendorBusinessProfileResponse {
+  success: boolean;
+  vendor: VendorProfile & {
+    vendorId?: string;
+    isBusinessProfileComplete?: boolean;
+    lifecycleStatus?: "DRAFT" | "ACTIVE" | "SUSPENDED";
+    setupRequired?: boolean;
+  };
 }
 
 export const vendorProfileApi = createApi({
@@ -91,10 +116,22 @@ export const vendorProfileApi = createApi({
       }),
       invalidatesTags: ["VendorProfile"],
     }),
+    createVendorBusinessProfile: builder.mutation<
+      CreateVendorBusinessProfileResponse,
+      CreateVendorBusinessProfileRequest
+    >({
+      query: (body) => ({
+        url: "/vendor/onboarding/business-profile",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["VendorProfile"],
+    }),
   }),
 });
 
 export const {
   useGetVendorProfileQuery,
   useUpdateVendorProfileMutation,
+  useCreateVendorBusinessProfileMutation,
 } = vendorProfileApi;

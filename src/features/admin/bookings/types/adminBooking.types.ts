@@ -20,6 +20,10 @@ export type AdminBookingVendorProfile = {
   slug: string;
   status: string;
   country: string;
+  city?: {
+    id: string;
+    name: string;
+  } | null;
 };
 
 export type AdminBookingCategory = {

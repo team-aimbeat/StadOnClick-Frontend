@@ -21,8 +21,19 @@ const pendingPayouts = [
   },
 ];
 
-const PendingPayoutsCard = () => {
-  const hasItems = pendingPayouts.length > 0;
+type PendingPayoutItem = {
+  vendor: string;
+  amount: string;
+  requestedAt: string;
+  status: string;
+};
+
+type PendingPayoutsCardProps = {
+  items?: PendingPayoutItem[];
+};
+
+const PendingPayoutsCard = ({ items = pendingPayouts }: PendingPayoutsCardProps) => {
+  const hasItems = items.length > 0;
 
   return (
     <AdminCardShell title="Pending Payouts" subtitle="Finance queue">
@@ -49,7 +60,7 @@ const PendingPayoutsCard = () => {
         ]}
       >
         {hasItems ? (
-          pendingPayouts.map((payout) => (
+          items.map((payout) => (
             <AdminTableRow key={`${payout.vendor}-${payout.amount}`}>
               <AdminTableCell className="text-sm font-semibold text-slate-900">
                 {payout.vendor}

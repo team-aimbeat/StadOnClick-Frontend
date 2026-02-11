@@ -2,13 +2,50 @@ import React from 'react';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 
-const cities = [
-  { name: 'Stockholm', percent: 81.57, lat: 59.3293, lng: 18.0686, color: '#2563EB' },
-  { name: 'Gothenburg', percent: 63.25, lat: 57.7089, lng: 11.9746, color: '#EA580C' },
-  { name: 'Malmö', percent: 52.95, lat: 55.605, lng: 13.0038, color: '#10B981' },
-  { name: 'Uppsala', percent: 47.29, lat: 59.8586, lng: 17.6389, color: '#9333EA' },
-  { name: 'Västerås', percent: 40.12, lat: 59.6091, lng: 16.5448, color: '#F472B6' },
+type RegionItem = {
+  name: string;
+  percent: number;
+};
+
+type MapCityItem = RegionItem & {
+  lat: number;
+  lng: number;
+  color: string;
+};
+
+type MapcityProps = {
+  regions?: RegionItem[];
+};
+
+const defaultCities: RegionItem[] = [
+  { name: 'Stockholm', percent: 81.57 },
+  { name: 'Gothenburg', percent: 63.25 },
+  { name: 'Malmo', percent: 52.95 },
+  { name: 'Uppsala', percent: 47.29 },
+  { name: 'Vasteras', percent: 40.12 },
 ];
+
+const cityCoordinates: Record<string, { lat: number; lng: number }> = {
+  stockholm: { lat: 59.3293, lng: 18.0686 },
+  gothenburg: { lat: 57.7089, lng: 11.9746 },
+  goteborg: { lat: 57.7089, lng: 11.9746 },
+  malmo: { lat: 55.605, lng: 13.0038 },
+  uppsala: { lat: 59.8586, lng: 17.6389 },
+  vasteras: { lat: 59.6091, lng: 16.5448 },
+  orebro: { lat: 59.2753, lng: 15.2134 },
+  linkoping: { lat: 58.4108, lng: 15.6214 },
+  helsingborg: { lat: 56.0465, lng: 12.6945 },
+  jonkoping: { lat: 57.7826, lng: 14.1618 },
+};
+
+const markerColors = ['#2563EB', '#EA580C', '#10B981', '#9333EA', '#F472B6', '#14B8A6'];
+
+const normalizeRegionName = (name: string) =>
+  name
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 
 const createMarker = (color: string) =>
   L.divIcon({
@@ -24,7 +61,18 @@ const createMarker = (color: string) =>
     `,
   });
 
-const Mapcity: React.FC = () => {
+const Mapcity: React.FC<MapcityProps> = ({ regions }) => {
+  const source = regions?.length ? regions : defaultCities;
+  const cities: MapCityItem[] = source.map((city, index) => {
+    const coords = cityCoordinates[normalizeRegionName(city.name)] ?? { lat: 58.5, lng: 15.5 };
+    return {
+      ...city,
+      lat: coords.lat,
+      lng: coords.lng,
+      color: markerColors[index % markerColors.length],
+    };
+  });
+
   return (
     <div className="rounded-lg  border min-h-137.5 border-slate-200 bg-white p-5 ">
       <div className="flex items-center justify-between">
@@ -49,7 +97,7 @@ const Mapcity: React.FC = () => {
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               {cities.map((city) => (
                 <Marker
-                  key={city.name}
+                  key={`${city.name}-${city.lat}-${city.lng}`}
                   position={[city.lat, city.lng]}
                   icon={createMarker(city.color)}
                 />

@@ -19,11 +19,16 @@ import {
   masterServiceVisuals,
 } from "@/pages/vendor-services/vendorServicesVisuals";
 
-const fallbackOverviewVisual = (alt: string): Visual => ({
-  src: well,
-  alt,
-  srcSet: `${wellSm} 480w, ${well} 1200w`,
-});
+const isRenderableImageUrl = (value?: string | null) => {
+  if (!value) return false;
+  return (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("/") ||
+    value.startsWith("data:") ||
+    value.startsWith("blob:")
+  );
+};
 
 type VendorServiceOverviewProps = {
   service: VendorServiceEntity;
@@ -65,12 +70,9 @@ export function VendorServiceOverview({
   const categoryVisual =
     categoryVisuals[service.category?.slug ?? ""] ?? masterVisual;
 
-  const primaryVisual = service.media?.[0]?.url
-    ? {
-        src: service.media[0].url,
-        alt: service.title ?? categoryVisual.alt,
-      }
-    : categoryVisual;
+  const primaryImage = isRenderableImageUrl(service.media?.[0]?.url)
+    ? (service.media?.[0]?.url as string)
+    : categoryVisual.src;
 
   return (
     <DashboardContainer className="space-y-6 pb-16">
@@ -125,8 +127,9 @@ export function VendorServiceOverview({
               className="h-56 w-full object-cover"
               loading="lazy"
               decoding="async"
-              srcSet={primaryVisual.srcSet}
-              sizes="(max-width: 1024px) 100vw, 640px"
+              onError={(event) => {
+                event.currentTarget.src = categoryVisual.src;
+              }}
             />
             <div className="flex flex-wrap items-center gap-2 px-4 py-3 text-xs font-semibold text-slate-600">
               <span className="rounded-full bg-white/80 px-2 py-0.5 text-slate-700">

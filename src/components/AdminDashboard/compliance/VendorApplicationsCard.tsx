@@ -14,8 +14,18 @@ const vendorApplications = [
   },
 ];
 
-const VendorApplicationsCard = () => {
-  const hasItems = vendorApplications.length > 0;
+type VendorApplicationItem = {
+  vendor: string;
+  city: string;
+  appliedAt: string;
+};
+
+type VendorApplicationsCardProps = {
+  items?: VendorApplicationItem[];
+};
+
+const VendorApplicationsCard = ({ items = vendorApplications }: VendorApplicationsCardProps) => {
+  const hasItems = items.length > 0;
 
   return (
     <AdminCardShell title="Vendor Applications" subtitle="Compliance queue">
@@ -28,7 +38,7 @@ const VendorApplicationsCard = () => {
         ]}
       >
         {hasItems ? (
-          vendorApplications.map((application) => (
+          items.map((application) => (
             <AdminTableRow key={`${application.vendor}-${application.city}`}>
               <AdminTableCell className="text-sm font-semibold text-slate-900">
                 {application.vendor}

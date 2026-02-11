@@ -11,11 +11,16 @@ import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
 import { ServiceCardOfferingsPreview } from "@/pages/vendor-services/ServiceCardOfferingsPreview";
 import { categoryVisuals, masterServiceVisuals } from "@/pages/vendor-services/vendorServicesVisuals";
 
-const fallbackListingVisual = (alt: string): Visual => ({
-  src: well,
-  alt,
-  srcSet: `${wellSm} 480w, ${well} 1200w`,
-});
+const isRenderableImageUrl = (value?: string | null) => {
+  if (!value) return false;
+  return (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("/") ||
+    value.startsWith("data:") ||
+    value.startsWith("blob:")
+  );
+};
 
 type VendorServicesListingProps = {
   hasService: boolean;
@@ -78,12 +83,9 @@ export const VendorServicesListing = ({
             const categoryVisual =
               categoryVisuals[service.category?.slug ?? ""] ?? masterVisual;
 
-            const primaryVisual = service.media?.[0]?.url
-              ? {
-                  src: service.media[0].url,
-                  alt: service.title ?? categoryVisual.alt,
-                }
-              : categoryVisual;
+            const primaryImage = isRenderableImageUrl(service.media?.[0]?.url)
+              ? (service.media?.[0]?.url as string)
+              : categoryVisual.src;
 
             return (
               <div
@@ -98,8 +100,9 @@ export const VendorServicesListing = ({
                       className="h-full w-full object-cover transition duration-200 group-hover:scale-105"
                       loading="lazy"
                       decoding="async"
-                      srcSet={primaryVisual.srcSet}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                      onError={(event) => {
+                        event.currentTarget.src = categoryVisual.src;
+                      }}
                     />
                     <div className="flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-slate-600">
                       <span className="rounded-full bg-white/80 px-2 py-0.5 text-slate-700">

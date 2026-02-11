@@ -1,4 +1,4 @@
-import { BadgeCheck, Check, ChevronLeft, Heart, MapPin, Share2, Star } from "lucide-react"
+import { BadgeCheck, Check, ChevronLeft, Heart, MapIcon, MapPin, MapPinIcon, Share2, Star } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useEffect, useMemo, useState } from "react"
 import salon1 from "@/assets/images/salon1.png"
@@ -9,6 +9,7 @@ import { slotStatusLegend, slotStatusMeta, SlotOption, SlotStatus } from "@/comp
 import { useAppSelector } from "@/app/hooks"
 
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
+import { useListMarketplaceServicesQuery } from "@/services/marketplaceApi"
 import { useGetServiceMediaQuery } from "@/services/serviceMediaApi"
 import {
   useGetServiceOfferingsQuery,
@@ -18,13 +19,14 @@ import {
 } from "@/services/vendorOfferingsApi"
 import { DateTime } from "luxon"
 import { useGetServiceReviewsQuery, useCreateReviewMutation } from "@/services/serviceReviewsApi"
-import { useApplyCouponMutation, useCreateOrderMutation } from "@/services/vendorOrdersApi"
+import { useApplyCouponMutation } from "@/services/vendorOrdersApi"
+import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi"
 import { Button } from "@/components/ui/button"
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge"
 import { LocationMap } from "@/components/marketplace/Map/LocationMap"
 import toast from "react-hot-toast"
-
+import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify"
 
 type ReviewCard = {
   id: string
@@ -36,14 +38,6 @@ type ReviewCard = {
   date: string
   location: string
 }
-
-const starBreakdown = [
-  { label: "5 ⭐", percent: 72 },
-  { label: "4 ⭐", percent: 17 },
-  { label: "3 ⭐", percent: 7 },
-  { label: "2 ⭐", percent: 3 },
-  { label: "1 ⭐", percent: 1 },
-]
 
 const STOCKHOLM_TIMEZONE = "Europe/Stockholm"
 
@@ -97,13 +91,15 @@ type CartItem = {
   slotId: string | null
 }
 
-const VENDOR_ID = "e6f6ce15-ff9f-40da-b1c8-88afd9aee225"
-
 export default function ServiceDetail() {
   const navigate = useNavigate()
-  const { serviceSlug } = useParams<{ serviceSlug?: string }>()
+  const { serviceId: serviceIdParam, serviceSlug } = useParams<{
+    serviceId?: string
+    serviceSlug?: string
+  }>()
   const userId = useAppSelector((state) => state.auth.user?.id)
-  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
+  const [createCheckoutSession, { isLoading: isCreatingSession }] =
+    useCreateCheckoutSessionMutation()
   const [applyCoupon, { isLoading: isApplyingCoupon }] = useApplyCouponMutation()
 
   const [userRating, setUserRating] = useState(0)
@@ -142,11 +138,38 @@ export default function ServiceDetail() {
   }
   const [fetchOfferingSlots, { data: fetchedSlots }] = useLazyGetOfferingSlotsQuery()
 
+  const slugSearchQuery = serviceSlug ? slugToSearchQuery(serviceSlug) : undefined
+  const marketplaceParams = serviceIdParam
+    ? { serviceId: serviceIdParam, limit: 12, offset: 0 }
+    : slugSearchQuery
+      ? { q: slugSearchQuery, limit: 12, offset: 0 }
+      : undefined
+
+  const skipMarketplace = !serviceIdParam && !serviceSlug
+
+  const { data: marketplaceList, isLoading: marketplaceLoading } = useListMarketplaceServicesQuery(
+    marketplaceParams,
+    { skip: skipMarketplace },
+  )
+
+  const matchedMarketplaceService = useMemo(() => {
+    if (!marketplaceList?.data || marketplaceList.data.length === 0) return undefined
+    if (serviceIdParam) {
+      return marketplaceList.data[0]
+    }
+    if (!serviceSlug) return undefined
+    return marketplaceList.data.find((row) => slugifyServiceTitle(row.title) === serviceSlug)
+  }, [marketplaceList?.data, serviceIdParam, serviceSlug])
+
+  const vendorId = matchedMarketplaceService?.vendorId
+  const serviceCity = matchedMarketplaceService?.cityName ?? "—"
+  const rules = matchedMarketplaceService?.offeringsPreview ?? "—"
+console.log(rules)
   useEffect(() => {
     if (bookedOffering) {
       fetchOfferingSlots({
         offeringId: bookedOffering.id,
-        vendorId: VENDOR_ID,
+        vendorId:vendorId,
       })
     }
   }, [bookedOffering, fetchOfferingSlots])
@@ -225,7 +248,7 @@ export default function ServiceDetail() {
 
     try {
       const response = await applyCoupon({
-        vendorId: VENDOR_ID,
+        vendorId: vendorId,
         promoCode: promoCode.trim(),
         subtotal: cartSubtotal,
       }).unwrap()
@@ -292,70 +315,141 @@ export default function ServiceDetail() {
       toast.success("Add at least one service to your order before booking.")
       return
     }
+
     if (!userId) {
-      toast.success("Sign in to confirm a booking before proceeding.")
+      toast.error("Sign in to confirm a booking before proceeding.")
       return
     }
 
-    try {
-      const order = await createOrder({
-        userId,
-        vendorId: VENDOR_ID,
-        items: cartItems.map((item) => ({
-          offeringId: item.offering.id,
-          quantity: item.quantity,
-          slotId: item.slotId ?? undefined,
-        })),
-        promoCode: appliedCoupon?.code || undefined,
-      }).unwrap()
+    if (!vendorId) {
+      toast.error("Unable to resolve the vendor for this booking.")
+      return
+    }
 
-      toast.success(
-        `Order confirmed (${formatCurrency(order.summary.total)}). We will notify the vendor shortly.`
-      )
+  try {
+    const response = await createCheckoutSession({
+      userId,
+      vendorId,
+      items: cartItems.map((item) => ({
+        offeringId: item.offering.id,
+        quantity: item.quantity,
+        slotId: item.slotId ?? undefined,
+      })),
+      promoCode: appliedCoupon?.code || undefined,
+    }).unwrap()
+
+      if (typeof window !== "undefined") {
+        const storagePayload = {
+          orderId: response.data?.orderId ?? null,
+          sessionId: response.data?.sessionId ?? null,
+        }
+
+        if (storagePayload.orderId || storagePayload.sessionId) {
+          window.sessionStorage.setItem(
+            "stadonclick.latestOrderReceipt",
+            JSON.stringify(storagePayload),
+          )
+        }
+      }
+
       setCartItems([])
       setPromoCode("")
       resetCoupon()
-    } catch (error) {
-      console.error("Failed to create order:", error)
-      toast.success("We could not save the booking. Please try again.")
+
+      toast.success("Redirecting you to Stripe checkout…")
+      const redirectUrl = response.data?.sessionUrl
+      if (redirectUrl && typeof window !== "undefined") {
+        window.location.assign(redirectUrl)
+      }
+    } catch (error: any) {
+      console.error("Failed to create checkout session:", error)
+      toast.error(
+        error?.data?.message || error?.error || "Failed to start checkout. Please try again."
+      )
     }
   }
 
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation()
 
-  // 1. Fetch vendor services list (scoped by vendorId)
-  const { data: vendorServices, isLoading: servicesLoading } = useGetVendorServicesQuery(VENDOR_ID)
 
-  // Find the specific service matching the slug
-  const service = vendorServices?.find((s) =>
-    typeof s.name === 'string'
-      ? s.name.toLowerCase().replace(/ /g, '-') === serviceSlug
-      : false
-  ) || vendorServices?.[0]
-  const serviceId = service?.id
+  const {
+    data: vendorServices,
+    isLoading: servicesLoading,
+  } = useGetVendorServicesQuery(vendorId ?? "", {
+    skip: !vendorId,
+  })
+
+  const service =
+    vendorServices != null
+      ? serviceIdParam
+        ? vendorServices.find((item) => item.id === serviceIdParam)
+        : serviceSlug
+          ? vendorServices.find((item) => slugifyServiceTitle(item.title) === serviceSlug)
+          : vendorServices[0]
+      : undefined
+  const currentServiceId = service?.id
 
   // 2. Fetch Media (isolated)
-  const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(serviceId ?? "", { skip: !serviceId })
+  const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(currentServiceId ?? "", {
+    skip: !currentServiceId,
+  })
 
   // 3. Fetch Offerings (isolated)
-  const { data: offerings, isLoading: offeringsLoading } = useGetServiceOfferingsQuery(serviceId ?? "", { skip: !serviceId })
+  const { data: offerings, isLoading: offeringsLoading } = useGetServiceOfferingsQuery(
+    currentServiceId ?? "",
+    { skip: !currentServiceId },
+  )
 
-  const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(serviceId ?? "", { skip: !serviceId })
+  const { data: reviews, isLoading: reviewsLoading } = useGetServiceReviewsQuery(currentServiceId ?? "", {
+    skip: !currentServiceId,
+  })
+
+  const starBreakdown = useMemo(() => {
+    const list = reviews ?? []
+    const total = list.length
+    if (total === 0) {
+      return [5, 4, 3, 2, 1].map((rating) => ({
+        label: `${rating} ⭐`,
+        percent: 0,
+      }))
+    }
+    return [5, 4, 3, 2, 1].map((rating) => {
+      const count = list.filter((review) => review.rating === rating).length
+      const percent = Math.round((count / total) * 100)
+      return {
+        label: `${rating} ⭐`,
+        percent,
+      }
+    })
+  }, [reviews])
+
+  const descriptionRules = useMemo(() => {
+    const seen = new Map<string, { label: string; value?: string | null }>()
+    for (const offering of offerings ?? []) {
+      for (const rule of offering.rules ?? []) {
+        const key = `${rule.ruleType}:${rule.value ?? ""}`
+        if (!seen.has(key)) {
+          seen.set(key, {
+            label: formatRuleLabel(rule.ruleType),
+            value: rule.value ?? null,
+          })
+        }
+      }
+    }
+    return Array.from(seen.values())
+  }, [offerings])
 
   const handleSubmitReview = async () => {
-    if (!serviceId) return
+    if (!currentServiceId) return
     if (userRating === 0) {
       toast.success("Please select a rating")
-      return
-    }
-    if (!userComment.trim()) {
-      toast.success("Please enter a comment")
       return
     }
 
     try {
       await createReview({
-        serviceId,
+        userId,
+        serviceId: currentServiceId,
         rating: userRating,
         comment: userComment,
       }).unwrap()
@@ -368,7 +462,7 @@ export default function ServiceDetail() {
     }
   }
 
-  if (servicesLoading || mediaLoading || offeringsLoading || reviewsLoading) {
+  if (marketplaceLoading || servicesLoading || mediaLoading || offeringsLoading || reviewsLoading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>
   }
 
@@ -408,9 +502,13 @@ export default function ServiceDetail() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold text-slate-900">
-                    {service.name}
+                    {service.title}
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-black">
+                    <div className="flex">
+                    <MapPinIcon className="h-5 w-5 "/>
+                  <div className="ml-2 font-semibold">{serviceCity}</div>
+                    </div>
                     <div className="flex items-center gap-1 rounded-full px-3 py-1 font-bold ">
                       <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
                       {(reviews && reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0")}
@@ -437,7 +535,7 @@ export default function ServiceDetail() {
               </div>
               <ServiceGallery 
                 galleryImages={galleryImages} 
-                serviceName={service.name} 
+                serviceName={service.title} 
               />
               <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 {service.status && (
@@ -551,15 +649,36 @@ export default function ServiceDetail() {
                 })}
               </div>
             ) : (
-              <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                <p className="text-sm text-slate-500">
-                  {serviceDescription}
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  {`We keep this experience updated—check the services tab to explore current offerings.`}
-                </p>
-              </div>
+            <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+              <p className="text-sm text-slate-500">
+                {serviceDescription}              {offerings.rules}   
+              </p>
+              <p className="text-xs text-slate-400">
+                {`We keep this experience updated—check the services tab to explore current offerings.`}
+              </p>
+              {descriptionRules.length > 0 && (
+                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-900">Service rules</p>
+                    <span className="text-xs font-medium text-slate-400">{descriptionRules.length} total</span>
+                  </div>
+                  <div className="space-y-1">
+                    {descriptionRules.map((rule) => (
+                      <div
+                        key={`${rule.label}-${rule.value}`}
+                        className="flex flex-wrap items-center gap-1 text-[13px] font-medium text-slate-500"
+                      >
+                        <span className="text-slate-700">{rule.label}</span>
+                        {rule.value ? (
+                          <span className="text-slate-400">—</span>
+                        ) : null}
+                        {rule.value ? <span>{rule.value}</span> : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             )}
           </div>
         </div>
@@ -699,9 +818,9 @@ export default function ServiceDetail() {
             <Button
               onClick={handleCheckoutCart}
               className="w-full"
-              disabled={cartItems.length === 0 || isCreatingOrder}
+              disabled={cartItems.length === 0 || isCreatingSession}
             >
-              {isCreatingOrder ? "Processing..." : "Confirm booking"}
+              {isCreatingSession ? "Processing..." : "Confirm booking"}
             </Button>
           </div>
      </div>
@@ -711,7 +830,7 @@ export default function ServiceDetail() {
           <div className="space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-900">
-                About the spa
+                {service.title}'s Location
               </h2>
 
               <a
@@ -725,9 +844,9 @@ export default function ServiceDetail() {
             </div>
 
             <LocationMap
-              lat={19.136326}
-              lng={72.827660}
-              name={service.name}
+              lat={service.latitude}
+              lng={service.longitude}
+              name={service.title}
             />
           </div>
        
@@ -969,6 +1088,8 @@ export default function ServiceDetail() {
               </div>
 
               <textarea
+                value={userComment}
+                onChange={(evt) => setUserComment(evt.target.value)}
                 placeholder="Tell fellow guests what made your visit special"
                 className="min-h-35 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 focus:border-blue-400 focus:outline-none"
               />
@@ -990,7 +1111,7 @@ export default function ServiceDetail() {
 
       <BookingModal
         isOpen={isBookingModalOpen}
-        serviceName={service.name}
+        serviceName={service.title}
         bookedOfferingName={bookedOffering?.name}
         selectedDate={selectedDate}
         selectedSlot={selectedSlot}
@@ -1001,7 +1122,7 @@ export default function ServiceDetail() {
         slotStatusLegend={slotStatusLegend}
         slotStatusMeta={slotStatusMeta}
         requiresSlot={requiresSlot}
-        isLoading={isCreatingOrder}
+        isLoading={isCreatingSession}
         onSelectDate={(date) => setSelectedDate(date)}
         onSelectSlot={(slotId) => setSelectedSlotId(slotId)}
         onClose={handleCloseBooking}

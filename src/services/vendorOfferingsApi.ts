@@ -152,6 +152,7 @@ export const vendorOfferingsApi = createApi({
 
 export const {
   useGetServiceOfferingsQuery,
+  useLazyGetServiceOfferingsQuery,
   useCreateOfferingMutation,
   useCreateSlotMutation,
   useCreateRuleMutation,

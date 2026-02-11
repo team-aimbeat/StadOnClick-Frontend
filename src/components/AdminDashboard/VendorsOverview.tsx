@@ -19,7 +19,7 @@ type VendorCategory = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-const vendorCategories: VendorCategory[] = [
+const defaultVendorCategories: VendorCategory[] = [
   { name: "Cafe", count: 334, trend: "up", delta: "+12%", icon: HiOutlineBuildingStorefront },
   { name: "Wellness", count: 145, trend: "up", delta: "+8%", icon: HiOutlineHeart },
   { name: "Events", count: 53, trend: "down", delta: "-2%", icon: HiOutlineTicket },
@@ -68,8 +68,12 @@ const VendorCategoryItem = ({ category }: { category: VendorCategory }) => {
 };
 
 
-const VendorsOverview = () => {
-  const totalVendors = vendorCategories.reduce((sum, item) => sum + item.count, 0);
+type VendorsOverviewProps = {
+  categories?: VendorCategory[];
+};
+
+const VendorsOverview = ({ categories = defaultVendorCategories }: VendorsOverviewProps) => {
+  const totalVendors = categories.reduce((sum, item) => sum + item.count, 0);
 
   return (
     <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5">
@@ -82,7 +86,7 @@ const VendorsOverview = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {vendorCategories.map((category) => (
+        {categories.map((category) => (
           <VendorCategoryItem key={category.name} category={category} />
         ))}
       </div>

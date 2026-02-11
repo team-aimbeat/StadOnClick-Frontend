@@ -35,6 +35,8 @@ import Teams from "@/pages/Teams";
 import Support from "@/pages/Support";
 import UserAccount from "@/pages/UserAccount";
 import Wishlist from "@/pages/Wishlist";
+import OrdersPage from "@/pages/Orders";
+import OrderConfirmationPage from "@/pages/OrderConfirmation";
 import VendorPlaceholder from "@/pages/VendorPlaceholder";
 
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
@@ -47,6 +49,7 @@ import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import ModeratorProtectedRoute from "./ModeratorProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
+import VendorAutoLogin from "@/pages/vendor/VendorAutoLogin";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
 import AdminNotFound from "@/pages/Admin/AdminNotFound";
@@ -105,6 +108,14 @@ const appRouter = createBrowserRouter([
             element: <UserAccount />,
           },
           {
+            path: "/orders",
+            element: <OrdersPage />,
+          },
+          {
+            path: "/orders/confirmation",
+            element: <OrderConfirmationPage />,
+          },
+          {
             path: "/sign-up",
             element: <Signup />,
             errorElement: <ErrorPage />,
@@ -138,6 +149,10 @@ const appRouter = createBrowserRouter([
             element: <About />,
           },
 
+          {
+            path: "/service/:serviceId",
+            element: <ServiceDetail />,
+          },
           {
             path: "/services/:serviceSlug",
             element: <ServiceDetail />,
@@ -354,6 +369,11 @@ const appRouter = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: "/vendor/auto-login",
+        element: <VendorAutoLogin />,
+        errorElement: <ErrorPage />,
+      },
+      {
         path: "/vendor",
         element: (
           <VendorProtectedRoute>
@@ -438,6 +458,7 @@ const appRouter = createBrowserRouter([
           },
           { path: "bookings/:bookingId", element: <VendorBookingDetail /> },
           { path: "profile", element: <VendorProfile /> },
+          { path: "business-profile/setup", element: <VendorProfile /> },
           { path: "services", element: <VendorServices /> },
           {
             path: "services/:serviceId/options",

@@ -43,10 +43,23 @@ export type VendorApplication = {
 
 export type Vendor = {
   id: string;
-  userId: string;
+  userId?: string;
   businessName?: string | null;
   createdAt: string;
   updatedAt: string;
+  slug?: string;
+  status?: VendorStatus;
+  kycStatus?: KycStatus;
+  city?: { name?: string } | null;
+  country?: string;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  payoutsEnabled?: boolean;
+  chargesEnabled?: boolean;
+  totalBookings?: number;
+  totalRevenue?: string | number;
+  ratingAvg?: number;
+  ratingCount?: number;
 
   // optional extras
   user?: {

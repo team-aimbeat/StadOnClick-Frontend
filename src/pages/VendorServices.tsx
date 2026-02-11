@@ -10,6 +10,9 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
 import dayjs, { type Dayjs } from "dayjs";
+import { HiSparkles } from "react-icons/hi2";
+
+import { Button } from "@/components/ui/button";
 import {
   useGetMasterCategoriesQuery,
   useGetServiceCategoriesByMasterQuery,
@@ -28,7 +31,6 @@ import {
   useCreateVendorServiceMutation,
   useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
-  useGetVendorProfileStatusQuery,
   type VendorServiceEntity,
 } from "@/services/vendorServicesApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
@@ -253,16 +255,11 @@ const VendorServices = () => {
     }
   }, [mode, pendingScrollToWizard]);
 
-  const { data: profileStatus } = useGetVendorProfileStatusQuery();
-  const dynamicVendorId = profileStatus?.id;
-
   const {
     data: vendorServices = [],
     isLoading: isServicesLoading,
     refetch: refetchServices,
-  } = useGetVendorServicesQuery(dynamicVendorId!, {
-    skip: !dynamicVendorId,
-  });
+  } = useGetVendorServicesQuery();
   const hasService = vendorServices.length > 0;
 
   const [vendorServiceDetails, setVendorServiceDetails] =
@@ -722,11 +719,6 @@ const VendorServices = () => {
       setGeneralError("Complete the vendor service details before continuing.");
       return;
     }
-    if (!dynamicVendorId) {
-      setGeneralError("Unable to resolve vendor session. Please reauthenticate.");
-      return;
-    }
-
     setGeneralError(null);
     setVendorServiceStep("loading");
     setVendorServiceError(null);
@@ -744,7 +736,6 @@ const VendorServices = () => {
             ? null
             : Number(refundPolicy.windowHours);
         const vendorServicePayload = {
-          vendorId: dynamicVendorId,
           categoryId: selectedCategoryId,
           title: vendorServiceDetails.title.trim(),
           description: vendorServiceDetails.description.trim(),
@@ -813,8 +804,14 @@ const VendorServices = () => {
       refetchServices();
     } catch (error) {
       const normalized = normalizeApiError(error, "Operation failed");
-      setGeneralError(normalized.toastMessage);
-      toast.error(normalized.toastMessage);
+      const vendorContextError =
+        normalized.formError === "VENDOR_CONTEXT_REQUIRED" ||
+        normalized.formError === "VENDOR_NOT_FOUND";
+      const message = vendorContextError
+        ? "Unable to resolve vendor session. Please complete vendor profile setup and sign in again."
+        : normalized.toastMessage;
+      setGeneralError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -916,22 +913,27 @@ const VendorServices = () => {
 
     if (!activeService) {
       return (
-        <div className="mx-auto px-6 py-10">
-          <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center">
-            <h2 className="text-lg font-semibold text-slate-900">
-              No service yet
+        <div className="mx-auto px-6 py-14">
+          <div className="mx-auto flex max-w-3xl flex-col items-center rounded-[32px] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+            <div className="relative mb-8 h-24 w-28">
+            <img src="@/assets/Images/box.png"/>
+            </div>
+
+            <h2 className="text-4xl font-bold tracking-tight text-slate-900">
+              Welcome to Vendor Services
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Create your single service first, then add multiple offerings under
-              it.
+            <p className="mt-3 max-w-xl text-base leading-7 text-slate-500">
+              Start by creating your first service, then add offerings, slots,
+              and rules to publish a complete customer-ready listing.
             </p>
-            <button
-              type="button"
+
+            <Button
               onClick={openWizardForNewService}
-              className="mt-6 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700"
+            className="mt-5"
             >
-              Create my service
-            </button>
+        
+              Create New Service
+            </Button>
           </div>
         </div>
       );
