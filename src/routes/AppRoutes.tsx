@@ -76,10 +76,11 @@ import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPla
 import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
-import AppLayout from "@/components/layout/AppLayout";
 import WeekendActivities from "@/pages/WeekendActivities";
-import AdminLayout from "@/components/layout/AdminLayout";
-import VendorLayout from "@/components/layout/VendorLayout";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import VendorLayout from "@/components/Layout/VendorLayout";
+import AppLayout from "@/components/Layout/AppLayout";
+
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
@@ -124,6 +125,11 @@ const appRouter = createBrowserRouter([
           {
             path: "/sign-in",
             element: <SignIn />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/business/onboarding",
+            element: <VendorProfile />,
             errorElement: <ErrorPage />,
           },
           {
@@ -458,7 +464,7 @@ const appRouter = createBrowserRouter([
           },
           { path: "bookings/:bookingId", element: <VendorBookingDetail /> },
           { path: "profile", element: <VendorProfile /> },
-          { path: "business-profile/setup", element: <VendorProfile /> },
+          { path: "business-profile/setup", element: <Navigate to="/business/onboarding" replace /> },
           { path: "services", element: <VendorServices /> },
           {
             path: "services/:serviceId/options",
