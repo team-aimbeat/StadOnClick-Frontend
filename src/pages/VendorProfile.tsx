@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   HiOutlineCheckCircle,
   HiOutlineClock,
-  HiOutlineEnvelope,
-  HiOutlineMapPin,
-  HiOutlinePhone,
 } from "react-icons/hi2";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { useAppDispatch } from "@/app/hooks";
+import { setUser } from "@/features/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { authApi } from "@/features/auth/api/authApi";
 import { useMockLoader } from "@/lib/useMockLoader";
-import { useGetVendorProfileQuery, useUpdateVendorProfileMutation } from "@/features/vendorProfile/api/vendorProfileApi";
+import {
+  useCreateVendorBusinessProfileMutation,
+  useGetVendorProfileQuery,
+  useUpdateVendorProfileMutation,
+} from "@/features/vendorProfile/api/vendorProfileApi";
 import type { BusinessHour } from "@/features/vendorProfile/api/vendorProfileApi";
 import toast from "react-hot-toast";
 const sidebarSections = [
@@ -26,13 +29,18 @@ const sidebarSections = [
 
 const VendorProfile = () => {
   const dispatch = useAppDispatch();
+  const authUser = useAppSelector((state) => state.auth.user);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeSection, setActiveSection] = useState("info");
   const loading = useMockLoader();
 
   const { data: profileData, isLoading: isLoadingProfile, error: profileError } = useGetVendorProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateVendorProfileMutation();
+  const [createBusinessProfile, { isLoading: isCreating }] = useCreateVendorBusinessProfileMutation();
 
   const [businessName, setBusinessName] = useState("");
+  const [cityId, setCityId] = useState("");
   const [description, setDescription] = useState("");
   const [headquarters, setHeadquarters] = useState("");
   const [serviceOverview, setServiceOverview] = useState("");
@@ -49,6 +57,7 @@ const VendorProfile = () => {
     if (profileData?.data) {
       const profile = profileData.data;
       setBusinessName(profile.businessName || "");
+      setCityId(profile.city?.id || "");
       setDescription(profile.description || "");
       setHeadquarters(profile.headquarters || "");
       setServiceOverview(profile.serviceOverview || "");
@@ -74,6 +83,9 @@ const VendorProfile = () => {
   const validateBusinessHour = (slot: BusinessHour) =>
     (slot.day?.trim().length ?? 0) >= 2 && (slot.value?.trim().length ?? 0) >= 2;
 
+  const isSetupMode = !profileData?.data;
+  const isSaving = isUpdating || isCreating;
+
   const updateBusinessHour = (index: number, field: keyof BusinessHour, value: string) => {
     setBusinessHours((prev) => {
       const updated = [...prev];
@@ -84,6 +96,11 @@ const VendorProfile = () => {
   };
 
   const handleSave = async () => {
+    if (!businessName.trim()) {
+      toast.error("Business name is required.");
+      return;
+    }
+
     const invalidIndexes = businessHours.reduce<number[]>((errs, slot, index) => {
       const isValid = validateBusinessHour(slot);
       if (!isValid) {
@@ -99,39 +116,62 @@ const VendorProfile = () => {
     }
 
     try {
-      await updateProfile({
-        businessName,
-        description: description || null,
-        headquarters: headquarters || null,
-        serviceOverview,
-        seoTitle: seoTitle || null,
-        seoDescription: seoDescription || null,
-        seoKeywords,
-        isIndexable,
-        contactEmail: contactEmail || null,
-        contactPhone: contactPhone || null,
-        businessHours: businessHours.length > 0 ? businessHours : undefined,
-      }).unwrap();
+      if (isSetupMode) {
+        await createBusinessProfile({
+          businessName: businessName.trim(),
+          description: description || undefined,
+          cityId: cityId || undefined,
+          headquarters: headquarters || undefined,
+          serviceOverview: serviceOverview || undefined,
+          seoTitle: seoTitle || undefined,
+          seoDescription: seoDescription || undefined,
+          seoKeywords: seoKeywords.filter(Boolean),
+          isIndexable,
+          contactEmail: contactEmail || undefined,
+          contactPhone: contactPhone || undefined,
+          businessHours: businessHours.length > 0 ? businessHours : [],
+        }).unwrap();
+        toast.success("Business profile created. Vendor ID generated.");
+      } else {
+        await updateProfile({
+          businessName,
+          cityId: cityId || null,
+          description: description || null,
+          headquarters: headquarters || null,
+          serviceOverview,
+          seoTitle: seoTitle || null,
+          seoDescription: seoDescription || null,
+          seoKeywords: seoKeywords.filter(Boolean),
+          isIndexable,
+          contactEmail: contactEmail || null,
+          contactPhone: contactPhone || null,
+          businessHours: businessHours.length > 0 ? businessHours : undefined,
+        }).unwrap();
+        toast.success("Profile saved");
+      }
 
       setInvalidHours([]);
-      toast.success("Profile saved");
+      dispatch(authApi.util.invalidateTags(["User"]));
+      if (authUser) {
+        dispatch(
+          setUser({
+            ...authUser,
+            nextAction: null,
+            vendorAccess: authUser.vendorAccess
+              ? { ...authUser.vendorAccess, setupRequired: false }
+              : authUser.vendorAccess,
+          }),
+        );
+      }
+
+      if (isSetupMode || location.pathname.includes("/business-profile/setup")) {
+        navigate("/vendor/dashboard", { replace: true });
+      }
     } catch (error: any) {
       console.error("Failed to save profile:", error);
-      toast.error(error?.data?.message || "Failed to save profile");
+      toast.error(error?.data?.message || error?.data?.error || "Failed to save profile");
     }
   };
-
-  const infoFields = useMemo(() => {
-    if (!profileData?.data) return [];
-    const profile = profileData.data;
-    return [
-      { label: "Business name", value: profile.businessName },
-      { label: "StadonClick slug", value: profile.slug },
-      { label: "Headquarters", value: profile.headquarters || "Not set" },
-      { label: "City", value: profile.city?.name || "Not set" },
-      { label: "Services focus", value: serviceOverview || "Not set" },
-    ];
-  }, [profileData, serviceOverview]);
 
   const completenessItems = useMemo(() => {
     const profile = profileData?.data;
@@ -165,17 +205,6 @@ const VendorProfile = () => {
               <div className="h-96 bg-slate-200 rounded-2xl" />
             </div>
           </div>
-        </div>
-      </DashboardContainer>
-    );
-  }
-
-  if (profileError) {
-    return (
-      <DashboardContainer className="py-10">
-        <div className="rounded-2xl bg-red-50 border border-red-200 p-8 text-center">
-          <p className="text-red-800 font-medium">Failed to load profile data</p>
-          <p className="text-red-600 text-sm mt-2">Please try again or contact support</p>
         </div>
       </DashboardContainer>
     );
@@ -228,6 +257,15 @@ const VendorProfile = () => {
         </aside>
 
         <main className="lg:col-span-9 space-y-6">
+          {profileError && (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4">
+              <p className="text-amber-900 font-medium">No business profile yet.</p>
+              <p className="text-amber-800 text-sm mt-1">
+                Fill the fields below and save to create your business profile and generate vendor ID.
+              </p>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 md:p-8">
             <div className="pb-6 border-b border-slate-100">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -255,13 +293,53 @@ const VendorProfile = () => {
 
             {activeSection === "info" && (
               <div className="pt-6 space-y-6">
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {infoFields.map((field) => (
-                    <div key={field.label} className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
-                      <p className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{field.label}</p>
-                      <p className="mt-1.5 text-sm font-semibold text-slate-900">{field.value}</p>
-                    </div>
-                  ))}
+                <div className="grid sm:grid-cols-2 gap-5 rounded-xl border border-slate-100 bg-slate-50/50 p-6">
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Business Name *</label>
+                    <input
+                      type="text"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">City ID</label>
+                    <input
+                      type="text"
+                      value={cityId}
+                      onChange={(e) => setCityId(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                      placeholder="UUID"
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Description</label>
+                    <textarea
+                      rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-[80px]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Headquarters</label>
+                    <input
+                      type="text"
+                      value={headquarters}
+                      onChange={(e) => setHeadquarters(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Services Focus</label>
+                    <input
+                      type="text"
+                      value={serviceOverview}
+                      onChange={(e) => setServiceOverview(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div className="rounded-xl bg-blue-50/40 border border-blue-100 p-5 text-sm text-slate-700">
@@ -322,21 +400,25 @@ const VendorProfile = () => {
 
             {activeSection === "contact" && (
               <div className="pt-6 grid md:grid-cols-2 gap-6">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-6 shadow-sm">
-                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-4 font-medium">Contact Details</p>
-                  <div className="space-y-4 text-sm">
-                    <div className="flex items-center gap-3">
-                      <HiOutlinePhone className="w-5 h-5 text-blue-500" />
-                      <span>{contactPhone || "Not provided"}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                    <HiOutlineEnvelope className="w-5 h-5 text-sky-500" />
-                      <span>{contactEmail || "Not provided"}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <HiOutlineMapPin className="w-5 h-5 text-amber-500" />
-                      <span>{profile?.city?.name || "Location not set"}</span>
-                    </div>
+                <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-6 shadow-sm space-y-4">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 font-medium">Contact Details</p>
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Contact Phone</label>
+                    <input
+                      type="text"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Contact Email</label>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
+                    />
                   </div>
                 </div>
 
@@ -432,12 +514,12 @@ const VendorProfile = () => {
           <div className="mt-6 border-t border-slate-100 pt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <button
               onClick={handleSave}
-              disabled={isUpdating}
+              disabled={isSaving}
               className={`ml-auto px-8 py-2.5 rounded-xl font-semibold text-white transition ${
-                isUpdating ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                isSaving ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {isUpdating ? "Saving..." : "Save Changes"}
+              {isSaving ? "Saving..." : isSetupMode ? "Create Business Profile" : "Save Changes"}
             </button>
           </div>
         </div>

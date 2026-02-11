@@ -385,11 +385,7 @@ const VendorPromote = () => {
   // If master categories exist, force the vendor to pick one before listing child services.
   const requireMaster = masterCategories.length > 0;
 
-  const baseServices = requireMaster
-    ? servicesByMaster
-    : selectedMasterId
-      ? servicesByMaster
-      : services;
+  const baseServices = selectedMasterId ? servicesByMaster : services;
 
   const servicesLoading = selectedMasterId
     ? isServicesByMasterLoading || isServicesByMasterFetching
@@ -487,23 +483,25 @@ const VendorPromote = () => {
 
           {isMastersLoading || isMastersFetching ? (
             <Skeleton className="h-10 w-full rounded-lg" />
-          ) : requireMaster && !selectedMasterId ? (
-            <EmptyState
-              title="Choose a master service first"
-              subtitle="Select a master service to load its child services that can be boosted."
-            />
           ) : (
-            <ServiceSelect
-              services={filteredServices}
-              selectedServiceId={selectedServiceId}
-              onChange={(id) => {
-                setSelectedServiceId(id);
-                setSelectedPlanId(null);
-              }}
-              loading={servicesLoading}
-              search={serviceSearch}
-              onSearchChange={setServiceSearch}
-            />
+            <>
+              {requireMaster && !selectedMasterId && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  Pick a master service to narrow down your boostable services.
+                </div>
+              )}
+              <ServiceSelect
+                services={filteredServices}
+                selectedServiceId={selectedServiceId}
+                onChange={(id) => {
+                  setSelectedServiceId(id);
+                  setSelectedPlanId(null);
+                }}
+                loading={servicesLoading}
+                search={serviceSearch}
+                onSearchChange={setServiceSearch}
+              />
+            </>
           )}
 
           {selectedService && (

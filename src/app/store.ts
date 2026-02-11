@@ -15,6 +15,7 @@ import { bookingsApi } from "@/services/bookingsApi";
 import { vendorcouponsApi } from "@/services/vendoiCouponsApi";
 import { adminLeadPlansApi } from "@/features/adminLeads/api/adminLeadPlans.api";
 import { vendorLeadSubscriptionsApi } from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
+import { ordersApi } from "@/services/ordersApi";
 import { adminStaffApi } from "@/features/admin/staff/adminStaffApi";
 import { supportApi } from "@/features/support/supportApi";
 import supportRealtimeReducer from "@/features/support/supportRealtimeSlice";
@@ -37,6 +38,7 @@ import { serviceReviewsApi } from "@/services/serviceReviewsApi";
 import { adminCouponsApi } from "@/features/admin/coupons/api/adminCouponsApi";
 import { welcomeCouponsApi } from "@/services/welcomeCouponsApi";
 import { marketplaceApi } from "@/services/marketplaceApi";
+import { checkoutApi } from "@/services/checkoutApi";
 import { vendorProfileApi } from "@/features/vendorProfile/api/vendorProfileApi";
 
 export const store = configureStore({
@@ -50,9 +52,11 @@ export const store = configureStore({
     [preferencesApi.reducerPath]: preferencesApi.reducer,
     [vendorOfferingsApi.reducerPath]: vendorOfferingsApi.reducer,
     [vendorOrdersApi.reducerPath]: vendorOrdersApi.reducer,
+    [ordersApi.reducerPath]: ordersApi.reducer,
     [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
     [serviceMediaApi.reducerPath]: serviceMediaApi.reducer,
     [vendorServicesApi.reducerPath]: vendorServicesApi.reducer,
+    [leadsApi.reducerPath]: leadsApi.reducer,
     [adminVendorApi.reducerPath]: adminVendorApi.reducer,
     [bookingsApi.reducerPath]: bookingsApi.reducer,
     [vendorcouponsApi.reducerPath]: vendorcouponsApi.reducer,
@@ -64,7 +68,6 @@ export const store = configureStore({
     [escalationApi.reducerPath]: escalationApi.reducer,
     [systemHealthApi.reducerPath]: systemHealthApi.reducer,
     [vendorKycApi.reducerPath]: vendorKycApi.reducer,
-    [leadsApi.reducerPath]: leadsApi.reducer,
     [vendorNotificationsApi.reducerPath]: vendorNotificationsApi.reducer,
     [userNotificationsApi.reducerPath]: userNotificationsApi.reducer,
     [accountApi.reducerPath]: accountApi.reducer,
@@ -75,6 +78,7 @@ export const store = configureStore({
     [adminBookingsApi.reducerPath]: adminBookingsApi.reducer,
     [adminCouponsApi.reducerPath]: adminCouponsApi.reducer,
     [welcomeCouponsApi.reducerPath]: welcomeCouponsApi.reducer,
+    [checkoutApi.reducerPath]: checkoutApi.reducer,
     [marketplaceApi.reducerPath]: marketplaceApi.reducer,
     [vendorSponsorshipsApi.reducerPath]: vendorSponsorshipsApi.reducer,
     [adminSponsorshipsApi.reducerPath]: adminSponsorshipsApi.reducer,
@@ -89,7 +93,9 @@ export const store = configureStore({
       .concat(serviceCategoriesApi.middleware)
       .concat(serviceMediaApi.middleware)
       .concat(vendorServicesApi.middleware)
+      .concat(leadsApi.middleware)
       .concat(vendorOrdersApi.middleware)
+      .concat(ordersApi.middleware)
       .concat(adminVendorApi.middleware)
     .concat(bookingsApi.middleware)
       .concat(vendorcouponsApi.middleware)
@@ -100,7 +106,6 @@ export const store = configureStore({
       .concat(supportApi.middleware)
       .concat(escalationApi.middleware)
       .concat(systemHealthApi.middleware)
-      .concat(leadsApi.middleware)
       .concat(vendorNotificationsApi.middleware)
       .concat(userNotificationsApi.middleware)
       .concat(accountApi.middleware)
@@ -114,6 +119,7 @@ export const store = configureStore({
       .concat(marketplaceApi.middleware)
       .concat(vendorSponsorshipsApi.middleware)
       .concat(adminSponsorshipsApi.middleware)
+      .concat(checkoutApi.middleware)
       .concat(serviceReviewsApi.middleware)
       .concat(vendorProfileApi.middleware),
 });

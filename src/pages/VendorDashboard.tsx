@@ -40,6 +40,12 @@ import {
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { useAppDispatch } from "@/app/hooks";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import { useGetVendorProfileQuery } from "@/features/vendorProfile/api/vendorProfileApi";
+import { useGetLeadSubscriptionStatusQuery } from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
+import { useGetVendorLeadsQuery } from "@/features/leads/api/leadsApi";
+import { useGetBookingsQuery } from "@/services/bookingsApi";
+import { useGetWalletSummaryQuery, useGetWalletTransactionsQuery } from "@/features/vendorWallet/api/walletApi";
+import { useGetVendorServicesQuery } from "@/services/vendorServicesApi";
 
 type VendorStatus = "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
 type KycStatus = "NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED";
@@ -121,99 +127,14 @@ const daysAgo = (days: number) => {
   return d.toISOString();
 };
 
-const vendorProfile: VendorProfile = {
-  businessName: "UrbanFix Plumbing & Heating",
-  description: "Full-service plumbing & heating specialists with 24/7 support.",
-  contactEmail: "hello@urbanfix.co",
-  contactPhone: "+91 99230 44519",
-  cityId: "mumbai",
-  city: { name: "Mumbai" },
-  status: "PENDING_REVIEW",
-  kycStatus: "NOT_SUBMITTED",
-  totalBookings: 284,
-  totalRevenue: 812000,
-  ratingAvg: 4.6,
-  ratingCount: 188,
-  stripeAccountId: null,
-  chargesEnabled: false,
-  payoutsEnabled: false,
-  activeServices: 5,
-  serviceCategories: 3,
-};
-
-const leadSubscription: VendorLeadSubscription = {
-  plan: { name: "PRO", leadsPerDay: 25 },
-  startsAt: daysAgo(22),
-  endsAt: daysAgo(1),
-  status: "EXPIRED",
-  leadsToday: 18,
-  lastLeadReset: daysAgo(1),
-  receiptNumber: "JD-4823",
-};
-
-const vendorLeads: VendorLead[] = [
-  { createdAt: today.toISOString(), status: "NEW", source: "SEARCH" },
-  { createdAt: today.toISOString(), status: "CONTACTED", source: "WHATSAPP" },
-  { createdAt: daysAgo(1), status: "CONVERTED", source: "PROFILE" },
-  { createdAt: daysAgo(2), status: "NEW", source: "MAP" },
-  { createdAt: daysAgo(3), status: "CONTACTED", source: "SERVICE" },
-  { createdAt: daysAgo(5), status: "LOST", source: "CALL" },
-  { createdAt: daysAgo(6), status: "CONVERTED", source: "SEARCH" },
-  { createdAt: daysAgo(8), status: "CONTACTED", source: "PROFILE" },
-];
-
-const bookings: Booking[] = [
-  {
-    status: "PENDING",
-    priceFinal: 3200,
-    createdAt: today.toISOString(),
-    startTime: today.toISOString(),
-  },
-  {
-    status: "CONFIRMED",
-    priceFinal: 5800,
-    createdAt: daysAgo(1),
-    startTime: daysAgo(1),
-  },
-  {
-    status: "COMPLETED",
-    priceFinal: 12400,
-    createdAt: daysAgo(3),
-    startTime: daysAgo(2),
-  },
-  {
-    status: "COMPLETED",
-    priceFinal: 9300,
-    createdAt: daysAgo(7),
-    startTime: daysAgo(6),
-  },
-  {
-    status: "REFUND_REQUESTED",
-    priceFinal: 6100,
-    createdAt: daysAgo(10),
-    startTime: daysAgo(8),
-  },
-  {
-    status: "REFUNDED",
-    priceFinal: 4400,
-    createdAt: daysAgo(25),
-    startTime: daysAgo(24),
-  },
-];
-
-const wallet: VendorWallet = {
-  balance: 48200,
-  currency: "INR",
-};
-
-const services = {
-  active: 5,
-  categories: 3,
-};
-
-const payoutsMeta = {
-  pendingRequests: 1,
-  lastPayoutDaysAgo: 12,
+const toLeadSource = (source?: string | null): LeadSource => {
+  const normalized = String(source ?? "").toUpperCase();
+  if (normalized === "PROFILE") return "PROFILE";
+  if (normalized === "SERVICE") return "SERVICE";
+  if (normalized === "MAP") return "MAP";
+  if (normalized === "WHATSAPP") return "WHATSAPP";
+  if (normalized === "CALL") return "CALL";
+  return "SEARCH";
 };
 
 const formatDate = (value: string) =>
@@ -297,6 +218,128 @@ const VendorDashboard = () => {
     dispatch(setPageTitle("Vendor Dashboard"));
   }, [dispatch]);
 
+  const { data: profileRes } = useGetVendorProfileQuery();
+  const { data: subscriptionRes } = useGetLeadSubscriptionStatusQuery();
+  const { data: leadsRes } = useGetVendorLeadsQuery({ page: 1, limit: 100 });
+  const { data: bookingsRes } = useGetBookingsQuery();
+  const { data: walletSummaryRes } = useGetWalletSummaryQuery();
+  const { data: walletTransactionsRes } = useGetWalletTransactionsQuery({ page: 1, limit: 20 });
+  const { data: servicesRes } = useGetVendorServicesQuery();
+
+  const vendorProfile: VendorProfile = useMemo(() => {
+    const profile = profileRes?.data;
+    return {
+      businessName: profile?.businessName ?? "Vendor",
+      description: profile?.description ?? "",
+      contactEmail: profile?.contactEmail ?? "",
+      contactPhone: profile?.contactPhone ?? "",
+      cityId: profile?.city?.id ?? "",
+      city: { name: profile?.city?.name ?? "Unknown city" },
+      status:
+        profile?.status === "SUSPENDED"
+          ? "SUSPENDED"
+          : profile?.status === "REJECTED"
+          ? "REJECTED"
+          : profile?.status === "ACTIVE" || profile?.status === "APPROVED"
+          ? "ACTIVE"
+          : "PENDING_REVIEW",
+      kycStatus:
+        profile?.kycStatus === "VERIFIED"
+          ? "VERIFIED"
+          : profile?.kycStatus === "REJECTED"
+          ? "REJECTED"
+          : profile?.kycStatus === "PENDING"
+          ? "PENDING"
+          : "NOT_SUBMITTED",
+      totalBookings: profile?.totalBookings ?? 0,
+      totalRevenue: Number(profile?.totalRevenue ?? 0),
+      ratingAvg: Number(profile?.ratingAvg ?? 0),
+      ratingCount: profile?.ratingCount ?? 0,
+      stripeAccountId: profile?.stripeAccountId ?? null,
+      chargesEnabled: profile?.chargesEnabled ?? false,
+      payoutsEnabled: profile?.payoutsEnabled ?? false,
+      activeServices: (servicesRes ?? []).filter((service) => service.status === "LIVE").length,
+      serviceCategories: new Set(
+        (servicesRes ?? [])
+          .map((service) => (service.category as { id?: string } | undefined)?.id)
+          .filter(Boolean)
+      ).size,
+    };
+  }, [profileRes, servicesRes]);
+
+  const leadSubscription: VendorLeadSubscription = useMemo(() => {
+    const sub = subscriptionRes;
+    const endsAt = sub?.expiresAt ?? daysAgo(1);
+    return {
+      plan: {
+        name: sub?.planName ?? "No Plan",
+        leadsPerDay: sub?.leadsPerDay ?? 0,
+      },
+      startsAt: daysAgo(30),
+      endsAt,
+      status: sub?.isActive ? "ACTIVE" : new Date(endsAt) < today ? "EXPIRED" : "PENDING",
+      leadsToday: sub?.leadsToday ?? 0,
+      lastLeadReset: daysAgo(1),
+      receiptNumber: sub?.receiptNumber ?? "-",
+    };
+  }, [subscriptionRes]);
+
+  const vendorLeads: VendorLead[] = useMemo(
+    () =>
+      (leadsRes?.data ?? []).map((lead) => ({
+        createdAt: lead.createdAt,
+        status: lead.status,
+        source: toLeadSource(lead.lead.source),
+      })),
+    [leadsRes]
+  );
+
+  const bookings: Booking[] = useMemo(
+    () =>
+      (bookingsRes ?? []).map((booking) => ({
+        status: booking.status as BookingStatus,
+        priceFinal: Number(booking.amount ?? 0),
+        createdAt: booking.startTime,
+        startTime: booking.startTime,
+      })),
+    [bookingsRes]
+  );
+
+  const wallet: VendorWallet = useMemo(
+    () => ({
+      balance: walletSummaryRes?.data.availableBalance ?? 0,
+      currency: walletSummaryRes?.data.currency ?? "INR",
+    }),
+    [walletSummaryRes]
+  );
+
+  const services = useMemo(
+    () => ({
+      active: vendorProfile.activeServices,
+      categories: vendorProfile.serviceCategories,
+    }),
+    [vendorProfile.activeServices, vendorProfile.serviceCategories]
+  );
+
+  const payoutsMeta = useMemo(() => {
+    const pendingRequests = (walletSummaryRes?.data.pendingPayoutBalance ?? 0) > 0 ? 1 : 0;
+    const latestPayoutTx = (walletTransactionsRes?.data ?? []).find(
+      (tx) => tx.direction === "DEBIT" && tx.status === "CONFIRMED"
+    );
+
+    const lastPayoutDaysAgo = latestPayoutTx
+      ? Math.max(
+          0,
+          Math.floor(
+            (today.getTime() - new Date(latestPayoutTx.createdAt).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        )
+      : 0;
+
+    return { pendingRequests, lastPayoutDaysAgo };
+  }, [walletSummaryRes, walletTransactionsRes]);
+
   const planExpired =
     !leadSubscription ||
     leadSubscription.status === "EXPIRED" ||
@@ -307,6 +350,12 @@ const VendorDashboard = () => {
       (leadSubscription?.leadsToday || 0),
     0
   );
+  const leadUsagePercentage =
+    leadSubscription.plan.leadsPerDay > 0
+      ? Math.round(
+          (leadSubscription.leadsToday / leadSubscription.plan.leadsPerDay) * 100
+        )
+      : 0;
 
   const bookingsToday = bookings.filter((booking) =>
     isSameDay(new Date(booking.createdAt), today)
@@ -325,7 +374,15 @@ const VendorDashboard = () => {
     })
     .reduce((sum, booking) => sum + booking.priceFinal, 0);
 
-  const revenueLastMonth = 42000;
+  const previousMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const revenueLastMonth = bookings
+    .filter((booking) => {
+      const created = new Date(booking.createdAt);
+      const validStatus =
+        booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
+      return validStatus && isSameMonth(created, previousMonthDate);
+    })
+    .reduce((sum, booking) => sum + booking.priceFinal, 0);
   const revenueVsLast =
     revenueLastMonth > 0
       ? Math.round(
@@ -344,7 +401,10 @@ const VendorDashboard = () => {
     ? Math.round((convertedLast7 / leadsLast7.length) * 100)
     : 0;
 
-  const profileScore = useMemo(() => calculateProfileScore(vendorProfile), []);
+  const profileScore = useMemo(
+    () => calculateProfileScore(vendorProfile),
+    [vendorProfile]
+  );
 
   const pipelineCounts = vendorLeads.reduce<Record<LeadStatus, number>>(
     (acc, lead) => {
@@ -362,7 +422,7 @@ const VendorDashboard = () => {
       refundRequested: bookings.filter((b) => b.status === "REFUND_REQUESTED")
         .length,
     }),
-    []
+    [bookings]
   );
 
   const alerts: Alert[] = [];
@@ -878,25 +938,13 @@ const VendorDashboard = () => {
                   <li>
                     <div className="flex items-center justify-between text-[11px] text-slate-600">
                       <span>Usage</span>
-                      <span>
-                        {Math.round(
-                          (leadSubscription.leadsToday /
-                            leadSubscription.plan.leadsPerDay) *
-                            100
-                        )}
-                        %
-                      </span>
+                      <span>{leadUsagePercentage}%</span>
                     </div>
                     <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white">
                       <div
                         className="h-1.5 rounded-full bg-blue-500"
                         style={{
-                          width: `${Math.min(
-                            (leadSubscription.leadsToday /
-                              leadSubscription.plan.leadsPerDay) *
-                              100,
-                            100
-                          )}%`,
+                          width: `${Math.min(leadUsagePercentage, 100)}%`,
                         }}
                       />
                     </div>

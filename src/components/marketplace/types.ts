@@ -15,5 +15,7 @@ export type Service = {
   image: string
   images?: string[]
   slug: string
+  categoryName: string
+  categoryId: string
   details: ServiceDetail[]
 }

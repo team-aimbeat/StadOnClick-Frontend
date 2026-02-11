@@ -22,7 +22,13 @@ export const serviceMediaApi = createApi({
         `/vendor/media/service/${serviceId}`,
 
       transformResponse: (response: any) => {
-        const media = response.media ?? response.data ?? [];
+        const media = Array.isArray(response?.media)
+          ? response.media
+          : Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response?.data?.data)
+              ? response.data.data
+              : [];
 
         return media.sort(
           (a: any, b: any) => a.sortOrder - b.sortOrder
@@ -75,6 +81,7 @@ export const serviceMediaApi = createApi({
 
 export const {
   useGetServiceMediaQuery,
+  useLazyGetServiceMediaQuery,
   useUploadServiceMediaMutation,
   useDeleteServiceMediaMutation,
 } = serviceMediaApi;

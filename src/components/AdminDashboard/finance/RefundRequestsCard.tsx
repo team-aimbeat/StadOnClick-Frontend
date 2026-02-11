@@ -14,8 +14,19 @@ const refundRequests = [
   },
 ];
 
-const RefundRequestsCard = () => {
-  const hasItems = refundRequests.length > 0;
+type RefundRequestItem = {
+  bookingId: string;
+  user: string;
+  amount: string;
+  reason: string;
+};
+
+type RefundRequestsCardProps = {
+  items?: RefundRequestItem[];
+};
+
+const RefundRequestsCard = ({ items = refundRequests }: RefundRequestsCardProps) => {
+  const hasItems = items.length > 0;
 
   return (
     <AdminCardShell title="Refund Requests" subtitle="Finance queue">
@@ -33,7 +44,7 @@ const RefundRequestsCard = () => {
         ]}
       >
         {hasItems ? (
-          refundRequests.map((request) => (
+          items.map((request) => (
             <AdminTableRow key={request.bookingId}>
               <AdminTableCell>
                 <div className="flex flex-col gap-1">

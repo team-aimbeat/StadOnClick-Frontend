@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import bannerImage from "@/assets/images/bgsalon.jpg"
 import { ChevronDown } from "lucide-react"
+import { slugifyServiceTitle } from "@/utils/slugify"
 import { Service } from "./types"
 import ServicesSidebar from "./ServicesSidebar"
 import EnquiryModal from "./enquiry/EnquiryModal"
@@ -17,14 +18,6 @@ const PAGE_SIZE = 18
 const PRICE_MIN = 0
 const PRICE_MAX = 500
 const DEFAULT_RATING_FILTER = 4.5
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
 
 const formatMoney = (amount: number, currency: string) => {
   try {
@@ -47,16 +40,18 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
       ? [service.thumbnailUrl]
       : []
 
-  return {
-    id: service.id,
-    title: service.vendorName || service.title,
-    location: service.cityName ?? "—",
-    rating: service.ratingAvg,
-    reviews: service.ratingCount,
-    image: images[0] ?? bannerImage,
-    images,
-    slug: slugify(service.title),
-    details: (service.offeringsPreview ?? []).map((offering) => ({
+    return {
+      id: service.id,
+      title: service.vendorName || service.title,
+      location: service.cityName ?? "—",
+      rating: service.ratingAvg,
+      reviews: service.ratingCount,
+      image: images[0] ?? bannerImage,
+      images,
+      slug: slugifyServiceTitle(service.title),
+      categoryName: service.categoryName ?? "—",
+      categoryId: service.categoryId,
+      details: (service.offeringsPreview ?? []).map((offering) => ({
       title: offering.name,
       subtitle: offering.description ?? undefined,
       duration: offering.durationLabel ?? undefined,
@@ -91,6 +86,7 @@ export default function ServicesExplorer({
   stats,
 }: ServicesExplorerProps = {}) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [enquiryService, setEnquiryService] = useState<Service | null>(null)
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
@@ -106,6 +102,7 @@ export default function ServicesExplorer({
   const [triggerList, listState] = useLazyListMarketplaceServicesQuery()
   const [marketplaceRows, setMarketplaceRows] = useState<MarketplaceService[]>([])
   const [marketplaceTotal, setMarketplaceTotal] = useState<number | undefined>(undefined)
+  const didHydrateCategoryFromQueryRef = useRef(false)
 
   const requestIdRef = useRef(0)
   const inFlightRef = useRef(false)
@@ -261,6 +258,39 @@ export default function ServicesExplorer({
     [cities, cityCounts],
   )
 
+  const requestedCategoryTokens = useMemo(() => {
+    const rawCategory = searchParams.get("category")
+    const rawCategoryIds = searchParams.get("categoryIds")
+    const merged = [rawCategory, rawCategoryIds].filter(Boolean).join(",")
+    return merged
+      .split(",")
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+  }, [searchParams])
+
+  useEffect(() => {
+    if (didHydrateCategoryFromQueryRef.current) return
+    if (!requestedCategoryTokens.length) {
+      didHydrateCategoryFromQueryRef.current = true
+      return
+    }
+    if (!serviceCategories.length) return
+
+    const selectedIds = serviceCategories
+      .filter((category) => {
+        const id = category.id.toLowerCase()
+        const slug = category.slug.toLowerCase()
+        return requestedCategoryTokens.includes(id) || requestedCategoryTokens.includes(slug)
+      })
+      .map((category) => category.id)
+
+    if (selectedIds.length) {
+      setSelectedCategoryIds(selectedIds)
+    }
+
+    didHydrateCategoryFromQueryRef.current = true
+  }, [requestedCategoryTokens, serviceCategories])
+
   const effectiveHeaderDescription =
     providedServices == null && marketplaceTotal != null
       ? `Explore and book local services Â· ${marketplaceTotal} results`
@@ -359,7 +389,7 @@ export default function ServicesExplorer({
               <ServiceCard
                 key={service.id}
                 service={service}
-                onViewDetails={(item) => navigate(`/services/${item.slug}`)}
+                onViewDetails={(item) => navigate(`/service/${item.id}`)}
                 onEnquiry={(item) => setEnquiryService(item)}
               />
             ))}
