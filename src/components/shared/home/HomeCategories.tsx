@@ -5,6 +5,7 @@ import family from "@/assets/Images/family.jpg"
 import food from "@/assets/Images/food.jpg"
 import travel from "@/assets/Images/travel.jpg"
 import wellness from "@/assets/Images/wellness.jpg"
+import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton"
 
 type CategoryCard = {
   category: string
@@ -94,10 +95,13 @@ export default function HomeCategories() {
             }}
             >
               <div className="relative h-40">
-                <img
+                <ImageWithSkeleton
                   src={card.image}
                   alt={card.title}
+                  containerClassName="h-full w-full"
                   className="h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
                   {card.category}
@@ -106,10 +110,14 @@ export default function HomeCategories() {
 
               <div className="p-3">
                 <div className="flex items-center gap-2">
-                  <img
+                  <ImageWithSkeleton
                     src={card.image}
                     alt={card.author}
+                    containerClassName="h-6 w-6 rounded-full"
+                    skeletonClassName="rounded-full"
                     className="h-6 w-6 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <p className="text-[11px] font-semibold text-slate-700">
                     {card.author}

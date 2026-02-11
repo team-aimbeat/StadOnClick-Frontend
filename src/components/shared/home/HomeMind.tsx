@@ -6,6 +6,7 @@ import salon from "@/assets/Images/mind5.jpg"
 import event from "@/assets/Images/mind6.jpg"
 import family from "@/assets/Images/family.jpg"
 import { useNavigate } from "react-router-dom"
+import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton"
 
 const mindItems = [
   { name: "Massage & Spa Services", image: spa, slug: "massage-spa-services" },
@@ -42,10 +43,14 @@ export default function HomeMind() {
                            shadow-md transition-transform duration-300
                            group-hover:scale-105"
               >
-                <img
+                <ImageWithSkeleton
                   src={item.image}
                   alt={item.name}
+                  containerClassName="h-full w-full rounded-full"
+                  skeletonClassName="rounded-full"
                   className="h-full w-full rounded-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <p className="mt-3 text-[17px] font-semibold text-black">
