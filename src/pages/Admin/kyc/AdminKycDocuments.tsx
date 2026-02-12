@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { HiClipboardDocumentList, HiEnvelopeOpen, HiXMark } from "react-icons/hi2";
+import { HiClipboardDocumentList, HiXMark } from "react-icons/hi2";
 import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 type AdminVendor = {
   id: string;
   name: string;
+  profileImageKey?: string | null;
   avatar?: string | null;
 };
 
@@ -175,7 +176,7 @@ const AdminKycDocumentsPage = () => {
         <div className="flex items-center gap-3">
           <img
             src={row.avatar || "/avatar-placeholder.png"}
-            className="h-8 w-8 rounded-full border"
+            className="h-10 w-10   rounded-full border"
           />
           <span className="font-medium">{row.vendor}</span>
         </div>
@@ -324,7 +325,7 @@ const AdminKycDocumentsPage = () => {
           {/* Header */}
           <div className="flex items-center gap-3">
             <img
-              src={activeDoc.avatar}
+              src={activeDoc.avatar || "/avatar-placeholder.png"}
               className="h-12 w-12 rounded-full border"
             />
             <div>

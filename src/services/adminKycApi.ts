@@ -6,6 +6,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 type AdminVendor = {
   id: string;
   name: string;
+  profileImageKey?: string | null;
   avatar?: string | null;
 };
 
