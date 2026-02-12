@@ -24,9 +24,13 @@ export type AdminKycAuditLog = {
     id: string;
     type: string;
     vendor: {
-      user: any;
+      user: {
+        firstName?: string | null;
+        lastName?: string | null;
+        profileImageKey?: string | null;
+        profileImageUrl?: string | null;
+      };
       id: string;
-      firstName: string;
     };
   };
 };

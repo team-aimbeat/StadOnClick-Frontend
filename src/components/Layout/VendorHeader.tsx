@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Bell,
+  ChevronRight,
   Info,
   Laptop,
   Lock,
@@ -69,9 +70,35 @@ const VendorHeader = () => {
   const navigate = useNavigate();
   const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
 
-    const { data } = useGetMeQuery();
-    const user = data?.user;
-        const avatar=  user?.profileImageUrl ?? profile7;
+  const { data } = useGetMeQuery();
+  const user = data?.user;
+  const avatar = user?.profileImageUrl ?? profile7;
+  const accountName =
+    `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || user?.email || "Vendor";
+
+  const managedAccounts = useMemo(
+    () => [
+      {
+        key: "VENDOR",
+        label: "Vendor",
+        email: user?.email ?? "—",
+        to: "/vendor/dashboard",
+        active: location.pathname.startsWith("/vendor"),
+      },
+      ...((user?.roles ?? []).includes("AFFILIATE")
+        ? [
+            {
+              key: "AFFILIATE",
+              label: "Affiliate",
+              email: user?.email ?? "—",
+              to: "/affiliate/dashboard",
+              active: location.pathname.startsWith("/affiliate"),
+            },
+          ]
+        : []),
+    ],
+    [location.pathname, user?.email, user?.roles],
+  );
 
   useEffect(() => {
     const selector = document.querySelector<HTMLAnchorElement>(
@@ -488,13 +515,13 @@ const VendorHeader = () => {
               btnClassName="group relative rounded-full border border-gray-200/80 bg-white p-0.5 shadow-sm transition hover:border-primary/40 dark:border-gray-700 dark:bg-gray-900/80"
               button={
                 <img
-                  className="h-9 w-9 rounded-full object-cover saturate-50 transition group-hover:saturate-100"
+                  className="h-12 w-12 rounded-full object-cover saturate-50 transition group-hover:saturate-100"
                   src={avatar}
                   alt="User avatar"
                 />
               }
             >
-               <ul className="w-[230px] font-semibold text-dark dark:text-white-light/90">
+               <ul className="w-[280px] font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img
@@ -504,7 +531,7 @@ const VendorHeader = () => {
                     />
                     <div className="ltr:pl-4 rtl:pr-4 truncate">
                       <h4 className="text-base">
-                        John Doe
+                        {accountName}
                         <span className="ltr:ml-2 rtl:ml-2 rounded bg-success-light px-1 text-xs text-success">
                           Vendor
                         </span>
@@ -513,9 +540,44 @@ const VendorHeader = () => {
                         type="button"
                         className="text-sm text-black/60 transition hover:text-primary dark:text-dark-light/60 dark:hover:text-white"
                       >
-                        johndoe@gmail.com
+                        {user?.email ?? "—"}
                       </button>
                     </div>
+                  </div>
+                </li>
+
+                <li className="border-t border-white-light px-4 py-3 dark:border-white-light/10">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/account")}
+                    className="text-[11px] uppercase tracking-widest text-slate-400 transition hover:text-slate-700"
+                  >
+                    Manage Accounts
+                  </button>
+                  <div className="mt-2 space-y-1">
+                    {managedAccounts.map((account) => (
+                      <button
+                        key={account.key}
+                        type="button"
+                        onClick={() => navigate(account.to)}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition ${
+                          account.active ? "bg-sky-50" : "hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sm font-semibold text-blue-700">
+                          {account.label[0]}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-slate-900">
+                            {account.label}
+                          </span>
+                          <span className="block truncate text-xs font-medium text-slate-500">
+                            {account.email}
+                          </span>
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                      </button>
+                    ))}
                   </div>
                 </li>
 
