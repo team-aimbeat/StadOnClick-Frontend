@@ -7,7 +7,7 @@ import {
   Share2,
   Star,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import salon1 from "@/assets/images/salon1.png";
 import salon2 from "@/assets/images/salon2.png";
@@ -37,6 +37,7 @@ import {
 } from "@/services/serviceReviewsApi";
 import { useApplyCouponMutation } from "@/services/vendorOrdersApi";
 import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
+import { useCreateAffiliateServiceLinkMutation } from "@/features/affiliate/api/affiliateApi";
 import { Button } from "@/components/ui/button";
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge";
@@ -98,16 +99,21 @@ type CartItem = {
 
 export default function ServiceDetail() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { serviceId: serviceIdParam, serviceSlug } = useParams<{
     serviceId?: string;
     serviceSlug?: string;
   }>();
-  const userId = useAppSelector((state) => state.auth.user?.id);
+  const authUser = useAppSelector((state) => state.auth.user);
+  const userId = authUser?.id;
+  const isAffiliate = (authUser?.roles ?? []).includes("AFFILIATE");
 
   const [createCheckoutSession, { isLoading: isCreatingSession }] =
     useCreateCheckoutSessionMutation();
   const [applyCoupon, { isLoading: isApplyingCoupon }] =
     useApplyCouponMutation();
+  const [createAffiliateServiceLink, { data: affiliateLinkRes, isLoading: isGeneratingAffiliateLink }] =
+    useCreateAffiliateServiceLinkMutation();
 
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
@@ -159,10 +165,12 @@ export default function ServiceDetail() {
   const slugSearchQuery = serviceSlug
     ? slugToSearchQuery(serviceSlug)
     : undefined;
+  const affiliateRef = (searchParams.get("ref") ?? "").trim() || undefined;
+  const referralCodeForCheckout = affiliateRef || undefined;
   const marketplaceParams = serviceIdParam
-    ? { serviceId: serviceIdParam, limit: 12, offset: 0 }
+    ? { serviceId: serviceIdParam, ref: affiliateRef, limit: 12, offset: 0 }
     : slugSearchQuery
-      ? { q: slugSearchQuery, limit: 12, offset: 0 }
+      ? { q: slugSearchQuery, ref: affiliateRef, limit: 12, offset: 0 }
       : undefined;
 
   const skipMarketplace = !serviceIdParam && !serviceSlug;
@@ -370,6 +378,7 @@ export default function ServiceDetail() {
           slotId: item.slotId ?? undefined,
         })),
         promoCode: appliedCoupon?.code || undefined,
+        referralCode: referralCodeForCheckout,
       }).unwrap();
 
       if (typeof window !== "undefined") {
@@ -397,10 +406,9 @@ export default function ServiceDetail() {
       }
     } catch (error: any) {
       console.error("Failed to create checkout session:", error);
+      const serverMessage = error?.data?.message || error?.error;
       toast.error(
-        error?.data?.message ||
-          error?.error ||
-          "Failed to start checkout. Please try again.",
+        serverMessage || "Failed to start checkout. Please try again.",
       );
     }
   };
@@ -606,6 +614,52 @@ export default function ServiceDetail() {
                   </span>
                 )}
               </div>
+
+              {isAffiliate && (
+                <div className="w-full max-w-[520px] rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-blue-900">
+                      Affiliate link for this service
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        if (!service.id) return;
+                        try {
+                          await createAffiliateServiceLink({ serviceId: service.id }).unwrap();
+                        } catch (error: any) {
+                          toast.error(error?.data?.message || "Unable to generate affiliate link.");
+                        }
+                      }}
+                      disabled={isGeneratingAffiliateLink}
+                      className="ml-auto"
+                    >
+                      {isGeneratingAffiliateLink ? "Generating..." : "Generate Link"}
+                    </Button>
+                  </div>
+
+                  {affiliateLinkRes?.data?.url ? (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs text-blue-800">Referral code</p>
+                      <p className="text-sm font-semibold text-blue-900">{affiliateLinkRes.data.code}</p>
+                      <p className="text-xs text-blue-800">Shareable link</p>
+                      <div className="rounded-lg border border-blue-200 bg-white p-2 text-xs font-mono break-all text-slate-700">
+                        {affiliateLinkRes.data.url}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(affiliateLinkRes.data.url);
+                          toast.success("Affiliate link copied");
+                        }}
+                      >
+                        Copy Link
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </div>
 
             {/* <div className="space-y-5 rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm">

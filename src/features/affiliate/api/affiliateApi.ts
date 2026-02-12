@@ -91,6 +91,41 @@ export type AffiliateCommissionsResponse = {
   };
 };
 
+export type AffiliateServiceLinkResponse = {
+  success: boolean;
+  data: {
+    linkId: string;
+    affiliateId: string;
+    serviceId: string;
+    code: string;
+    isActive: boolean;
+    url: string;
+    createdAt: string;
+  };
+};
+
+export type AffiliateStatsResponse = {
+  success: boolean;
+  data: {
+    affiliateId: string;
+    totals: {
+      clicks: number;
+      bookings: number;
+      earnings: number;
+    };
+    services: Array<{
+      linkId: string;
+      serviceId: string;
+      serviceTitle: string;
+      vendorName: string;
+      clicks: number;
+      bookings: number;
+      earnings: number;
+      link: string;
+    }>;
+  };
+};
+
 export const affiliateApi = createApi({
   reducerPath: "affiliateApi",
   baseQuery: baseQueryWithReauth,
@@ -132,6 +167,24 @@ export const affiliateApi = createApi({
       }),
       providesTags: ["AffiliateCommissions"],
     }),
+    createAffiliateServiceLink: builder.mutation<
+      AffiliateServiceLinkResponse,
+      { serviceId: string }
+    >({
+      query: (body) => ({
+        url: "/affiliate/links",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["AffiliateDashboard", "AffiliateReferrals", "AffiliateCommissions"],
+    }),
+    getAffiliateStats: builder.query<AffiliateStatsResponse, void>({
+      query: () => ({
+        url: "/affiliate/stats",
+        method: "GET",
+      }),
+      providesTags: ["AffiliateDashboard"],
+    }),
   }),
 });
 
@@ -140,4 +193,6 @@ export const {
   useGetAffiliateDashboardQuery,
   useGetAffiliateReferralsQuery,
   useGetAffiliateCommissionsQuery,
+  useCreateAffiliateServiceLinkMutation,
+  useGetAffiliateStatsQuery,
 } = affiliateApi;

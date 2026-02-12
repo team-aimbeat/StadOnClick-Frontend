@@ -79,14 +79,20 @@ import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import WeekendActivities from "@/pages/WeekendActivities";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
+import AffiliatePlaceholder from "@/pages/AffiliatePlaceholder";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
+import AffiliateLayout from "@/components/Layout/AffiliateLayout";
 import AppLayout from "@/components/Layout/AppLayout";
 
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
+);
+
+const affiliatePlaceholder = (title: string, description?: string) => (
+  <AffiliatePlaceholder title={title} description={description} />
 );
 
 const appRouter = createBrowserRouter([
@@ -161,8 +167,71 @@ const appRouter = createBrowserRouter([
             element: <AffiliateMarketing />,
           },
           {
-            path: "/affiliate/dashboard",
-            element: <AffiliateDashboard />,
+            path: "/affiliate",
+            element: <AffiliateLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "overview",
+                element: <AffiliateDashboard />,
+              },
+              {
+                path: "dashboard",
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "referrals",
+                element: affiliatePlaceholder(
+                  "Referrals",
+                  "Track users who signed up through your referral code and their status.",
+                ),
+              },
+              {
+                path: "vendors-referred",
+                element: affiliatePlaceholder(
+                  "Vendors Referred",
+                  "See vendors attributed to your referrals and their conversion progress.",
+                ),
+              },
+              {
+                path: "commission",
+                element: affiliatePlaceholder(
+                  "Commission",
+                  "Review earned, pending, and paid commission transactions.",
+                ),
+              },
+              {
+                path: "wallet",
+                element: affiliatePlaceholder(
+                  "Wallet",
+                  "View your affiliate wallet balance and transaction history.",
+                ),
+              },
+              {
+                path: "payouts",
+                element: affiliatePlaceholder(
+                  "Payouts",
+                  "Manage payout requests and track payout statuses.",
+                ),
+              },
+              {
+                path: "reports",
+                element: affiliatePlaceholder(
+                  "Reports",
+                  "Generate and export affiliate performance reports.",
+                ),
+              },
+              {
+                path: "profile-settings",
+                element: affiliatePlaceholder(
+                  "Profile Settings",
+                  "Manage your affiliate profile details and preferences.",
+                ),
+              },
+            ],
           },
   
           {

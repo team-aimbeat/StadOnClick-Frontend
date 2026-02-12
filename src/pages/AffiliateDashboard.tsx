@@ -5,7 +5,6 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { useAppSelector } from "@/app/hooks";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
-import { Button } from "@/components/ui/button";
 import {
   useGetAffiliateCommissionsQuery,
   useGetAffiliateDashboardQuery,
@@ -17,6 +16,20 @@ const currency = (value: number) =>
     value ?? 0,
   );
 
+const getStatusBadgeClasses = (status: string) => {
+  const normalized = status.toLowerCase();
+  if (normalized.includes("paid") || normalized.includes("approved") || normalized.includes("completed")) {
+    return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+  }
+  if (normalized.includes("pending") || normalized.includes("processing")) {
+    return "bg-amber-50 text-amber-700 ring-1 ring-amber-200";
+  }
+  if (normalized.includes("rejected") || normalized.includes("failed") || normalized.includes("cancelled")) {
+    return "bg-rose-50 text-rose-700 ring-1 ring-rose-200";
+  }
+  return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
+};
+
 export default function AffiliateDashboard() {
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -25,12 +38,15 @@ export default function AffiliateDashboard() {
 
   const { data: dashboardRes, isLoading: dashboardLoading } = useGetAffiliateDashboardQuery(undefined, {
     skip: !canViewAffiliateDashboard,
+    refetchOnMountOrArgChange: true,
   });
   const { data: referralsRes, isLoading: referralsLoading } = useGetAffiliateReferralsQuery({ page, limit }, {
     skip: !canViewAffiliateDashboard,
+    refetchOnMountOrArgChange: true,
   });
   const { data: commissionsRes } = useGetAffiliateCommissionsQuery({ page: 1, limit: 10 }, {
     skip: !canViewAffiliateDashboard,
+    refetchOnMountOrArgChange: true,
   });
 
   const dashboard = dashboardRes?.data;
@@ -59,98 +75,106 @@ export default function AffiliateDashboard() {
     return <div className="p-8">Loading affiliate dashboard...</div>;
   }
 
+  const statCards = [
+    {
+      label: "Total Referrals",
+      value: dashboard?.summary.totalReferrals ?? 0,
+      valueClassName: "text-slate-900",
+    },
+    {
+      label: "Active Referrals",
+      value: dashboard?.summary.activeReferrals ?? 0,
+      valueClassName: "text-slate-900",
+    },
+    {
+      label: "Total Commission Earned",
+      value: currency(dashboard?.summary.totalCommissionEarned ?? 0),
+      valueClassName: "text-slate-900",
+    },
+    {
+      label: "Pending Commission",
+      value: currency(dashboard?.summary.pendingCommission ?? 0),
+      valueClassName: "text-amber-700",
+    },
+  ];
+
   return (
-    <DashboardContainer className="space-y-6">
+    <DashboardContainer className="space-y-6 pb-6">
       <TitleBreadCrumbs title="Affiliate Dashboard" breadCrumbTitle="Affiliate / Dashboard" />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <p className="text-xs uppercase text-slate-500">Total Referrals</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{dashboard?.summary.totalReferrals ?? 0}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <p className="text-xs uppercase text-slate-500">Active Referrals</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{dashboard?.summary.activeReferrals ?? 0}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <p className="text-xs uppercase text-slate-500">Total Commission Earned</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">
-            {currency(dashboard?.summary.totalCommissionEarned ?? 0)}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <p className="text-xs uppercase text-slate-500">Pending Commission</p>
-          <p className="mt-2 text-2xl font-bold text-amber-700">{currency(dashboard?.summary.pendingCommission ?? 0)}</p>
-        </div>
+        {statCards.map((card) => (
+          <div
+            key={card.label}
+            className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50 p-5 shadow-sm"
+          >
+            <p className="text-xs uppercase tracking-wide text-slate-500">{card.label}</p>
+            <p className={`mt-2 text-3xl font-bold ${card.valueClassName}`}>{card.value}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Monthly Earnings</h2>
             <span className="text-xs text-slate-500">Commission from paid bookings</span>
           </div>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => currency(Number(value ?? 0))} />
-                <Bar dataKey="earnings" fill="#2563eb" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => currency(Number(value ?? 0))} />
+                  <Bar dataKey="earnings" fill="#0b59a2" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50">
+                <p className="text-sm text-slate-500">No earnings data yet.</p>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Referral Link</h2>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">Affiliate Code</h2>
           <p className="mt-3 text-sm text-slate-500">Referral code</p>
-          <p className="font-semibold text-slate-900">{dashboard?.affiliate.referralCode ?? "-"}</p>
-          <p className="mt-3 text-sm text-slate-500">Referral URL</p>
-          <div className="mt-1 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 break-all">
-            {dashboard?.affiliate.referralLink ?? "-"}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button
-              onClick={async () => {
-                if (!dashboard?.affiliate.referralLink) return;
-                await navigator.clipboard.writeText(dashboard.affiliate.referralLink);
-              }}
-            >
-              Copy Link
-            </Button>
-            <a
-              href={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-                dashboard?.affiliate.referralLink ?? "",
-              )}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
-            >
-              Open QR
-            </a>
-          </div>
+          <p className="font-semibold tracking-wide text-slate-900">{dashboard?.affiliate.referralCode ?? "-"}</p>
+          <p className="mt-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            Service-specific affiliate links are generated from each marketplace service page.
+          </p>
           <div className="mt-6 border-t border-slate-100 pt-4">
             <p className="text-sm text-slate-500">Recent commissions</p>
-            <ul className="mt-2 space-y-2 text-sm">
-              {(commissionsRes?.items ?? []).slice(0, 5).map((row) => (
-                <li key={row.id} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
-                  <span className="text-slate-700">{row.bookingId.slice(0, 8)}...</span>
-                  <span className="font-semibold text-slate-900">{currency(row.amount)}</span>
-                </li>
-              ))}
-            </ul>
+            {(commissionsRes?.items ?? []).length ? (
+              <ul className="mt-2 space-y-2 text-sm">
+                {(commissionsRes?.items ?? []).slice(0, 5).map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-2"
+                  >
+                    <span className="text-slate-700">{row.bookingId.slice(0, 8)}...</span>
+                    <span className="font-semibold text-slate-900">{currency(row.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="mt-2 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
+                No commissions yet.
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-slate-900">Referral Details</h2>
           <a
             href={exportHref}
-            className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+            className="inline-flex items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             target="_blank"
             rel="noreferrer"
           >
@@ -158,34 +182,42 @@ export default function AffiliateDashboard() {
           </a>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-slate-100">
           <table className="min-w-full text-sm">
-            <thead>
+            <thead className="bg-slate-50">
               <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-2 py-3">Referral</th>
-                <th className="px-2 py-3">Booking ID</th>
-                <th className="px-2 py-3">Date</th>
-                <th className="px-2 py-3">Amount</th>
-                <th className="px-2 py-3">Status</th>
+                <th className="px-3 py-3">Referral</th>
+                <th className="px-3 py-3">Booking ID</th>
+                <th className="px-3 py-3">Date</th>
+                <th className="px-3 py-3">Amount</th>
+                <th className="px-3 py-3">Status</th>
               </tr>
             </thead>
             <tbody>
-              {referrals.map((row) => (
-                <tr key={`${row.referralId}-${row.bookingId ?? "none"}`} className="border-b border-slate-100">
-                  <td className="px-2 py-3">
-                    <p className="font-semibold text-slate-900">{row.referredName}</p>
-                    <p className="text-xs text-slate-500">{row.referredEmail}</p>
-                  </td>
-                  <td className="px-2 py-3 text-slate-700">{row.bookingId ?? "-"}</td>
-                  <td className="px-2 py-3 text-slate-700">{new Date(row.date).toLocaleDateString()}</td>
-                  <td className="px-2 py-3 text-slate-900">{currency(row.amount)}</td>
-                  <td className="px-2 py-3">
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {row.status}
-                    </span>
+              {referrals.length ? (
+                referrals.map((row) => (
+                  <tr key={`${row.referralId}-${row.bookingId ?? "none"}`} className="border-b border-slate-100 hover:bg-slate-50/60">
+                    <td className="px-3 py-3">
+                      <p className="font-semibold text-slate-900">{row.referredName}</p>
+                      <p className="text-xs text-slate-500">{row.referredEmail}</p>
+                    </td>
+                    <td className="px-3 py-3 text-slate-700">{row.bookingId ?? "-"}</td>
+                    <td className="px-3 py-3 text-slate-700">{new Date(row.date).toLocaleDateString()}</td>
+                    <td className="px-3 py-3 text-slate-900">{currency(row.amount)}</td>
+                    <td className="px-3 py-3">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(row.status)}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-3 py-10 text-center text-sm text-slate-500">
+                    No referral activity yet.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -197,7 +229,7 @@ export default function AffiliateDashboard() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               disabled={!pagination || pagination.page <= 1}
             >
@@ -205,7 +237,7 @@ export default function AffiliateDashboard() {
             </button>
             <button
               type="button"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => setPage((prev) => prev + 1)}
               disabled={!pagination || pagination.page >= pagination.totalPages}
             >

@@ -48,6 +48,7 @@ export type ListMarketplaceServicesParams = {
   masterCategoryId?: string;
   categoryIds?: string[]; // sent as comma-separated list
   serviceId?: string;
+  ref?: string;
   cityId?: string;
   cityIds?: string[]; // sent as comma-separated list (preferred when multiple)
   q?: string;
