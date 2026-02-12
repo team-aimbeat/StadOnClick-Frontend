@@ -24,7 +24,7 @@ export default function HomeSightseeing() {
             <img
               src={sight2}
               alt="City drive"
-              className="h-[250px] w-full object-cover"
+              className="h-62.5 w-full object-cover"
             />
             <div className="absolute inset-0 bg-slate-900/40" />
             <p className="absolute bottom-3 left-3 text-[16px] font-semibold text-white">
@@ -54,7 +54,7 @@ export default function HomeSightseeing() {
           <img
             src={sight5}
             alt="Main scenic view"
-            className="h-full min-h-[380px] w-full object-cover "
+            className="h-full min-h-95 w-full object-cover "
           />
         </div>
 
@@ -64,7 +64,7 @@ export default function HomeSightseeing() {
             <img
               src={sight4}
               alt="Traveler"
-              className="h-[250px] w-full object-cover"
+              className="h-62.5 w-full object-cover"
             />
           </div>
 
@@ -80,13 +80,13 @@ export default function HomeSightseeing() {
           </div>
 
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-slate-800">
+            <p className="text-base font-semibold text-slate-800">
               The automotive user experience is being redefined.
             </p>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-[14px] text-slate-500">
               Enjoy curated places with real-time updates and simpler planning.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-500">
+            <div className="mt-4 flex items-center gap-2 text-[12px] text-slate-500">
               <span className="rounded-full bg-slate-100 px-2 py-1">
                 Need help
               </span>
