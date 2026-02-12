@@ -110,6 +110,8 @@ type AdminBookingRow = RowData & {
   orderNumber: string;
   customerName: string;
   customerEmail: string;
+  customerProfileImageUrl?: string | null;
+  customerProfileImageKey?: string | null;
   vendorName: string;
   vendorStatus: string;
   serviceTitle: string;
@@ -216,6 +218,8 @@ export default function AdminBookingsPage({
         orderNumber: item.orderItem?.orderNumber ?? item.id,
         customerName: nameParts || "—",
         customerEmail: item.user?.email ?? "—",
+        customerProfileImageUrl: item.user?.profileImageUrl ?? null,
+        customerProfileImageKey: item.user?.profileImageKey ?? null,
         vendorName: item.vendorProfile?.businessName ?? "—",
         vendorStatus: item.vendorProfile?.status ?? "—",
         serviceTitle: item.vendorService?.title ?? "—",
@@ -299,9 +303,16 @@ export default function AdminBookingsPage({
         render: (_: string, row: RowData) => {
           const booking = row as AdminBookingRow;
           return (
-            <div className="flex flex-col">
-              <span className="font-semibold text-slate-900">{booking.customerName}</span>
-              <span className="text-xs font-medium text-slate-500">{booking.customerEmail}</span>
+            <div className="flex items-center gap-3">
+              <img
+                src={booking.customerProfileImageUrl || booking.customerProfileImageKey || "/avatar-placeholder.png"}
+                alt={booking.customerName}
+                className="h-10 w-10 rounded-full border object-cover"
+              />
+              <div className="flex flex-col">
+                <span className="font-semibold text-slate-900">{booking.customerName}</span>
+                <span className="text-xs font-medium text-slate-500">{booking.customerEmail}</span>
+              </div>
             </div>
           );
         },
@@ -661,3 +672,7 @@ export default function AdminBookingsPage({
     />
   );
 }
+
+
+
+

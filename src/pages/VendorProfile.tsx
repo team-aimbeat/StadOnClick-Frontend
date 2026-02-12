@@ -10,10 +10,11 @@ import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { setUser } from "@/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { authApi } from "@/features/auth/api/authApi";
+import { authApi, useRefreshMutation } from "@/features/auth/api/authApi";
 import { useMockLoader } from "@/lib/useMockLoader";
 import {
   useCreateVendorBusinessProfileMutation,
+  useEnsureVendorBusinessOnboardingMutation,
   useGetVendorProfileQuery,
   useUpdateVendorProfileMutation,
 } from "@/features/vendorProfile/api/vendorProfileApi";
@@ -34,10 +35,22 @@ const VendorProfile = () => {
   const location = useLocation();
   const [activeSection, setActiveSection] = useState("info");
   const loading = useMockLoader();
+  const isBusinessOnboardingRoute = location.pathname === "/business/onboarding";
+  const isVendorUser = (authUser?.roles ?? []).includes("VENDOR");
+  const shouldSkipVendorProfileQuery = isBusinessOnboardingRoute && !isVendorUser;
 
-  const { data: profileData, isLoading: isLoadingProfile, error: profileError } = useGetVendorProfileQuery();
+  const {
+    data: profileData,
+    isLoading: isLoadingProfile,
+    error: profileError,
+    refetch,
+  } = useGetVendorProfileQuery(undefined, { skip: shouldSkipVendorProfileQuery });
   const [updateProfile, { isLoading: isUpdating }] = useUpdateVendorProfileMutation();
   const [createBusinessProfile, { isLoading: isCreating }] = useCreateVendorBusinessProfileMutation();
+  const [refreshSession] = useRefreshMutation();
+  const [ensureBusinessOnboarding, { isLoading: isEnsuringOnboarding }] =
+    useEnsureVendorBusinessOnboardingMutation();
+  const [hasTriggeredEnsure, setHasTriggeredEnsure] = useState(false);
 
   const [businessName, setBusinessName] = useState("");
   const [cityId, setCityId] = useState("");
@@ -79,6 +92,35 @@ const VendorProfile = () => {
   useEffect(() => {
     dispatch(setPageTitle("Business Profile"));
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!isBusinessOnboardingRoute || !authUser || hasTriggeredEnsure || profileData?.data) {
+      return;
+    }
+
+    setHasTriggeredEnsure(true);
+
+    (async () => {
+      try {
+        await ensureBusinessOnboarding().unwrap();
+        await refreshSession().unwrap();
+        dispatch(authApi.util.invalidateTags(["User"]));
+      } catch (error: any) {
+        console.error("Failed to initialize business onboarding:", error);
+        toast.error(error?.data?.message || error?.data?.error || "Failed to initialize onboarding", {
+          id: "vendor-onboarding-init-failed",
+        });
+      }
+    })();
+  }, [
+    authUser,
+    dispatch,
+    ensureBusinessOnboarding,
+    refreshSession,
+    hasTriggeredEnsure,
+    isBusinessOnboardingRoute,
+    profileData?.data,
+  ]);
 
   const validateBusinessHour = (slot: BusinessHour) =>
     (slot.day?.trim().length ?? 0) >= 2 && (slot.value?.trim().length ?? 0) >= 2;
@@ -152,20 +194,28 @@ const VendorProfile = () => {
 
       setInvalidHours([]);
       dispatch(authApi.util.invalidateTags(["User"]));
-      if (authUser) {
-        dispatch(
-          setUser({
-            ...authUser,
-            nextAction: null,
-            vendorAccess: authUser.vendorAccess
-              ? { ...authUser.vendorAccess, setupRequired: false }
-              : authUser.vendorAccess,
-          }),
-        );
+      try {
+        await refreshSession().unwrap();
+      } catch {
+        // continue; we'll still try /auth/me below
       }
 
-      if (isSetupMode || location.pathname.includes("/business-profile/setup")) {
-        navigate("/vendor/dashboard", { replace: true });
+      let me: { user?: { roles?: string[] } } | null = null;
+      try {
+        me = await dispatch(
+          authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true }),
+        ).unwrap();
+      } catch {
+        me = null;
+      }
+
+      if (me?.user) {
+        dispatch(setUser(me.user as any));
+      }
+
+      if (isSetupMode || location.pathname.includes("/business-profile/setup") || isBusinessOnboardingRoute) {
+        const isVendorAfterSave = (me?.user?.roles ?? []).includes("VENDOR");
+        navigate(isVendorAfterSave ? "/vendor/dashboard" : "/business/onboarding", { replace: true });
       }
     } catch (error: any) {
       console.error("Failed to save profile:", error);
@@ -192,7 +242,7 @@ const VendorProfile = () => {
     ];
   }, [profileData]);
 
-  if (loading || isLoadingProfile) {
+  if (loading || isLoadingProfile || isEnsuringOnboarding) {
     return (
       <DashboardContainer className="py-10">
         <div className="animate-pulse space-y-8">

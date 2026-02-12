@@ -45,8 +45,14 @@ export function AuthBootstrap({ children }: PropsWithChildren) {
       }
 
       const isVendor = (user.roles ?? []).includes("VENDOR");
-      if (isVendor && user.nextAction && path.startsWith("/vendor") && path !== user.nextAction) {
-        navigate(user.nextAction, { replace: true });
+      const nextAction = user.nextAction;
+      const shouldForceVendorSetup =
+        isVendor &&
+        !!nextAction &&
+        path !== nextAction &&
+        (path.startsWith("/vendor") || nextAction === "/business/onboarding");
+      if (shouldForceVendorSetup && nextAction) {
+        navigate(nextAction, { replace: true });
         return;
       }
 

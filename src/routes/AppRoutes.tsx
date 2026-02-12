@@ -76,14 +76,23 @@ import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPla
 import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
-import AppLayout from "@/components/layout/AppLayout";
 import WeekendActivities from "@/pages/WeekendActivities";
-import AdminLayout from "@/components/layout/AdminLayout";
-import VendorLayout from "@/components/layout/VendorLayout";
+import AffiliateMarketing from "@/pages/AffiliateMarketing";
+import AffiliateDashboard from "@/pages/AffiliateDashboard";
+import AffiliatePlaceholder from "@/pages/AffiliatePlaceholder";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import VendorLayout from "@/components/Layout/VendorLayout";
+import AffiliateLayout from "@/components/Layout/AffiliateLayout";
+import AppLayout from "@/components/Layout/AppLayout";
+
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
+);
+
+const affiliatePlaceholder = (title: string, description?: string) => (
+  <AffiliatePlaceholder title={title} description={description} />
 );
 
 const appRouter = createBrowserRouter([
@@ -127,6 +136,11 @@ const appRouter = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: "/business/onboarding",
+            element: <VendorProfile />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: "/marketplace",
             element: <Marketplace />,
             errorElement: <ErrorPage />,
@@ -148,7 +162,78 @@ const appRouter = createBrowserRouter([
             path: "/about",
             element: <About />,
           },
-
+          {
+            path: "/affiliate-marketing",
+            element: <AffiliateMarketing />,
+          },
+          {
+            path: "/affiliate",
+            element: <AffiliateLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "overview",
+                element: <AffiliateDashboard />,
+              },
+              {
+                path: "dashboard",
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "referrals",
+                element: affiliatePlaceholder(
+                  "Referrals",
+                  "Track users who signed up through your referral code and their status.",
+                ),
+              },
+              {
+                path: "vendors-referred",
+                element: affiliatePlaceholder(
+                  "Vendors Referred",
+                  "See vendors attributed to your referrals and their conversion progress.",
+                ),
+              },
+              {
+                path: "commission",
+                element: affiliatePlaceholder(
+                  "Commission",
+                  "Review earned, pending, and paid commission transactions.",
+                ),
+              },
+              {
+                path: "wallet",
+                element: affiliatePlaceholder(
+                  "Wallet",
+                  "View your affiliate wallet balance and transaction history.",
+                ),
+              },
+              {
+                path: "payouts",
+                element: affiliatePlaceholder(
+                  "Payouts",
+                  "Manage payout requests and track payout statuses.",
+                ),
+              },
+              {
+                path: "reports",
+                element: affiliatePlaceholder(
+                  "Reports",
+                  "Generate and export affiliate performance reports.",
+                ),
+              },
+              {
+                path: "profile-settings",
+                element: affiliatePlaceholder(
+                  "Profile Settings",
+                  "Manage your affiliate profile details and preferences.",
+                ),
+              },
+            ],
+          },
+  
           {
             path: "/service/:serviceId",
             element: <ServiceDetail />,
@@ -458,7 +543,7 @@ const appRouter = createBrowserRouter([
           },
           { path: "bookings/:bookingId", element: <VendorBookingDetail /> },
           { path: "profile", element: <VendorProfile /> },
-          { path: "business-profile/setup", element: <VendorProfile /> },
+          { path: "business-profile/setup", element: <Navigate to="/business/onboarding" replace /> },
           { path: "services", element: <VendorServices /> },
           {
             path: "services/:serviceId/options",

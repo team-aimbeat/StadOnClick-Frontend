@@ -6,6 +6,11 @@ export interface ServiceReview {
   rating: number;
   comment: string;
   createdAt: string;
+  user?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    nickName?: string | null;
+  } | null;
 }
 
 export const serviceReviewsApi = createApi({

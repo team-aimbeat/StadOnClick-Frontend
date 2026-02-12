@@ -48,7 +48,6 @@ type Props = {
   citiesLoading?: boolean
   marketingConsent: boolean
   termsAccepted: boolean
-  role?: string
   setValue: <T extends string | boolean>(field: string, value: T, opts?: { shouldValidate?: boolean }) => void
   errors: FieldErrors
   onBack?: () => void
@@ -73,7 +72,6 @@ function StepProfileComponent({
   citiesLoading = false,
   marketingConsent,
   termsAccepted,
-  role,
   setValue,
   errors,
   onBack,
@@ -262,11 +260,10 @@ function StepProfileComponent({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div>
-          <Label className="mb-1 inline-block">Role</Label>
+          <Label className="mb-1 inline-block">Account Type</Label>
           <Input
             className="h-10 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-[#3289FF]/40"
-            value={role === "VENDOR" ? "Vendor" : role === "USER" ? "User" : ""}
-            placeholder="Select role in previous step"
+            value="User"
             disabled
           />
         </div>
@@ -504,7 +501,6 @@ function StepProfileComponent({
         <Button
           className="h-[52px] w-full sm:w-auto rounded-[10px] bg-[#3B82F6] px-6 text-white"
           disabled={
-            !role ||
             !firstName ||
             !email ||
             !cityId ||

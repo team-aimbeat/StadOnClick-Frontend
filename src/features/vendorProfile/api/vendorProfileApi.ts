@@ -95,6 +95,16 @@ export interface CreateVendorBusinessProfileResponse {
   };
 }
 
+export interface EnsureVendorBusinessOnboardingResponse {
+  success: boolean;
+  isVendor: boolean;
+  hasVendorProfile: boolean;
+  vendorId: string | null;
+  isBusinessProfileComplete: boolean;
+  lifecycleStatus: "DRAFT" | "ACTIVE" | "SUSPENDED";
+  setupRequired: boolean;
+}
+
 export const vendorProfileApi = createApi({
   reducerPath: "vendorProfileApi",
   baseQuery: baseQueryWithReauth,
@@ -127,6 +137,13 @@ export const vendorProfileApi = createApi({
       }),
       invalidatesTags: ["VendorProfile"],
     }),
+    ensureVendorBusinessOnboarding: builder.mutation<EnsureVendorBusinessOnboardingResponse, void>({
+      query: () => ({
+        url: "/vendor/onboarding/business-onboarding/ensure",
+        method: "POST",
+      }),
+      invalidatesTags: ["VendorProfile"],
+    }),
   }),
 });
 
@@ -134,4 +151,5 @@ export const {
   useGetVendorProfileQuery,
   useUpdateVendorProfileMutation,
   useCreateVendorBusinessProfileMutation,
+  useEnsureVendorBusinessOnboardingMutation,
 } = vendorProfileApi;
