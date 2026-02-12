@@ -10,6 +10,8 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import type { ServiceCategory, ServiceMasterCategory } from "@/services/serviceCategoriesApi";
 import type { VendorOffering } from "@/services/vendorOfferingsApi";
 import well from "@/assets/Images/well.jpg";
+import wellSm from "@/assets/Images/optimized/well-sm.jpg";
+import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
 
 import { DashboardContainer } from "@/components/dashboard";
 import { LocationPicker } from "@/components/forms/LocationPicker";
@@ -34,6 +36,12 @@ import { MasterServiceCard } from "@/pages/vendor-services/MasterServiceCard";
 import { MasterServiceHero } from "@/pages/vendor-services/MasterServiceHero";
 import { formatCurrency } from "@/pages/vendor-services/vendorServicesUtils";
 import { categoryVisuals, masterServiceVisuals } from "@/pages/vendor-services/vendorServicesVisuals";
+
+const fallbackMasterVisual = (alt: string): Visual => ({
+  src: well,
+  alt,
+  srcSet: `${wellSm} 480w, ${well} 1200w`,
+});
 
 export type VendorServicesWizardProps = {
   wizardScrollRef: React.RefObject<HTMLDivElement | null>;
@@ -306,15 +314,14 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr">
                         {masterServiceOptions.map((service) => {
                           const isSelected = service.id === selectedMasterServiceId;
-                          const visual = masterServiceVisuals[service.slug];
-                          const imageSrc = visual?.src ?? well;
-                          const imageAlt = visual?.alt ?? service.name;
+                          const visual =
+                            masterServiceVisuals[service.slug] ?? fallbackMasterVisual(service.name);
                           return (
                             <MasterServiceCard
                               key={service.id}
                               service={service}
                               isSelected={isSelected}
-                              visual={{ src: imageSrc, alt: imageAlt }}
+                              visual={visual}
                               onSelect={handleSelectMaster}
                             />
                           );
@@ -394,9 +401,10 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                         const masterVisual =
                           selectedMasterService &&
                           masterServiceVisuals[selectedMasterService.slug];
-                        const visual = categoryVisuals[category.slug] ?? masterVisual;
-                        const imageSrc = visual?.src ?? well;
-                        const imageAlt = visual?.alt ?? category.name;
+                        const categoryImage =
+                          categoryVisuals[category.slug] ??
+                          masterVisual ??
+                          fallbackMasterVisual(category.name);
                         return (
                           <button
                             key={category.id}
@@ -420,12 +428,14 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                             <div className="flex items-center gap-3">
                               <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                                 <img
-                                  src={imageSrc}
-                                  alt={imageAlt}
+                                  src={categoryImage.src}
+                                  alt={categoryImage.alt}
                                   className="h-full w-full object-cover"
                                   loading="lazy"
                                   decoding="async"
                                   fetchPriority="low"
+                                  srcSet={categoryImage.srcSet}
+                                  sizes="48px"
                                 />
                               </div>
                               <div>

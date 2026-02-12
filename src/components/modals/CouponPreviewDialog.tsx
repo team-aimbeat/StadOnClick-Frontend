@@ -59,7 +59,7 @@ export function CouponPreviewDialog({
           <div className="relative w-full max-w-xl">
             <div className="relative flex overflow-hidden rounded-[26px] ">
                 <span
-                  className="pointer-events-none absolute top-1/2 left-[-16px] h-10 w-10 -translate-y-1/2 rounded-full bg-white"
+                  className="pointer-events-none absolute top-1/2 -left-4 h-10 w-10 -translate-y-1/2 rounded-full bg-white"
                   aria-hidden
                 />
               <div className="flex w-36 flex-col items-center justify-between gap-1 border-r border-slate-200 bg-gray-200 px-4 py-5 text-center">
@@ -85,11 +85,11 @@ export function CouponPreviewDialog({
               </div>
 
               <div
-                className={`relative flex flex-1 flex-col gap-5 bg-gradient-to-r ${previewGradient} px-8 py-6 text-white`}
+                className={`relative flex flex-1 flex-col gap-5 bg-linear-to-r ${previewGradient} px-8 py-6 text-white`}
               >
 
                 <span
-                  className="pointer-events-none absolute top-1/2 right-[-16px] h-10 w-10 -translate-y-1/2 rounded-full bg-white"
+                  className="pointer-events-none absolute top-1/2 -right-4 h-10 w-10 -translate-y-1/2 rounded-full bg-white"
                   aria-hidden
                 />
                 <div className="space-y-2">

@@ -1,0 +1,7 @@
+*** Begin Patch
+*** Update File: src/components/Layout/UserHeader.tsx
+@@
+-  const [query, setQuery] = useState();
++ const [query, setQuery] = useState();
++  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+*** End Patch

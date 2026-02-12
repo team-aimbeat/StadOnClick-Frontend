@@ -32,6 +32,8 @@ export const MasterServiceCard = React.memo(function MasterServiceCard({
           loading="lazy"
           decoding="async"
           fetchPriority="low"
+          srcSet={visual.srcSet}
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 28vw"
         />
       </div>
       <div className="space-y-0.5 px-1">
@@ -41,4 +43,3 @@ export const MasterServiceCard = React.memo(function MasterServiceCard({
     </button>
   );
 });
-

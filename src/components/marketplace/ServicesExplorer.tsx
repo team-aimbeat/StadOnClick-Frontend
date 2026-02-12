@@ -219,6 +219,7 @@ export default function ServicesExplorer({
     return []
   }, [marketplaceRows, providedServices])
 
+
   const categoryCounts = useMemo(() => {
     const counts = new Map<string, number>()
     for (const row of marketplaceRows) {
@@ -227,6 +228,7 @@ export default function ServicesExplorer({
     return counts
   }, [marketplaceRows])
 
+ 
   const cityCounts = useMemo(() => {
     const counts = new Map<string, number>()
     for (const row of marketplaceRows) {

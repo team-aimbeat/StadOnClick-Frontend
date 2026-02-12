@@ -15,7 +15,7 @@ const navItems = [
 
 export default function ModeratorSidebar() {
   return (
-    <aside className="hidden w-[240px] flex-col border-r border-slate-200/80 bg-white lg:flex">
+    <aside className="hidden w-60 flex-col border-r border-slate-200/80 bg-white lg:flex">
       <div className="flex h-16 items-center justify-center border-b border-slate-200/80">
         <span className="text-lg font-semibold tracking-tight text-slate-900">
           StadonClick Ops

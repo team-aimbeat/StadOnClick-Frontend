@@ -5,6 +5,8 @@ import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import type { ServiceMasterCategory } from "@/services/serviceCategoriesApi";
 import type { VendorServiceEntity } from "@/services/vendorServicesApi";
 import well from "@/assets/Images/well.jpg";
+import wellSm from "@/assets/Images/optimized/well-sm.jpg";
+import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
 
 import { ServiceCardOfferingsPreview } from "@/pages/vendor-services/ServiceCardOfferingsPreview";
 import { categoryVisuals, masterServiceVisuals } from "@/pages/vendor-services/vendorServicesVisuals";
@@ -75,10 +77,9 @@ export const VendorServicesListing = ({
             const master = masterServices?.find(
               (m) => m.id === service.category?.masterCategoryId,
             );
-            const masterVisual = masterServiceVisuals[master?.slug ?? ""] ?? {
-              src: well,
-              alt: master?.name ?? "Master service",
-            };
+            const masterVisual =
+              masterServiceVisuals[master?.slug ?? ""] ??
+              fallbackListingVisual(master?.name ?? "Master service");
             const categoryVisual =
               categoryVisuals[service.category?.slug ?? ""] ?? masterVisual;
 
@@ -94,9 +95,9 @@ export const VendorServicesListing = ({
                 <div className="mb-4 grid grid-cols-3 gap-3">
                   <div className="col-span-2 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
                     <img
-                      src={primaryImage}
-                      alt={service.title || categoryVisual.alt}
-                      className="h-28 w-full object-cover transition duration-200 group-hover:scale-105"
+                      src={primaryVisual.src}
+                      alt={primaryVisual.alt}
+                      className="h-full w-full object-cover transition duration-200 group-hover:scale-105"
                       loading="lazy"
                       decoding="async"
                       onError={(event) => {
@@ -114,9 +115,11 @@ export const VendorServicesListing = ({
                     <img
                       src={masterVisual.src}
                       alt={masterVisual.alt}
-                      className="h-28 w-full object-cover transition duration-200 group-hover:scale-105"
+                      className="h-full w-full object-cover transition duration-200 group-hover:scale-105"
                       loading="lazy"
                       decoding="async"
+                      srcSet={masterVisual.srcSet}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                     />
                     <div className="px-3 py-2 text-[11px] font-semibold text-slate-600">
                       <span className="rounded-full bg-white/80 px-2 py-0.5 text-slate-700">

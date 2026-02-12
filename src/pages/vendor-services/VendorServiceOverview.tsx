@@ -10,6 +10,9 @@ import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi";
 import type { VendorServiceEntity } from "@/services/vendorServicesApi";
 
 import well from "@/assets/Images/well.jpg";
+import wellSm from "@/assets/Images/optimized/well-sm.jpg";
+import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
+
 import { AddOfferingDialog } from "@/pages/vendor-services/AddOfferingDialog";
 import {
   categoryVisuals,
@@ -62,10 +65,8 @@ export function VendorServiceOverview({
     return masterServices?.find((m) => m.id === service.category?.masterCategoryId);
   }, [masterServices, service.category?.masterCategoryId]);
 
-  const masterVisual = masterServiceVisuals[master?.slug ?? ""] ?? {
-    src: well,
-    alt: master?.name ?? "Master service",
-  };
+  const masterVisual =
+    masterServiceVisuals[master?.slug ?? ""] ?? fallbackOverviewVisual(master?.name ?? "Master service");
   const categoryVisual =
     categoryVisuals[service.category?.slug ?? ""] ?? masterVisual;
 
@@ -121,8 +122,8 @@ export function VendorServiceOverview({
         <div className="lg:col-span-2 rounded-3xl border border-slate-100 bg-white p-5">
           <div className="mb-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
             <img
-              src={primaryImage}
-              alt={service.title || categoryVisual.alt}
+              src={primaryVisual.src}
+              alt={primaryVisual.alt}
               className="h-56 w-full object-cover"
               loading="lazy"
               decoding="async"

@@ -133,7 +133,7 @@ export function MediaUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px]">
+      <DialogContent className="sm:max-w-115">
         <DialogHeader className="space-y-1.5">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl">Upload Media</DialogTitle>
@@ -258,7 +258,7 @@ export function MediaUploadDialog({
             <Button
               type="submit"
               disabled={isUploading || !file || !title.trim()}
-              className="min-w-[140px]"
+              className="min-w-35"
             >
               {isUploading ? (
                 <>

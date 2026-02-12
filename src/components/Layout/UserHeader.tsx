@@ -608,7 +608,7 @@ export default function UserHeader() {
                         Loading notifications...
                       </div>
                     ) : notificationsList.length ? (
-                      <ul className="max-h-[360px] space-y-2 overflow-auto px-2 py-2">
+                      <ul className="max-h-90 space-y-2 overflow-auto px-2 py-2">
                         {notificationsList.map((notification) => {
                           const isUnread = !notification.readAt;
                           return (
@@ -778,7 +778,7 @@ export default function UserHeader() {
         <div className="relative" onMouseLeave={() => setHoveredMasterSlug(null)}>
           <div
             ref={navContainerRef}
-            className="relative mx-auto flex w-full max-w-8xl flex-wrap items-center justify-center gap-6 overflow-x-auto px-4 py-2 sm:px-6"
+className="relative mx-auto flex w-full max-w-[1700px] flex-nowrap items-center justify-between gap-2 overflow-hidden px-4 py-2 sm:px-6"
           >
             {masterCategories.map((master) => {
               const planned = plannedCategoryMap.get(master.slug);
@@ -870,7 +870,7 @@ export default function UserHeader() {
                               className={cn(
                                 "group relative flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-900 transition-all duration-200",
                                 "before:absolute before:left-3 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-slate-200 before:content-['']",
-                                "pl-7 hover:-translate-y-[1px] hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
+                                "pl-7 hover:-translate-y-px hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
                                 "hover:before:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2",
                               )}
                             >
@@ -888,7 +888,7 @@ export default function UserHeader() {
                                 className={cn(
                                   "group relative flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-900 transition-all duration-200",
                                   "before:absolute before:left-3 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-slate-200 before:content-['']",
-                                  "pl-7 hover:-translate-y-[1px] hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
+                                  "pl-7 hover:-translate-y-px hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
                                   "hover:before:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2",
                                 )}
                               >
@@ -906,7 +906,7 @@ export default function UserHeader() {
                     )}
                   </div>
 
-                  <div className="relative min-h-[420px] bg-slate-100">
+                  <div className="relative min-h-105 bg-slate-100">
                     {megaMenuImageSrc ? (
                       <img
                         src={megaMenuImageSrc}
@@ -919,7 +919,8 @@ export default function UserHeader() {
                       />
                     ) : null}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-black/0" />
+                    <div className="absolute inset-0 bg-linear-to-t
+                     from-black/45 via-black/0 to-black/0" />
                     <div className="absolute bottom-6 left-6 flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-900">
                         {HoveredIcon ? (
@@ -960,7 +961,7 @@ function IconButton({ icon, label, badge, onClick }: IconButtonProps) {
     >
       {icon}
       {badge ? (
-        <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-yellow-500 px-1 text-[11px] font-semibold text-white">
+        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-500 px-1 text-[11px] font-semibold text-white">
           {badge}
         </span>
       ) : null}

@@ -58,7 +58,7 @@ export default function VendorSidebar() {
     <aside
       className={cn(
         "sidebar fixed inset-y-0 z-40 bg-white shadow-sm transition-[width] duration-300 ease-out",
-        isCollapsed ? "w-[72px]" : "w-[260px]"
+        isCollapsed ? "w-18" : "w-65"
       )}
       data-collapsed={isCollapsed}
     >

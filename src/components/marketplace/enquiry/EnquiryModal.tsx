@@ -55,7 +55,7 @@ export default function EnquiryModal({ service, onClose }: EnquiryModalProps) {
         </div>
 
         <div className="mt-4 flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div className="h-[60px] w-[60px] overflow-hidden rounded-2xl">
+          <div className="h-15 w-15 overflow-hidden rounded-2xl">
             <img
               src={service.image}
               alt={service.title}

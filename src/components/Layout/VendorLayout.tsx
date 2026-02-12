@@ -19,8 +19,8 @@ export default function VendorLayout() {
         className={`
         flex flex-col flex-1
         transition-[margin] duration-300 ease-out
-        lg:ml-[70px]
-        ${!isSidebarCollapsed ? "lg:ml-[260px]" : ""}
+        lg:ml-17.5
+        ${!isSidebarCollapsed ? "lg:ml-65" : ""}
       `}
       >
         <VendorHeader />

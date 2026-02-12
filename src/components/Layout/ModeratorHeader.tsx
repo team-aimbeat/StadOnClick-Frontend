@@ -49,7 +49,7 @@ export default function ModeratorHeader() {
               </span>
             }
           >
-            <ul className="w-[220px] text-sm font-semibold text-slate-700">
+            <ul className="w-55 text-sm font-semibold text-slate-700">
               <li className="px-4 py-3 text-xs text-slate-500">
                 {user?.email ?? "Signed in"}
               </li>
