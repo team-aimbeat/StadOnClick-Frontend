@@ -20,6 +20,9 @@ export interface ColumnConfig {
     render?: (value: any, row: RowData, index: number) => ReactNode;
     sortable?: boolean;
     breadCrumbTitle?: string;
+    align?: 'left' | 'center' | 'right';
+    headerClassName?: string;
+    cellClassName?: string;
 }
 
 export interface FilterConfig {
@@ -488,8 +491,20 @@ interface HeaderCellProps {
 }
 
 const HeaderCell: React.FC<HeaderCellProps> = React.memo(({ column, currentSortStatus, onSort, loading }) => (
-    <th className={`px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider ${column.key === 'jobTitle' ? 'min-w-[200px]' : ''}`}>
-        <div className="flex items-center">
+    <th
+        className={`px-6 py-3 text-xs font-bold text-black uppercase tracking-wider ${
+            column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'
+        } ${column.key === 'jobTitle' ? 'min-w-[200px]' : ''} ${column.headerClassName || ''}`}
+    >
+        <div
+            className={`flex items-center ${
+                column.align === 'right'
+                    ? 'justify-end'
+                    : column.align === 'center'
+                      ? 'justify-center'
+                      : 'justify-start'
+            }`}
+        >
             <span>{column.title}</span>
             {column.sortable && (
                 <button 
@@ -828,7 +843,12 @@ export const DataTable: React.FC<DataTableProps> = ({
                     </td>
                 )}
                 {visibleColumns.map((col) => (
-                    <td key={col.key} className={`px-6 py-4 ${col.key === 'jobTitle' ? 'min-w-[200px]' : ''}`}>
+                    <td
+                        key={col.key}
+                        className={`px-6 py-4 ${
+                            col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                        } ${col.key === 'jobTitle' ? 'min-w-[200px]' : ''} ${col.cellClassName || ''}`}
+                    >
                         {col.render ? col.render(row[col.key], row, index) : <span className="text-sm text-gray-900">{row[col.key]}</span>}
                     </td>
                 ))}

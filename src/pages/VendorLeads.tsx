@@ -22,6 +22,13 @@ import { useListServiceCategoriesQuery } from "@/services/serviceCategoriesApi";
 
 const statusOptions: LeadStatus[] = ["NEW", "CONTACTED", "CONVERTED", "LOST"];
 
+const formatLeadStatusLabel = (status: LeadStatus) =>
+  status
+    .toLowerCase()
+    .split("_")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
+
 const formatTimestamp = (value: string) =>
   new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
@@ -206,11 +213,13 @@ const VendorLeads = () => {
   const [updateStatus] = useUpdateVendorLeadStatusMutation();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const statusHeading = statusFilter
+    ? `${formatLeadStatusLabel(statusFilter)} Leads`
+    : "All Leads";
 
   useEffect(() => {
-    const title = statusFilter ? `${statusFilter} Leads` : "All Leads";
-    dispatch(setPageTitle(title));
-  }, [dispatch, statusFilter]);
+    dispatch(setPageTitle(statusHeading));
+  }, [dispatch, statusHeading]);
 
   const leads = data?.data ?? [];
   const total = data?.meta.total ?? leads.length;
@@ -238,8 +247,8 @@ const VendorLeads = () => {
   return (
     <DashboardContainer className="space-y-4 lg:space-y-5">
       <TitleBreadCrumbs
-        title={statusFilter ? `${statusFilter} Leads` : "All Leads"}
-        breadCrumbTitle={`Vendor / ${statusFilter ? `${statusFilter} Leads` : "All Leads"}`}
+        title={statusHeading}
+        breadCrumbTitle={`Vendor / ${statusHeading}`}
         className="w-full"
       />
 
@@ -276,7 +285,7 @@ const VendorLeads = () => {
             <option value="ALL">Any status</option>
             {statusOptions.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {formatLeadStatusLabel(option)}
               </option>
             ))}
           </select>

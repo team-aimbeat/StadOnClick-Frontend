@@ -13,6 +13,7 @@ export interface CreateCheckoutSessionPayload {
   vendorId: string;
   items: CreateCheckoutSessionItem[];
   promoCode?: string;
+  referralCode?: string;
   successUrl?: string;
   cancelUrl?: string;
 }

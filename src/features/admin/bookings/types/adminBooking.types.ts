@@ -12,6 +12,7 @@ export type AdminBookingUser = {
   lastName?: string | null;
   email: string;
   profileImageKey?: string | null;
+  profileImageUrl?: string | null;
 };
 
 export type AdminBookingVendorProfile = {

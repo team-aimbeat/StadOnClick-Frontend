@@ -162,8 +162,17 @@ const AdminPlatformWalletPage = () => {
                     <HiOutlineDocumentText className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">{tx.wallet?.vendor?.businessName || "Unknown"}</p>
-                    <p className="text-[10px] text-slate-500 font-mono">{tx.wallet?.vendor?.contactEmail}</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {tx.sourceVendor?.businessName ||
+                        tx.wallet?.vendor?.businessName ||
+                        "Platform Revenue"}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-mono">
+                      {tx.sourceVendor?.contactEmail ||
+                        tx.wallet?.vendor?.contactEmail ||
+                        tx.reference ||
+                        tx.type}
+                    </p>
                   </div>
                 </div>
               ),
@@ -171,11 +180,17 @@ const AdminPlatformWalletPage = () => {
             {
               key: "amount",
               title: "Revenue Yield",
-              render: (value: any) => (
-                <div className="text-right font-black text-base text-mono-finance tracking-tighter text-emerald-600">
-                   +{stats?.currency} {parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </div>
-              ),
+              align: "right",
+              render: (value: any, tx: any) => {
+                const numericAmount = Number(value || 0);
+                const isRefund = tx.type === "REFUND";
+                return (
+                  <div className={`text-right font-black text-base text-mono-finance tracking-tighter ${isRefund ? "text-rose-600" : "text-emerald-600"}`}>
+                    {isRefund ? "-" : "+"}
+                    {stats?.currency} {numericAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
+                );
+              },
             },
             {
               key: "createdAt",

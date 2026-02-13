@@ -19,14 +19,6 @@ export const AgeGroupEnum = {
 
 export type AgeGroupEnum = (typeof AgeGroupEnum)[keyof typeof AgeGroupEnum]
 
-export const OnboardingRoleEnum = {
-  USER: "USER",
-  VENDOR: "VENDOR",
-} as const
-
-export type OnboardingRoleEnum =
-  (typeof OnboardingRoleEnum)[keyof typeof OnboardingRoleEnum]
-
 export type BasicProfileRequest = {
   onboardingSessionId: string
   firstName: string
@@ -41,6 +33,6 @@ export type BasicProfileRequest = {
   cityId?: string
   profileImageUrl?: string
   marketingConsent?: boolean
-  role?: OnboardingRoleEnum
+  referralCode?: string
   termsAccepted: true
 }

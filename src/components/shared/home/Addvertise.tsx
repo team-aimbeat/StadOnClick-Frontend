@@ -3,6 +3,7 @@ import highlightImage from "@/assets/images/wheel.svg";
 import bowlingImage from "@/assets/images/bowling.svg";
 import waterImage from "@/assets/images/aqua.svg";
 import { useNavigate } from "react-router-dom";
+import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton";
 
 export default function Addvertise() {
   const navigate = useNavigate();
@@ -41,10 +42,13 @@ export default function Addvertise() {
               </button>
             </div>
 
-            <img
+            <ImageWithSkeleton
               src={heroImage}
               alt="Weekend activity"
+              containerClassName="absolute bottom-0 right-0 h-105 w-[320px]"
               className="absolute bottom-0 right-0 h-105 w-[320px] object-contain"
+              loading="lazy"
+              decoding="async"
             />
           </article>
 
@@ -74,10 +78,13 @@ export default function Addvertise() {
                 </button>
               </div>
 
-              <img
+              <ImageWithSkeleton
                 src={highlightImage}
                 alt="Adventure"
+                containerClassName="absolute right-0 top-0 h-full w-[45%]"
                 className="absolute right-0 top-0 h-full w-[45%] object-contain"
+                loading="lazy"
+                decoding="async"
               />
             </article>
 

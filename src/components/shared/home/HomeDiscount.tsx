@@ -8,6 +8,7 @@ import green from "@/assets/images/green.png"
 import pink from "@/assets/images/pink.png"
 import blue from "@/assets/images/blue.png"
 import purple from "@/assets/images/purple.png"
+import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton"
 
 
 const offerCards = [
@@ -90,10 +91,13 @@ export default function HomeDiscount() {
                 →
               </div>
               <div className="absolute h-24.25 overflow-hidden -ml-1 ">
-                <img
+                <ImageWithSkeleton
                   src={card.image}
                   alt={card.title}
+                  containerClassName="h-32.5 w-51.25"
                   className="h-32.5 w-51.25 object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             </article>

@@ -10,8 +10,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
 import dayjs, { type Dayjs } from "dayjs";
-import { HiSparkles } from "react-icons/hi2";
-
+import boxImg from "@/assets/Images/box.png";
 import { Button } from "@/components/ui/button";
 import {
   useGetMasterCategoriesQuery,
@@ -120,8 +119,12 @@ const VendorServices = () => {
   const [slotFields, setSlotFields] = useState<SlotFields>(slotInitialState);
   const [slotStartDate, setSlotStartDate] = useState<Dayjs | null>(null);
   const [slotEndDate, setSlotEndDate] = useState<Dayjs | null>(null);
-  const [slotStartTime, setSlotStartTime] = useState<Dayjs | null>(dayjs().hour(9).minute(0));
-  const [slotEndTime, setSlotEndTime] = useState<Dayjs | null>(dayjs().hour(10).minute(0));
+  const [slotStartTime, setSlotStartTime] = useState<Dayjs | null>(
+    dayjs().hour(9).minute(0),
+  );
+  const [slotEndTime, setSlotEndTime] = useState<Dayjs | null>(
+    dayjs().hour(10).minute(0),
+  );
   const [ruleFields, setRuleFields] = useState<RuleFields>(ruleInitialState);
   const [slotValidationError, setSlotValidationError] = useState<string | null>(
     null,
@@ -240,7 +243,12 @@ const VendorServices = () => {
         setHighestStep(1);
       }
     },
-    [isEditing, resetOfferingsState, selectedMasterServiceId, startMasterTransition],
+    [
+      isEditing,
+      resetOfferingsState,
+      selectedMasterServiceId,
+      startMasterTransition,
+    ],
   );
 
   useEffect(() => {
@@ -308,27 +316,21 @@ const VendorServices = () => {
     skip: !createdServiceId,
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState,
-    reset,
-    setValue,
-    control,
-  } = useForm<{ offerings: OfferingFormValues[] }>({
-    mode: "onBlur",
-    defaultValues: {
-      offerings: [
-        {
-          name: "",
-          description: "",
-          basePrice: 0,
-          salePrice: 0,
-          maxQuantity: undefined,
-        },
-      ],
-    },
-  });
+  const { register, handleSubmit, formState, reset, setValue, control } =
+    useForm<{ offerings: OfferingFormValues[] }>({
+      mode: "onBlur",
+      defaultValues: {
+        offerings: [
+          {
+            name: "",
+            description: "",
+            basePrice: 0,
+            salePrice: 0,
+            maxQuantity: undefined,
+          },
+        ],
+      },
+    });
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -453,7 +455,11 @@ const VendorServices = () => {
 
   const combineDayAndTime = (date: Dayjs | null, time: Dayjs | null) => {
     if (!date || !time) return null;
-    return date.hour(time.hour()).minute(time.minute()).second(0).millisecond(0);
+    return date
+      .hour(time.hour())
+      .minute(time.minute())
+      .second(0)
+      .millisecond(0);
   };
 
   type SlotKind = "start" | "end";
@@ -673,7 +679,8 @@ const VendorServices = () => {
 
       if (refundPolicy.type !== "NO_REFUND") {
         if (Number.isNaN(windowHours) || windowHours <= 0) {
-          errors.refundPolicy = "Enter a valid cutoff window (hours) greater than 0.";
+          errors.refundPolicy =
+            "Enter a valid cutoff window (hours) greater than 0.";
         }
       }
     }
@@ -712,7 +719,9 @@ const VendorServices = () => {
       return;
     }
     if (!createdServiceId && hasService) {
-      setGeneralError("Only one service is allowed per vendor. Please update the existing service instead.");
+      setGeneralError(
+        "Only one service is allowed per vendor. Please update the existing service instead.",
+      );
       return;
     }
     if (!validateVendorServiceDetails()) {
@@ -748,7 +757,8 @@ const VendorServices = () => {
           },
         };
 
-        const createdVendorService = await createVendorService(vendorServicePayload).unwrap();
+        const createdVendorService =
+          await createVendorService(vendorServicePayload).unwrap();
         currentServiceId = createdVendorService.id;
         setCreatedServiceId(currentServiceId);
         setVendorServiceStep("success");
@@ -778,9 +788,12 @@ const VendorServices = () => {
       }
 
       setOfferingStep("success");
-      toast.success("All offerings and extra configurations saved successfully", {
-        id: "vendor-multi-offering-success",
-      });
+      toast.success(
+        "All offerings and extra configurations saved successfully",
+        {
+          id: "vendor-multi-offering-success",
+        },
+      );
 
       // Cleanup & return to overview
       reset();
@@ -840,43 +853,46 @@ const VendorServices = () => {
     setPendingScrollToWizard(true);
   }, [reset, resetOfferingsState]);
 
-  const openWizardForService = useCallback((
-    service: VendorServiceEntity,
-    options?: { step?: number; offeringId?: string },
-  ) => {
-    setMode("wizard");
-    setCreatedServiceId(service.id);
-    setSelectedCategoryId(service.category?.id ?? "");
-    const masterId = service.category?.masterCategoryId ?? "";
-    setSelectedMasterServiceId(masterId);
-    startMasterTransition(() => {
-      setSelectedMasterForQuery(masterId);
-    });
-    setVendorServiceDetails({
-      title: service.title ?? "",
-      description: service.description ?? "",
-      terms: service.terms ?? "",
-      latitude: service.latitude?.toString() ?? "",
-      longitude: service.longitude?.toString() ?? "",
-    });
-    setRefundPolicy(
-      service.refundPolicy?.type
-        ? {
-            type: service.refundPolicy.type,
-            windowHours:
-              service.refundPolicy.windowHours != null
-                ? String(service.refundPolicy.windowHours)
-                : "48",
-          }
-        : defaultRefundPolicy,
-    );
-    setHighestStep(4);
-    setCurrentStep(options?.step ?? 3);
-    if (options?.offeringId) {
-      setPendingPrefillOfferingId(options.offeringId);
-    }
-    setPendingScrollToWizard(true);
-  }, [startMasterTransition]);
+  const openWizardForService = useCallback(
+    (
+      service: VendorServiceEntity,
+      options?: { step?: number; offeringId?: string },
+    ) => {
+      setMode("wizard");
+      setCreatedServiceId(service.id);
+      setSelectedCategoryId(service.category?.id ?? "");
+      const masterId = service.category?.masterCategoryId ?? "";
+      setSelectedMasterServiceId(masterId);
+      startMasterTransition(() => {
+        setSelectedMasterForQuery(masterId);
+      });
+      setVendorServiceDetails({
+        title: service.title ?? "",
+        description: service.description ?? "",
+        terms: service.terms ?? "",
+        latitude: service.latitude?.toString() ?? "",
+        longitude: service.longitude?.toString() ?? "",
+      });
+      setRefundPolicy(
+        service.refundPolicy?.type
+          ? {
+              type: service.refundPolicy.type,
+              windowHours:
+                service.refundPolicy.windowHours != null
+                  ? String(service.refundPolicy.windowHours)
+                  : "48",
+            }
+          : defaultRefundPolicy,
+      );
+      setHighestStep(4);
+      setCurrentStep(options?.step ?? 3);
+      if (options?.offeringId) {
+        setPendingPrefillOfferingId(options.offeringId);
+      }
+      setPendingScrollToWizard(true);
+    },
+    [startMasterTransition],
+  );
 
   useEffect(() => {
     if (!addOfferingRequested) return;
@@ -915,8 +931,8 @@ const VendorServices = () => {
       return (
         <div className="mx-auto px-6 py-14">
           <div className="mx-auto flex max-w-3xl flex-col items-center rounded-[32px] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-            <div className="relative mb-8 h-24 w-28">
-            <img src="@/assets/Images/box.png"/>
+            <div >
+              <img src={boxImg} className="w-110 ml-15 " alt="box" />
             </div>
 
             <h2 className="text-4xl font-bold tracking-tight text-slate-900">
@@ -927,11 +943,7 @@ const VendorServices = () => {
               and rules to publish a complete customer-ready listing.
             </p>
 
-            <Button
-              onClick={openWizardForNewService}
-            className="mt-5"
-            >
-        
+            <Button onClick={openWizardForNewService} className="mt-5">
               Create New Service
             </Button>
           </div>

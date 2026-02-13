@@ -1,26 +1,28 @@
-import { useEffect } from "react";
-import HomeBrowse from "@/components/shared/home/HomeBrowse";
+import { Suspense, lazy, useEffect } from "react";
 import HomeHero from "@/components/shared/home/HomeHero";
 import HomeCategories from "@/components/shared/home/HomeCategories";
-import HomeMind from "@/components/shared/home/HomeMind";
-import HomeServices from "@/components/shared/home/HomeServices";
-import HomeDiscount from "@/components/shared/home/HomeDiscount";
-import HomeTravel from "@/components/shared/home/HomeTravel";
-// import HomeStudios from "@/components/shared/home/HomeStudios";
-import HomeTrending from "@/components/shared/home/HomeTrending";
-import HomeMovies from "@/components/shared/home/HomeMovies";
-import HomeCoupon from "@/components/shared/home/HomeCoupon";
-import HomeDeal from "@/components/shared/home/HomeDeal";
-import HomeTestimonial from "@/components/shared/home/HomeTestimonial";
-import HomeSightseeing from "@/components/shared/home/HomeSightseeing";
-import HomeLaunchStrip from "@/components/shared/home/Promo";
-import HomeGlowSale from "@/components/shared/home/Sale";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import HomeSubscribe from "@/components/shared/home/HomeSubscribe";
-import Addvertise from "@/components/shared/home/Addvertise";
-import Blogs from "@/components/shared/home/Blogs";
+import LazySection from "@/components/shared/LazySection";
 
+const HomeDeal = lazy(() => import("@/components/shared/home/HomeDeal"));
+const HomeDiscount = lazy(() => import("@/components/shared/home/HomeDiscount"));
+const Addvertise = lazy(() => import("@/components/shared/home/Addvertise"));
+const HomeTrending = lazy(() => import("@/components/shared/home/HomeTrending"));
+const HomeCoupon = lazy(() => import("@/components/shared/home/HomeCoupon"));
+const HomeMind = lazy(() => import("@/components/shared/home/HomeMind"));
+const HomeTravel = lazy(() => import("@/components/shared/home/HomeTravel"));
+const HomeSightseeing = lazy(() => import("@/components/shared/home/HomeSightseeing"));
+
+function SectionSkeleton({ height = 260 }: { height?: number }) {
+  return (
+    <div
+      className="mt-6 w-full animate-pulse rounded-2xl bg-slate-100"
+      style={{ height }}
+      aria-hidden="true"
+    />
+  );
+}
 
 export default function Home() {
   const dispatch = useAppDispatch();
@@ -29,31 +31,58 @@ export default function Home() {
   }, [dispatch]);
 
   return (
-    <div className="text-slate-900">
+    <div className="overflow-x-hidden text-slate-900">
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-6 sm:px-6 lg:px-8">
         <HomeHero />
         <HomeCategories />
-                        <HomeDeal />
 
-        {/* <HomeLaunchStrip /> */}
-        <HomeDiscount />
+        <LazySection minHeight={280}>
+          <Suspense fallback={<SectionSkeleton height={280} />}>
+            <HomeDeal />
+          </Suspense>
+        </LazySection>
 
-        <Addvertise />
-        {/* <HomeStudios /> */}
-        <HomeTrending />
-        <HomeCoupon />
-        <HomeMind />
-        <HomeTravel />
-        {/* <HomeMovies /> */}
-                                <HomeDeal />
+        <LazySection minHeight={280}>
+          <Suspense fallback={<SectionSkeleton height={280} />}>
+            <HomeDiscount />
+          </Suspense>
+        </LazySection>
 
-        {/* <HomeGlowSale /> */}
-        <HomeSightseeing />
-        {/* <HomeBrowse /> */}
-        {/* <HomeTestimonial /> */}
-        {/* <HomeSubscribe /> */}
-        {/* <Blogs/> */}
-        
+        <LazySection minHeight={520}>
+          <Suspense fallback={<SectionSkeleton height={520} />}>
+            <Addvertise />
+          </Suspense>
+        </LazySection>
+
+        <LazySection minHeight={560}>
+          <Suspense fallback={<SectionSkeleton height={560} />}>
+            <HomeTrending />
+          </Suspense>
+        </LazySection>
+
+        <LazySection minHeight={180}>
+          <Suspense fallback={<SectionSkeleton height={180} />}>
+            <HomeCoupon />
+          </Suspense>
+        </LazySection>
+
+        <LazySection minHeight={540}>
+          <Suspense fallback={<SectionSkeleton height={540} />}>
+            <HomeMind />
+          </Suspense>
+        </LazySection>
+
+        <LazySection minHeight={900}>
+          <Suspense fallback={<SectionSkeleton height={900} />}>
+            <HomeTravel />
+          </Suspense>
+        </LazySection>
+
+        <LazySection minHeight={620}>
+          <Suspense fallback={<SectionSkeleton height={620} />}>
+            <HomeSightseeing />
+          </Suspense>
+        </LazySection>
       </div>
     </div>
   )

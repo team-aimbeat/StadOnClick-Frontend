@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, ClipboardList, Heart, ShoppingBag, ShoppingCart, ShoppingCartIcon, Sparkles, UserRound, X } from "lucide-react";
+import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, ClipboardList, Heart, Megaphone, ShoppingBag, ShoppingCart, ShoppingCartIcon, Sparkles, UserRound, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   useEffect,
@@ -454,13 +454,43 @@ export default function UserHeader() {
                 setCartMenuOpen(false);
                 setNotificationsMenuOpen(false);
                 setProfileMenuOpen(false);
-                navigate("/vendor/sign-in");
+                if (!user) {
+                  navigate("/sign-in");
+                  return;
+                }
+
+                const isVendor = (user.roles ?? []).includes("VENDOR");
+                if (isVendor) {
+                  navigate(user.nextAction || "/vendor/dashboard");
+                  return;
+                }
+
+                navigate("/business/onboarding");
               }}
               className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2"
               aria-label="Business with StadOnClick"
             >
               <BriefcaseBusiness className="h-4.5 w-4.5 text-slate-500" />
               <span>Business on StadOnClick</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                if (!user) {
+                  navigate("/sign-in");
+                  return;
+                }
+                const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
+                navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2"
+              aria-label="Affiliate Program"
+            >
+              <Megaphone className="h-4.5 w-4.5 text-slate-500" />
+              <span>Affiliate Program</span>
             </button>
             <div ref={cartRef} className="relative">
               <IconButton

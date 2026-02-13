@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { HiClipboardDocumentList, HiEnvelopeOpen, HiXMark } from "react-icons/hi2";
+import { HiClipboardDocumentList, HiXMark } from "react-icons/hi2";
 import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
-import VendorTable from "@/components/shared/CustomTable";
+import { DataTable, type ColumnConfig } from "@/components/shared/DataTable";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 
 import {
@@ -18,6 +18,7 @@ import {
 type AdminVendor = {
   id: string;
   name: string;
+  profileImageKey?: string | null;
   avatar?: string | null;
 };
 
@@ -167,25 +168,25 @@ const AdminKycDocumentsPage = () => {
 
   /* ================= TABLE ================= */
 
-  const columns = [
+  const columns: ColumnConfig[] = [
     {
       key: "vendor",
-      header: "Vendor",
-      render: (row: TableDoc) => (
+      title: "Vendor",
+      render: (_value, row: TableDoc) => (
         <div className="flex items-center gap-3">
           <img
             src={row.avatar || "/avatar-placeholder.png"}
-            className="h-8 w-8 rounded-full border"
+            className="h-10 w-10   rounded-full border"
           />
           <span className="font-medium">{row.vendor}</span>
         </div>
       ),
     },
-    { key: "docType", header: "Document type" },
+    { key: "docType", title: "Document type" },
     {
       key: "status",
-      header: "Status",
-      render: (row: TableDoc) => (
+      title: "Status",
+      render: (_value, row: TableDoc) => (
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles(
             row.status,
@@ -197,8 +198,8 @@ const AdminKycDocumentsPage = () => {
     },
     {
       key: "submitted",
-      header: "Submitted",
-      render: (row: TableDoc) => (
+      title: "Submitted",
+      render: (_value, row: TableDoc) => (
         <>
           <div>{row.submitted}</div>
           <div className="text-xs text-gray-400">{row.submittedTime}</div>
@@ -207,11 +208,16 @@ const AdminKycDocumentsPage = () => {
     },
     {
       key: "actions",
-      header: "Actions",
-      render: (row: TableDoc) => (
-
-        <HiClipboardDocumentList  className="h-5 w-5 text-slate-600"onClick={() => setActiveDoc(row)} />
-     
+      title: "Actions",
+      render: (_value, row: TableDoc) => (
+        <button
+          type="button"
+          onClick={() => setActiveDoc(row)}
+          className="rounded p-1 transition hover:bg-slate-100"
+          aria-label="Open KYC document details"
+        >
+          <HiClipboardDocumentList className="h-5 w-5 text-slate-600" />
+        </button>
       ),
     },
   ];
@@ -251,10 +257,17 @@ const AdminKycDocumentsPage = () => {
         </div>
       )}
 
-      <VendorTable<TableDoc>
+      <DataTable
+        title="KYC Documents"
+        breadCrumbTitle="Admin / Vendor KYC"
         columns={columns}
         data={documents}
-        showToolbar={!isFetching}
+        loading={isFetching}
+        selectable={false}
+        showSerialNumber={false}
+        searchable
+        searchPlaceholder="Search vendor or document type"
+        noRecordText="No KYC documents found"
       />
 
     {/* ================= REVIEW MODAL ================= */}
@@ -324,7 +337,7 @@ const AdminKycDocumentsPage = () => {
           {/* Header */}
           <div className="flex items-center gap-3">
             <img
-              src={activeDoc.avatar}
+              src={activeDoc.avatar || "/avatar-placeholder.png"}
               className="h-12 w-12 rounded-full border"
             />
             <div>

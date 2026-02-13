@@ -1,7 +1,13 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import type { FieldErrors } from "react-hook-form";
-import { OnboardingRoleEnum } from "@/features/auth/types/basicProfile.types";
+
+const OnboardingRoleEnum = {
+  USER: "USER",
+  VENDOR: "VENDOR",
+} as const;
+
+type OnboardingRoleEnum = (typeof OnboardingRoleEnum)[keyof typeof OnboardingRoleEnum];
 
 type Props = {
   role: string;
@@ -73,4 +79,3 @@ function StepRoleComponent({
 }
 
 export const StepRole = memo(StepRoleComponent);
-
