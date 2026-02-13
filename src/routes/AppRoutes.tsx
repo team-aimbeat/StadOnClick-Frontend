@@ -167,74 +167,6 @@ const appRouter = createBrowserRouter([
             element: <AffiliateMarketing />,
           },
           {
-            path: "/affiliate",
-            element: <AffiliateLayout />,
-            children: [
-              {
-                index: true,
-                element: <Navigate to="/affiliate/overview" replace />,
-              },
-              {
-                path: "overview",
-                element: <AffiliateDashboard />,
-              },
-              {
-                path: "dashboard",
-                element: <Navigate to="/affiliate/overview" replace />,
-              },
-              {
-                path: "referrals",
-                element: affiliatePlaceholder(
-                  "Referrals",
-                  "Track users who signed up through your referral code and their status.",
-                ),
-              },
-              {
-                path: "vendors-referred",
-                element: affiliatePlaceholder(
-                  "Vendors Referred",
-                  "See vendors attributed to your referrals and their conversion progress.",
-                ),
-              },
-              {
-                path: "commission",
-                element: affiliatePlaceholder(
-                  "Commission",
-                  "Review earned, pending, and paid commission transactions.",
-                ),
-              },
-              {
-                path: "wallet",
-                element: affiliatePlaceholder(
-                  "Wallet",
-                  "View your affiliate wallet balance and transaction history.",
-                ),
-              },
-              {
-                path: "payouts",
-                element: affiliatePlaceholder(
-                  "Payouts",
-                  "Manage payout requests and track payout statuses.",
-                ),
-              },
-              {
-                path: "reports",
-                element: affiliatePlaceholder(
-                  "Reports",
-                  "Generate and export affiliate performance reports.",
-                ),
-              },
-              {
-                path: "profile-settings",
-                element: affiliatePlaceholder(
-                  "Profile Settings",
-                  "Manage your affiliate profile details and preferences.",
-                ),
-              },
-            ],
-          },
-  
-          {
             path: "/service/:serviceId",
             element: <ServiceDetail />,
           },
@@ -571,6 +503,73 @@ const appRouter = createBrowserRouter([
       },
     ],
   },
+    {
+            path: "/affiliate",
+            element: <AffiliateLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "overview",
+                element: <AffiliateDashboard />,
+              },
+              {
+                path: "dashboard",
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "referrals",
+                element: affiliatePlaceholder(
+                  "Referrals",
+                  "Track users who signed up through your referral code and their status.",
+                ),
+              },
+              {
+                path: "vendors-referred",
+                element: affiliatePlaceholder(
+                  "Vendors Referred",
+                  "See vendors attributed to your referrals and their conversion progress.",
+                ),
+              },
+              {
+                path: "commission",
+                element: affiliatePlaceholder(
+                  "Commission",
+                  "Review earned, pending, and paid commission transactions.",
+                ),
+              },
+              {
+                path: "wallet",
+                element: affiliatePlaceholder(
+                  "Wallet",
+                  "View your affiliate wallet balance and transaction history.",
+                ),
+              },
+              {
+                path: "payouts",
+                element: affiliatePlaceholder(
+                  "Payouts",
+                  "Manage payout requests and track payout statuses.",
+                ),
+              },
+              {
+                path: "reports",
+                element: affiliatePlaceholder(
+                  "Reports",
+                  "Generate and export affiliate performance reports.",
+                ),
+              },
+              {
+                path: "profile-settings",
+                element: affiliatePlaceholder(
+                  "Profile Settings",
+                  "Manage your affiliate profile details and preferences.",
+                ),
+              },
+            ],
+          },
 ]);
 
 export default appRouter;
