@@ -42,7 +42,7 @@ export default function HomeSightseeing() {
               <li>Mountain getaways</li>
             </ul>
             <button className="mt-4 inline-flex items-center gap-2 text-[14px] font-semibold text-slate-900">
-              ↗ Visit site
+              Visit site
             </button>
           </div>
 
@@ -69,7 +69,7 @@ export default function HomeSightseeing() {
           </div>
 
           <div className="rounded-2xl bg-white p-4 shadow-sm">
-            <p className="text-2xl font-semibold text-slate-200">“</p>
+            <p className="text-2xl font-semibold text-slate-500">&ldquo;</p>
             <p className="mt-2 text-[14px] text-slate-600">
               I love SYNC because it helps me save money.
             </p>

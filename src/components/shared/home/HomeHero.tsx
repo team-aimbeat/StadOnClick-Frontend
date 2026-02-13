@@ -86,12 +86,12 @@ return (
 
     {/* ================= CONTENT AT VERY BOTTOM ================= */}
     <div className="absolute bottom-8 left-1/2 w-full max-w-5xl -translate-x-1/2 px-6 text-center text-white">
-      <h1 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
+      <h1 className="text-2xl font-semibold sm:text-3xl lg:text-4xl tracking-wider ">
         Discover Services. Book Instantly.
       </h1>
 
-      <p className="mt-2 text-sm text-white/80 sm:text-base">
-        Beauty • Sports • Events • Hotels • Vacation
+      <p className="mt-2 text-sm text-white/80 sm:text-base tracking-wider">
+        Beauty | Sports | Events | Hotels | Vacation
       </p>
 
       {showHeroSearch && (
