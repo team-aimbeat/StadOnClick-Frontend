@@ -573,8 +573,23 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        Service not found
+      <div className="flex min-h-screen items-center justify-center bg-[#F1F3F7] px-4">
+        <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
+            Sign in to view services
+          </h2>
+          <p className="mt-3 text-sm text-slate-600">
+            We need to know who you are before showing your bookings and
+            purchases.
+          </p>
+          <Button
+            type="button"
+            onClick={() => navigate("/sign-in")}
+            className="mt-6 h-11 w-full rounded-full bg-blue-600 text-base font-semibold text-white hover:bg-blue-700"
+          >
+            Go to sign in
+          </Button>
+        </div>
       </div>
     );
   }
