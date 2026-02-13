@@ -16,13 +16,14 @@ export default function AffiliateLayout() {
   }
 
   return (
-    <div className="mx-auto max-w-8xl bg-slate-50 py-5 ">
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <AffiliateSidebar />  
-
-        <section className="min-w-0">
-          <Outlet />
-        </section>
+    <div className="flex min-h-screen bg-gray-100">
+      <AffiliateSidebar />
+      <div className="flex flex-1 flex-col transition-[margin] duration-300 ease-out lg:ml-65">
+        <main className="flex-1 p-6">
+          <section className="min-w-0">
+            <Outlet />
+          </section>
+        </main>
       </div>
     </div>
   );

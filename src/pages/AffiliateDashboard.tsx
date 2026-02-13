@@ -1,10 +1,23 @@
 import { useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { NavLink, Navigate } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  HiOutlineCalendarDays,
+  HiOutlineArrowPathRoundedSquare,
+  HiOutlineBanknotes,
+  HiOutlineChartBarSquare,
+  HiOutlineCurrencyDollar,
+  HiOutlineDocumentChartBar,
+  HiOutlineAdjustmentsHorizontal,
+  HiOutlineUserGroup,
+  HiOutlineWallet,
+} from "react-icons/hi2";
 
 import { useAppSelector } from "@/app/hooks";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import StatsCard from "@/components/shared/StatsCard";
+import { cn } from "@/lib/utils";
 import {
   useGetAffiliateCommissionsQuery,
   useGetAffiliateDashboardQuery,
@@ -15,6 +28,17 @@ const currency = (value: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "SEK", maximumFractionDigits: 2 }).format(
     value ?? 0,
   );
+
+const dashboardTabs = [
+  { label: "Overview", to: "/affiliate/overview" },
+  { label: "Referrals", to: "/affiliate/referrals" },
+  { label: "Vendors Referred", to: "/affiliate/vendors-referred" },
+  { label: "Commission", to: "/affiliate/commission" },
+  { label: "Wallet", to: "/affiliate/wallet" },
+  { label: "Payouts", to: "/affiliate/payouts" },
+  { label: "Reports", to: "/affiliate/reports" },
+  { label: "Profile Settings", to: "/affiliate/profile-settings" },
+];
 
 const getStatusBadgeClasses = (status: string) => {
   const normalized = status.toLowerCase();
@@ -75,42 +99,100 @@ export default function AffiliateDashboard() {
     return <div className="p-8">Loading affiliate dashboard...</div>;
   }
 
+  const affiliateName = `${(user.firstName ?? "Affiliate").toUpperCase()}'S Business`;
+
   const statCards = [
     {
       label: "Total Referrals",
       value: dashboard?.summary.totalReferrals ?? 0,
-      valueClassName: "text-slate-900",
+      icon: HiOutlineUserGroup,
+      accentColor: "blue" as const,
+      subtitle: "All-time referrals",
     },
     {
       label: "Active Referrals",
       value: dashboard?.summary.activeReferrals ?? 0,
-      valueClassName: "text-slate-900",
+      icon: HiOutlineArrowPathRoundedSquare,
+      accentColor: "green" as const,
+      subtitle: "Currently active",
     },
     {
       label: "Total Commission Earned",
       value: currency(dashboard?.summary.totalCommissionEarned ?? 0),
-      valueClassName: "text-slate-900",
+      icon: HiOutlineCurrencyDollar,
+      accentColor: "purple" as const,
+      subtitle: "Approved and paid",
     },
     {
       label: "Pending Commission",
       value: currency(dashboard?.summary.pendingCommission ?? 0),
-      valueClassName: "text-amber-700",
+      icon: HiOutlineBanknotes,
+      accentColor: "yellow" as const,
+      subtitle: "Awaiting approval",
+    },
+    {
+      label: "Commission Rate",
+      value: `${dashboard?.affiliate.commissionRate ?? 0}%`,
+      icon: HiOutlineChartBarSquare,
+      accentColor: "cyan" as const,
+      subtitle: "Default affiliate rate",
+    },
+    {
+      label: "Recent Commissions",
+      value: commissionsRes?.pagination.total ?? 0,
+      icon: HiOutlineWallet,
+      accentColor: "green" as const,
+      subtitle: "Tracked commission rows",
     },
   ];
 
   return (
-    <DashboardContainer className="space-y-6 pb-6">
+    <DashboardContainer className="space-y-6 pb-8">
       <TitleBreadCrumbs title="Affiliate Dashboard" breadCrumbTitle="Affiliate / Dashboard" />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50 p-5 shadow-sm"
-          >
-            <p className="text-xs uppercase tracking-wide text-slate-500">{card.label}</p>
-            <p className={`mt-2 text-3xl font-bold ${card.valueClassName}`}>{card.value}</p>
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <p className="text-xl font-bold text-slate-900">{affiliateName}</p>
+            <p className="text-xs font-semibold text-slate-500">
+              {new Date(dashboard?.affiliate.joinedAt ?? Date.now()).toLocaleDateString()} -{" "}
+              {new Date().toLocaleDateString()}
+            </p>
           </div>
+          <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+            <HiOutlineCalendarDays className="h-4 w-4" />
+            Affiliate performance overview
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-4 border-b border-slate-200">
+          {dashboardTabs.map((tab) => (
+            <NavLink
+              key={tab.to}
+              to={tab.to}
+              className={({ isActive }) =>
+                cn(
+                  "pb-3 text-sm font-semibold text-slate-600 transition hover:text-slate-900",
+                  isActive && "border-b-2 border-blue-600 text-blue-700",
+                )
+              }
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        {statCards.map((card) => (
+          <StatsCard
+            key={card.label}
+            title={card.label}
+            value={card.value}
+            subtitle={card.subtitle}
+            icon={card.icon}
+            accentColor={card.accentColor}
+            showTrendIcon={false}
+          />
         ))}
       </div>
 
