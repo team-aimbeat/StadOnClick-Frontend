@@ -68,6 +68,8 @@ export type Vendor = {
     lastName?: string | null;
     email: string;
     phone?: string | null;
+    profileImageKey?: string | null;
+    profileImageUrl?: string | null;
   };
 };
 
