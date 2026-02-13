@@ -1,6 +1,11 @@
-import { ChevronLeft, ChevronRight, Clock, MapPin, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Star } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Service } from "./types"
+import {
+  WISHLIST_UPDATED_EVENT,
+  isWishlisted,
+  toggleWishlist,
+} from "@/utils/wishlistStorage"
 
 type ServiceCardProps = {
   service: Service
@@ -13,6 +18,8 @@ export default function ServiceCard({
   onViewDetails,
   onEnquiry,
 }: ServiceCardProps) {
+  const [wishlisted, setWishlisted] = useState<boolean>(() => isWishlisted(service.id))
+
   const images = useMemo(() => {
     const list =
       service.images && service.images.length > 0 ? service.images : [service.image]
@@ -44,6 +51,17 @@ export default function ServiceCard({
       snapRafRef.current = null
     }
   }, [imagesKey])
+
+  useEffect(() => {
+    const syncWishlist = () => setWishlisted(isWishlisted(service.id))
+    syncWishlist()
+    window.addEventListener(WISHLIST_UPDATED_EVENT, syncWishlist)
+    window.addEventListener("storage", syncWishlist)
+    return () => {
+      window.removeEventListener(WISHLIST_UPDATED_EVENT, syncWishlist)
+      window.removeEventListener("storage", syncWishlist)
+    }
+  }, [service.id])
 
   const showPrev = () => {
     if (images.length <= 1) return
@@ -91,6 +109,29 @@ export default function ServiceCard({
   return (
     <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-139.5">
       <div className="relative h-51 overflow-hidden">
+        <button
+          type="button"
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className={`absolute right-4 top-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border bg-white/95 shadow-sm transition ${
+            wishlisted
+              ? "border-rose-200 text-rose-500"
+              : "border-slate-200 text-slate-500 hover:border-rose-200 hover:text-rose-500"
+          }`}
+          onClick={() => {
+            const next = toggleWishlist({
+              id: service.id,
+              title: service.title,
+              image: service.image,
+              location: service.location,
+              categoryName: service.categoryName,
+              rating: service.rating,
+              reviews: service.reviews,
+            })
+            setWishlisted(next)
+          }}
+        >
+          <Heart className={`h-4.5 w-4.5 ${wishlisted ? "fill-current" : ""}`} />
+        </button>
         <div
           className={`flex h-full w-full transform-gpu will-change-transform ${transitionEnabled ? "transition-transform duration-500 ease-out" : ""}`}
           style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}

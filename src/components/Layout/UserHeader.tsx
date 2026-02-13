@@ -328,14 +328,24 @@ export default function UserHeader() {
 
   const menuItems = useMemo(
     () => [
-      { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
+      {
+        label: "My Orders",
+        icon: <ShoppingBag className="h-4 w-4" />,
+        onClick: () => navigate("/orders"),
+      },
+      {
+        label: "My Wishlist",
+        icon: <Heart className="h-4 w-4" />,
+        onClick: () => navigate("/wishlist"),
+      },
       {
         label: "Notifications",
         icon: <Bell className="h-4 w-4" />,
         meta: notificationsBadge,
+        onClick: () => setNotificationsMenuOpen(true),
       },
     ],
-    [notificationsBadge],
+    [navigate, notificationsBadge],
   );
 
   const handleNotificationSelect = async (notification: UserNotificationItem) => {
@@ -506,7 +516,7 @@ export default function UserHeader() {
               }}
             />
             <IconButton
-              icon={<ShoppingCartIcon  className="h-5 w-5 text-slate-500" />}
+              icon={<ShoppingBag   className="h-5 w-5 text-slate-500" />}
               label="My orders"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -785,7 +795,10 @@ export default function UserHeader() {
                           key={item.label}
                           type="button"
                           className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-sky-50"
-                          onClick={() => setProfileMenuOpen(false)}
+                          onClick={() => {
+                            setProfileMenuOpen(false);
+                            item.onClick();
+                          }}
                         >
                           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-50 text-blue-700">
                             {item.icon}
