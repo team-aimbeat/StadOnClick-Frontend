@@ -52,6 +52,17 @@ const navLinkBase =
   "after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[2px] after:rounded-full after:bg-blue-600 after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:content-[''] " +
   "hover:after:scale-x-100";
 
+const resolveUserAvatarUrl = (user: unknown) => {
+  if (!user || typeof user !== "object") return "";
+  const candidate = user as Record<string, unknown>;
+  const raw =
+    candidate.profileImageUrl ??
+    candidate.avatar ??
+    candidate.profileImage ??
+    null;
+  return typeof raw === "string" ? raw.trim() : "";
+};
+
 export default function UserHeader() {
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -62,6 +73,7 @@ export default function UserHeader() {
   const [cartMenuOpen, setCartMenuOpen] = useState(false);
   const [notificationsMenuOpen, setNotificationsMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [isProfileImageBroken, setIsProfileImageBroken] = useState(false);
   const [cartSnapshot, setCartSnapshot] = useState<StoredCart>(() => getStoredCart());
   const anyMenuOpen = profileMenuOpen || cartMenuOpen || notificationsMenuOpen;
 
@@ -293,6 +305,13 @@ export default function UserHeader() {
 
     return accountName;
   }, [accountName, user]);
+
+  const profileImageUrl = resolveUserAvatarUrl(user);
+  const canShowProfileImage = Boolean(profileImageUrl) && !isProfileImageBroken;
+
+  useEffect(() => {
+    setIsProfileImageBroken(false);
+  }, [profileImageUrl]);
 
   const handleSignOut = async () => {
     try {
@@ -700,9 +719,18 @@ export default function UserHeader() {
                   className="flex items-center gap-2  rounded-full  px-2 py-2 text-sm font-semibold text-slate-900 transition hover:border-yellow-400"
                   onClick={() => setProfileMenuOpen((prev) => !prev)}
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-blue-700">
-                    {userInitial}
-                  </span>
+                  {canShowProfileImage ? (
+                    <img
+                      src={profileImageUrl}
+                      alt={accountName}
+                      className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200"
+                      onError={() => setIsProfileImageBroken(true)}
+                    />
+                  ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-blue-700">
+                      {userInitial}
+                    </span>
+                  )}
                   <span className="sr-only">{accountName}</span>
                 </button>
 
@@ -728,9 +756,18 @@ export default function UserHeader() {
 
                     <a href="/account">
                       <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
-                          {userInitial}
-                        </div>
+                        {canShowProfileImage ? (
+                          <img
+                            src={profileImageUrl}
+                            alt={accountName}
+                            className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200"
+                            onError={() => setIsProfileImageBroken(true)}
+                          />
+                        ) : (
+                          <div className="flex h-15 w-15 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
+                            {userInitial}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-slate-900 truncate">
                             {accountName}
