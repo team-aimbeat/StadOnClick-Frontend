@@ -5,6 +5,7 @@ export type Coupon = {
   code: string;
   title: string;
   discount: number;
+  discountType: "PERCENT" | "FLAT";
   minOrder: number;
   maxUses: number;
   expiry: string;
@@ -15,6 +16,7 @@ export type Coupon = {
 type VendorCouponResponse = {
   code: string;
   title: string;
+  discountType?: "PERCENT" | "FLAT";
   value: string;
   validFrom: string;
   validTill: string;
@@ -31,11 +33,12 @@ const mapToCoupon = (payload: VendorCouponResponse): Coupon => ({
   code: payload.code,
   title: payload.title,
   discount: Number(payload.value),
+  discountType: payload.discountType ?? "PERCENT",
   minOrder: Number(payload.minorder),
   maxUses: Number(payload.uses) || 0,
   expiry: new Date(payload.validTill).toISOString().split("T")[0],
   status: payload.Status,
-  preview: `${payload.title} - ${payload.value}% off`,
+  preview: `${payload.title} - ${payload.discountType === "FLAT" ? payload.value : `${payload.value}%`} off`,
 });
 
 export const vendorcouponsApi = createApi({
@@ -48,6 +51,14 @@ export const vendorcouponsApi = createApi({
       transformResponse: (response: CouponsResponse) =>
         response.data.map(mapToCoupon),
       providesTags: ["Coupons"],
+    }),
+    getPublicVendorCoupons: builder.query<Coupon[], string>({
+      query: (vendorId) => ({
+        url: "/vendor/coupons",
+        params: { vendorId },
+      }),
+      transformResponse: (response: CouponsResponse) =>
+        response.data.map(mapToCoupon),
     }),
 
     createCoupon: builder.mutation<Coupon, Partial<Coupon>>({
@@ -83,6 +94,7 @@ export const vendorcouponsApi = createApi({
 
 export const {
   useGetCouponsQuery,
+  useGetPublicVendorCouponsQuery,
   useCreateCouponMutation,
   useDisableCouponMutation,
 } = vendorcouponsApi;

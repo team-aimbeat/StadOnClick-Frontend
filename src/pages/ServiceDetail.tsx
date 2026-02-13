@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import salon1 from "@/assets/images/salon1.png";
 import salon2 from "@/assets/images/salon2.png";
 import salon3 from "@/assets/images/salon3.png";
+import map from "@/assets/icons/map.png";
 import { BookingModal } from "@/components/booking/BookingModal";
 import {
   slotStatusLegend,
@@ -36,6 +37,7 @@ import {
   useCreateReviewMutation,
 } from "@/services/serviceReviewsApi";
 import { useApplyCouponMutation } from "@/services/vendorOrdersApi";
+import { useGetPublicVendorCouponsQuery } from "@/services/vendoiCouponsApi";
 import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
 import { useCreateAffiliateServiceLinkMutation } from "@/features/affiliate/api/affiliateApi";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,7 @@ import { Badge } from "@/components/ui/badge";
 import { LocationMap } from "@/components/marketplace/Map/LocationMap";
 import toast from "react-hot-toast";
 import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify";
+import { clearStoredCart, setStoredCart } from "@/utils/cartStorage";
 
 const STOCKHOLM_TIMEZONE = "Europe/Stockholm";
 
@@ -96,6 +99,25 @@ type CartItem = {
   quantity: number;
   slotId: string | null;
 };
+
+const couponThemes = [
+  {
+    leftPanel: "bg-[#E9ECF2]",
+    rightPanel: "bg-gradient-to-r from-[#2A2236] via-[#7A1D34] to-[#E30B24]",
+  },
+  {
+    leftPanel: "bg-[#E8F2EE]",
+    rightPanel: "bg-gradient-to-r from-[#12322C] via-[#1D6B59] to-[#26B68A]",
+  },
+  {
+    leftPanel: "bg-[#EAF0FA]",
+    rightPanel: "bg-gradient-to-r from-[#1E2A4A] via-[#2E4FA4] to-[#4F7DF3]",
+  },
+  {
+    leftPanel: "bg-[#F8ECE7]",
+    rightPanel: "bg-gradient-to-r from-[#40210F] via-[#8E3E1B] to-[#E66A2C]",
+  },
+] as const;
 
 export default function ServiceDetail() {
   const navigate = useNavigate();
@@ -277,12 +299,34 @@ export default function ServiceDetail() {
   const cartTaxRate = 0.12;
   const cartTaxes = cartSubtotal * cartTaxRate;
   const cartDiscount = couponDiscount;
-  const cartTotal = cartSubtotal + cartTaxes;
+  const cartTotal = Math.max(cartSubtotal + cartTaxes - cartDiscount, 0);
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      clearStoredCart();
+      return;
+    }
+
+    setStoredCart(
+      cartItems.map((item) => ({
+        id: item.offering.id,
+        title: item.offering.name,
+        description: item.offering.description ?? "Premium experience",
+        quantity: item.quantity,
+        unitPrice: item.offering.salePrice,
+        totalPrice: item.offering.salePrice * item.quantity,
+      })),
+    );
+  }, [cartItems]);
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return;
     if (cartItems.length === 0) {
       toast.success("Add services to your cart before applying a coupon.");
+      return;
+    }
+    if (!vendorId) {
+      toast.error("Unable to resolve the vendor for this booking.");
       return;
     }
 
@@ -445,6 +489,10 @@ export default function ServiceDetail() {
     useGetServiceOfferingsQuery(currentServiceId ?? "", {
       skip: !currentServiceId,
     });
+  const { data: vendorCoupons = [] } = useGetPublicVendorCouponsQuery(
+    vendorId ?? "",
+    { skip: !vendorId },
+  );
 
   const { data: reviews, isLoading: reviewsLoading } =
     useGetServiceReviewsQuery(currentServiceId ?? "", {
@@ -834,11 +882,11 @@ export default function ServiceDetail() {
                       key={item.offering.id}
                       className="flex items-start justify-between gap-4"
                     >
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-slate-900">
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-semibold text-slate-900">
                           {item.offering.name}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="break-all text-xs text-slate-500">
                           {item.offering.description ?? "Premium experience"}
                         </p>
                         <button
@@ -849,11 +897,11 @@ export default function ServiceDetail() {
                           Remove
                         </button>
                       </div>
-                      <div className="text-right">
+                      <div className="w-[136px] shrink-0 text-right">
                         <p className="text-sm font-semibold text-slate-900">
                           {formatCurrency(item.offering.salePrice)} per person
                         </p>
-                        <div className="mt-2 flex items-center justify-end gap-2 rounded-full  px-2 py-1">
+                        <div className="mt-2 flex items-center justify-end gap-2 rounded-full px-2 py-1">
                           <button
                             type="button"
                             className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
@@ -964,34 +1012,143 @@ export default function ServiceDetail() {
               >
                 {isCreatingSession ? "Processing..." : "Confirm booking"}
               </Button>
+        
             </div>
+       
           </div>
         </div>
 
-        <div className="space-y-5">
-          <div className="space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900">
-                {service.title}'s Location
-              </h2>
+<div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-              <a
-                href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold text-blue-600 hover:underline"
-              >
-                Directions
-              </a>
+  {/* ================= LEFT SIDE - LOCATION ================= */}
+  <div className="lg:col-span-3 space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
+    
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-semibold text-slate-900">
+        {service.title}'s Location
+      </h2>
+
+      <a
+        href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-600 hover:underline"
+      >
+        <img src={map} className="h-5 w-5" />
+        <span>Google Maps</span>
+      </a>
+    </div>
+
+    <LocationMap
+      lat={service.latitude}
+      lng={service.longitude}
+      name={service.title}
+    />
+  </div>
+
+
+  {/* ================= RIGHT SIDE - COUPONS ================= */}
+  {vendorCoupons.length > 0 && (
+    <div className="lg:col-span-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+
+      <h4 className="text-sm font-semibold text-slate-900">
+        Coupons
+      </h4>
+
+      <div className="space-y-3">
+        {vendorCoupons.slice(0, 4).map((coupon, index) => {
+          const theme = couponThemes[index % couponThemes.length];
+
+          return (
+            <div
+              key={coupon.code}
+              className="relative overflow-hidden rounded-2xl shadow-sm"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-[122px_1fr]">
+
+                {/* LEFT PANEL */}
+                <div className={`relative px-3 py-4 text-center ${theme.leftPanel}`}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-700">
+                    Shopping Coupon
+                  </p>
+
+                  <p className="mt-2 text-[30px] font-black leading-none text-slate-900">
+                    {coupon.discountType === "FLAT"
+                      ? `${formatCurrency(coupon.discount)}`
+                      : `${coupon.discount}%`}
+                  </p>
+
+                  <p className="text-[28px] font-black leading-none text-slate-900">
+                    OFF
+                  </p>
+
+                  <div className="mt-3 space-y-1 text-[11px] text-slate-600">
+                    <p>Min order {formatCurrency(coupon.minOrder)}</p>
+                    <p>Max uses {coupon.maxUses}</p>
+                  </div>
+
+                  <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                </div>
+
+
+                {/* RIGHT PANEL */}
+                <div className={`relative px-4 py-4 text-white ${theme.rightPanel}`}>
+                  <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+
+                  <div className="pl-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
+                      STADONCLICK.COM
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold leading-tight">
+                      {coupon.title}
+                    </p>
+
+                    <p className="mt-2 text-xs text-white/85">
+                      Valid until{" "}
+                      <span className="font-semibold text-white">
+                        {new Intl.DateTimeFormat("en-US", {
+                          month: "long",
+                          year: "numeric",
+                        }).format(new Date(coupon.expiry))}
+                      </span>
+                    </p>
+
+                    <p className="mt-2 text-base font-bold tracking-[0.22em]">
+                      Code : {coupon.code}
+                    </p>
+
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <p className="text-[11px] text-white/90">
+                        Apply this code at checkout to unlock the offer.
+                      </p>
+
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="h-8 shrink-0 rounded-md border border-white/40 bg-white/20 px-3 text-xs font-semibold text-white hover:bg-white/30"
+                        onClick={() => {
+                          setPromoCode(coupon.code);
+                          setCouponError(null);
+                        }}
+                      >
+                        Use code
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
+          );
+        })}
+      </div>
 
-            <LocationMap
-              lat={service.latitude}
-              lng={service.longitude}
-              name={service.title}
-            />
-          </div>
-        </div>
+    </div>
+  )}
+
+</div>
+
 
         <div className="max-w-[800px]">
           {/* Highlights & Amenities Section */}
