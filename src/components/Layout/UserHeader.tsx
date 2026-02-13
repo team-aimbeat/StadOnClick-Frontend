@@ -26,12 +26,13 @@ import {
   type ServiceCategory,
 } from "@/services/serviceCategoriesApi";
 import { plannedCategories } from "@/data/vendorServiceCategories";
-
-type CartPreviewItem = {
-  title: string;
-  detail: string;
-  price: string;
-};
+import {
+  CART_UPDATED_EVENT,
+  getCartItemCount,
+  getCartSubtotal,
+  getStoredCart,
+  type StoredCart,
+} from "@/utils/cartStorage";
 
 const searchCategories = [
   { label: "Beauty", slug: "salon-deals" },
@@ -43,30 +44,6 @@ const searchCategories = [
 ];
 
 const locations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad"];
-
-const cartPreviewItems: CartPreviewItem[] = [
-  {
-    title: "Nordic Spa Evening",
-    detail: "2 guests - Feb 12",
-    price: "$145",
-  },
-  {
-    title: "Stockholm Street Food Tour",
-    detail: "1 guest - Feb 14",
-    price: "$95",
-  },
-  {
-    title: "Archipelago Kayak Adventure",
-    detail: "1 guest - Feb 18",
-    price: "$110",
-  },
-];
-
-const cartPreviewSubtotal = cartPreviewItems.reduce(
-  (total, item) =>
-    total + Number(item.price.replace(/[^0-9.]/g, "")),
-  0
-);
 
 const navLinkBase =
   "group relative inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 " +
@@ -85,6 +62,7 @@ export default function UserHeader() {
   const [cartMenuOpen, setCartMenuOpen] = useState(false);
   const [notificationsMenuOpen, setNotificationsMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [cartSnapshot, setCartSnapshot] = useState<StoredCart>(() => getStoredCart());
   const anyMenuOpen = profileMenuOpen || cartMenuOpen || notificationsMenuOpen;
 
   const user = useAppSelector((state) => state.auth.user);
@@ -106,6 +84,30 @@ export default function UserHeader() {
   const isEmptyNotifications = !notificationsList.length && !isNotificationsFetching;
   const isNotificationsLoading = isNotificationsFetching && !notificationsList.length;
   const notificationsBadge = unreadCount > 0 ? String(unreadCount) : undefined;
+  const cartItemCount = getCartItemCount(cartSnapshot);
+  const cartPreviewSubtotal = getCartSubtotal(cartSnapshot);
+  const cartBadge = cartItemCount > 0 ? String(cartItemCount) : undefined;
+  const cartPreviewItems = cartSnapshot.items.slice(0, 3).map((item) => ({
+    id: item.id,
+    title: item.title,
+    quantityLabel: `Qty ${item.quantity}`,
+    description: item.description ?? "",
+    price: `SEK ${item.totalPrice.toFixed(0)}`,
+  }));
+  const hasCartItems = cartSnapshot.items.length > 0;
+
+  useEffect(() => {
+    const syncCart = () => setCartSnapshot(getStoredCart());
+
+    syncCart();
+    window.addEventListener(CART_UPDATED_EVENT, syncCart);
+    window.addEventListener("storage", syncCart);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, syncCart);
+      window.removeEventListener("storage", syncCart);
+    };
+  }, []);
 
   useEffect(() => {
     if (!anyMenuOpen) return;
@@ -428,27 +430,7 @@ export default function UserHeader() {
           </div>
 
           <div className="flex items-center gap-3">
-            <IconButton
-              icon={<Bookmark className="h-5 w-5 text-slate-500" />}
-              label="Wishlist"
-              onClick={() => {
-                setCartMenuOpen(false);
-                setNotificationsMenuOpen(false);
-                setProfileMenuOpen(false);
-                navigate("/wishlist");
-              }}
-            />
-            <IconButton
-              icon={<ShoppingCartIcon  className="h-5 w-5 text-slate-500" />}
-              label="My orders"
-              onClick={() => {
-                setCartMenuOpen(false);
-                setNotificationsMenuOpen(false);
-                setProfileMenuOpen(false);
-                navigate("/orders");
-              }}
-            />
-            <button
+               <button
               type="button"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -473,6 +455,7 @@ export default function UserHeader() {
               <BriefcaseBusiness className="h-4.5 w-4.5 text-slate-500" />
               <span>Business on StadOnClick</span>
             </button>
+                     
             <button
               type="button"
               onClick={() => {
@@ -492,11 +475,33 @@ export default function UserHeader() {
               <Megaphone className="h-4.5 w-4.5 text-slate-500" />
               <span>Affiliate Program</span>
             </button>
+            
+            <IconButton
+              icon={<Heart className="h-5 w-5 text-red-500" />}
+              label="Wishlist"
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/wishlist");
+              }}
+            />
+            <IconButton
+              icon={<ShoppingCartIcon  className="h-5 w-5 text-slate-500" />}
+              label="My orders"
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/orders");
+              }}
+            />
+
             <div ref={cartRef} className="relative">
               <IconButton
-                icon={<ShoppingBag className="h-5 w-5 text-slate-500" />}
+                icon={<ShoppingCartIcon className="h-5 w-5 text-blue-500" />}
                 label="Cart"
-                badge="3"
+                badge={cartBadge}
                 onClick={() => {
                   setCartMenuOpen((prev) => !prev);
                   setNotificationsMenuOpen(false);
@@ -508,7 +513,7 @@ export default function UserHeader() {
                 {cartMenuOpen ? (
                   <motion.div
                     {...dropdownMotion}
-                    className="absolute right-0 top-full z-40 mt-2 w-[320px] origin-top-right rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)] will-change-transform"
+                    className="absolute right-0 top-full z-40 mt-2 w-[360px] origin-top-right rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)] will-change-transform"
                   >
                     <div className="px-5 py-4">
                       <div className="flex items-start justify-between gap-3">
@@ -521,38 +526,49 @@ export default function UserHeader() {
                           </p>
                         </div>
                         <span className="text-xs font-semibold text-sky-500">
-                          {cartPreviewItems.length} items
+                          {cartItemCount} {cartItemCount === 1 ? "item" : "items"}
                         </span>
                       </div>
                       <div className="mt-4 space-y-3">
-                        {cartPreviewItems.map((item) => (
-                          <div
-                            key={item.title}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 px-3 py-2"
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-sm font-semibold text-slate-900">
-                                {item.title}
-                              </span>
-                              <span className="text-xs text-slate-500">
-                                {item.detail}
+                        {hasCartItems ? (
+                          cartPreviewItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 px-3 py-2.5"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-semibold text-slate-900">
+                                  {item.title}
+                                </span>
+                                <span className="mt-0.5 block text-xs font-medium text-slate-600">
+                                  {item.quantityLabel}
+                                </span>
+                                {item.description ? (
+                                  <span className="mt-0.5 block truncate text-xs text-slate-500">
+                                    {item.description}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <span className="shrink-0 text-sm font-semibold text-slate-900">
+                                {item.price}
                               </span>
                             </div>
-                            <span className="text-sm font-semibold text-slate-900">
-                              {item.price}
-                            </span>
+                          ))
+                        ) : (
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 px-3 py-5 text-center text-sm text-slate-500">
+                            Your cart is empty.
                           </div>
-                        ))}
+                        )}
                       </div>
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
                         <Link
-                          to="/cart"
-                          className="text-sky-600 transition hover:text-sky-900"
+                          to="/orders"
+                          className="font-medium text-sky-600 transition hover:text-sky-900"
                         >
-                          View cart
+                          View orders
                         </Link>
-                        <span className="text-xs font-semibold text-slate-500">
-                          Subtotal ${cartPreviewSubtotal.toFixed(2)}
+                        <span className="text-xs font-semibold text-slate-600">
+                          Subtotal SEK {cartPreviewSubtotal.toFixed(0)}
                         </span>
                       </div>
                     </div>
@@ -562,7 +578,7 @@ export default function UserHeader() {
             </div>
             <div ref={notificationsRef} className="relative">
               <IconButton
-                icon={<Bell className="h-5 w-5 text-slate-500" />}
+                icon={<Bell className="h-5 w-5 text-yellow-500" />}
                 label="Alerts"
                 badge={notificationsBadge}
                 onClick={() => {
@@ -681,10 +697,10 @@ export default function UserHeader() {
               <div ref={profileRef} className="relative">
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-yellow-400"
+                  className="flex items-center gap-2  rounded-full  px-2 py-2 text-sm font-semibold text-slate-900 transition hover:border-yellow-400"
                   onClick={() => setProfileMenuOpen((prev) => !prev)}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-blue-700">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-blue-700">
                     {userInitial}
                   </span>
                   <span className="sr-only">{accountName}</span>

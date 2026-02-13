@@ -19,6 +19,12 @@ import {
   masterServiceVisuals,
 } from "@/pages/vendor-services/vendorServicesVisuals";
 
+const fallbackOverviewVisual = (label: string): Visual => ({
+  src: well,
+  alt: `${label} visual`,
+  srcSet: `${wellSm} 480w, ${well} 1200w`,
+});
+
 const isRenderableImageUrl = (value?: string | null) => {
   if (!value) return false;
   return (
@@ -122,8 +128,8 @@ export function VendorServiceOverview({
         <div className="lg:col-span-2 rounded-3xl border border-slate-100 bg-white p-5">
           <div className="mb-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
             <img
-              src={primaryVisual.src}
-              alt={primaryVisual.alt}
+              src={primaryImage}
+              alt={service.title}
               className="h-56 w-full object-cover"
               loading="lazy"
               decoding="async"

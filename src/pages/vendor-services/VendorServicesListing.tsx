@@ -11,6 +11,12 @@ import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
 import { ServiceCardOfferingsPreview } from "@/pages/vendor-services/ServiceCardOfferingsPreview";
 import { categoryVisuals, masterServiceVisuals } from "@/pages/vendor-services/vendorServicesVisuals";
 
+const fallbackListingVisual = (label: string): Visual => ({
+  src: well,
+  alt: `${label} visual`,
+  srcSet: `${wellSm} 480w, ${well} 1200w`,
+});
+
 const isRenderableImageUrl = (value?: string | null) => {
   if (!value) return false;
   return (
@@ -95,8 +101,8 @@ export const VendorServicesListing = ({
                 <div className="mb-4 grid grid-cols-3 gap-3">
                   <div className="col-span-2 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
                     <img
-                      src={primaryVisual.src}
-                      alt={primaryVisual.alt}
+                      src={primaryImage}
+                      alt={service.title}
                       className="h-full w-full object-cover transition duration-200 group-hover:scale-105"
                       loading="lazy"
                       decoding="async"
