@@ -724,7 +724,7 @@ const VendorServices = () => {
       );
       return;
     }
-    if (!validateVendorServiceDetails()) {
+    if (!createdServiceId && !validateVendorServiceDetails()) {
       setGeneralError("Complete the vendor service details before continuing.");
       return;
     }
@@ -744,6 +744,7 @@ const VendorServices = () => {
           refundPolicy.type === "NO_REFUND"
             ? null
             : Number(refundPolicy.windowHours);
+
         const vendorServicePayload = {
           categoryId: selectedCategoryId,
           title: vendorServiceDetails.title.trim(),
@@ -763,6 +764,55 @@ const VendorServices = () => {
         setCreatedServiceId(currentServiceId);
         setVendorServiceStep("success");
         toast.success("Vendor service created");
+      } else {
+        const updatePayload: {
+          id: string;
+          categoryId: string;
+          title?: string;
+          description?: string;
+          terms?: string;
+          latitude?: number;
+          longitude?: number;
+          refundPolicy?: { type: RefundPolicyType; windowHours?: number | null };
+        } = {
+          id: currentServiceId,
+          categoryId: selectedCategoryId,
+        };
+
+        const nextTitle = vendorServiceDetails.title.trim();
+        if (nextTitle) updatePayload.title = nextTitle;
+
+        const nextDescription = vendorServiceDetails.description.trim();
+        if (nextDescription) updatePayload.description = nextDescription;
+
+        const nextTerms = vendorServiceDetails.terms.trim();
+        if (nextTerms) updatePayload.terms = nextTerms;
+
+        const latRaw = vendorServiceDetails.latitude.trim();
+        const lngRaw = vendorServiceDetails.longitude.trim();
+        const lat = latRaw ? Number(latRaw) : NaN;
+        const lng = lngRaw ? Number(lngRaw) : NaN;
+        if (Number.isFinite(lat)) updatePayload.latitude = lat;
+        if (Number.isFinite(lng)) updatePayload.longitude = lng;
+
+        const parsedWindowHours =
+          refundPolicy.type === "NO_REFUND"
+            ? null
+            : Number(refundPolicy.windowHours);
+        if (
+          refundPolicy.type === "NO_REFUND" ||
+          (Number.isFinite(parsedWindowHours) && parsedWindowHours > 0)
+        ) {
+          updatePayload.refundPolicy = {
+            type: refundPolicy.type,
+            windowHours: refundPolicy.type === "NO_REFUND" ? null : parsedWindowHours,
+          };
+        }
+
+        await updateVendorService({
+          ...updatePayload,
+        }).unwrap();
+        setVendorServiceStep("success");
       }
 
       // 2. Create multiple Offerings

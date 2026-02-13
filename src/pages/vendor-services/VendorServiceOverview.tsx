@@ -148,10 +148,14 @@ export function VendorServiceOverview({
               </span>
               <span className="truncate">{service.category?.name ?? "—"}</span>
             </div>
+                    <div>
+              <h2 className="text-xl font-semibold text-slate-900">{service.title}</h2>
+          <p className="mt-1 text-sm text-slate-600 ">{service.description}</p>
           </div>
+          </div>
+  
 
-          <h2 className="text-xl font-semibold text-slate-900">{service.title}</h2>
-          <p className="mt-1 text-sm text-slate-600">{service.description}</p>
+        
 
           {service.terms ? (
             <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">

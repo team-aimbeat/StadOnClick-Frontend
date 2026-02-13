@@ -553,17 +553,17 @@ export default function UserHeader() {
                           cartPreviewItems.map((item) => (
                             <div
                               key={item.id}
-                              className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 px-3 py-2.5"
+                              className="flex items-start justify-between gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 px-3 py-2.5"
                             >
                               <div className="min-w-0 flex-1">
-                                <span className="block truncate text-sm font-semibold text-slate-900">
+                                <span className="block max-w-full truncate text-sm font-semibold text-slate-900">
                                   {item.title}
                                 </span>
                                 <span className="mt-0.5 block text-xs font-medium text-slate-600">
                                   {item.quantityLabel}
                                 </span>
                                 {item.description ? (
-                                  <span className="mt-0.5 block truncate text-xs text-slate-500">
+                                  <span className="mt-0.5 block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-slate-500">
                                     {item.description}
                                   </span>
                                 ) : null}

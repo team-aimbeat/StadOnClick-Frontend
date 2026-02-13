@@ -880,13 +880,13 @@ export default function ServiceDetail() {
                   {cartItems.map((item) => (
                     <div
                       key={item.offering.id}
-                      className="flex items-start justify-between gap-4"
+                      className="flex items-start justify-between gap-4 overflow-hidden"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="break-words text-sm font-semibold text-slate-900">
+                        <p className="max-w-full break-words text-sm font-semibold text-slate-900">
                           {item.offering.name}
                         </p>
-                        <p className="break-all text-xs text-slate-500">
+                        <p className="max-w-full overflow-hidden break-all text-xs text-slate-500">
                           {item.offering.description ?? "Premium experience"}
                         </p>
                         <button
