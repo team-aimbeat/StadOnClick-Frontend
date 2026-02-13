@@ -206,7 +206,7 @@ export default function ServiceDetail() {
     if (!marketplaceList?.data || marketplaceList.data.length === 0)
       return undefined;
     if (serviceIdParam) {
-      return marketplaceList.data[0];
+      return marketplaceList.data.find((row) => row.id === serviceIdParam);
     }
     if (!serviceSlug) return undefined;
     return marketplaceList.data.find(
