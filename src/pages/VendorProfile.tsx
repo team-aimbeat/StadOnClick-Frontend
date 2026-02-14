@@ -4,10 +4,11 @@ import { HiOutlineCheckCircle } from "react-icons/hi2";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { setUser } from "@/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { authApi, useRefreshMutation } from "@/features/auth/api/authApi";
+import { authApi, useGetCitiesQuery, useRefreshMutation } from "@/features/auth/api/authApi";
 import { useMockLoader } from "@/lib/useMockLoader";
 import {
   useCreateVendorBusinessProfileMutation,
@@ -42,6 +43,7 @@ const VendorProfile = () => {
     error: profileError,
     refetch,
   } = useGetVendorProfileQuery(undefined, { skip: shouldSkipVendorProfileQuery });
+  const { data: citiesResponse, isLoading: isLoadingCities } = useGetCitiesQuery(undefined);
   const [updateProfile, { isLoading: isUpdating }] = useUpdateVendorProfileMutation();
   const [createBusinessProfile, { isLoading: isCreating }] = useCreateVendorBusinessProfileMutation();
   const [refreshSession] = useRefreshMutation();
@@ -246,6 +248,11 @@ const VendorProfile = () => {
     ];
   }, [profileData]);
 
+  const cityOptions = useMemo(() => {
+    const cities = citiesResponse?.data ?? [];
+    return [...cities].sort((a, b) => a.name.localeCompare(b.name));
+  }, [citiesResponse?.data]);
+
   if (loading || isLoadingProfile || isEnsuringOnboarding) {
     return (
       <DashboardContainer className="py-10">
@@ -355,14 +362,29 @@ const VendorProfile = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">City ID</label>
-                    <input
-                      type="text"
-                      value={cityId}
-                      onChange={(e) => setCityId(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
-                      placeholder="UUID"
-                    />
+                    <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">City</label>
+                    <Select value={cityId} onValueChange={setCityId}>
+                      <SelectTrigger className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm">
+                        <SelectValue placeholder={isLoadingCities ? "Loading cities..." : "Select city"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72 overflow-y-auto">
+                        {isLoadingCities ? (
+                          <SelectItem value="__loading__" disabled>
+                            Loading cities...
+                          </SelectItem>
+                        ) : cityOptions.length === 0 ? (
+                          <SelectItem value="__empty__" disabled>
+                            No cities found
+                          </SelectItem>
+                        ) : (
+                          cityOptions.map((city) => (
+                            <SelectItem key={city.id} value={city.id}>
+                              {city.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="text-xs uppercase tracking-wider text-slate-500 font-medium">Description</label>
