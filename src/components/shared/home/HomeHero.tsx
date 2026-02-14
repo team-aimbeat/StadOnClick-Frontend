@@ -86,12 +86,12 @@ return (
 
     {/* ================= CONTENT AT VERY BOTTOM ================= */}
     <div className="absolute bottom-8 left-1/2 w-full max-w-5xl -translate-x-1/2 px-6 text-center text-white">
-      <h1 className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
+      <h1 className="text-4xl font-semibold sm:text-4xl lg:text-5xl tracking-wider">
         Discover Services. Book Instantly.
       </h1>
 
-      <p className="mt-2 text-sm text-white/80 sm:text-base">
-        Beauty • Sports • Events • Hotels • Vacation
+      <p className="mt-2 text-sm text-white/80 sm:text-base tracking-wider">
+        Beauty | Sports | Events | Hotels | Vacation
       </p>
 
       {showHeroSearch && (
@@ -117,13 +117,13 @@ return (
       )}
 
       {/* POPULAR */}
-      <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs">
-        <span className="font-semibold">Popular:</span>
+      <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm sm:text-base">
+        <span className="font-semibold text-white/80 mt-1">Popular:</span>
         {popularChips.map((chip) => (
           <button
             key={chip.label}
             onClick={() => navigate(`/services/${chip.slug}`)}
-            className="rounded-full bg-black/60 px-3 py-1 hover:bg-black/80"
+            className="rounded-full bg-black/70 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
           >
             {chip.label}
           </button>

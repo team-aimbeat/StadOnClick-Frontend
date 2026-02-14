@@ -36,12 +36,17 @@ export type VendorServiceCategory = {
   highlights: string[]
   subcategories: string[]
   accent?: string
+  accentBg?: string
+  accentBgActive?: string
 }
 
 export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Experiences & Activities",
     slug: "experiences-activities",
+    accent: "#16a34a",
+    accentBg: "#dcfce7",
+    accentBgActive: "#bbf7d0",
     icon: HiOutlineSparkles,
     image: well,
     imageOptimized: wellSm,
@@ -64,6 +69,9 @@ export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Health & Wellness",
     slug: "health-wellness",
+    accent: "#fb7185",
+    accentBg: "#ffe4e6",
+    accentBgActive: "#fecdd3",
     icon: HiOutlineHeart,
     image: wellness,
     imageOptimized: wellnessSm,
@@ -84,6 +92,9 @@ export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Kids & Family",
     slug: "kids-family",
+    accent: "#f97316",
+    accentBg: "#fff7ed",
+    accentBgActive: "#ffe8d7",
     icon: HiOutlineUsers,
     image: family,
     imageOptimized: familySm,
@@ -103,6 +114,9 @@ export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Learning & Skill Development",
     slug: "learning-skill-development",
+    accent: "#22d3ee",
+    accentBg: "#ecfeff",
+    accentBgActive: "#cffafe",
     icon: HiOutlineAcademicCap,
     image: learn,
     imageOptimized: learnSm,
@@ -122,6 +136,9 @@ export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Home & Personal Services",
     slug: "home-personal-services",
+    accent: "#0ea5e9",
+    accentBg: "#dbeafe",
+    accentBgActive: "#bfdbfe",
     icon: HiOutlineHomeModern,
     image: wash,
     imageOptimized: washSm,
@@ -142,6 +159,9 @@ export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Travel & Transportation",
     slug: "travel-transportation",
+    accent: "#34d399",
+    accentBg: "#ecfdf5",
+    accentBgActive: "#bbf7d0",
     icon: HiOutlineMap,
     image: travel,
     imageOptimized: travelSm,
@@ -159,6 +179,9 @@ export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Food & Leisure",
     slug: "food-leisure",
+    accent: "#f59e0b",
+    accentBg: "#fef3c7",
+    accentBgActive: "#fde68a",
     icon: HiOutlineGlobeAlt,
     image: food,
     imageOptimized: foodSm,
@@ -176,6 +199,9 @@ export const plannedCategories: VendorServiceCategory[] = [
   {
     name: "Real Estate & Local Support",
     slug: "real-estate-local-support",
+    accent: "#14b8a6",
+    accentBg: "#ccfbf1",
+    accentBgActive: "#99f6e4",
     icon: HiOutlineBuildingOffice2,
     image: home,
     imageOptimized: homeSm,

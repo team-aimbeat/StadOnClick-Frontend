@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, Bookmark, BriefcaseBusiness, ChevronRight, ClipboardList, Heart, Megaphone, ShoppingBag, ShoppingCart, ShoppingCartIcon, Sparkles, UserRound, X } from "lucide-react";
+import { Bell, Bookmark, BriefcaseBusiness, ChevronLeft, ChevronRight, Heart, Megaphone, Search, ShoppingBag, ShoppingCartIcon, Sparkles, UserRound, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   useEffect,
@@ -45,12 +45,44 @@ const searchCategories = [
 
 const locations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad"];
 
+const cartPreviewItems: CartPreviewItem[] = [
+  {
+    title: "Nordic Spa Evening",
+    detail: "2 guests - Feb 12",
+    price: "$145",
+  },
+  {
+    title: "Stockholm Street Food Tour",
+    detail: "1 guest - Feb 14",
+    price: "$95",
+  },
+  {
+    title: "Archipelago Kayak Adventure",
+    detail: "1 guest - Feb 18",
+    price: "$110",
+  },
+];
+
+const cartPreviewSubtotal = cartPreviewItems.reduce(
+  (total, item) =>
+    total + Number(item.price.replace(/[^0-9.]/g, "")),
+  0
+);
+
 const navLinkBase =
-  "group relative inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 " +
-  "hover:-translate-y-[1px] hover:bg-blue-50/60 hover:text-blue-700 hover:shadow-sm " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2 " +
-  "after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[2px] after:rounded-full after:bg-blue-600 after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:content-[''] " +
-  "hover:after:scale-x-100";
+  "group flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30";
+
+
+const categoryAccentClasses = [
+  "bg-rose-50 text-rose-600",
+  "bg-amber-50 text-amber-600",
+  "bg-lime-50 text-lime-600",
+  "bg-emerald-50 text-emerald-600",
+  "bg-sky-50 text-sky-600",
+  "bg-indigo-50 text-indigo-600",
+  "bg-purple-50 text-purple-600",
+  "bg-fuchsia-50 text-fuchsia-600",
+];
 
 const resolveUserAvatarUrl = (user: unknown) => {
   if (!user || typeof user !== "object") return "";
@@ -176,6 +208,8 @@ export default function UserHeader() {
   const [isSubCategoriesLoading, setIsSubCategoriesLoading] = useState(false);
   const [popoverTop, setPopoverTop] = useState(0);
   const navContainerRef = useRef<HTMLDivElement | null>(null);
+  const megaMenuRef = useRef<HTMLDivElement | null>(null);
+  const navListRef = useRef<HTMLDivElement | null>(null);
 
   const { data: masterCategories = [] } = useGetMasterCategoriesQuery();
   const [fetchCategoriesForMaster] = useLazyGetServiceCategoriesByMasterQuery();
@@ -263,6 +297,45 @@ export default function UserHeader() {
     }
 
     setHoveredMasterSlug(slug);
+  };
+
+  useEffect(() => {
+    if (!hoveredMasterSlug) return;
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        (navContainerRef.current && navContainerRef.current.contains(target)) ||
+        (megaMenuRef.current && megaMenuRef.current.contains(target))
+      ) {
+        return;
+      }
+      setHoveredMasterSlug(null);
+    };
+
+    const handleDocumentPointer = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (
+        (navContainerRef.current && navContainerRef.current.contains(target)) ||
+        (megaMenuRef.current && megaMenuRef.current.contains(target))
+      ) {
+        return;
+      }
+      setHoveredMasterSlug(null);
+    };
+
+    document.addEventListener("click", handleDocumentClick);
+    document.addEventListener("pointermove", handleDocumentPointer);
+    return () => {
+      document.removeEventListener("click", handleDocumentClick);
+      document.removeEventListener("pointermove", handleDocumentPointer);
+    };
+  }, [hoveredMasterSlug]);
+
+  const scrollNavigation = (direction: "left" | "right") => {
+    if (!navListRef.current) return;
+    const offset = direction === "right" ? 320 : -320;
+    navListRef.current.scrollBy({ left: offset, behavior: "smooth" });
   };
 
   const accountName = useMemo(() => {
@@ -412,14 +485,14 @@ export default function UserHeader() {
   }, [reduceMotion]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-      <div className="bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 bg-white shadow">
+      <div className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex w-full max-w-screen-2xl flex-wrap items-center gap-3 px-3 py-1 sm:px-4">
           <Link
             to="/"
             className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900"
           >
-            <div className="h-10 w-10 rounded-full bg-blue-700">
+<div className="h-8 w-8 rounded-full bg-blue-700">
               <span className="sr-only">StadOnClick logo</span>
             </div>
             <div className="leading-tight">
@@ -433,33 +506,35 @@ export default function UserHeader() {
             </div>
           </Link>
 
-          <div className="flex-1">
-    
-              <div className="mx-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 transition-all duration-200 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100">
+          <div className="flex flex-1 min-w-[260px] justify-center">
+            <div className="w-full max-w-3xl">
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100">
                 <input
                   type="search"
-                  placeholder="Search salons, gyms, restaurants, events..."
+                  placeholder="Search salons, gyms, restaurants, experiences..."
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={(event) =>
                     event.key === "Enter" && handleSearch()
                   }
-                  className="w-full bg-transparent px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                  className="flex-1 bg-transparent px-2 py-2 text-[14px] text-slate-700 placeholder:text-slate-400 focus:outline-none"
                   aria-label="Search"
                 />
                 <button
                   type="button"
                   onClick={handleSearch}
-                  className="rounded-full bg-blue-500 px-5 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+                  className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-1 text-sm font-semibold text-white  hover:bg-emerald-700"
                 >
+                  <Search className="h-4 w-4" />
                   Search
                 </button>
               </div>
-            
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-               <button
+          <div className="hidden flex-wrap items-center gap-2 text-xs font-semibold sm:flex">
+           
+            <button
               type="button"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -478,11 +553,11 @@ export default function UserHeader() {
 
                 navigate("/business/onboarding");
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2"
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Business with StadOnClick"
             >
-              <BriefcaseBusiness className="h-4.5 w-4.5 text-slate-500" />
-              <span>Business on StadOnClick</span>
+              <BriefcaseBusiness className="h-4 w-4 text-emerald-500" />
+              Business on StadOnClick
             </button>
                      
             <button
@@ -498,15 +573,16 @@ export default function UserHeader() {
                 const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
                 navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2"
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Affiliate Program"
             >
-              <Megaphone className="h-4.5 w-4.5 text-slate-500" />
-              <span>Affiliate Program</span>
+              <Megaphone className="h-4 w-4 text-indigo-500" />
+              Affiliate Program
             </button>
-            
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <IconButton
-              icon={<Heart className="h-5 w-5 text-red-500" />}
+              icon={<Heart className="h-5 w-5 text-rose-500" />}
               label="Wishlist"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -516,7 +592,7 @@ export default function UserHeader() {
               }}
             />
             <IconButton
-              icon={<ShoppingBag   className="h-5 w-5 text-slate-500" />}
+              icon={<ShoppingBag className="h-5 w-5 text-amber-600" />}
               label="My orders"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -524,11 +600,11 @@ export default function UserHeader() {
                 setProfileMenuOpen(false);
                 navigate("/orders");
               }}
+              className="border-amber-200 bg-amber-50 text-amber-600"
             />
-
             <div ref={cartRef} className="relative">
               <IconButton
-                icon={<ShoppingCartIcon className="h-5 w-5 text-blue-500" />}
+                icon={<ShoppingCartIcon className="h-5 w-5 text-indigo-600" />}
                 label="Cart"
                 badge={cartBadge}
                 onClick={() => {
@@ -536,6 +612,7 @@ export default function UserHeader() {
                   setNotificationsMenuOpen(false);
                   setProfileMenuOpen(false);
                 }}
+                className="bg-slate-50"
               />
 
               <AnimatePresence>
@@ -607,7 +684,7 @@ export default function UserHeader() {
             </div>
             <div ref={notificationsRef} className="relative">
               <IconButton
-                icon={<Bell className="h-5 w-5 text-yellow-500" />}
+                icon={<Bell className="h-5 w-5 text-emerald-600" />}
                 label="Alerts"
                 badge={notificationsBadge}
                 onClick={() => {
@@ -615,6 +692,7 @@ export default function UserHeader() {
                   setCartMenuOpen(false);
                   setProfileMenuOpen(false);
                 }}
+                className="border-emerald-200 bg-emerald-50 text-emerald-600"
               />
 
               <AnimatePresence>
@@ -726,7 +804,7 @@ export default function UserHeader() {
               <div ref={profileRef} className="relative">
                 <button
                   type="button"
-                  className="flex items-center gap-2  rounded-full  px-2 py-2 text-sm font-semibold text-slate-900 transition hover:border-yellow-400"
+                  className="flex items-center gap-2 rounded-full  bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-300 hover:shadow-sm"
                   onClick={() => setProfileMenuOpen((prev) => !prev)}
                 >
                   {canShowProfileImage ? (
@@ -786,7 +864,7 @@ export default function UserHeader() {
                             {user.email}
                           </p>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                        <ChevronRight className="h-3 w-3 text-slate-400" />
                       </div>
                     </a>
                     <div className="space-y-1 px-4 py-3">
@@ -830,9 +908,9 @@ export default function UserHeader() {
             ) : (
               <a
                 href="/sign-in"
-                className="flex items-center gap-2 rounded-full border border-blue-200 px-4 py-2 text-sm font-semibold text-sky-900 transition hover:border-yellow-400"
+                className="flex items-center gap-2 rounded-full  bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-300 hover:shadow-sm"
               >
-                <UserRound className="h-5 w-5" />
+                <UserRound className="h-5 w-5 text-slate-500" />
                 Sign In
               </a>
             )}
@@ -840,69 +918,88 @@ export default function UserHeader() {
         </div>
       </div>
 
-      <div className="border-t border-[#e6e6e6] bg-white shadow-sm">
+      <div className="border-t border-slate-200 bg-white">
         <div className="relative" onMouseLeave={() => setHoveredMasterSlug(null)}>
           <div
             ref={navContainerRef}
-className="relative mx-auto flex w-full max-w-[1700px] flex-nowrap items-center justify-between gap-2 overflow-hidden px-4 py-2 sm:px-6"
+            className="relative mx-auto flex w-full max-w-screen-2xl items-center gap-2 overflow-hidden px-3 py-0.5"
           >
-            {masterCategories.map((master) => {
-              const planned = plannedCategoryMap.get(master.slug);
-              const IconComponent = planned?.icon;
-              const isHovered = hoveredMasterSlug === master.slug;
-              return (
-                <NavLink
-                  key={master.slug}
-                  to={`/services/${master.slug}`}
-                  onMouseEnter={(event) => handleHover(event, master.slug)}
-                  className={({ isActive }) =>
-                    cn(
-                      navLinkBase,
-                      (isActive || isHovered) && "bg-blue-50/60 text-blue-700 after:scale-x-100",
-                    )
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span
-                        className={cn(
-                          "inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 transition-colors duration-200",
-                          (isActive || isHovered) && "bg-blue-100/70",
-                          !(isActive || isHovered) && "group-hover:bg-blue-100/70",
-                        )}
-                      >
-                        {IconComponent ? (
-                          <IconComponent
+            <button
+              type="button"
+              onClick={() => scrollNavigation("left")}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow shadow-slate-200/60 transition hover:border-slate-300 hover:bg-slate-50"
+              aria-label="Scroll categories left"
+            >
+              <ChevronLeft className="h-5 w-5 text-slate-500" />
+            </button>
+            <div className="flex-1 overflow-hidden">
+              <div
+                ref={navListRef}
+                className="flex w-full gap-3 overflow-x-auto px-1 py-1 scrollbar-hidden"
+              >
+                {masterCategories.map((master, index) => {
+                  const planned = plannedCategoryMap.get(master.slug);
+                  const IconComponent = planned?.icon;
+                  const isHovered = hoveredMasterSlug === master.slug;
+                  const accentClass =
+                    categoryAccentClasses[index % categoryAccentClasses.length];
+
+                  return (
+                    <NavLink
+                      key={master.slug}
+                      to={`/services/${master.slug}`}
+                      onMouseEnter={(event) => handleHover(event, master.slug)}
+                      className={({ isActive }) =>
+                        cn(
+                          navLinkBase,
+                          (isActive || isHovered) && "border-slate-200 text-slate-900",
+                        )
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span
                             className={cn(
-                              "h-4 w-4 text-slate-500 transition-colors duration-200 group-hover:text-blue-700",
-                              (isActive || isHovered) && "text-blue-700",
+                              "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-base font-semibold shadow-sm transition duration-150",
+                              accentClass,
+                              (isActive || isHovered) && "ring-2 ring-emerald-500/60",
                             )}
-                          />
-                        ) : (
-                          <Sparkles
-                            className={cn(
-                              "h-4 w-4 text-slate-500 transition-colors duration-200 group-hover:text-blue-700",
-                              (isActive || isHovered) && "text-blue-700",
+                          >
+                            {IconComponent ? (
+                              <IconComponent className="h-4 w-4" />
+                            ) : (
+                              <Sparkles className="h-4 w-4" />
                             )}
-                          />
-                        )}
-                      </span>
-                      {master.name}
-                    </>
-                  )}
-                </NavLink>
-              );
-            })}
+                          </span>
+                          <span className="flex-1 text-sm font-semibold text-slate-900 whitespace-nowrap tracking-wide drop-shadow-[0_2px_4px_rgba(15,23,42,0.25)] ml-1">
+                            {master.name}
+                          </span>
+                        </>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => scrollNavigation("right")}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow shadow-slate-200/60 transition hover:border-slate-300 hover:bg-slate-50"
+              aria-label="Scroll categories right"
+            >
+              <ChevronRight className="h-5 w-5 text-slate-500" />
+            </button>
           </div>
 
           <AnimatePresence>
             {hoveredMaster ? (
-              <motion.div
-                key={hoveredMaster.slug}
-                {...megaMenuMotion}
-                className="absolute left-0 right-0 z-40 will-change-transform"
-                style={{ top: popoverTop }}
-              >
+        <motion.div
+          key={hoveredMaster.slug}
+          {...megaMenuMotion}
+          className="absolute left-0 right-0 z-40 will-change-transform"
+          style={{ top: popoverTop }}
+          ref={megaMenuRef}
+        >
               <div className="mx-auto w-full max-w-7xl overflow-hidden border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
                 <div
                   className={cn(
@@ -941,7 +1038,7 @@ className="relative mx-auto flex w-full max-w-[1700px] flex-nowrap items-center 
                               )}
                             >
                               <span className="truncate">{category.name}</span>
-                              <ChevronRight className="h-4 w-4 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
+                              <ChevronRight className="h-3 w-3 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
                             </Link>
                           ))}
                         </div>
@@ -959,7 +1056,7 @@ className="relative mx-auto flex w-full max-w-[1700px] flex-nowrap items-center 
                                 )}
                               >
                                 <span className="truncate">{category.name}</span>
-                                <ChevronRight className="h-4 w-4 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
+                                <ChevronRight className="h-3 w-3 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
                               </Link>
                             ))}
                           </div>
@@ -1016,14 +1113,18 @@ type IconButtonProps = {
   label: string;
   badge?: string;
   onClick?: () => void;
+  className?: string;
 };
 
-function IconButton({ icon, label, badge, onClick }: IconButtonProps) {
+function IconButton({ icon, label, badge, onClick, className }: IconButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative inline-flex items-center justify-center rounded-full border border-sky-200 bg-white p-2 text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2"
+      className={cn(
+        "relative inline-flex items-center justify-center rounded-full border border-slate-200 bg-white p-2 text-blue-700 transition-all duration-200 hover:-translate-y-[1px] hover:border-yellow-400 hover:shadow-sm active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2",
+        className,
+      )}
     >
       {icon}
       {badge ? (

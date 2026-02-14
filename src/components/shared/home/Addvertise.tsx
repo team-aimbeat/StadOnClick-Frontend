@@ -4,18 +4,23 @@ import bowlingImage from "@/assets/images/bowling.svg";
 import waterImage from "@/assets/images/aqua.svg";
 import { useNavigate } from "react-router-dom";
 import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton";
+import { motion } from "framer-motion"
+import { Star, Flame, MapPin } from "lucide-react"
+
 
 export default function Addvertise() {
   const navigate = useNavigate();
   return (
     <section className="mt-10">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-387.5 ">
 
         {/* SECTION HEADING */}
         <div className="mx-auto mb-10 w-full max-w-3xl text-center">
-          <h3 className="text-[30px] font-bold text-black tracking-wider">
-            Weekend Activities & Experiences
-          </h3>
+        <h2 className="relative inline-block text-start text-[28px] sm:text-3xl lg:text-3xl font-bold text-gray-900 tracking-wide">
+  Exclusive Weekend Indulgences
+  <span className="absolute left-0 -bottom-2 w-40 h-1 bg-pink-500 rounded-full"></span>
+</h2>
+
        
         </div>
 
@@ -23,34 +28,102 @@ export default function Addvertise() {
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
 
           {/* LEFT BIG CARD */}
-          <article className="relative min-h-140 overflow-hidden bg-[#E5E5E5]">
-            <div className="absolute bottom-8 left-8 z-10 max-w-xs">
-              <h4 className="text-[28px] font-semibold text-slate-900">
-                Weekend Activities
-              </h4>
+        <article className="relative min-h-[520px] overflow-hidden  bg-gradient-to-br from-[#f8f9fb] via-[#eef1f6] to-[#e3e7ee] shadow-xl px-12 py-16 flex items-center">
 
-              <p className="mt-2 text-[14px] text-slate-600">
-                Find top-rated places for friends, couples, and families nearby.
-              </p>
+  {/* Decorative Background Circle */}
+  <div className="absolute -top-20 -left-20 w-72 h-72 bg-pink-200/40 rounded-full blur-3xl"></div>
+  <div className="absolute bottom-0 right-40 w-80 h-80 bg-purple-200/40 rounded-full blur-3xl"></div>
 
-              <button
-                type="button"
-                onClick={() => navigate("/weekend-activities")}
-                className="mt-4 h-12 w-50 rounded-full border border-slate-300 bg-white text-[14px] font-semibold tracking-widest transition hover:border-slate-400"
-              >
-                Explore Activities
-              </button>
-            </div>
+  {/* Content */}
+  <div className="relative z-10 max-w-lg">
 
-            <ImageWithSkeleton
-              src={heroImage}
-              alt="Weekend activity"
-              containerClassName="absolute bottom-0 right-0 h-105 w-[320px]"
-              className="absolute bottom-0 right-0 h-105 w-[320px] object-contain"
-              loading="lazy"
-              decoding="async"
-            />
-          </article>
+    {/* Badge */}
+    <motion.span
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="inline-block bg-yellow-400 text-black text-xs font-bold px-4 py-1 rounded-full tracking-wider shadow-sm"
+    >
+      LIMITED WEEKEND SLOTS
+    </motion.span>
+
+    {/* Heading */}
+    <motion.h4
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="mt-4 text-[38px] leading-tight font-bold text-slate-900"
+    >
+      Make This Weekend
+      <span className="block bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+        Unforgettable
+      </span>
+    </motion.h4>
+
+    {/* Description */}
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.3, duration: 0.6 }}
+      className="mt-4 text-[16px] text-slate-600"
+    >
+      Discover top-rated experiences for couples, families & friends —
+      handpicked and trending near you.
+    </motion.p>
+
+    {/* Feature Points */}
+   <div className="mt-6 flex gap-6 text-sm text-slate-600">
+
+  <div className="flex items-center gap-2">
+    <Star size={16} />
+    4.8 Rated
+  </div>
+
+  <div className="flex items-center gap-2">
+    <Flame size={16} />
+    Trending
+  </div>
+
+  <div className="flex items-center gap-2">
+    <MapPin size={16} />
+    Nearby
+  </div>
+
+</div>
+
+
+    {/* CTA */}
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      type="button"
+      onClick={() => navigate("/weekend-activities")}
+      className="mt-8 h-12 px-8 rounded-full bg-slate-900 text-white text-[15px] font-semibold tracking-wide shadow-lg hover:bg-black transition"
+    >
+      Explore Experiences →
+    </motion.button>
+
+  </div>
+
+  {/* Right Image */}
+  <motion.div
+    initial={{ opacity: 0, x: 40 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.6 }}
+    className="absolute left-105 bottom-0"
+  >
+    <ImageWithSkeleton
+      src={heroImage}
+      alt="Weekend activity"
+      containerClassName="w-[420px] h-[460px]"
+      className="w-full h-full object-contain drop-shadow-2xl"
+      loading="lazy"
+      decoding="async"
+    />
+  </motion.div>
+
+</article>
+
 
           {/* RIGHT COLUMN */}
           <div className="grid gap-5">
@@ -82,7 +155,7 @@ export default function Addvertise() {
                 src={highlightImage}
                 alt="Adventure"
                 containerClassName="absolute right-0 top-0 h-full w-[45%]"
-                className="absolute right-0 top-0 h-full w-[45%] object-contain"
+                className="absolute right-0 top-0 h-full w-[100%] object-contain"
                 loading="lazy"
                 decoding="async"
               />

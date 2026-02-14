@@ -6,26 +6,26 @@ import banner3 from "@/assets/images/add3.jpg"
 
 const promoCards = [
   {
-    title: "Haircuts",
-    subtitle: "Offers under Rs 399",
-    cta: "Buy Now",
-    accent: "from-[#e3be6f] to-transparent",
-    image: banner1,
-  },
-  {
-    title: "Spa & Wellness",
-    subtitle: "Relaxing care packages",
-    cta: "Explore",
-    accent: "from-[#d45b53] to-transparent",
-    image: banner2,
-  },
-  {
-    title: "Salon Makeovers",
-    subtitle: "Trending styles for 2024",
-    cta: "Book Slot",
-    accent: "from-[#8f5ab9] to-transparent",
-    image: banner1,
-  },
+     title: "FLAT 40% OFF",
+     highlight: "Haircuts & Styling",
+     subtitle: "Limited time festive offer",
+     cta: "Book Now",
+     image: banner1,
+   },
+   {
+      title: "Salon Makeover",
+      highlight: "Trending 2024 Looks",
+      subtitle: "Professional Experts",
+      cta: "Book Slot",
+      image: banner3,
+    },
+   {
+     title: "FLAT 40% OFF",
+     highlight: "Haircuts & Styling",
+     subtitle: "Limited time festive offer",
+     cta: "Book Now",
+     image: banner1,
+   },
   
 ]
 
@@ -43,42 +43,48 @@ export default function HomeHero() {
     <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-[250px] w-screen overflow-hidden">
       <div className="absolute inset-0">
         <div className="relative h-full w-screen overflow-hidden">
+         <div
+        className="flex h-full transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+      >
+        {promoCards.map((card) => (
           <div
-            className="flex h-full w-full transition-transform duration-700 ease-out"
-            style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+            key={card.title}
+            className="min-w-full h-full relative flex items-center"
+            style={{
+              backgroundImage: `url(${card.image})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
           >
-            {promoCards.map((card) => (
-              <article
-                key={card.title}
-                className="min-w-full h-full"
-              >
-                <div
-                  className="flex h-full w-full items-center gap-6 p-8"
-                  style={{
-                    backgroundImage: `url(${card.image})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                >
-                  <div className="flex flex-1 flex-col gap-3">
-                    <span className={`h-12 w-2 rounded-full bg-gradient-to-b ${card.accent}`} />
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/20" />
 
-                    <h2 className="text-4xl font-serif font-semibold text-white">
-                      {card.title}
-                    </h2>
+            {/* Content */}
+            <div className="relative z-10 px-6 md:px-16 text-white">
+              <div className="max-w-xl">
 
-                    <p className="text-xl text-white">
-                      {card.subtitle}
-                    </p>
+                <p className="text-yellow-400 text-sm md:text-base uppercase tracking-widest font-semibold">
+                  {card.title}
+                </p>
 
-                    <button className="mt-4 w-fit rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#111] transition hover:bg-[#111] hover:text-white">
-                      {card.cta}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
+                <h2 className="text-2xl md:text-4xl font-bold mt-1">
+                  {card.highlight}
+                </h2>
+
+                <p className="text-sm md:text-lg mt-1 text-gray-200">
+                  {card.subtitle}
+                </p>
+
+                <button className="mt-4 bg-yellow-400 text-black px-5 py-2 md:px-6 md:py-3 rounded-full text-sm md:text-base font-semibold hover:bg-white transition-all duration-300">
+                  {card.cta}
+                </button>
+
+              </div>
+            </div>
           </div>
+        ))}
+      </div>
         </div>
       </div>
     </section>

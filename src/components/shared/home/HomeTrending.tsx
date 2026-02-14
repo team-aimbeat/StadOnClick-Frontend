@@ -29,53 +29,65 @@ const places = [
 
 export default function HomeTrending() {
   return (
-    <section className="relative mt-10 w-screen -mx-[calc((100vw-100%)/2)] py-10">
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat "
-        style={{ backgroundImage: `url(${trendingBg})` }}
-      />
+   <section className="relative mt-16 w-screen -mx-[calc((100vw-100%)/2)] py-16">
 
-      <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
-      <div className="relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <h3 className="mt-5 text-[28px] font-semibold text-black tracking-wide">
-            Trending places near you
-          </h3>
-        </div>
+  {/* Background */}
+  <div
+    className="absolute inset-0 bg-cover bg-center"
+    style={{ backgroundImage: `url(${trendingBg})` }}
+  />
+  <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
 
-        <div className="mt-5 flex justify-center">
-          <div className="grid w-full max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {places.map((place) => (
-              <article
-                key={place.title}
-                className="group relative h-95 w-full overflow-hidden rounded-3xl border border-transparent bg-white/10 shadow-lg transition duration-500 hover:-translate-y-2 hover:border-white/70 hover:shadow-2xl"
-              >
-                <ImageWithSkeleton
-                  src={place.image}
-                  alt={place.title}
-                  containerClassName="h-full w-full"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/30 to-transparent transition duration-500 group-hover:from-black/60 group-hover:via-black/40" />
-                <div className="absolute bottom-3 left-3 right-3 rounded-2xl bg-black/40 p-3 shadow-lg transition duration-500 group-hover:bg-black/60">
-                  <p className="text-[18px] font-semibold tracking-wide text-white transition group-hover:text-amber-200">
-                    {place.title}
-                  </p>
-                  <p className="text-[14px] text-white/80 transition group-hover:text-white">
-                    {place.offers}
-                  </p>
-                  <p className="text-[11px] text-white/70 transition group-hover:text-white/90">
-                    Starting from {place.price}
-                  </p>
-                </div>
-              </article>
-            ))}
+  {/* Shared Container */}
+  <div className="relative max-w-380 mx-auto px-6">
+
+    {/* Heading */}
+    <div className="mb-10">
+    <h3 className="relative inline-block text-3xl font-semibold text-slate-900 tracking-wide">
+  Elevated Experiences Nearby
+  <span className="absolute left-0 -bottom-2 h-[3px] w-16 bg-slate-900 rounded-full"></span>
+</h3>
+
+    </div>
+
+    {/* Cards Grid (Same Container) */}
+    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+
+      {places.map((place) => (
+        <article
+          key={place.title}
+          className="group overflow-hidden rounded-2xl bg-white shadow-sm transition duration-300 hover:shadow-xl hover:-translate-y-2"
+        >
+          <div className="h-72 overflow-hidden">
+            <ImageWithSkeleton
+              src={place.image}
+              alt={place.title}
+              containerClassName="h-full w-full"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
-        </div>
-      </div>
-    </section>
+
+          <div className="p-5">
+            <h4 className="text-xl font-semibold text-slate-900">
+              {place.title}
+            </h4>
+            <p className="mt-1 text-lg text-slate-500">
+              {place.offers}
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-700">
+              Starting from {place.price}
+            </p>
+          </div>
+        </article>
+      ))}
+
+    </div>
+
+  </div>
+</section>
+
   );
 }
 

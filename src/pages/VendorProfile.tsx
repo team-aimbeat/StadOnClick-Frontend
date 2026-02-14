@@ -370,7 +370,7 @@ const VendorProfile = () => {
                       rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-[80px]"
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-20"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -431,7 +431,7 @@ const VendorProfile = () => {
                       rows={3}
                       value={seoDescription}
                       onChange={(e) => setSeoDescription(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-[80px]"
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-20"
                     />
                   </div>
                 </div>
@@ -478,7 +478,7 @@ const VendorProfile = () => {
                   <p className="text-sm text-slate-700">
                     Most viewed areas: Lower Parel, Bandra, Andheri. Consider highlighting availability in these zones.
                   </p>
-                  <div className="mt-5 h-40 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg flex items-center justify-center text-slate-400 text-sm">
+                  <div className="mt-5 h-40 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-lg flex items-center justify-center text-slate-400 text-sm">
                     Map preview (placeholder)
                   </div>
                 </div>

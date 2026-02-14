@@ -76,7 +76,6 @@ import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPla
 import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
-import WeekendActivities from "@/pages/WeekendActivities";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
 import AffiliatePlaceholder from "@/pages/AffiliatePlaceholder";
@@ -150,10 +149,7 @@ const appRouter = createBrowserRouter([
             element: <RestaurantMarketplace />,
             errorElement: <ErrorPage />,
           },
-          {
-            path: "/weekend-activities",
-            element: <WeekendActivities />,
-          },
+      
           {
             path: "/wishlist",
             element: <Wishlist />,

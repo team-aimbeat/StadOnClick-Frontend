@@ -32,7 +32,7 @@ export default function Home() {
 
   return (
     <div className="overflow-x-hidden text-slate-900">
-      <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-387.5  px-4 pb-14 pt-6 sm:px-6 lg:px-8">
         <HomeHero />
         <HomeCategories />
 
