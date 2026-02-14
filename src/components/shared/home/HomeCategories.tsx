@@ -77,10 +77,15 @@ export default function HomeCategories() {
 
   return (
     <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-12">
-        <h2 className="mb-4 text-start text-[26px] font-semibold text-slate-800 -tracking-tight">
-          Flat Up to 50% Off + Extra Deals
-        </h2>
+      <div className="relative z-10 mx-auto max-w-387.5 px-6 py-12">
+      <div className="mb-6">
+  <h2 className="text-start text-[28px] sm:text-3xl lg:text-3xl font-semibold tracking-wide text-gray-900">
+    Flat Up to <span className="text-rose-600 font-bold">50% Off</span> + Extra Deals
+  </h2>
+
+  <div className="mt-2 h-[3px] w-20 bg-gradient-to-r from-rose-500 to-orange-400 rounded-full"></div>
+</div>
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
           {categories.map((card) => (
             <article
@@ -103,7 +108,7 @@ export default function HomeCategories() {
                   loading="lazy"
                   decoding="async"
                 />
-                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[12px] font-semibold uppercase tracking-wide text-slate-700">
                   {card.category}
                 </span>
               </div>
@@ -119,15 +124,15 @@ export default function HomeCategories() {
                     loading="lazy"
                     decoding="async"
                   />
-                  <p className="text-[11px] font-semibold text-slate-700">
+                  <p className="text-[14px] font-semibold text-slate-700">
                     {card.author}
                   </p>
                 </div>
 
-                <h3 className="mt-2 text-sm font-semibold text-slate-900">
+                <h3 className="mt-2 text-[16px] font-semibold text-slate-900">
                   {card.title}
                 </h3>
-                <p className="mt-1 text-[12px] text-slate-500">
+                <p className="mt-1 text-[14px] text-slate-500">
                   {card.description}
                 </p>
 

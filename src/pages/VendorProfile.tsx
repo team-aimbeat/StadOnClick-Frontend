@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  HiOutlineCheckCircle,
-  HiOutlineClock,
-} from "react-icons/hi2";
+import { HiOutlineCheckCircle } from "react-icons/hi2";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
@@ -20,12 +17,12 @@ import {
 } from "@/features/vendorProfile/api/vendorProfileApi";
 import type { BusinessHour } from "@/features/vendorProfile/api/vendorProfileApi";
 import toast from "react-hot-toast";
-const sidebarSections = [
-  { id: "info", label: "Profile Info" },
-  { id: "seo", label: "SEO & Visibility" },
-  { id: "contact", label: "Contact & Location" },
-  { id: "hours", label: "Business Hours" },
-  { id: "preview", label: "Preview" },
+const formSteps = [
+  { id: "info", label: "Profile Info", description: "Provide business basics" },
+  { id: "seo", label: "SEO & Visibility", description: "Boost discoverability" },
+  { id: "contact", label: "Contact & Location", description: "Where can they reach you?" },
+  { id: "hours", label: "Business Hours", description: "Share when you're open" },
+  { id: "preview", label: "Preview", description: "See how it looks live" },
 ];
 
 const VendorProfile = () => {
@@ -33,7 +30,7 @@ const VendorProfile = () => {
   const authUser = useAppSelector((state) => state.auth.user);
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeSection, setActiveSection] = useState("info");
+  const [activeStep, setActiveStep] = useState(0);
   const loading = useMockLoader();
   const isBusinessOnboardingRoute = location.pathname === "/business/onboarding";
   const isVendorUser = (authUser?.roles ?? []).includes("VENDOR");
@@ -127,6 +124,13 @@ const VendorProfile = () => {
 
   const isSetupMode = !profileData?.data;
   const isSaving = isUpdating || isCreating;
+  const activeSection = formSteps[activeStep]?.id ?? "info";
+  const isFirstStep = activeStep === 0;
+  const isLastStep = activeStep === formSteps.length - 1;
+  const nextStepLabel = formSteps[activeStep + 1]?.label ?? "";
+  const goToStep = (index: number) => setActiveStep(index);
+  const goNextStep = () => setActiveStep((prev) => Math.min(prev + 1, formSteps.length - 1));
+  const goPreviousStep = () => setActiveStep((prev) => Math.max(prev - 1, 0));
 
   const updateBusinessHour = (index: number, field: keyof BusinessHour, value: string) => {
     setBusinessHours((prev) => {
@@ -223,25 +227,6 @@ const VendorProfile = () => {
     }
   };
 
-  const completenessItems = useMemo(() => {
-    const profile = profileData?.data;
-
-    if (!profile) {
-      return [];
-    }
-
-    const servicesCount = profile._count?.services ?? 1;
-
-    return [
-      { label: "Add business details", done: Boolean(profile.description?.trim()) },
-      { label: "Upload KYC documents", done: profile.kycStatus !== "NOT_SUBMITTED" },
-      { label: "Connect Stripe payouts", done: profile.payoutsEnabled },
-      { label: "Publish  services", done: servicesCount >= 1 },
-      { label: "Respond to new leads", done: profile.totalBookings > 0 },
-      { label: "Share recent photos", done: Boolean(profile.seoImageKey) },
-    ];
-  }, [profileData]);
-
   if (loading || isLoadingProfile || isEnsuringOnboarding) {
     return (
       <DashboardContainer className="py-10">
@@ -264,49 +249,10 @@ const VendorProfile = () => {
 
   return (
     <DashboardContainer className="py-8 pb-24">
-      <TitleBreadCrumbs title="Business Profile" breadCrumbTitle="Vendor / Business Profile" />
+      {/* <TitleBreadCrumbs title="Business Profile" breadCrumbTitle="Vendor / Business Profile" /> */}
 
-      <div className="grid lg:grid-cols-12 gap-6">
-        <aside className="lg:col-span-3 lg:sticky lg:top-6 h-fit space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            {sidebarSections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`w-full text-left px-5 py-3.5 text-sm font-medium transition-colors ${
-                  activeSection === section.id
-                ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
-                : "text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                {section.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-4 font-medium">
-              Profile completeness
-            </p>
-            <div className="space-y-3 text-sm">
-              {completenessItems.map((item) => (
-                <div key={item.label} className="flex items-center gap-2.5">
-                  {item.done ? (
-                    <HiOutlineCheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  ) : (
-                    <HiOutlineClock className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                  )}
-                  <span className={item.done ? "text-slate-800" : "text-slate-600"}>{item.label}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-xs text-slate-500 leading-relaxed">
-              Completing these steps improves visibility and lead quality.
-            </p>
-          </div>
-        </aside>
-
-        <main className="lg:col-span-9 space-y-6">
+      <div className="flex justify-center">
+        <main className="w-full max-w-5xl space-y-6">
           {profileError && (
             <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4">
               <p className="text-amber-900 font-medium">No business profile yet.</p>
@@ -340,6 +286,42 @@ const VendorProfile = () => {
 
               <p className="mt-5 text-slate-700 leading-relaxed">{description || "No business description added yet."}</p>
             </div>
+            <div className="rounded-2xl bg-white  px-6 py-6">
+              <div className="flex items-center gap-3">
+                {formSteps.map((step, index) => {
+                  const isCompleted = index < activeStep;
+                  const isActive = index === activeStep;
+                  return (
+                    <div key={step.id} className="flex flex-1 items-center">
+                      <div className="flex w-full justify-center">
+                        <button
+                          type="button"
+                          onClick={() => goToStep(index)}
+                          className={`inline-flex h-12 w-12 items-center justify-center rounded-full border-2 text-base font-semibold transition ${
+                            isActive
+                              ? "border-blue-600 text-blue-600"
+                              : isCompleted
+                              ? "border-blue-200 bg-blue-50 text-blue-700"
+                              : "border-slate-200 text-slate-500"
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      </div>
+                      {index < formSteps.length - 1 && <span className="flex-1 h-[1px] bg-slate-200" />}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 grid grid-cols-1 gap-1 text-center text-[14px]  tracking-[0.1em] sm:grid-cols-5">
+                {formSteps.map((step) => (
+                  <div key={`${step.id}-label`}>
+                    <p className="text-[11px] font-semibold text-slate-900">{step.label}</p>
+                    {/* <p className="text-[10px] text-slate-500 tracking-[0.12em]">{step.description}</p> */}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {activeSection === "info" && (
               <div className="pt-6 space-y-6">
@@ -369,7 +351,7 @@ const VendorProfile = () => {
                       rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-[80px]"
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-20"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -430,7 +412,7 @@ const VendorProfile = () => {
                       rows={3}
                       value={seoDescription}
                       onChange={(e) => setSeoDescription(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-[80px]"
+                      className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm resize-y min-h-20"
                     />
                   </div>
                 </div>
@@ -477,7 +459,7 @@ const VendorProfile = () => {
                   <p className="text-sm text-slate-700">
                     Most viewed areas: Lower Parel, Bandra, Andheri. Consider highlighting availability in these zones.
                   </p>
-                  <div className="mt-5 h-40 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-lg flex items-center justify-center text-slate-400 text-sm">
+                  <div className="mt-5 h-40 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-lg flex items-center justify-center text-slate-400 text-sm">
                     Map preview (placeholder)
                   </div>
                 </div>
@@ -547,7 +529,7 @@ const VendorProfile = () => {
               </div>
             )}
 
-          {activeSection === "preview" && (
+            {activeSection === "preview" && (
             <div className="pt-6">
               <div className="rounded-xl border border-slate-100 p-6 bg-white shadow-sm">
                 <div className="flex items-center justify-between mb-4">
@@ -561,11 +543,31 @@ const VendorProfile = () => {
             </div>
           )}
 
-          <div className="mt-6 border-t border-slate-100 pt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="mt-6 border-t border-slate-100 pt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-3">
+              {!isFirstStep && (
+                <button
+                  type="button"
+                  onClick={goPreviousStep}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-300"
+                >
+                  Back
+                </button>
+              )}
+              {!isLastStep && (
+                <button
+                  type="button"
+                  onClick={goNextStep}
+                  className="inline-flex items-center justify-center rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                  Next: {nextStepLabel}
+                </button>
+              )}
+            </div>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className={`ml-auto px-8 py-2.5 rounded-xl font-semibold text-white transition ${
+              className={`px-8 py-2.5 rounded-xl font-semibold text-white transition ${
                 isSaving ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
               }`}
             >

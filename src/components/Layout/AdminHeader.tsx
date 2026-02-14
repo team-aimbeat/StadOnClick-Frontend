@@ -69,7 +69,8 @@ const AdminHeader = () => {
           link.classList.remove("active");
         }
       });
-
+    
+      
       const nestedMenu = selector.closest("ul.sub-menu");
       if (nestedMenu) {
         const parentMenu = nestedMenu.closest("li.menu");
@@ -165,7 +166,7 @@ const AdminHeader = () => {
           px-5 py-3
           bg-white dark:bg-gray-900
           border-b border-gray-200/80 dark:border-gray-800
-          min-h-[60px]
+         min-h-15
         "
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -175,9 +176,9 @@ const AdminHeader = () => {
             aria-label={t("Toggle sidebar") || "Toggle sidebar"}
             onClick={() => dispatch(toggleSidebar())}
           >
-            <Menu className="h-[18px] w-[18px]" strokeWidth={1.8} />
+            <Menu className="h-4.5 w-4.5" strokeWidth={1.8} />
           </button>
-          <div className="hidden w-full max-w-[520px] sm:block">
+          <div className="hidden w-full max-w-130 sm:block">
             <SearchBar />
           </div>
           <div className="sm:hidden">
@@ -208,7 +209,7 @@ const AdminHeader = () => {
                 />
               }
             >
-              <ul className="grid w-[280px] grid-cols-2 gap-2 px-2 font-semibold text-dark dark:text-white-light/90">
+              <ul className="grid w-70 grid-cols-2 gap-2 px-2 font-semibold text-dark dark:text-white-light/90">
                 {themeConfig.languageList.map(
                   (item: { code: string; name: string }) => (
                     <li key={item.code}>
@@ -246,9 +247,9 @@ const AdminHeader = () => {
                 btnClassName={actionBtnClass}
                 button={<Mail className="h-5 w-5" strokeWidth={1.8} />}
               >
-                <ul className="w-[320px] text-dark dark:text-white-dark sm:w-[360px]">
+                <ul className="w-[320px] text-dark dark:text-white-dark sm:w-90">
                   <li
-                    className="relative h-[70px] overflow-hidden rounded-t-lg"
+                    className="relative h-17.5 overflow-hidden rounded-t-lg"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <img
@@ -261,7 +262,7 @@ const AdminHeader = () => {
                     </div>
                   </li>
                   <li
-                    className="max-h-[320px] overflow-y-auto divide-y divide-gray-100/80 dark:divide-white/10"
+                    className="max-h-80 overflow-y-auto divide-y divide-gray-100/80 dark:divide-white/10"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {messages.length ? (
@@ -293,7 +294,7 @@ const AdminHeader = () => {
                               {message.time}
                             </span>
                             {message.count ? (
-                              <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-white">
+                              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1.5 text-[11px] font-semibold text-white">
                                 {message.count}
                               </span>
                             ) : null}
@@ -359,7 +360,7 @@ const AdminHeader = () => {
                 />
               }
             >
-              <ul className="w-[230px] font-semibold text-dark dark:text-white-light/90">
+              <ul className="w-57.5 font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img

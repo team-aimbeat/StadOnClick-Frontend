@@ -28,6 +28,8 @@ export const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
             loading="lazy"
             decoding="async"
             fetchPriority="low"
+            srcSet={visual?.srcSet}
+            sizes="(max-width: 640px) 100vw, 360px"
           />
         </div>
         <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
@@ -56,4 +58,3 @@ export const MasterServiceHero = ({ service }: MasterServiceHeroProps) => {
     </div>
   );
 };
-
