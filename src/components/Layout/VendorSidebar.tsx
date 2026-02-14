@@ -10,6 +10,9 @@ import {
   VendorNavGroup,
   getVendorNavGroups,
 } from "@/routes/vendorNavItems";
+import { useGetVendorLeadsQuery } from "@/features/leads/api/leadsApi";
+import { useGetBookingsQuery } from "@/services/bookingsApi";
+import { useGetVendorKycDocumentsQuery } from "@/services/vendorKycApi";
 import { cn } from "@/lib/utils";
 
 type OpenMap = Record<string, boolean>;
@@ -19,16 +22,84 @@ export default function VendorSidebar() {
   const location = useLocation();
   const themeConfig = useSelector((state: RootState) => state.themeConfig);
   const isCollapsed = !themeConfig.sidebar;
+  const { data: allLeadsResponse } = useGetVendorLeadsQuery({ page: 1, limit: 1 });
+  const { data: newLeadsResponse } = useGetVendorLeadsQuery({ page: 1, limit: 1, status: "NEW" });
+  const { data: contactedLeadsResponse } = useGetVendorLeadsQuery({
+    page: 1,
+    limit: 1,
+    status: "CONTACTED",
+  });
+  const { data: convertedLeadsResponse } = useGetVendorLeadsQuery({
+    page: 1,
+    limit: 1,
+    status: "CONVERTED",
+  });
+  const { data: lostLeadsResponse } = useGetVendorLeadsQuery({ page: 1, limit: 1, status: "LOST" });
+
+  const leadCounts = useMemo(
+    () => ({
+      all: allLeadsResponse?.meta?.total ?? 0,
+      new: newLeadsResponse?.meta?.total ?? 0,
+      contacted: contactedLeadsResponse?.meta?.total ?? 0,
+      converted: convertedLeadsResponse?.meta?.total ?? 0,
+      lost: lostLeadsResponse?.meta?.total ?? 0,
+    }),
+    [
+      allLeadsResponse?.meta?.total,
+      newLeadsResponse?.meta?.total,
+      contactedLeadsResponse?.meta?.total,
+      convertedLeadsResponse?.meta?.total,
+      lostLeadsResponse?.meta?.total,
+    ]
+  );
+  const { data: bookings = [] } = useGetBookingsQuery();
+  const { data: kycDocuments = [] } = useGetVendorKycDocumentsQuery();
+  const bookingCounts = useMemo(() => {
+    const upcoming = bookings.filter(
+      (booking) => booking.status === "PENDING" || booking.status === "CONFIRMED"
+    ).length;
+    const completed = bookings.filter((booking) => booking.status === "COMPLETED").length;
+    const refunds = bookings.filter((booking) => booking.status === "REFUND_REQUESTED").length;
+
+    return {
+      all: bookings.length,
+      upcoming,
+      completed,
+      refunds,
+    };
+  }, [bookings]);
+
+  const kycStatus = useMemo<"NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED">(() => {
+    if (!kycDocuments.length) {
+      return "NOT_SUBMITTED";
+    }
+    if (kycDocuments.some((doc) => doc.status === "REJECTED")) {
+      return "REJECTED";
+    }
+    if (kycDocuments.some((doc) => doc.status === "PENDING")) {
+      return "PENDING";
+    }
+    return "VERIFIED";
+  }, [kycDocuments]);
 
   const navGroups: VendorNavGroup[] = useMemo(
     () =>
       getVendorNavGroups({
-        newLeads: 4,
-        pendingBookings: 2,
-        kycStatus: "NOT_SUBMITTED",
+        newLeads: leadCounts.new,
+        allLeads: leadCounts.all,
+        contactedLeads: leadCounts.contacted,
+        convertedLeads: leadCounts.converted,
+        lostLeads: leadCounts.lost,
+        allBookings: bookingCounts.all,
+        upcomingBookings: bookingCounts.upcoming,
+        completedBookings: bookingCounts.completed,
+        refundRequestBookings: bookingCounts.refunds,
+        pendingBookings: bookingCounts.upcoming,
+        kycDocumentsCount: kycDocuments.length,
+        kycStatus,
         subscriptionExpired: true,
       }),
-    []
+    [bookingCounts, kycDocuments.length, kycStatus, leadCounts]
   );
 
   const [openItems, setOpenItems] = useState<OpenMap>({});
