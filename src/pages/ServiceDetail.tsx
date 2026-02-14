@@ -134,8 +134,10 @@ export default function ServiceDetail() {
     useCreateCheckoutSessionMutation();
   const [applyCoupon, { isLoading: isApplyingCoupon }] =
     useApplyCouponMutation();
-  const [createAffiliateServiceLink, { data: affiliateLinkRes, isLoading: isGeneratingAffiliateLink }] =
-    useCreateAffiliateServiceLinkMutation();
+  const [
+    createAffiliateServiceLink,
+    { data: affiliateLinkRes, isLoading: isGeneratingAffiliateLink },
+  ] = useCreateAffiliateServiceLinkMutation();
 
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
@@ -173,13 +175,10 @@ export default function ServiceDetail() {
   } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
-
   const resetCoupon = () => {
     setCouponDiscount(0);
     setAppliedCoupon(null);
     setCouponError(null);
-    
-    
   };
   const [fetchOfferingSlots, { data: fetchedSlots }] =
     useLazyGetOfferingSlotsQuery();
@@ -689,22 +688,31 @@ export default function ServiceDetail() {
                       onClick={async () => {
                         if (!service.id) return;
                         try {
-                          await createAffiliateServiceLink({ serviceId: service.id }).unwrap();
+                          await createAffiliateServiceLink({
+                            serviceId: service.id,
+                          }).unwrap();
                         } catch (error: any) {
-                          toast.error(error?.data?.message || "Unable to generate affiliate link.");
+                          toast.error(
+                            error?.data?.message ||
+                              "Unable to generate affiliate link.",
+                          );
                         }
                       }}
                       disabled={isGeneratingAffiliateLink}
                       className="ml-auto"
                     >
-                      {isGeneratingAffiliateLink ? "Generating..." : "Generate Link"}
+                      {isGeneratingAffiliateLink
+                        ? "Generating..."
+                        : "Generate Link"}
                     </Button>
                   </div>
 
                   {affiliateLinkRes?.data?.url ? (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs text-blue-800">Referral code</p>
-                      <p className="text-sm font-semibold text-blue-900">{affiliateLinkRes.data.code}</p>
+                      <p className="text-sm font-semibold text-blue-900">
+                        {affiliateLinkRes.data.code}
+                      </p>
                       <p className="text-xs text-blue-800">Shareable link</p>
                       <div className="rounded-lg border border-blue-200 bg-white p-2 text-xs font-mono break-all text-slate-700">
                         {affiliateLinkRes.data.url}
@@ -713,7 +721,9 @@ export default function ServiceDetail() {
                         type="button"
                         variant="outline"
                         onClick={async () => {
-                          await navigator.clipboard.writeText(affiliateLinkRes.data.url);
+                          await navigator.clipboard.writeText(
+                            affiliateLinkRes.data.url,
+                          );
                           toast.success("Affiliate link copied");
                         }}
                       >
@@ -1027,143 +1037,133 @@ export default function ServiceDetail() {
               >
                 {isCreatingSession ? "Processing..." : "Confirm booking"}
               </Button>
-        
             </div>
-       
           </div>
         </div>
 
-<div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* ================= LEFT SIDE - LOCATION ================= */}
+          <div className="lg:col-span-3 space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-slate-900">
+                {service.title}'s Location
+              </h2>
 
-  {/* ================= LEFT SIDE - LOCATION ================= */}
-  <div className="lg:col-span-3 space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
-    
-    <div className="flex items-center justify-between">
-      <h2 className="text-xl font-semibold text-slate-900">
-        {service.title}'s Location
-      </h2>
+              <a
+                href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-600 hover:underline"
+              >
+                <img src={map} className="h-5 w-5" />
+                <span>Google Maps</span>
+              </a>
+            </div>
 
-      <a
-        href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-600 hover:underline"
-      >
-        <img src={map} className="h-5 w-5" />
-        <span>Google Maps</span>
-      </a>
-    </div>
+            <LocationMap
+              lat={service.latitude}
+              lng={service.longitude}
+              name={service.title}
+            />
+          </div>
 
-    <LocationMap
-      lat={service.latitude}
-      lng={service.longitude}
-      name={service.title}
-    />
-  </div>
+          {/* ================= RIGHT SIDE - COUPONS ================= */}
+          {vendorCoupons.length > 0 && (
+            <div className="lg:col-span-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-slate-900">Coupons</h4>
 
+              <div className="space-y-3">
+                {vendorCoupons.slice(0, 4).map((coupon, index) => {
+                  const theme = couponThemes[index % couponThemes.length];
 
-  {/* ================= RIGHT SIDE - COUPONS ================= */}
-  {vendorCoupons.length > 0 && (
-    <div className="lg:col-span-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  return (
+                    <div
+                      key={coupon.code}
+                      className="relative overflow-hidden rounded-2xl shadow-sm"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-[122px_1fr]">
+                        {/* LEFT PANEL */}
+                        <div
+                          className={`relative px-3 py-4 text-center ${theme.leftPanel}`}
+                        >
+                          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-700">
+                            Shopping Coupon
+                          </p>
 
-      <h4 className="text-sm font-semibold text-slate-900">
-        Coupons
-      </h4>
+                          <p className="mt-2 text-[30px] font-black leading-none text-slate-900">
+                            {coupon.discountType === "FLAT"
+                              ? `${formatCurrency(coupon.discount)}`
+                              : `${coupon.discount}%`}
+                          </p>
 
-      <div className="space-y-3">
-        {vendorCoupons.slice(0, 4).map((coupon, index) => {
-          const theme = couponThemes[index % couponThemes.length];
+                          <p className="text-[28px] font-black leading-none text-slate-900">
+                            OFF
+                          </p>
 
-          return (
-            <div
-              key={coupon.code}
-              className="relative overflow-hidden rounded-2xl shadow-sm"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-[122px_1fr]">
+                          <div className="mt-3 space-y-1 text-[11px] text-slate-600">
+                            <p>Min order {formatCurrency(coupon.minOrder)}</p>
+                            <p>Max uses {coupon.maxUses}</p>
+                          </div>
 
-                {/* LEFT PANEL */}
-                <div className={`relative px-3 py-4 text-center ${theme.leftPanel}`}>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-700">
-                    Shopping Coupon
-                  </p>
+                          <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                        </div>
 
-                  <p className="mt-2 text-[30px] font-black leading-none text-slate-900">
-                    {coupon.discountType === "FLAT"
-                      ? `${formatCurrency(coupon.discount)}`
-                      : `${coupon.discount}%`}
-                  </p>
+                        {/* RIGHT PANEL */}
+                        <div
+                          className={`relative px-4 py-4 text-white ${theme.rightPanel}`}
+                        >
+                          <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
 
-                  <p className="text-[28px] font-black leading-none text-slate-900">
-                    OFF
-                  </p>
+                          <div className="pl-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
+                              STADONCLICK.COM
+                            </p>
 
-                  <div className="mt-3 space-y-1 text-[11px] text-slate-600">
-                    <p>Min order {formatCurrency(coupon.minOrder)}</p>
-                    <p>Max uses {coupon.maxUses}</p>
-                  </div>
+                            <p className="mt-1 text-lg font-bold leading-tight">
+                              {coupon.title}
+                            </p>
 
-                  <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
-                </div>
+                            <p className="mt-2 text-xs text-white/85">
+                              Valid until{" "}
+                              <span className="font-semibold text-white">
+                                {new Intl.DateTimeFormat("en-US", {
+                                  month: "long",
+                                  year: "numeric",
+                                }).format(new Date(coupon.expiry))}
+                              </span>
+                            </p>
 
+                            <p className="mt-2 text-base font-bold tracking-[0.22em]">
+                              Code : {coupon.code}
+                            </p>
 
-                {/* RIGHT PANEL */}
-                <div className={`relative px-4 py-4 text-white ${theme.rightPanel}`}>
-                  <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <p className="text-[11px] text-white/90">
+                                Apply this code at checkout to unlock the offer.
+                              </p>
 
-                  <div className="pl-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
-                      STADONCLICK.COM
-                    </p>
-
-                    <p className="mt-1 text-lg font-bold leading-tight">
-                      {coupon.title}
-                    </p>
-
-                    <p className="mt-2 text-xs text-white/85">
-                      Valid until{" "}
-                      <span className="font-semibold text-white">
-                        {new Intl.DateTimeFormat("en-US", {
-                          month: "long",
-                          year: "numeric",
-                        }).format(new Date(coupon.expiry))}
-                      </span>
-                    </p>
-
-                    <p className="mt-2 text-base font-bold tracking-[0.22em]">
-                      Code : {coupon.code}
-                    </p>
-
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <p className="text-[11px] text-white/90">
-                        Apply this code at checkout to unlock the offer.
-                      </p>
-
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="h-8 shrink-0 rounded-md border border-white/40 bg-white/20 px-3 text-xs font-semibold text-white hover:bg-white/30"
-                        onClick={() => {
-                          setPromoCode(coupon.code);
-                          setCouponError(null);
-                        }}
-                      >
-                        Use code
-                      </Button>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                className="h-8 shrink-0 rounded-md border border-white/40 bg-white/20 px-3 text-xs font-semibold text-white hover:bg-white/30"
+                                onClick={() => {
+                                  setPromoCode(coupon.code);
+                                  setCouponError(null);
+                                }}
+                              >
+                                Use code
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
+                  );
+                })}
               </div>
             </div>
-          );
-        })}
-      </div>
-
-    </div>
-  )}
-
-</div>
-
+          )}
+        </div>
 
         <div className="max-w-[800px]">
           {/* Highlights & Amenities Section */}
@@ -1317,48 +1317,48 @@ export default function ServiceDetail() {
               const reviewerInitial = reviewerName.charAt(0).toUpperCase();
 
               return (
-              <article
-                key={review.id}
-                className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
-              >
-                <div className="flex gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
-                    {reviewerInitial}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[15px] font-bold text-slate-900">
-                        {reviewerName}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
-                      >
-                        <Check className="h-3 w-3 stroke-[3px]" />
-                        Verified
-                      </Badge>
+                <article
+                  key={review.id}
+                  className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                >
+                  <div className="flex gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
+                      {reviewerInitial}
                     </div>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className={`h-3 w-3 ${
-                            s <= review.rating
-                              ? "fill-orange-400 text-orange-400"
-                              : "text-slate-200"
-                          }`}
-                        />
-                      ))}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[15px] font-bold text-slate-900">
+                          {reviewerName}
+                        </p>
+                        <Badge
+                          variant="outline"
+                          className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
+                        >
+                          <Check className="h-3 w-3 stroke-[3px]" />
+                          Verified
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className={`h-3 w-3 ${
+                              s <= review.rating
+                                ? "fill-orange-400 text-orange-400"
+                                : "text-slate-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <p className="text-[15px] leading-relaxed text-slate-600">
-                  {review.comment}
-                </p>
-                <div className="text-[13px] font-medium text-slate-400">
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </div>
-              </article>
+                  <p className="text-[15px] leading-relaxed text-slate-600">
+                    {review.comment}
+                  </p>
+                  <div className="text-[13px] font-medium text-slate-400">
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </div>
+                </article>
               );
             })}
           </div>
