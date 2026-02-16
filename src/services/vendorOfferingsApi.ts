@@ -28,6 +28,7 @@ export type VendorOffering = {
   salePrice: number;
   currency: string;
   maxQuantity: number | null;
+  remainingQuantity: number | null;
   slots: VendorSlot[];
   rules: VendorRule[];
 };
@@ -44,6 +45,7 @@ export interface CreateOfferingPayload {
   basePrice: number;
   salePrice: number;
   maxQuantity?: number | null;
+  remainingQuantity?: number | null;
 }
 
 export interface CreateSlotPayload {
@@ -64,6 +66,7 @@ const toVendorOffering = (offering: RawVendorOffering): VendorOffering => ({
   basePrice: Number(offering.basePrice),
   salePrice: Number(offering.salePrice),
   maxQuantity: offering.maxQuantity ?? null,
+  remainingQuantity: offering.remainingQuantity ?? offering.maxQuantity ?? null,
 });
 
 export const vendorOfferingsApi = createApi({

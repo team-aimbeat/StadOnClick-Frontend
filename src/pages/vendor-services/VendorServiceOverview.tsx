@@ -148,6 +148,14 @@ export function VendorServiceOverview({
     },
   );
   const { data: vendorServices = [] } = useGetVendorServicesQuery();
+  const mappedUserServices = useMemo(() => {
+    const seen = new Set<string>();
+    return vendorServices.filter((vendorService) => {
+      if (!vendorService?.id || seen.has(vendorService.id)) return false;
+      seen.add(vendorService.id);
+      return true;
+    });
+  }, [vendorServices]);
 
   useEffect(() => {
     if (requestAddOfferingOpen) {
@@ -410,7 +418,7 @@ export function VendorServiceOverview({
     let active = true;
 
     const run = async () => {
-      if (!vendorServices.length) {
+      if (!mappedUserServices.length) {
         setServiceTrends([]);
         return;
       }
@@ -451,7 +459,7 @@ export function VendorServiceOverview({
       setServiceTrendsLoading(true);
       try {
         const rows = await Promise.all(
-          vendorServices.map(async (vendorService) => {
+          mappedUserServices.map(async (vendorService) => {
             try {
               const serviceOfferings = await loadServiceOfferings(vendorService.id, true).unwrap();
               const current = compute(serviceOfferings, start, end);
@@ -496,7 +504,7 @@ export function VendorServiceOverview({
     return () => {
       active = false;
     };
-  }, [dateFrom, dateTo, loadServiceOfferings, vendorServices]);
+  }, [dateFrom, dateTo, loadServiceOfferings, mappedUserServices]);
 
   const maxSales = Math.max(...analytics.dateSeries.map((row) => row.totalSales), 1);
   const maxPurchase = Math.max(...analytics.dateSeries.map((row) => row.totalPurchase), 1);
@@ -764,7 +772,7 @@ export function VendorServiceOverview({
             </div>
           ) : serviceTrends.length ? (
             <ul className="mb-4 space-y-2">
-              {serviceTrends.slice(0, 3).map((trend) => (
+              {serviceTrends.map((trend) => (
                 <li key={trend.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
@@ -984,3 +992,4 @@ function InfoTile({
     </div>
   );
 }
+     

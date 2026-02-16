@@ -284,6 +284,18 @@ const VendorServiceOptions = () => {
                 className="w-24 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
               />
             </div>
+            <div className="flex items-center justify-between">
+              <span>Max quantity</span>
+              <span className="text-xs font-semibold text-slate-700">
+                {primaryOffering?.maxQuantity ?? "N/A"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Remaining quantity</span>
+              <span className="text-xs font-semibold text-slate-700">
+                {primaryOffering?.remainingQuantity ?? "N/A"}
+              </span>
+            </div>
             <p className="text-[11px] text-slate-500">
               Updating pricing updates all linked offerings and slot booking values.
             </p>

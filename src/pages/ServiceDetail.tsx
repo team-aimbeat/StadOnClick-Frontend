@@ -82,6 +82,9 @@ const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
 
   const capacity = Math.max(slot.capacity ?? 1, 1);
   const remaining = Math.max(slot.remaining ?? 0, 0);
+  if (remaining <= 0) {
+    return "unavailable";
+  }
   const threshold = Math.max(1, Math.ceil(capacity * 0.25));
   return remaining <= threshold ? "few" : "available";
 };
@@ -279,7 +282,11 @@ export default function ServiceDetail() {
       prev
         .map((item) => {
           if (item.offering.id !== offeringId) return item;
-          const nextQuantity = Math.max(item.quantity + delta, 1);
+          const maxAllowed = item.offering.remainingQuantity ?? Number.POSITIVE_INFINITY;
+          const nextQuantity = Math.min(
+            Math.max(item.quantity + delta, 1),
+            Math.max(maxAllowed, 1),
+          );
           return { ...item, quantity: nextQuantity };
         })
         .filter((item) => item.quantity > 0),
@@ -362,6 +369,10 @@ export default function ServiceDetail() {
     const slots = offering.slots ?? [];
     const slotCount = slots.length;
     const requiresSlot = offering.usesSlots || slotCount > 0;
+    const outOfStock =
+      !requiresSlot &&
+      offering.remainingQuantity !== null &&
+      offering.remainingQuantity <= 0;
 
     if (requiresSlot) {
       if (slotCount === 0) {
@@ -369,6 +380,10 @@ export default function ServiceDetail() {
         return;
       }
       openBookingModal(offering);
+      return;
+    }
+    if (outOfStock) {
+      toast.error("This offering is currently out of stock.");
       return;
     }
 
@@ -799,12 +814,19 @@ export default function ServiceDetail() {
                     {offerings?.map((offering) => {
                       const slotCount = offering.slots?.length ?? 0;
                       const requiresSlot = offering.usesSlots || slotCount > 0;
+                      const outOfStock =
+                        !requiresSlot &&
+                        offering.remainingQuantity !== null &&
+                        offering.remainingQuantity <= 0;
                       const buttonLabel = requiresSlot
                         ? slotCount > 0
                           ? "Book"
                           : "Slots unavailable"
-                        : "Add to cart";
-                      const isSlotUnavailable = requiresSlot && slotCount === 0;
+                        : outOfStock
+                          ? "Out of stock"
+                          : "Add to cart";
+                      const isSlotUnavailable =
+                        (requiresSlot && slotCount === 0) || outOfStock;
                       return (
                         <div
                           key={offering.id}
@@ -819,6 +841,9 @@ export default function ServiceDetail() {
                             </p>
                             <p className="text-xs font-semibold text-slate-400">
                               Max Qty: {offering.maxQuantity || "N/A"}
+                            </p>
+                            <p className="text-xs font-semibold text-slate-400">
+                              Remaining: {offering.remainingQuantity ?? "N/A"}
                             </p>
                           </div>
                           <div className="flex flex-col items-end gap-3">
