@@ -1,11 +1,13 @@
 import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Star } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Service } from "./types"
+import { useAppSelector } from "@/app/hooks"
 import {
-  WISHLIST_UPDATED_EVENT,
-  isWishlisted,
-  toggleWishlist,
-} from "@/utils/wishlistStorage"
+  useAddWishlistItemMutation,
+  useGetWishlistQuery,
+  useRemoveWishlistItemMutation,
+} from "@/services/wishlistApi"
 
 type ServiceCardProps = {
   service: Service
@@ -18,7 +20,16 @@ export default function ServiceCard({
   onViewDetails,
   onEnquiry,
 }: ServiceCardProps) {
-  const [wishlisted, setWishlisted] = useState<boolean>(() => isWishlisted(service.id))
+  const navigate = useNavigate()
+  const user = useAppSelector((state) => state.auth.user)
+  const { data: wishlistItems = [] } = useGetWishlistQuery(undefined, {
+    skip: !user,
+  })
+  const [addWishlistItem] = useAddWishlistItemMutation()
+  const [removeWishlistItem] = useRemoveWishlistItemMutation()
+  const wishlisted = wishlistItems.some(
+    (item) => item.serviceId === service.id || item.id === service.id,
+  )
 
   const images = useMemo(() => {
     const list =
@@ -51,17 +62,6 @@ export default function ServiceCard({
       snapRafRef.current = null
     }
   }, [imagesKey])
-
-  useEffect(() => {
-    const syncWishlist = () => setWishlisted(isWishlisted(service.id))
-    syncWishlist()
-    window.addEventListener(WISHLIST_UPDATED_EVENT, syncWishlist)
-    window.addEventListener("storage", syncWishlist)
-    return () => {
-      window.removeEventListener(WISHLIST_UPDATED_EVENT, syncWishlist)
-      window.removeEventListener("storage", syncWishlist)
-    }
-  }, [service.id])
 
   const showPrev = () => {
     if (images.length <= 1) return
@@ -117,17 +117,16 @@ export default function ServiceCard({
               ? "border-rose-200 text-rose-500"
               : "border-slate-200 text-slate-500 hover:border-rose-200 hover:text-rose-500"
           }`}
-          onClick={() => {
-            const next = toggleWishlist({
-              id: service.id,
-              title: service.title,
-              image: service.image,
-              location: service.location,
-              categoryName: service.categoryName,
-              rating: service.rating,
-              reviews: service.reviews,
-            })
-            setWishlisted(next)
+          onClick={async () => {
+            if (!user) {
+              navigate("/sign-in")
+              return
+            }
+            if (wishlisted) {
+              await removeWishlistItem({ serviceId: service.id })
+              return
+            }
+            await addWishlistItem({ serviceId: service.id })
           }}
         >
           <Heart className={`h-4.5 w-4.5 ${wishlisted ? "fill-current" : ""}`} />
