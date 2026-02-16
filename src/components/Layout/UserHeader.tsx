@@ -12,6 +12,14 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clearAuth } from "@/features/auth/authSlice";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useLogoutMutation } from "@/features/auth/api/authApi";
 import {
   useGetNotificationsQuery,
@@ -104,6 +112,7 @@ export default function UserHeader() {
 
   const [cartMenuOpen, setCartMenuOpen] = useState(false);
   const [notificationsMenuOpen, setNotificationsMenuOpen] = useState(false);
+  const [affiliateConfirmOpen, setAffiliateConfirmOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [isProfileImageBroken, setIsProfileImageBroken] = useState(false);
   const [cartSnapshot, setCartSnapshot] = useState<StoredCart>(() => getStoredCart());
@@ -442,6 +451,31 @@ export default function UserHeader() {
     }
   };
 
+  const handleAffiliateProgramClick = () => {
+    setCartMenuOpen(false);
+    setNotificationsMenuOpen(false);
+    setProfileMenuOpen(false);
+
+    if (!user) {
+      navigate("/sign-in");
+      return;
+    }
+
+    setAffiliateConfirmOpen(true);
+  };
+
+  const handleConfirmAffiliateSwitch = () => {
+    if (!user) {
+      setAffiliateConfirmOpen(false);
+      navigate("/sign-in");
+      return;
+    }
+
+    const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
+    setAffiliateConfirmOpen(false);
+    navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
+  };
+
   const utilityLinks = [
     "Curated local moments",
     "Download the companion app",
@@ -562,17 +596,7 @@ export default function UserHeader() {
                      
             <button
               type="button"
-              onClick={() => {
-                setCartMenuOpen(false);
-                setNotificationsMenuOpen(false);
-                setProfileMenuOpen(false);
-                if (!user) {
-                  navigate("/sign-in");
-                  return;
-                }
-                const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
-                navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
-              }}
+              onClick={handleAffiliateProgramClick}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Affiliate Program"
             >
@@ -1104,6 +1128,32 @@ export default function UserHeader() {
           </AnimatePresence>
         </div>
       </div>
+      <Dialog open={affiliateConfirmOpen} onOpenChange={setAffiliateConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Switch to Affiliate Program?</DialogTitle>
+            <DialogDescription>
+              You are about to switch to the affiliate program area. Do you want to continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <button
+              type="button"
+              onClick={() => setAffiliateConfirmOpen(false)}
+              className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmAffiliateSwitch}
+              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+            >
+              Confirm
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
