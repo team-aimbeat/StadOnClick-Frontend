@@ -213,13 +213,14 @@ export default function ServiceCard({
           <button
             type="button"
             onClick={() => onViewDetails(service)}
-            className="min-w-33.75 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+            className="min-w-33.75 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
             View all services
           </button>
           <button
             type="button"
-            className="min-w-33.75 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="min-w-33.75 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 transition
+             hover:bg-blue-50"
             onClick={() => onEnquiry(service)}
           >
             <div className="flex items-center justify-center gap-2">

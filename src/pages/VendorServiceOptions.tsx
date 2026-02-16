@@ -532,27 +532,26 @@ const VendorServiceOptions = () => {
 };
 
 function formatSlotLabel(startTime: string, endTime?: string | null) {
-  const start = new Date(startTime);
-  if (Number.isNaN(start.getTime())) {
-    return "Unknown slot";
-  }
+  const formatSlotTime = (isoString: string) => {
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return "--:--";
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
 
-  const startLabel = start.toLocaleString("en-US", {
-    weekday: "short",
-    hour: "numeric",
-    minute: "numeric",
-  });
+  const startLabel = formatSlotTime(startTime);
 
   if (!endTime) {
     return startLabel;
   }
 
-  const end = new Date(endTime);
-  const endLabel = Number.isNaN(end.getTime())
-    ? "Unknown"
-    : end.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric" });
+  const endLabel = formatSlotTime(endTime);
 
-  return `${startLabel} · ${endLabel}`;
+  return `${startLabel} - ${endLabel}`;
 }
 
 export default VendorServiceOptions;
+

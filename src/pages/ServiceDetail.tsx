@@ -31,7 +31,6 @@ import {
   VendorOffering,
   VendorSlot,
 } from "@/services/vendorOfferingsApi";
-import { DateTime } from "luxon";
 import {
   useGetServiceReviewsQuery,
   useCreateReviewMutation,
@@ -48,11 +47,16 @@ import toast from "react-hot-toast";
 import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify";
 import { clearStoredCart, setStoredCart } from "@/utils/cartStorage";
 
-const STOCKHOLM_TIMEZONE = "Europe/Stockholm";
-
 const formatSlotLabel = (start: string, end?: string | null) => {
-  const formatTime = (value: string) =>
-    DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE).toFormat("HH:mm");
+  const formatTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "--:--";
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
 
   const startLabel = formatTime(start);
   if (!end) return startLabel;
@@ -60,13 +64,15 @@ const formatSlotLabel = (start: string, end?: string | null) => {
   return `${startLabel} - ${endLabel}`;
 };
 
-const getStockholmDateKey = (value?: Date | string) => {
+const getLocalDateKey = (value?: Date | string) => {
   if (!value) return "";
-  const dt =
-    typeof value === "string"
-      ? DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE)
-      : DateTime.fromJSDate(value).setZone(STOCKHOLM_TIMEZONE);
-  return dt.toISODate();
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "";
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 };
 
 const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
@@ -149,11 +155,7 @@ export default function ServiceDetail() {
     () => new Date(),
   );
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-  const selectedDateIso = selectedDate
-    ? DateTime.fromJSDate(selectedDate)
-        .setZone(STOCKHOLM_TIMEZONE, { keepLocalTime: true })
-        .toISODate()
-    : "";
+  const selectedDateIso = selectedDate ? getLocalDateKey(selectedDate) : "";
   const formattedSelectedDate = selectedDate
     ? new Intl.DateTimeFormat("default", {
         weekday: "short",
@@ -234,7 +236,7 @@ export default function ServiceDetail() {
   const slotsForSelectedDate = useMemo(() => {
     if (!selectedDate) return slotsForBookedOffering;
     return slotsForBookedOffering.filter((slot) => {
-      const slotDate = getStockholmDateKey(slot.startTime);
+      const slotDate = getLocalDateKey(slot.startTime);
       return slotDate === selectedDateIso;
     });
   }, [slotsForBookedOffering, selectedDateIso, selectedDate]);
