@@ -29,6 +29,19 @@ export type VendorServiceEntity = {
   status: "DRAFT" | "LIVE" | "PAUSED";
   category?: any;
   media?: { url: string; type?: string; title?: string }[];
+  reviews?: {
+    id: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+    user?: {
+      firstName?: string | null;
+      lastName?: string | null;
+      nickName?: string | null;
+      profileImageKey?: string | null;
+      profileImageUrl?: string | null;
+    } | null;
+  }[];
   refundPolicy?: RefundPolicyInput | null;
   terms?: string | null;
 };
@@ -86,6 +99,7 @@ export const vendorServicesApi = createApi({
           longitude: s.longitude,
           terms: s.terms,
           media: s.media,
+          reviews: s.reviews,
           refundPolicy: s.refundPolicy,
         })),
     }),

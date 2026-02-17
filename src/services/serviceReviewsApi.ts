@@ -10,6 +10,7 @@ export interface ServiceReview {
     firstName?: string | null;
     lastName?: string | null;
     nickName?: string | null;
+    profileImageUrl?: string | null;
   } | null;
 }
 
