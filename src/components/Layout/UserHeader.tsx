@@ -41,7 +41,7 @@ import {
   getStoredCart,
   type StoredCart,
 } from "@/utils/cartStorage";
-import { HiMiniKey } from "react-icons/hi2";
+
 
 const searchCategories = [
   { label: "Beauty", slug: "salon-deals" },
@@ -650,7 +650,7 @@ export default function UserHeader() {
                 className="bg-slate-50"
               />
 
-              <AnimatePresence>
+              <AnimatePresence> 
                 {cartMenuOpen ? (
                   <motion.div
                     {...dropdownMotion}
