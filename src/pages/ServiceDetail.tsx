@@ -103,6 +103,37 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
 
+const resolveReviewerImageUrl = (review: {
+  user?: {
+    profileImageUrl?: string | null;
+    avatar?: string | null;
+    image?: string | null;
+    profileImage?: string | null;
+  } | null;
+  profileImageUrl?: string | null;
+  avatar?: string | null;
+  image?: string | null;
+}) => {
+  const candidate =
+    review.user?.profileImageUrl?.trim() ||
+    review.user?.avatar?.trim() ||
+    review.user?.image?.trim() ||
+    review.user?.profileImage?.trim() ||
+    review.profileImageUrl?.trim() ||
+    review.avatar?.trim() ||
+    review.image?.trim() ||
+    "";
+
+  if (!candidate) return "";
+  if (/^https?:\/\//i.test(candidate) || candidate.startsWith("data:")) {
+    return candidate;
+  }
+
+  const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+  if (!apiBaseUrl) return candidate;
+  return `${apiBaseUrl}/${candidate.replace(/^\/+/, "")}`;
+};
+
 type CartItem = {
   offering: VendorOffering;
   quantity: number;
@@ -179,6 +210,9 @@ export default function ServiceDetail() {
     value: number;
   } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [failedReviewerImages, setFailedReviewerImages] = useState<
+    Record<string, boolean>
+  >({});
 
   const resetCoupon = () => {
     setCouponDiscount(0);
@@ -366,6 +400,18 @@ export default function ServiceDetail() {
   };
 
   const handleBookClick = (offering: VendorOffering) => {
+    if (isMovieBookingService) {
+      const url = offering.bookingUrl?.trim();
+      if (!url) {
+        toast.error("Booking URL is not configured for this movie offering.");
+        return;
+      }
+      if (typeof window !== "undefined") {
+        window.location.assign(url);
+      }
+      return;
+    }
+
     const slots = offering.slots ?? [];
     const slotCount = slots.length;
     const requiresSlot = offering.usesSlots || slotCount > 0;
@@ -490,6 +536,10 @@ export default function ServiceDetail() {
             )
           : vendorServices[0]
       : undefined;
+  const isMovieBookingService =
+    String(service?.category?.slug ?? "").toLowerCase() === "movie-bookings" ||
+    String(matchedMarketplaceService?.categoryName ?? "").toLowerCase() ===
+      "movie bookings";
   const currentServiceId = service?.id;
 
   // 2. Fetch Media (isolated)
@@ -812,21 +862,29 @@ export default function ServiceDetail() {
                 {activeTab === "services" ? (
                   <div className="space-y-4">
                     {offerings?.map((offering) => {
+                      const isMovieBookingOffering = isMovieBookingService;
                       const slotCount = offering.slots?.length ?? 0;
                       const requiresSlot = offering.usesSlots || slotCount > 0;
                       const outOfStock =
                         !requiresSlot &&
                         offering.remainingQuantity !== null &&
                         offering.remainingQuantity <= 0;
-                      const buttonLabel = requiresSlot
-                        ? slotCount > 0
-                          ? "Book"
-                          : "Slots unavailable"
-                        : outOfStock
-                          ? "Out of stock"
-                          : "Add to cart";
+                      const missingBookingUrl =
+                        isMovieBookingOffering && !offering.bookingUrl?.trim();
+                      const buttonLabel = isMovieBookingOffering
+                        ? missingBookingUrl
+                          ? "Booking unavailable"
+                          : "Book now"
+                        : requiresSlot
+                          ? slotCount > 0
+                            ? "Book"
+                            : "Slots unavailable"
+                          : outOfStock
+                            ? "Out of stock"
+                            : "Add to cart";
                       const isSlotUnavailable =
-                        (requiresSlot && slotCount === 0) || outOfStock;
+                        missingBookingUrl ||
+                        ((requiresSlot && slotCount === 0) || outOfStock);
                       return (
                         <div
                           key={offering.id}
@@ -1342,6 +1400,21 @@ export default function ServiceDetail() {
                   .join(" ") ||
                 "Anonymous User";
               const reviewerInitial = reviewerName.charAt(0).toUpperCase();
+              const reviewerImageUrl = resolveReviewerImageUrl(
+                review as typeof review & {
+                  user?: {
+                    profileImageUrl?: string | null;
+                    avatar?: string | null;
+                    image?: string | null;
+                    profileImage?: string | null;
+                  } | null;
+                  profileImageUrl?: string | null;
+                  avatar?: string | null;
+                  image?: string | null;
+                },
+              );
+              const showReviewerImage =
+                !!reviewerImageUrl && !failedReviewerImages[review.id];
 
               return (
                 <article
@@ -1349,9 +1422,23 @@ export default function ServiceDetail() {
                   className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
                 >
                   <div className="flex gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
-                      {reviewerInitial}
-                    </div>
+                    {showReviewerImage ? (
+                      <img
+                        src={reviewerImageUrl}
+                        alt={reviewerName}
+                        className="h-12 w-12 shrink-0 rounded-full object-cover"
+                        onError={() =>
+                          setFailedReviewerImages((prev) => ({
+                            ...prev,
+                            [review.id]: true,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
+                        {reviewerInitial}
+                      </div>
+                    )}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <p className="text-[15px] font-bold text-slate-900">
