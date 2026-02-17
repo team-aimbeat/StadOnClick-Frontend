@@ -7,8 +7,6 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlineWallet,
   HiOutlineBanknotes,
-  HiOutlineDocumentChartBar,
-  HiOutlineAdjustmentsHorizontal,
 } from "react-icons/hi2";
 
 import { cn } from "@/lib/utils";
@@ -39,13 +37,6 @@ const navGroups: AffiliateNavGroup[] = [
       { label: "Commission", to: "/affiliate/commission", icon: HiOutlineCurrencyDollar },
       { label: "Wallet", to: "/affiliate/wallet", icon: HiOutlineWallet },
       { label: "Payouts", to: "/affiliate/payouts", icon: HiOutlineBanknotes },
-    ],
-  },
-  {
-    label: "MANAGEMENT",
-    items: [
-      { label: "Reports", to: "/affiliate/reports", icon: HiOutlineDocumentChartBar },
-      { label: "Profile Settings", to: "/affiliate/profile-settings", icon: HiOutlineAdjustmentsHorizontal },
     ],
   },
 ];
