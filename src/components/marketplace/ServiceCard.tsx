@@ -107,8 +107,8 @@ export default function ServiceCard({
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-139.5">
-      <div className="relative h-51 overflow-hidden">
+    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-155">
+      <div className="relative h-50">
         <button
           type="button"
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
