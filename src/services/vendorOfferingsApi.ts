@@ -23,6 +23,7 @@ export type VendorOffering = {
   serviceId: string;
   name: string;
   description?: string | null;
+  bookingUrl?: string | null;
   usesSlots: boolean;
   basePrice: number;
   salePrice: number;
@@ -42,6 +43,7 @@ export interface CreateOfferingPayload {
   serviceId: string;
   name: string;
   description: string;
+  bookingUrl?: string | null;
   basePrice: number;
   salePrice: number;
   maxQuantity?: number | null;

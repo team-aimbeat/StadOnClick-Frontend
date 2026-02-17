@@ -41,6 +41,7 @@ type StepState = "idle" | "loading" | "success" | "error";
 type OfferingFormValues = {
   name: string;
   description: string;
+  bookingUrl?: string;
   basePrice: number;
   salePrice: number;
   maxQuantity?: number;
@@ -324,6 +325,7 @@ const VendorServices = () => {
           {
             name: "",
             description: "",
+            bookingUrl: "",
             basePrice: 0,
             salePrice: 0,
             maxQuantity: undefined,
@@ -442,6 +444,7 @@ const VendorServices = () => {
     // Prefill the FIRST offering card
     setValue("offerings.0.name", offering.name);
     setValue("offerings.0.description", offering.description ?? "");
+    setValue("offerings.0.bookingUrl", offering.bookingUrl ?? "");
     setValue("offerings.0.basePrice", offering.basePrice);
     setValue("offerings.0.salePrice", offering.salePrice);
     setValue("offerings.0.maxQuantity", offering.maxQuantity ?? undefined);
@@ -821,6 +824,7 @@ const VendorServices = () => {
           serviceId: currentServiceId,
           name: offeringVals.name.trim(),
           description: offeringVals.description.trim(),
+          bookingUrl: offeringVals.bookingUrl?.trim() || undefined,
           basePrice: offeringVals.basePrice,
           salePrice: offeringVals.salePrice,
           maxQuantity: offeringVals.maxQuantity,
