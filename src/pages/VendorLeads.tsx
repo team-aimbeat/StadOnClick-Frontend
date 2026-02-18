@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
+  HiOutlineArrowDownTray,
   HiOutlineChevronDown,
   HiOutlineEnvelope,
   HiOutlineLockClosed,
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import {
+  useExportVendorLeadsMutation,
   useGetVendorLeadsQuery,
   useUpdateVendorLeadStatusMutation,
 } from "@/features/leads/api/leadsApi";
@@ -211,6 +213,7 @@ const VendorLeads = () => {
   });
 
   const [updateStatus] = useUpdateVendorLeadStatusMutation();
+  const [exportVendorLeads, { isLoading: isExporting }] = useExportVendorLeadsMutation();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const statusHeading = statusFilter
@@ -241,6 +244,26 @@ const VendorLeads = () => {
       toast.error(error?.data?.message || "Unable to update lead status.");
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const file = await exportVendorLeads({
+        status: statusFilter,
+      }).unwrap();
+
+      const url = URL.createObjectURL(file);
+      const anchor = document.createElement("a");
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      anchor.href = url;
+      anchor.download = `vendor-leads-${dateStamp}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Unable to export leads.");
     }
   };
 
@@ -291,6 +314,15 @@ const VendorLeads = () => {
           </select>
           <HiOutlineChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-slate-500" />
         </label>
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={isExporting}
+          className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <HiOutlineArrowDownTray className="h-4 w-4" />
+          {isExporting ? "Exporting..." : "Export Excel"}
+        </button>
       </div>
 
       <div className="space-y-4">
