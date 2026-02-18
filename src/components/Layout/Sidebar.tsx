@@ -247,6 +247,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         children: [
           { label: t("Staff"), to: withBase("staff") },
           { label: t("Vendors"), to: withBase("vendors") },
+          { label: t("Affiliate Users"), to: withBase("affiliates") },
         ],
       },
       {
