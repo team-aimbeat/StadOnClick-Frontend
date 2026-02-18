@@ -31,9 +31,9 @@ const benefits = [
 ]
 
 const rightItems = [
-  { label: "Influencers", icon: iconTrust, href: "/signup" },
-  { label: "Wholesalers", icon: iconVerified, href: "/signup" },
-  { label: "Dropshippers", icon: iconLock, href: "/signup" },
+  { label: "Influencers", icon: iconTrust, href: "/sign-up" },
+  { label: "Wholesalers", icon: iconVerified, href: "/sign-up" },
+  { label: "Dropshippers", icon: iconLock, href: "/sign-up" },
 ]
 
 export default function HomeDeals() {

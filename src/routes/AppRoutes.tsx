@@ -43,6 +43,7 @@ import VendorPlaceholder from "@/pages/VendorPlaceholder";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
+import AffiliatesPage from "@/pages/Admin/Affiliates/AffiliatesPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 
@@ -126,6 +127,11 @@ const appRouter = createBrowserRouter([
           },
           {
             path: "/sign-up",
+            element: <Signup />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/signup",
             element: <Signup />,
             errorElement: <ErrorPage />,
           },
@@ -221,6 +227,11 @@ const appRouter = createBrowserRouter([
           {
             path: "vendors",
             element: <VendorsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "affiliates",
+            element: <AffiliatesPage />,
             errorElement: <ErrorPage />,
           },
           {
