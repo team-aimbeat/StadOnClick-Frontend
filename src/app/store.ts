@@ -42,6 +42,7 @@ import { checkoutApi } from "@/services/checkoutApi";
 import { vendorProfileApi } from "@/features/vendorProfile/api/vendorProfileApi";
 import { affiliateApi } from "@/features/affiliate/api/affiliateApi";
 import { wishlistApi } from "@/services/wishlistApi";
+import { menuMediaApi } from "@/services/menuMediaApi";
 
 export const store = configureStore({
   reducer: {
@@ -88,6 +89,7 @@ export const store = configureStore({
     [vendorProfileApi.reducerPath]: vendorProfileApi.reducer,
     [affiliateApi.reducerPath]: affiliateApi.reducer,
     [wishlistApi.reducerPath]: wishlistApi.reducer,
+    [menuMediaApi.reducerPath]: menuMediaApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -127,7 +129,8 @@ export const store = configureStore({
       .concat(serviceReviewsApi.middleware)
       .concat(vendorProfileApi.middleware)
       .concat(affiliateApi.middleware)
-      .concat(wishlistApi.middleware),
+      .concat(wishlistApi.middleware)
+      .concat(menuMediaApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -20,6 +20,7 @@ import VendorServices from "@/pages/VendorServices";
 import VendorCategoryDetail from "@/pages/VendorCategoryDetail";
 import VendorServiceOptions from "@/pages/VendorServiceOptions";
 import VendorMedia from "@/pages/VendorMedia";
+import VendorMenu from "@/pages/VendorMenu";
 import VendorCoupons from "@/pages/VendorCoupons";
 import VendorWallet from "@/pages/VendorWallet";
 import VendorPayouts from "@/pages/VendorPayouts";
@@ -478,6 +479,7 @@ const appRouter = createBrowserRouter([
             element: <VendorServiceOptions />,
           },
           { path: "media", element: <VendorMedia /> },
+          { path: "menu", element: <VendorMenu /> },
           { path: "coupons", element: <VendorCoupons /> },
           { path: "wallet", element: <VendorWallet /> },
           { path: "payouts", element: <VendorPayouts /> },

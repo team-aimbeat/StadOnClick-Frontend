@@ -174,6 +174,11 @@ export const getVendorNavGroups = ({
         to: "/vendor/media",
       },
       {
+        label: "Menu",
+        icon: HiOutlineBookmarkSquare,
+        to: "/vendor/menu",
+      },
+      {
         label: "Coupons",
         icon: HiOutlineTicket,
         to: "/vendor/coupons",
