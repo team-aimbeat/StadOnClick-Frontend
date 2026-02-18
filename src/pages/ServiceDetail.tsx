@@ -8,7 +8,7 @@ import {
   Star,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import salon1 from "@/assets/images/salon1.png";
 import salon2 from "@/assets/images/salon2.png";
 import salon3 from "@/assets/images/salon3.png";
@@ -25,6 +25,7 @@ import { useAppSelector } from "@/app/hooks";
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi";
 import { useListMarketplaceServicesQuery } from "@/services/marketplaceApi";
 import { useGetServiceMediaQuery } from "@/services/serviceMediaApi";
+import { useGetServiceMenuMediaQuery } from "@/services/menuMediaApi";
 import {
   useGetServiceOfferingsQuery,
   useLazyGetOfferingSlotsQuery,
@@ -256,14 +257,23 @@ export default function ServiceDetail() {
   const serviceCity = matchedMarketplaceService?.cityName ?? "—";
   const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
   console.log(rules);
+  const lastFetchedSlotsKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (bookedOffering) {
-      fetchOfferingSlots({
-        offeringId: bookedOffering.id,
-        vendorId: vendorId,
-      });
+    if (!bookedOffering?.id || !vendorId) {
+      lastFetchedSlotsKeyRef.current = null;
+      return;
     }
-  }, [bookedOffering, fetchOfferingSlots]);
+
+    const requestKey = `${vendorId}:${bookedOffering.id}`;
+    if (lastFetchedSlotsKeyRef.current === requestKey) return;
+
+    lastFetchedSlotsKeyRef.current = requestKey;
+    fetchOfferingSlots({
+      offeringId: bookedOffering.id,
+      vendorId,
+    });
+  }, [bookedOffering?.id, fetchOfferingSlots, vendorId]);
 
   const slotsForBookedOffering = useMemo(
     () => (bookedOffering ? (fetchedSlots ?? bookedOffering.slots ?? []) : []),
@@ -549,6 +559,10 @@ export default function ServiceDetail() {
       skip: !currentServiceId,
     },
   );
+  const { data: menuMedia = [], isLoading: menuMediaLoading } =
+    useGetServiceMenuMediaQuery(currentServiceId ?? "", {
+      skip: !currentServiceId,
+    });
 
   // 3. Fetch Offerings (isolated)
   const { data: offerings, isLoading: offeringsLoading } =
@@ -627,6 +641,7 @@ export default function ServiceDetail() {
     marketplaceLoading ||
     servicesLoading ||
     mediaLoading ||
+    menuMediaLoading ||
     offeringsLoading ||
     reviewsLoading
   ) {
@@ -663,6 +678,10 @@ export default function ServiceDetail() {
   const galleryImages = media
     ?.filter((m) => m.type === "IMAGE")
     .map((m) => m.signedUrl) || [salon1, salon2, salon3];
+  const menuPreviewImages =
+    menuMedia
+      ?.filter((m) => m.type === "IMAGE")
+      .map((m) => m.signedUrl) || [];
   const tabs: { id: "services" | "description"; label: string }[] = [
     { id: "services", label: "Services" },
     { id: "description", label: "Description" },
@@ -1279,15 +1298,19 @@ export default function ServiceDetail() {
                 View uploaded menu photos from the restaurant
               </p>
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="min-w-[100px] shrink-0">
-                    <img
-                      src={galleryImages[i % galleryImages.length]}
-                      alt={`Menu preview ${i}`}
-                      className="h-48 w-full rounded-2xl object-cover"
-                    />
-                  </div>
-                ))}
+                {menuPreviewImages.length > 0 ? (
+                  menuPreviewImages.map((imageUrl, index) => (
+                    <div key={`${imageUrl}-${index}`} className="min-w-[100px] shrink-0">
+                      <img
+                        src={imageUrl}
+                        alt={`Menu preview ${index + 1}`}
+                        className="h-48 w-full rounded-2xl object-cover"
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">No menu images uploaded yet.</p>
+                )}
               </div>
             </div>
           </div>
