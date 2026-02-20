@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import parkImage from "@/assets/images/trending1.jpg";
 import mallImage from "@/assets/images/trending2.jpg";
 import marketImage from "@/assets/images/trending3.jpg";
@@ -11,23 +13,39 @@ const places = [
     offers: "25 Offers",
     price: "Rs 119",
     image: parkImage,
+    link: "/marketplace?place=connaught-place",
   },
   {
     title: "Club Road",
     offers: "8 Offers",
     price: "Rs 159",
     image: restaurantImage,
+    link: "/marketplace?place=club-road",
   },
-  { title: "Aerocity", offers: "6 Offers", price: "Rs 1129", image: mallImage },
+  {
+    title: "Aerocity",
+    offers: "6 Offers",
+    price: "Rs 1129",
+    image: mallImage,
+    link: "/marketplace?place=aerocity",
+  },
   {
     title: "Ramphal Chowk Road",
     offers: "5 Offers",
     price: "Rs 199",
     image: marketImage,
+    link: "/marketplace?place=ramphal-chowk-road",
   },
 ];
 
 export default function HomeTrending() {
+  const navigate = useNavigate()
+  const handleNavigate = useCallback(
+    (link: string) => {
+      navigate(link)
+    },
+    [navigate],
+  )
   return (
    <section className="relative mt-16 w-screen -mx-[calc((100vw-100%)/2)] py-16">
 
@@ -47,16 +65,23 @@ export default function HomeTrending() {
   Elevated Experiences Nearby
   <span className="absolute left-0 -bottom-2 h-[3px] w-16 bg-slate-900 rounded-full"></span>
 </h3>
-
     </div>
-
     {/* Cards Grid (Same Container) */}
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
 
       {places.map((place) => (
         <article
           key={place.title}
-          className="group overflow-hidden rounded-2xl bg-white shadow-sm transition duration-300 hover:shadow-xl hover:-translate-y-2"
+          className="group cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm transition duration-300 hover:shadow-xl hover:-translate-y-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"
+          role="button"
+          tabIndex={0}
+          onClick={() => handleNavigate(place.link)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault()
+              handleNavigate(place.link)
+            }
+          }}
         >
           <div className="h-72 overflow-hidden">
             <ImageWithSkeleton
@@ -68,7 +93,6 @@ export default function HomeTrending() {
               decoding="async"
             />
           </div>
-
           <div className="p-5">
             <h4 className="text-xl font-semibold text-slate-900">
               {place.title}
