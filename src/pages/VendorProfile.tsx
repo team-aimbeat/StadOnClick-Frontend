@@ -542,6 +542,8 @@ import { DashboardContainer } from "@/components/dashboard";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import defaultVendorCover from "@/assets/images/bgsalon.jpg";
+import foodCover from "@/assets/images/food.jpg";
+import leisureCover from "@/assets/images/event.jpg";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { setUser } from "@/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
@@ -596,6 +598,7 @@ const VendorProfile = () => {
   const [contactPhone, setContactPhone] = useState("");
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
   const [invalidHours, setInvalidHours] = useState<number[]>([]);
+  const [isVendorAvatarBroken, setIsVendorAvatarBroken] = useState(false);
 
   useEffect(() => {
     if (profileData?.data) {
@@ -738,17 +741,50 @@ const VendorProfile = () => {
   }, [citiesResponse?.data]);
 
   const profile = profileData?.data;
+  const defaultCoverByCategory = useMemo(() => {
+    const categoryText = [
+      serviceOverview,
+      profile?.serviceOverview,
+      profile?.description,
+      ...(profile?.seoKeywords ?? []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    if (categoryText.includes("food")) return foodCover;
+    if (categoryText.includes("leisure")) return leisureCover;
+    return defaultVendorCover;
+  }, [
+    serviceOverview,
+    profile?.serviceOverview,
+    profile?.description,
+    profile?.seoKeywords,
+  ]);
+
   const coverImageUrl = useMemo(() => {
     const candidate = profile?.seoImageKey?.trim();
-    if (!candidate) return defaultVendorCover;
+    if (!candidate) return defaultCoverByCategory;
     if (/^https?:\/\//i.test(candidate) || candidate.startsWith("data:")) {
       return candidate;
     }
 
     const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
-    if (!apiBaseUrl) return defaultVendorCover;
+    if (!apiBaseUrl) return defaultCoverByCategory;
     return `${apiBaseUrl}/${candidate.replace(/^\/+/, "")}`;
-  }, [profile?.seoImageKey]);
+  }, [defaultCoverByCategory, profile?.seoImageKey]);
+  const vendorAvatarUrl = useMemo(() => {
+    const candidate = (authUser?.profileImageUrl ?? "").trim();
+    if (!candidate) return "";
+    if (/^https?:\/\//i.test(candidate) || candidate.startsWith("data:")) {
+      return candidate;
+    }
+
+    const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+    if (!apiBaseUrl) return candidate;
+    return `${apiBaseUrl}/${candidate.replace(/^\/+/, "")}`;
+  }, [authUser?.profileImageUrl]);
+  const showVendorAvatar = Boolean(vendorAvatarUrl) && !isVendorAvatarBroken;
 
   if (loading || isLoadingProfile) {
     return (
@@ -813,9 +849,20 @@ const VendorProfile = () => {
               {/* Avatar + name */}
               <div className="flex flex-col items-center px-6 pt-8 pb-6 border-b border-slate-100">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
-                    {(profile?.businessName || businessName || "V").charAt(0).toUpperCase()}
-                  </div>
+                  {showVendorAvatar ? (
+                    <img
+                      src={vendorAvatarUrl}
+                      alt={profile?.businessName || businessName || "Vendor"}
+                      className="w-24 h-24 rounded-full object-cover shadow-md"
+                      onError={() => setIsVendorAvatarBroken(true)}
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-md">
+                      {(profile?.businessName || businessName || "V")
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                  )}
                   <button className="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center shadow hover:bg-blue-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
