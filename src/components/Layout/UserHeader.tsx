@@ -1,5 +1,19 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, Bookmark, BriefcaseBusiness, ChevronLeft, ChevronRight, Heart, Megaphone, Search, ShoppingBag, ShoppingCartIcon, Sparkles, UserRound, X } from "lucide-react";
+import {
+  Bell,
+  Bookmark,
+  BriefcaseBusiness,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Megaphone,
+  Search,
+  ShoppingBag,
+  ShoppingCartIcon,
+  Sparkles,
+  UserRound,
+  X,
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   useEffect,
@@ -63,14 +77,12 @@ const cartPreviewItems: CartPreviewItem[] = [
 ];
 
 const cartPreviewSubtotal = cartPreviewItems.reduce(
-  (total, item) =>
-    total + Number(item.price.replace(/[^0-9.]/g, "")),
-  0
+  (total, item) => total + Number(item.price.replace(/[^0-9.]/g, "")),
+  0,
 );
 
 const navLinkBase =
   "group flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30";
-
 
 const categoryAccentClasses = [
   "bg-rose-50 text-rose-600",
@@ -105,14 +117,22 @@ export default function UserHeader() {
     isFetching: isNotificationsFetching,
     error: notificationsError,
   } = useGetNotificationsQuery({ page: 1, limit: 5 }, { skip: !user });
-  const { data: unreadResponse } = useGetUnreadCountQuery(undefined, { skip: !user });
+  const { data: unreadResponse } = useGetUnreadCountQuery(undefined, {
+    skip: !user,
+  });
   const [markNotificationRead] = useMarkNotificationReadMutation();
-  const [markAllRead, { isLoading: isMarkAllReadLoading }] = useMarkAllReadMutation();
-  const notificationsList = (notificationsResponse?.data ?? []) as UserNotificationItem[];
-  const fallbackUnreadCount = notificationsList.filter((notification) => !notification.readAt).length;
+  const [markAllRead, { isLoading: isMarkAllReadLoading }] =
+    useMarkAllReadMutation();
+  const notificationsList = (notificationsResponse?.data ??
+    []) as UserNotificationItem[];
+  const fallbackUnreadCount = notificationsList.filter(
+    (notification) => !notification.readAt,
+  ).length;
   const unreadCount = unreadResponse?.count ?? fallbackUnreadCount;
-  const isEmptyNotifications = !notificationsList.length && !isNotificationsFetching;
-  const isNotificationsLoading = isNotificationsFetching && !notificationsList.length;
+  const isEmptyNotifications =
+    !notificationsList.length && !isNotificationsFetching;
+  const isNotificationsLoading =
+    isNotificationsFetching && !notificationsList.length;
   const notificationsBadge = unreadCount > 0 ? String(unreadCount) : undefined;
 
   useEffect(() => {
@@ -121,17 +141,11 @@ export default function UserHeader() {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
 
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(target)
-      ) {
+      if (profileRef.current && !profileRef.current.contains(target)) {
         setProfileMenuOpen(false);
       }
 
-      if (
-        cartRef.current &&
-        !cartRef.current.contains(target)
-      ) {
+      if (cartRef.current && !cartRef.current.contains(target)) {
         setCartMenuOpen(false);
       }
 
@@ -157,7 +171,7 @@ export default function UserHeader() {
     const normalized = query.trim().toLowerCase();
     const directMatch = categoryLookup.get(normalized);
     const partialMatch = searchCategories.find((c) =>
-      c.label.toLowerCase().includes(normalized)
+      c.label.toLowerCase().includes(normalized),
     );
     const target = directMatch ?? partialMatch?.slug ?? "new-deals";
     navigate(`/services/${target}`, {
@@ -165,8 +179,12 @@ export default function UserHeader() {
     });
   };
 
-  const [hoveredMasterSlug, setHoveredMasterSlug] = useState<string | null>(null);
-  const [subCategoryCache, setSubCategoryCache] = useState<Record<string, ServiceCategory[]>>({});
+  const [hoveredMasterSlug, setHoveredMasterSlug] = useState<string | null>(
+    null,
+  );
+  const [subCategoryCache, setSubCategoryCache] = useState<
+    Record<string, ServiceCategory[]>
+  >({});
   const [isSubCategoriesLoading, setIsSubCategoriesLoading] = useState(false);
   const [popoverTop, setPopoverTop] = useState(0);
   const navContainerRef = useRef<HTMLDivElement | null>(null);
@@ -177,8 +195,9 @@ export default function UserHeader() {
   const [fetchCategoriesForMaster] = useLazyGetServiceCategoriesByMasterQuery();
 
   const plannedCategoryMap = useMemo(
-    () => new Map(plannedCategories.map((category) => [category.slug, category])),
-    []
+    () =>
+      new Map(plannedCategories.map((category) => [category.slug, category])),
+    [],
   );
 
   const hoveredMaster = hoveredMasterSlug
@@ -224,7 +243,7 @@ export default function UserHeader() {
     ? plannedCategoryMap.get(hoveredMasterSlug)
     : undefined;
   const hoveredSubCategories = hoveredMasterId
-    ? subCategoryCache[hoveredMasterId] ?? []
+    ? (subCategoryCache[hoveredMasterId] ?? [])
     : [];
   const HoveredIcon = hoveredPlannedCategory?.icon;
   const megaMenuImageSrc =
@@ -251,7 +270,7 @@ export default function UserHeader() {
   const hasSecondSubcategoryColumn = secondColumn.length > 0;
   const handleHover = (
     _event: ReactMouseEvent<HTMLAnchorElement>,
-    slug: string
+    slug: string,
   ) => {
     const containerRect = navContainerRef.current?.getBoundingClientRect();
     if (containerRect) {
@@ -366,7 +385,9 @@ export default function UserHeader() {
     [notificationsBadge],
   );
 
-  const handleNotificationSelect = async (notification: UserNotificationItem) => {
+  const handleNotificationSelect = async (
+    notification: UserNotificationItem,
+  ) => {
     if (!notification.readAt) {
       try {
         await markNotificationRead(notification.id).unwrap();
@@ -437,11 +458,10 @@ export default function UserHeader() {
             to="/"
             className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900"
           >
-<div className="h-8 w-8 rounded-full bg-blue-700">
+            <div className="h-8 w-8 rounded-full bg-blue-700">
               <span className="sr-only">StadOnClick logo</span>
             </div>
             <div className="leading-tight">
-              
               <p className="text-sm font-semibold tracking-tight text-slate-500">
                 StadOnClick
               </p>
@@ -453,22 +473,20 @@ export default function UserHeader() {
 
           <div className="flex flex-1 min-w-[260px] justify-center">
             <div className="w-full max-w-3xl">
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100">
+              <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3 py-1 transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100">
                 <input
                   type="search"
                   placeholder="Search salons, gyms, restaurants, experiences..."
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  onKeyDown={(event) =>
-                    event.key === "Enter" && handleSearch()
-                  }
-                  className="flex-1 bg-transparent px-2 py-2 text-[14px] text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                  onKeyDown={(event) => event.key === "Enter" && handleSearch()}
+                  className="flex-1 bg-transparent px-2 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                   aria-label="Search"
                 />
                 <button
                   type="button"
                   onClick={handleSearch}
-                  className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-1 text-sm font-semibold text-white  hover:bg-emerald-700"
+                  className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"
                 >
                   <Search className="h-4 w-4" />
                   Search
@@ -477,8 +495,7 @@ export default function UserHeader() {
             </div>
           </div>
 
-          <div className="hidden flex-wrap items-center gap-2 text-xs font-semibold sm:flex">
-           
+          <div className="hidden flex-wrap items-center gap-3 text-xs font-semibold sm:flex">
             <button
               type="button"
               onClick={() => {
@@ -498,7 +515,7 @@ export default function UserHeader() {
 
                 navigate("/business/onboarding");
               }}
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Business with StadOnClick"
             >
               <BriefcaseBusiness className="h-4 w-4 text-emerald-500" />
@@ -515,16 +532,18 @@ export default function UserHeader() {
                   return;
                 }
                 const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
-                navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
+                navigate(
+                  isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing",
+                );
               }}
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Affiliate Program"
             >
               <Megaphone className="h-4 w-4 text-indigo-500" />
               Affiliate Program
             </button>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <IconButton
               icon={<Bookmark className="h-5 w-5 text-rose-500" />}
               label="Wishlist"
@@ -634,101 +653,103 @@ export default function UserHeader() {
                     {...dropdownMotion}
                     className="absolute right-0 top-full z-40 mt-2 w-[320px] origin-top-right rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)] will-change-transform"
                   >
-                  <div className="px-5 py-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          Notifications
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Live updates from StadOnClick
-                        </p>
+                    <div className="px-5 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            Notifications
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Live updates from StadOnClick
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-slate-500 transition hover:text-slate-900 disabled:text-slate-300"
+                          disabled={!unreadCount || isMarkAllReadLoading}
+                          onClick={handleMarkAllRead}
+                        >
+                          Mark all read
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        className="text-xs font-semibold text-slate-500 transition hover:text-slate-900 disabled:text-slate-300"
-                        disabled={!unreadCount || isMarkAllReadLoading}
-                        onClick={handleMarkAllRead}
-                      >
-                        Mark all read
-                      </button>
                     </div>
-                  </div>
-                  <div className="border-t border-slate-100 bg-white">
-                    {notificationsError ? (
-                      <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
-                        Unable to load notifications
-                      </div>
-                    ) : isNotificationsLoading ? (
-                      <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
-                        Loading notifications...
-                      </div>
-                    ) : notificationsList.length ? (
-                      <ul className="max-h-90 space-y-2 overflow-auto px-2 py-2">
-                        {notificationsList.map((notification) => {
-                          const isUnread = !notification.readAt;
-                          return (
-                            <li key={notification.id}>
-                              <button
-                                type="button"
-                                onClick={() => handleNotificationSelect(notification)}
-                                className={cn(
-                                  "flex w-full items-start justify-between gap-3 rounded-2xl px-4 py-3 text-left transition",
-                                  isUnread
-                                    ? "bg-slate-50 hover:bg-slate-100"
-                                    : "bg-white hover:bg-slate-50",
-                                )}
-                              >
-                                <div className="flex flex-1 flex-col gap-1">
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-sm font-semibold text-slate-900 truncate">
-                                      {notification.title}
-                                    </p>
-                                    {isUnread ? (
-                                      <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                    <div className="border-t border-slate-100 bg-white">
+                      {notificationsError ? (
+                        <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
+                          Unable to load notifications
+                        </div>
+                      ) : isNotificationsLoading ? (
+                        <div className="flex items-center justify-center px-4 py-10 text-sm text-slate-500">
+                          Loading notifications...
+                        </div>
+                      ) : notificationsList.length ? (
+                        <ul className="max-h-90 space-y-2 overflow-auto px-2 py-2">
+                          {notificationsList.map((notification) => {
+                            const isUnread = !notification.readAt;
+                            return (
+                              <li key={notification.id}>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleNotificationSelect(notification)
+                                  }
+                                  className={cn(
+                                    "flex w-full items-start justify-between gap-3 rounded-2xl px-4 py-3 text-left transition",
+                                    isUnread
+                                      ? "bg-slate-50 hover:bg-slate-100"
+                                      : "bg-white hover:bg-slate-50",
+                                  )}
+                                >
+                                  <div className="flex flex-1 flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm font-semibold text-slate-900 truncate">
+                                        {notification.title}
+                                      </p>
+                                      {isUnread ? (
+                                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                                      ) : null}
+                                    </div>
+                                    {notification.body ? (
+                                      <p className="text-xs text-slate-500">
+                                        {notification.body}
+                                      </p>
                                     ) : null}
                                   </div>
-                                  {notification.body ? (
-                                    <p className="text-xs text-slate-500">
-                                      {notification.body}
-                                    </p>
-                                  ) : null}
-                                </div>
-                                <span className="text-[11px] text-slate-400">
-                                  {formatRelativeTime(notification.createdAt)}
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center text-xs text-slate-500">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                          <Bell className="h-6 w-6" strokeWidth={1.8} />
+                                  <span className="text-[11px] text-slate-400">
+                                    {formatRelativeTime(notification.createdAt)}
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center text-xs text-slate-500">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                            <Bell className="h-6 w-6" strokeWidth={1.8} />
+                          </div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            You're all caught up
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            We will keep you posted.
+                          </p>
                         </div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          You're all caught up
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          We will keep you posted.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="border-t border-slate-100 px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
-                      {utilityLinks.map((link) => (
-                        <button
-                          key={link}
-                          type="button"
-                          className="rounded-xl border border-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-                        >
-                          {link}
-                        </button>
-                      ))}
+                      )}
                     </div>
-                  </div>
+                    <div className="border-t border-slate-100 px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        {utilityLinks.map((link) => (
+                          <button
+                            key={link}
+                            type="button"
+                            className="rounded-xl border border-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                          >
+                            {link}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </motion.div>
                 ) : null}
               </AnimatePresence>
@@ -752,67 +773,69 @@ export default function UserHeader() {
                       {...dropdownMotion}
                       className="absolute z-50 -right-[190%] mt-2 w-75 origin-top-right rounded-3xl border bg-white shadow-[0_45px_90px_rgba(15,23,42,0.18)] will-change-transform"
                     >
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-sky-100">
-                      <p className="text-sm font-semibold text-slate-900">
-                        Hi, {greetingName}!
-                      </p>
-                      <button
-                        type="button"
-                        className="rounded-full p-1 text-sky-500 transition hover:bg-slate-100 hover:text-sky-700"
-                        onClick={() => setProfileMenuOpen(false)}
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Close menu</span>
-                      </button>
-                    </div>
-
-                    <a href="/account">
-                      <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
-                          {userInitial}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
-                            {accountName}
-                          </p>
-                          <p className="text-xs text-slate-500 truncate">
-                            {user.email}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-3 w-3 text-slate-400" />
-                      </div>
-                    </a>
-                    <div className="space-y-1 px-4 py-3">
-                      {menuItems.map((item) => (
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-sky-100">
+                        <p className="text-sm font-semibold text-slate-900">
+                          Hi, {greetingName}!
+                        </p>
                         <button
-                          key={item.label}
                           type="button"
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-sky-50"
+                          className="rounded-full p-1 text-sky-500 transition hover:bg-slate-100 hover:text-sky-700"
                           onClick={() => setProfileMenuOpen(false)}
                         >
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-50 text-blue-700">
-                            {item.icon}
-                          </span>
-                          <span className="flex-1 truncate">{item.label}</span>
-                          {item.meta && (
-                            <span className="text-xs font-semibold text-sky-500">
-                              {item.meta}
-                            </span>
-                          )}
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Close menu</span>
                         </button>
-                      ))}
-                    </div>
+                      </div>
 
-                    <div className="border-t border-sky-100 hover:bg-gray-200 transition-colors duration-100 cursor-pointer  rounded-b-2xl px-5 py-3">
-                      <button
-                        type="button"
-                        className="w-full text-left text-sm font-semibold cursor-pointer  text-blue-700 transition hover:text-blue-900 disabled:cursor-wait disabled:text-slate-400"
-                        onClick={handleSignOut}
-                        disabled={isSigningOut}
-                      >
-                        Sign Out
-                      </button>
-                    </div>
+                      <a href="/account">
+                        <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
+                            {userInitial}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-900 truncate">
+                              {accountName}
+                            </p>
+                            <p className="text-xs text-slate-500 truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-3 w-3 text-slate-400" />
+                        </div>
+                      </a>
+                      <div className="space-y-1 px-4 py-3">
+                        {menuItems.map((item) => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-sky-50"
+                            onClick={() => setProfileMenuOpen(false)}
+                          >
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-50 text-blue-700">
+                              {item.icon}
+                            </span>
+                            <span className="flex-1 truncate">
+                              {item.label}
+                            </span>
+                            {item.meta && (
+                              <span className="text-xs font-semibold text-sky-500">
+                                {item.meta}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="border-t border-sky-100 hover:bg-gray-200 transition-colors duration-100 cursor-pointer  rounded-b-2xl px-5 py-3">
+                        <button
+                          type="button"
+                          className="w-full text-left text-sm font-semibold cursor-pointer  text-blue-700 transition hover:text-blue-900 disabled:cursor-wait disabled:text-slate-400"
+                          onClick={handleSignOut}
+                          disabled={isSigningOut}
+                        >
+                          Sign Out
+                        </button>
+                      </div>
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
@@ -831,7 +854,10 @@ export default function UserHeader() {
       </div>
 
       <div className="border-t border-slate-200 bg-white">
-        <div className="relative" onMouseLeave={() => setHoveredMasterSlug(null)}>
+        <div
+          className="relative"
+          onMouseLeave={() => setHoveredMasterSlug(null)}
+        >
           <div
             ref={navContainerRef}
             className="relative mx-auto flex w-full max-w-screen-2xl items-center gap-2 overflow-hidden px-3 py-0.5"
@@ -864,7 +890,8 @@ export default function UserHeader() {
                       className={({ isActive }) =>
                         cn(
                           navLinkBase,
-                          (isActive || isHovered) && "border-slate-200 text-slate-900",
+                          (isActive || isHovered) &&
+                            "border-slate-200 text-slate-900",
                         )
                       }
                     >
@@ -874,7 +901,8 @@ export default function UserHeader() {
                             className={cn(
                               "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-base font-semibold shadow-sm transition duration-150",
                               accentClass,
-                              (isActive || isHovered) && "ring-2 ring-emerald-500/60",
+                              (isActive || isHovered) &&
+                                "ring-2 ring-emerald-500/60",
                             )}
                           >
                             {IconComponent ? (
@@ -905,112 +933,122 @@ export default function UserHeader() {
 
           <AnimatePresence>
             {hoveredMaster ? (
-        <motion.div
-          key={hoveredMaster.slug}
-          {...megaMenuMotion}
-          className="absolute left-0 right-0 z-40 will-change-transform"
-          style={{ top: popoverTop }}
-          ref={megaMenuRef}
-        >
-              <div className="mx-auto w-full max-w-7xl overflow-hidden border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
-                <div
-                  className={cn(
-                    "grid grid-cols-1",
-                    hasSecondSubcategoryColumn
-                      ? "md:grid-cols-[420px_1fr]"
-                      : "md:grid-cols-[340px_1fr]",
-                  )}
-                >
-                  <div className="px-8 py-8">
-                    <p className="text-xs font-semibold text-slate-500">
-                      Subcategories
-                    </p>
+              <motion.div
+                key={hoveredMaster.slug}
+                {...megaMenuMotion}
+                className="absolute left-0 right-0 z-40 will-change-transform"
+                style={{ top: popoverTop }}
+                ref={megaMenuRef}
+              >
+                <div className="mx-auto w-full max-w-7xl overflow-hidden border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+                  <div
+                    className={cn(
+                      "grid grid-cols-1",
+                      hasSecondSubcategoryColumn
+                        ? "md:grid-cols-[420px_1fr]"
+                        : "md:grid-cols-[340px_1fr]",
+                    )}
+                  >
+                    <div className="px-8 py-8 bg-white border-r border-slate-200">
+                      {/* Heading */}
+                      <div className="mb-6 flex items-center gap-3">
+                        <div className="h-6 w-1.5 rounded-full bg-green-600" />
+                        <p className="text-xl font-bold tracking-tight text-slate-900">
+                          Subcategories
+                        </p>
+                      </div>
 
-                    {isSubCategoriesLoading && !hoveredSubCategories.length ? (
-                      <p className="mt-4 text-sm text-slate-500">
-                        Loading...
-                      </p>
-                    ) : hoveredSubCategories.length ? (
-                      <div
-                        className={cn(
-                          "mt-5 grid gap-x-8",
-                          hasSecondSubcategoryColumn ? "grid-cols-2" : "grid-cols-1",
-                        )}
-                      >
-                        <div className="space-y-3">
-                          {firstColumn.map((category) => (
-                            <Link
-                              key={category.id}
-                              to={`/services/${category.slug}`}
-                              className={cn(
-                                "group relative flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-900 transition-all duration-200",
-                                "before:absolute before:left-3 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-slate-200 before:content-['']",
-                                "pl-7 hover:-translate-y-px hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
-                                "hover:before:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2",
-                              )}
-                            >
-                              <span className="truncate">{category.name}</span>
-                              <ChevronRight className="h-3 w-3 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
-                            </Link>
-                          ))}
-                        </div>
-                        {hasSecondSubcategoryColumn ? (
-                          <div className="space-y-3">
-                            {secondColumn.map((category) => (
+                      {isSubCategoriesLoading &&
+                      !hoveredSubCategories.length ? (
+                        <p className="text-sm text-slate-500 animate-pulse">
+                          Loading categories...
+                        </p>
+                      ) : hoveredSubCategories.length ? (
+                        <div
+                          className={cn(
+                            "grid gap-x-8",
+                            hasSecondSubcategoryColumn
+                              ? "grid-cols-2"
+                              : "grid-cols-1",
+                          )}
+                        >
+                          {/* First Column */}
+                          <div className="space-y-2">
+                            {firstColumn.map((category) => (
                               <Link
                                 key={category.id}
                                 to={`/services/${category.slug}`}
-                                className={cn(
-                                  "group relative flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-900 transition-all duration-200",
-                                  "before:absolute before:left-3 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full before:bg-slate-200 before:content-['']",
-                                  "pl-7 hover:-translate-y-px hover:bg-slate-50 hover:text-blue-700 hover:shadow-sm",
-                                  "hover:before:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2",
-                                )}
+                                className="group flex items-center justify-between rounded-xl border border-transparent bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-[2px] hover:border-green-200 hover:bg-white hover:text-green-700 hover:shadow-md"
                               >
-                                <span className="truncate">{category.name}</span>
-                                <ChevronRight className="h-3 w-3 flex-none text-slate-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-600 group-hover:opacity-100" />
+                                <div className="flex items-center gap-3">
+                                  <span className="h-2 w-2 rounded-full bg-slate-400 transition-all duration-200 group-hover:scale-125 group-hover:bg-green-600" />
+                                  <span className="truncate">
+                                    {category.name}
+                                  </span>
+                                </div>
+
+                                <ChevronRight className="h-4 w-4 text-slate-300 transition-all duration-200 group-hover:translate-x-1 group-hover:text-green-600" />
                               </Link>
                             ))}
                           </div>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <p className="mt-4 text-sm text-slate-500">
-                        No subcategories available.
-                      </p>
-                    )}
-                  </div>
 
-                  <div className="relative min-h-105 bg-slate-100">
-                    {megaMenuImageSrc ? (
+                          {/* Second Column */}
+                          {hasSecondSubcategoryColumn && (
+                            <div className="space-y-2">
+                              {secondColumn.map((category) => (
+                                <Link
+                                  key={category.id}
+                                  to={`/services/${category.slug}`}
+                                  className="group flex items-center justify-between rounded-xl border border-transparent bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-[2px] hover:border-blue-200 hover:bg-white hover:text-blue-700 hover:shadow-md"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="h-2 w-2 rounded-full bg-slate-400 transition-all duration-200 group-hover:scale-125 group-hover:bg-green-600" />
+                                    <span className="truncate">
+                                      {category.name}
+                                    </span>
+                                  </div>
+
+                                  <ChevronRight className="h-4 w-4 text-slate-300 transition-all duration-200 group-hover:translate-x-1 group-hover:text-green-600" />
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500">
+                          No subcategories available.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="relative group overflow-hidden  shadow-lg">
+                      {/* Image */}
                       <img
                         src={megaMenuImageSrc}
-                        srcSet={megaMenuImageSrcSet}
-                        sizes="(min-width: 768px) 60vw, 100vw"
-                        alt={`${hoveredMaster.name} cover`}
-                        className="absolute inset-0 h-full w-full object-cover"
-                        decoding="async"
-                        loading="eager"
+                        alt="Experiences & Activities"
+                        className="h-105 w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                    ) : null}
 
-                    <div className="absolute inset-0 bg-linear-to-t
-                     from-black/45 via-black/0 to-black/0" />
-                    <div className="absolute bottom-6 left-6 flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-900">
-                        {HoveredIcon ? (
-                          <HoveredIcon className="h-4 w-4" />
-                        ) : (
-                          <Sparkles className="h-4 w-4 text-yellow-500" />
-                        )}
+                      {/* Dark Overlay */}
+                      <div className="absolute inset-0 bg-black/40 transition duration-300 group-hover:bg-black/50" />
+
+                      {/* Content */}
+                      <div className="absolute bottom-8 left-8 right-8 text-white">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-sm font-semibold backdrop-blur-sm">
+                          Featured Category
+                        </div>
+
+                        <h2 className="mt-4 text-3xl font-bold tracking-tight drop-shadow-lg">
+                          Experiences & Activities
+                        </h2>
+
+                        <button className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2 text-sm font-semibold text-black transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+                          Explore Now →
+                        </button>
                       </div>
-                      <p className="text-base font-semibold text-white drop-shadow">
-                        {hoveredMaster.name}
-                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
               </motion.div>
             ) : null}
           </AnimatePresence>
@@ -1028,7 +1066,13 @@ type IconButtonProps = {
   className?: string;
 };
 
-function IconButton({ icon, label, badge, onClick, className }: IconButtonProps) {
+function IconButton({
+  icon,
+  label,
+  badge,
+  onClick,
+  className,
+}: IconButtonProps) {
   return (
     <button
       type="button"
@@ -1056,11 +1100,10 @@ function formatRelativeTime(iso?: string) {
 
   const diffSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (diffSeconds < 45) return "Just now";
-  if (diffSeconds < 3600) return `${Math.max(1, Math.floor(diffSeconds / 60))}m`;
+  if (diffSeconds < 3600)
+    return `${Math.max(1, Math.floor(diffSeconds / 60))}m`;
   if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`;
   if (diffSeconds < 172800) return "Yesterday";
 
   return date.toLocaleDateString();
 }
-
-
