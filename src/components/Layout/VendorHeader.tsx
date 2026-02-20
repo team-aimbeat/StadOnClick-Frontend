@@ -516,7 +516,7 @@ const VendorHeader = () => {
               btnClassName="group relative rounded-full border border-gray-200/80 bg-white p-0.5 shadow-sm transition hover:border-primary/40 dark:border-gray-700 dark:bg-gray-900/80"
               button={
                 <img
-                  className="h-12 w-12 rounded-full object-cover saturate-50 transition group-hover:saturate-100"
+                  className="h-12 w-12 rounded-full object-cover saturate-100"
                   src={avatar}
                   alt="User avatar"
                 />
