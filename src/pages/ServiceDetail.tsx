@@ -849,7 +849,7 @@ export default function ServiceDetail() {
         </div>
 
         <div className="grid gap-6 grid-cols-5">
-          <div className="col-span-3">
+          <div className="col-span-3 min-w-0">
             <div className="space-y-5 rounded-3xl bg-white p-8 ">
               <div className="flex items-center justify-between">
                 <div>
@@ -947,12 +947,10 @@ export default function ServiceDetail() {
                     })}
                   </div>
                 ) : (
-                  <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                    <p className="text-sm text-slate-500">
-                      {serviceDescription} {offerings.rules}
+                  <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
+                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription} {offerings.rules}
                     </p>
-                    <p className="text-xs text-slate-400">
-                      {`We keep this experience updated—check the services tab to explore current offerings.`}
+                    <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updated—check the services tab to explore current offerings.`}
                     </p>
                     {descriptionRules.length > 0 && (
                       <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
@@ -1638,3 +1636,5 @@ export default function ServiceDetail() {
     </section>
   );
 }
+
+
