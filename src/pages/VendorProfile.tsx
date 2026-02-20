@@ -1027,34 +1027,63 @@ const VendorProfile = () => {
                   <span className="text-sm text-slate-500">Profile status</span>
                   <StatusPill status={profile?.status || "PENDING_REVIEW"} />
                 </div>
-                <div className="flex items-center justify-between px-6 py-3.5">
-                  <span className="text-sm text-slate-500">Opportunities applied</span>
-                  <span className="text-sm font-bold text-blue-600">—</span>
-                </div>
-                <div className="flex items-center justify-between px-6 py-3.5">
-                  <span className="text-sm text-slate-500">Opportunities won</span>
-                  <span className="text-sm font-bold text-green-500">—</span>
-                </div>
               </div>
 
               {/* Actions */}
-              <div className="px-6 py-5 space-y-2.5">
-                <button className="w-full rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+              <div className="px-6 py-5 space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/vendor/kyc")}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100"
+                  >
+                    <p className="text-xs text-slate-500">Verification</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">KYC</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/vendor/wallet")}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100"
+                  >
+                    <p className="text-xs text-slate-500">Finance</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">Wallet</p>
+                  </button>
+                </div>
+
+                <div className="border-t border-slate-100 pt-3">
+                  <p className="mb-2 text-lg font-semibold text-slate-900">Setting</p>
+                  <div className="space-y-2">
+                   
+                    <button
+                      type="button"
+                      onClick={() => navigate("/vendor/support")}
+                      className="flex w-full items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Support
+                      <span>�</span>
+                    </button>
+           
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
                   View Public Profile
                 </button>
                 <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
                   <span className="flex-1 truncate text-sm text-slate-400">
                     {profile?.slug ? `stadonclick.com/v/${profile.slug}` : "Slug not set"}
                   </span>
-                  <button className="shrink-0 text-slate-400 hover:text-blue-600 transition">
+                  <button type="button" className="shrink-0 text-slate-400 hover:text-blue-600 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   </button>
                 </div>
               </div>
-            </div>
-          </aside>
+            </div>          </aside>
 
           {/* ── Main Panel ── */}
           <main className="flex-1 min-w-0">
@@ -1375,4 +1404,5 @@ const VendorProfile = () => {
 };
 
 export default VendorProfile;
+
 
