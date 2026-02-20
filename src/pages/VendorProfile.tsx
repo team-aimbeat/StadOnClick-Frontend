@@ -538,6 +538,11 @@
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import dayjs, { type Dayjs } from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DashboardContainer } from "@/components/dashboard";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -557,6 +562,8 @@ import {
 import type { BusinessHour } from "@/features/vendorProfile/api/vendorProfileApi";
 import toast from "react-hot-toast";
 
+dayjs.extend(customParseFormat);
+
 const formSteps = [
   { id: "info", label: "Profile Info" },
   { id: "seo", label: "SEO & Visibility" },
@@ -564,6 +571,7 @@ const formSteps = [
   { id: "hours", label: "Business Hours" },
   { id: "preview", label: "Preview" },
 ];
+const weekdayOptions = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const VendorProfile = () => {
   const dispatch = useAppDispatch();
@@ -600,6 +608,7 @@ const VendorProfile = () => {
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
   const [invalidHours, setInvalidHours] = useState<number[]>([]);
   const [isVendorAvatarBroken, setIsVendorAvatarBroken] = useState(false);
+  const [selectedScheduleDay, setSelectedScheduleDay] = useState<string>("Mon");
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -648,6 +657,51 @@ const VendorProfile = () => {
     });
     setInvalidHours((prev) => prev.filter((i) => i !== index));
   };
+  const parseBusinessHourValue = (value: string) => {
+    const [rawStart = "", rawEnd = ""] =
+      value.includes(" - ") ? value.split(" - ") : value.split(/\s*-\s*/);
+    const parseTime = (input: string) => {
+      if (!input.trim()) return null;
+      const parsed = dayjs(input.trim(), ["h:mm A", "hh:mm A", "H:mm", "HH:mm"], true);
+      return parsed.isValid() ? parsed : null;
+    };
+    return {
+      startTime: parseTime(rawStart),
+      endTime: parseTime(rawEnd),
+    };
+  };
+  const updateBusinessHourTimeRange = (
+    index: number,
+    startTime: Dayjs | null,
+    endTime: Dayjs | null,
+  ) => {
+    const startText = startTime ? startTime.format("hh:mm A") : "";
+    const endText = endTime ? endTime.format("hh:mm A") : "";
+    const range = startText || endText ? `${startText} - ${endText}`.trim() : "";
+    updateBusinessHour(index, "value", range);
+  };
+  const resolveDayKey = (value: string) => {
+    const normalized = value.trim().toLowerCase();
+    const match = weekdayOptions.find((day) => normalized.startsWith(day.toLowerCase()));
+    return match ?? "Mon";
+  };
+  const businessHourSlotsByDay = useMemo(() => {
+    const grouped: Record<string, Array<{ index: number; slot: BusinessHour }>> = {
+      Mon: [],
+      Tue: [],
+      Wed: [],
+      Thu: [],
+      Fri: [],
+      Sat: [],
+      Sun: [],
+    };
+    businessHours.forEach((slot, index) => {
+      const day = resolveDayKey(slot.day || "");
+      grouped[day].push({ index, slot });
+    });
+    return grouped;
+  }, [businessHours]);
+  const selectedDaySlots = businessHourSlotsByDay[selectedScheduleDay] ?? [];
 
   const handleSave = async () => {
     if (!businessName.trim()) {
@@ -1167,27 +1221,93 @@ const VendorProfile = () => {
                 {/* ── Business Hours ── */}
                 {activeSection === "hours" && (
                   <div className="rounded-xl border border-slate-100 bg-white p-5 space-y-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {businessHours.length > 0 ? (
-                        businessHours.map((slot, index) => {
-                          const rowInvalid = invalidHours.includes(index);
-                          return (
-                            <div key={index}>
-                              <div className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 ${rowInvalid ? "border-red-300 bg-red-50" : "border-slate-200 bg-slate-50"}`}>
-                                <input value={slot.day} onChange={(e) => updateBusinessHour(index, "day", e.target.value)} className="w-20 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Mon" />
-                                <input value={slot.value} onChange={(e) => updateBusinessHour(index, "value", e.target.value)} className="flex-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="09:00 - 17:00" />
-                                <button onClick={() => { setBusinessHours(businessHours.filter((_, i) => i !== index)); setInvalidHours((prev) => prev.filter((i) => i !== index)); }} className="text-red-400 hover:text-red-600 text-xs font-medium shrink-0 transition">Remove</button>
-                              </div>
-                              {rowInvalid && <p className="mt-1 text-xs text-red-500">Day and time must each be at least 2 characters.</p>}
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="col-span-2 py-10 text-center text-sm text-slate-400">No business hours added yet.</div>
-                      )}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">Set business timings</p>
+
+                      </div>
+                
                     </div>
-                    <button onClick={() => setBusinessHours([...businessHours, { day: "", value: "" }])} className="w-full rounded-lg border border-blue-200 bg-blue-50 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-100 transition">
-                      + Add Hours
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                      {weekdayOptions.map((day) => {
+                        const count = businessHourSlotsByDay[day]?.length ?? 0;
+                        const isActive = day === selectedScheduleDay;
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => setSelectedScheduleDay(day)}
+                            className={`rounded-lg border px-3 py-2 text-left transition ${
+                              isActive
+                                ? "border-blue-300 bg-blue-50"
+                                : "border-slate-200 bg-white hover:border-slate-300"
+                            }`}
+                          >
+                            <p className={`text-sm font-semibold ${isActive ? "text-blue-700" : "text-slate-700"}`}>
+                              {day}
+                            </p>
+                            
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {selectedDaySlots.length > 0 ? (
+                          selectedDaySlots.map(({ index, slot }) => {
+                            const rowInvalid = invalidHours.includes(index);
+                            const { startTime, endTime } = parseBusinessHourValue(slot.value ?? "");
+                            return (
+                              <div key={index} className={`rounded-lg border p-3 ${rowInvalid ? "border-red-300 bg-red-50" : "border-slate-200 bg-slate-50"}`}>
+                                <div className="grid gap-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <TimePicker
+                                      label="Open"
+                                      value={startTime}
+                                      onChange={(value) => updateBusinessHourTimeRange(index, value, endTime)}
+                                      slotProps={{ textField: { size: "small", fullWidth: true } }}
+                                    />
+                                    <TimePicker
+                                      label="Close"
+                                      value={endTime}
+                                      onChange={(value) => updateBusinessHourTimeRange(index, startTime, value)}
+                                      slotProps={{ textField: { size: "small", fullWidth: true } }}
+                                    />
+                                  </div>
+                                  <div className="flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setBusinessHours(businessHours.filter((_, i) => i !== index));
+                                        setInvalidHours((prev) => prev.filter((i) => i !== index));
+                                      }}
+                                      className="text-red-500 hover:text-red-600 text-xs font-medium transition"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+                                {rowInvalid && <p className="mt-1 text-xs text-red-500">Day and time must each be at least 2 characters.</p>}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="col-span-2 py-10 text-center text-sm text-slate-400">
+                            No slots added for {selectedScheduleDay}.
+                          </div>
+                        )}
+                      </div>
+                    </LocalizationProvider>
+                    <button
+                      onClick={() =>
+                        setBusinessHours([
+                          ...businessHours,
+                          { day: selectedScheduleDay, value: "" },
+                        ])
+                      }
+                      className="w-full rounded-lg border border-blue-200 bg-blue-50 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-100 transition"
+                    >
+                      + Add Business Hours for {selectedScheduleDay}
                     </button>
                   </div>
                 )}
