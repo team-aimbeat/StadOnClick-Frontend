@@ -39,14 +39,32 @@ export type VendorNavGroup = {
 
 export type VendorSidebarMeta = {
   newLeads: number;
+  allLeads?: number;
+  contactedLeads?: number;
+  convertedLeads?: number;
+  lostLeads?: number;
+  allBookings?: number;
+  upcomingBookings?: number;
+  completedBookings?: number;
+  refundRequestBookings?: number;
   pendingBookings?: number;
+  kycDocumentsCount?: number;
   kycStatus: "NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED";
   subscriptionExpired: boolean;
 };
 
 export const getVendorNavGroups = ({
   newLeads,
+  allLeads = 0,
+  contactedLeads = 0,
+  convertedLeads = 0,
+  lostLeads = 0,
+  allBookings = 0,
+  upcomingBookings = 0,
+  completedBookings = 0,
+  refundRequestBookings = 0,
   pendingBookings = 0,
+  kycDocumentsCount = 0,
   kycStatus,
   subscriptionExpired,
 }: VendorSidebarMeta): VendorNavGroup[] => [
@@ -76,17 +94,33 @@ export const getVendorNavGroups = ({
       {
         label: "Leads",
         icon: HiOutlineEnvelopeOpen,
-        badge: newLeads > 0 ? `${newLeads}` : undefined,
+        badge: allLeads > 0 ? `${allLeads}` : undefined,
         children: [
-          { label: "All Leads", to: "/vendor/leads" },
+          {
+            label: "All Leads",
+            to: "/vendor/leads",
+            badge: allLeads > 0 ? `${allLeads}` : undefined,
+          },
           {
             label: "New Leads",
             to: "/vendor/leads?status=NEW",
             badge: newLeads > 0 ? `${newLeads}` : undefined,
           },
-          { label: "Contacted Leads", to: "/vendor/leads?status=CONTACTED" },
-          { label: "Converted Leads", to: "/vendor/leads?status=CONVERTED" },
-          { label: "Lost Leads", to: "/vendor/leads?status=LOST" },
+          {
+            label: "Contacted Leads",
+            to: "/vendor/leads?status=CONTACTED",
+            badge: contactedLeads > 0 ? `${contactedLeads}` : undefined,
+          },
+          {
+            label: "Converted Leads",
+            to: "/vendor/leads?status=CONVERTED",
+            badge: convertedLeads > 0 ? `${convertedLeads}` : undefined,
+          },
+          {
+            label: "Lost Leads",
+            to: "/vendor/leads?status=LOST",
+            badge: lostLeads > 0 ? `${lostLeads}` : undefined,
+          },
         ],
       },
       {
@@ -107,11 +141,26 @@ export const getVendorNavGroups = ({
       {
         label: "Bookings",
         icon: HiOutlineQueueList,
-        badge: pendingBookings > 0 ? `${pendingBookings}` : undefined,
+        badge: allBookings > 0 ? `${allBookings}` : undefined,
         children: [
-          { label: "Upcoming", to: "/vendor/bookings/upcoming" },
-          { label: "Completed", to: "/vendor/bookings/completed" },
-          { label: "Refund Requests", to: "/vendor/bookings/refunds" },
+          {
+            label: "Upcoming",
+            to: "/vendor/bookings/upcoming",
+            badge:
+              (upcomingBookings > 0 ? upcomingBookings : pendingBookings) > 0
+                ? `${upcomingBookings > 0 ? upcomingBookings : pendingBookings}`
+                : undefined,
+          },
+          {
+            label: "Completed",
+            to: "/vendor/bookings/completed",
+            badge: completedBookings > 0 ? `${completedBookings}` : undefined,
+          },
+          {
+            label: "Refund Requests",
+            to: "/vendor/bookings/refunds",
+            badge: refundRequestBookings > 0 ? `${refundRequestBookings}` : undefined,
+          },
         ],
       },
       {
@@ -123,6 +172,11 @@ export const getVendorNavGroups = ({
         label: "Photos & Media",
         icon: HiOutlineCloud,
         to: "/vendor/media",
+      },
+      {
+        label: "Menu",
+        icon: HiOutlineBookmarkSquare,
+        to: "/vendor/menu",
       },
       {
         label: "Coupons",
@@ -169,7 +223,7 @@ export const getVendorNavGroups = ({
         label: "KYC Documents",
         icon: HiOutlineShieldCheck,
         to: "/vendor/kyc",
-        badge: kycStatus !== "VERIFIED" ? "!" : undefined,
+        badge: kycDocumentsCount > 0 ? `${kycDocumentsCount}` : undefined,
       },
       {
         label: "Stripe Connect",

@@ -41,6 +41,10 @@ import { marketplaceApi } from "@/services/marketplaceApi";
 import { checkoutApi } from "@/services/checkoutApi";
 import { vendorProfileApi } from "@/features/vendorProfile/api/vendorProfileApi";
 import { affiliateApi } from "@/features/affiliate/api/affiliateApi";
+import { wishlistApi } from "@/services/wishlistApi";
+import { menuMediaApi } from "@/services/menuMediaApi";
+import { referralApi } from "@/features/referrals/api/referralApi";
+import { adminAffiliatesApi } from "@/features/admin/affiliates/api/affiliatesApi";
 
 export const store = configureStore({
   reducer: {
@@ -86,6 +90,10 @@ export const store = configureStore({
     [serviceReviewsApi.reducerPath]: serviceReviewsApi.reducer,
     [vendorProfileApi.reducerPath]: vendorProfileApi.reducer,
     [affiliateApi.reducerPath]: affiliateApi.reducer,
+    [wishlistApi.reducerPath]: wishlistApi.reducer,
+    [menuMediaApi.reducerPath]: menuMediaApi.reducer,
+    [referralApi.reducerPath]: referralApi.reducer,
+    [adminAffiliatesApi.reducerPath]: adminAffiliatesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -124,7 +132,11 @@ export const store = configureStore({
       .concat(checkoutApi.middleware)
       .concat(serviceReviewsApi.middleware)
       .concat(vendorProfileApi.middleware)
-      .concat(affiliateApi.middleware),
+      .concat(affiliateApi.middleware)
+      .concat(wishlistApi.middleware)
+      .concat(menuMediaApi.middleware)
+      .concat(referralApi.middleware)
+      .concat(adminAffiliatesApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

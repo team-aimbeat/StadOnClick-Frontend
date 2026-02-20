@@ -6,15 +6,22 @@ import VendorDocumentsTable from "@/components/shared/VendorDocumentsTable";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { useMockLoader } from "@/lib/useMockLoader";
 import { useGetVendorKycDocumentsQuery } from "@/services/vendorKycApi";
 
 const VendorKyc = () => {
   const dispatch = useAppDispatch();
+  const authUser = useAppSelector((state) => state.auth.user);
   const loading = useMockLoader();
   const uploadModalOpenerRef = useRef<() => void>();
-  const { data: documents = [] } = useGetVendorKycDocumentsQuery();
+  const hasVendorRole = Boolean(authUser?.roles?.includes("VENDOR"));
+  const authVendorId = authUser?.vendorAccess?.vendorId ?? null;
+  const shouldFetchDocuments = Boolean(authUser && hasVendorRole && authVendorId);
+  const { data: documents = [] } = useGetVendorKycDocumentsQuery(authVendorId ?? undefined, {
+    skip: !shouldFetchDocuments,
+    refetchOnMountOrArgChange: true,
+  });
 
   const kycStatus = useMemo<"NOT_SUBMITTED" | "PENDING" | "VERIFIED" | "REJECTED">(() => {
     if (!documents.length) {
@@ -100,28 +107,7 @@ const VendorKyc = () => {
             );
           })}
         </div>
-        <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Upload documents</p>
-          <p className="mt-1">
-            Submit ID proof, business registration, and address proof to complete KYC. Approved docs
-            unlock payouts.
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleUploadClick}
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
-            >
-              Upload documents
-            </button>
-            <NavLink
-              to="/vendor/help"
-              className="text-xs font-semibold text-blue-600 hover:text-blue-500"
-            >
-              Need help?
-            </NavLink>
-          </div>
-        </div>
+
 
         {kycStatus === "REJECTED" && (
           <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">

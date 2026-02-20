@@ -244,7 +244,11 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         id: "administration",
         label: t("Administration"),
         icon: Users,
-        children: [{ label: t("Staff"), to: withBase("staff") }],
+        children: [
+          { label: t("Staff"), to: withBase("staff") },
+          { label: t("Vendors"), to: withBase("vendors") },
+          { label: t("Affiliate Users"), to: withBase("affiliates") },
+        ],
       },
       {
         id: "system-health",

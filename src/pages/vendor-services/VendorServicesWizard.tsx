@@ -200,6 +200,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     isResettingOfferings,
     handleConfirmedCategoryReset,
   } = props;
+  const isMovieBookingsCategory = selectedCategory?.slug === "movie-bookings";
 
   return (
     <div ref={wizardScrollRef}>
@@ -823,6 +824,42 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                           )}
                         </label>
 
+                        {isMovieBookingsCategory && (
+                          <label className="space-y-1 text-sm text-slate-700 md:col-span-2">
+                            <span className="font-semibold text-slate-600">
+                              Booking URL *
+                            </span>
+                            <input
+                              type="url"
+                              {...register(`offerings.${index}.bookingUrl` as const, {
+                                setValueAs: (value: string) =>
+                                  typeof value === "string" ? value.trim() || undefined : value,
+                                validate: (value: string | undefined) => {
+                                  const trimmed = value?.trim();
+                                  if (!isMovieBookingsCategory) return true;
+                                  if (!trimmed) {
+                                    return "Booking URL is required for Movie Bookings.";
+                                  }
+                                  try {
+                                    // Validate a complete URL (e.g. https://example.com).
+                                    new URL(trimmed);
+                                    return true;
+                                  } catch {
+                                    return "Enter a valid URL.";
+                                  }
+                                },
+                              })}
+                              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                              placeholder="https://example.com/book"
+                            />
+                            {errors.offerings?.[index]?.bookingUrl && (
+                              <p className="text-xs text-rose-600">
+                                {errors.offerings[index]?.bookingUrl?.message}
+                              </p>
+                            )}
+                          </label>
+                        )}
+
                         <label className="space-y-1 text-sm text-slate-700">
                           <span className="font-semibold text-slate-600">
                             Base price *
@@ -893,7 +930,13 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                   <button
                     type="button"
                     onClick={() =>
-                      append({ name: "", description: "", basePrice: 0, salePrice: 0 })
+                      append({
+                        name: "",
+                        description: "",
+                        bookingUrl: "",
+                        basePrice: 0,
+                        salePrice: 0,
+                      })
                     }
                     className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-500 transition-colors duration-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50"
                   >

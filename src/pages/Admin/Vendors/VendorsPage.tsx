@@ -36,6 +36,7 @@ export type VendorRow = RowData & {
   id: string;
   userId: string;
   loginEmail?: string;
+  profileImageUrl?: string | null;
   businessName: string;
   slug: string;
   status: "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
@@ -170,6 +171,7 @@ export default function VendorsPage({
         id: String(v.id),
         userId: String(v.userId),
         loginEmail: v.user?.email ?? v.contactEmail ?? undefined,
+        profileImageUrl: v.user?.profileImageUrl ?? null,
         businessName: String(v.businessName ?? "-"),
         slug: String(v.slug ?? "-"),
         status: (v.status ?? "PENDING_REVIEW") as VendorRow["status"],
@@ -243,15 +245,33 @@ export default function VendorsPage({
         sortable: true,
         render: (value: any, row: RowData) => {
           const r = row as VendorRow;
+          const initials = String(value ?? r.businessName ?? "V")
+            .trim()
+            .slice(0, 1)
+            .toUpperCase();
 
           return (
-            <div className="flex flex-col">
-              <span className="font-semibold text-slate-900">
-                {String(value ?? r.businessName ?? "-")}
-              </span>
-              <span className="text-xs font-medium text-slate-500">
-                {(r.city ?? "Unknown city") + " | " + (r.slug ?? "-")}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-700">
+                {r.profileImageUrl ? (
+                  <img
+                    src={r.profileImageUrl}
+                    alt={String(value ?? r.businessName ?? "Vendor")}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate font-semibold text-slate-900">
+                  {String(value ?? r.businessName ?? "-")}
+                </span>
+                <span className="truncate text-xs font-medium text-slate-500">
+                  {(r.city ?? "Unknown city") + " | " + (r.slug ?? "-")}
+                </span>
+              </div>
             </div>
           );
         },

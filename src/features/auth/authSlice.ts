@@ -8,6 +8,7 @@ export type AuthUser = {
   lastName: string | null;
   nickName: string | null;
   displayName: string;
+  referralCode?: string | null;
   roles: string[];
   profileImageUrl: string | null;
   status: string;

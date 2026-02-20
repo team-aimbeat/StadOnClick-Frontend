@@ -23,11 +23,13 @@ export type VendorOffering = {
   serviceId: string;
   name: string;
   description?: string | null;
+  bookingUrl?: string | null;
   usesSlots: boolean;
   basePrice: number;
   salePrice: number;
   currency: string;
   maxQuantity: number | null;
+  remainingQuantity: number | null;
   slots: VendorSlot[];
   rules: VendorRule[];
 };
@@ -41,9 +43,11 @@ export interface CreateOfferingPayload {
   serviceId: string;
   name: string;
   description: string;
+  bookingUrl?: string | null;
   basePrice: number;
   salePrice: number;
   maxQuantity?: number | null;
+  remainingQuantity?: number | null;
 }
 
 export interface CreateSlotPayload {
@@ -64,6 +68,7 @@ const toVendorOffering = (offering: RawVendorOffering): VendorOffering => ({
   basePrice: Number(offering.basePrice),
   salePrice: Number(offering.salePrice),
   maxQuantity: offering.maxQuantity ?? null,
+  remainingQuantity: offering.remainingQuantity ?? offering.maxQuantity ?? null,
 });
 
 export const vendorOfferingsApi = createApi({

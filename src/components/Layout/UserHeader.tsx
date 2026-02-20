@@ -12,6 +12,14 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clearAuth } from "@/features/auth/authSlice";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useLogoutMutation } from "@/features/auth/api/authApi";
 import {
   useGetNotificationsQuery,
@@ -26,12 +34,14 @@ import {
   type ServiceCategory,
 } from "@/services/serviceCategoriesApi";
 import { plannedCategories } from "@/data/vendorServiceCategories";
+import {
+  CART_UPDATED_EVENT,
+  getCartItemCount,
+  getCartSubtotal,
+  getStoredCart,
+  type StoredCart,
+} from "@/utils/cartStorage";
 
-type CartPreviewItem = {
-  title: string;
-  detail: string;
-  price: string;
-};
 
 const searchCategories = [
   { label: "Beauty", slug: "salon-deals" },
@@ -83,6 +93,17 @@ const categoryAccentClasses = [
   "bg-fuchsia-50 text-fuchsia-600",
 ];
 
+const resolveUserAvatarUrl = (user: unknown) => {
+  if (!user || typeof user !== "object") return "";
+  const candidate = user as Record<string, unknown>;
+  const raw =
+    candidate.profileImageUrl ??
+    candidate.avatar ??
+    candidate.profileImage ??
+    null;
+  return typeof raw === "string" ? raw.trim() : "";
+};
+
 export default function UserHeader() {
   const profileRef = useRef<HTMLDivElement | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -92,7 +113,11 @@ export default function UserHeader() {
 
   const [cartMenuOpen, setCartMenuOpen] = useState(false);
   const [notificationsMenuOpen, setNotificationsMenuOpen] = useState(false);
+  const [affiliateConfirmOpen, setAffiliateConfirmOpen] = useState(false);
+  const [businessConfirmOpen, setBusinessConfirmOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [isProfileImageBroken, setIsProfileImageBroken] = useState(false);
+  const [cartSnapshot, setCartSnapshot] = useState<StoredCart>(() => getStoredCart());
   const anyMenuOpen = profileMenuOpen || cartMenuOpen || notificationsMenuOpen;
 
   const user = useAppSelector((state) => state.auth.user);
@@ -114,6 +139,30 @@ export default function UserHeader() {
   const isEmptyNotifications = !notificationsList.length && !isNotificationsFetching;
   const isNotificationsLoading = isNotificationsFetching && !notificationsList.length;
   const notificationsBadge = unreadCount > 0 ? String(unreadCount) : undefined;
+  const cartItemCount = getCartItemCount(cartSnapshot);
+  const cartPreviewSubtotal = getCartSubtotal(cartSnapshot);
+  const cartBadge = cartItemCount > 0 ? String(cartItemCount) : undefined;
+  const cartPreviewItems = cartSnapshot.items.slice(0, 3).map((item) => ({
+    id: item.id,
+    title: item.title,
+    quantityLabel: `Qty ${item.quantity}`,
+    description: item.description ?? "",
+    price: `SEK ${item.totalPrice.toFixed(0)}`,
+  }));
+  const hasCartItems = cartSnapshot.items.length > 0;
+
+  useEffect(() => {
+    const syncCart = () => setCartSnapshot(getStoredCart());
+
+    syncCart();
+    window.addEventListener(CART_UPDATED_EVENT, syncCart);
+    window.addEventListener("storage", syncCart);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, syncCart);
+      window.removeEventListener("storage", syncCart);
+    };
+  }, []);
 
   useEffect(() => {
     if (!anyMenuOpen) return;
@@ -341,6 +390,13 @@ export default function UserHeader() {
     return accountName;
   }, [accountName, user]);
 
+  const profileImageUrl = resolveUserAvatarUrl(user);
+  const canShowProfileImage = Boolean(profileImageUrl) && !isProfileImageBroken;
+
+  useEffect(() => {
+    setIsProfileImageBroken(false);
+  }, [profileImageUrl]);
+
   const handleSignOut = async () => {
     try {
       await logout().unwrap();
@@ -356,14 +412,24 @@ export default function UserHeader() {
 
   const menuItems = useMemo(
     () => [
-      { label: "My Wishlist", icon: <Heart className="h-4 w-4" /> },
+      {
+        label: "My Orders",
+        icon: <ShoppingBag className="h-4 w-4" />,
+        onClick: () => navigate("/orders"),
+      },
+      {
+        label: "My Wishlist",
+        icon: <Heart className="h-4 w-4" />,
+        onClick: () => navigate("/wishlist"),
+      },
       {
         label: "Notifications",
         icon: <Bell className="h-4 w-4" />,
         meta: notificationsBadge,
+        onClick: () => setNotificationsMenuOpen(true),
       },
     ],
-    [notificationsBadge],
+    [navigate, notificationsBadge],
   );
 
   const handleNotificationSelect = async (notification: UserNotificationItem) => {
@@ -385,6 +451,56 @@ export default function UserHeader() {
     } catch {
       /* ignore */
     }
+  };
+
+  const handleAffiliateProgramClick = () => {
+    setCartMenuOpen(false);
+    setNotificationsMenuOpen(false);
+    setProfileMenuOpen(false);
+
+    if (!user) {
+      navigate("/sign-in");
+      return;
+    }
+
+    setAffiliateConfirmOpen(true);
+  };
+
+  const handleBusinessProgramClick = () => {
+    setCartMenuOpen(false);
+    setNotificationsMenuOpen(false);
+    setProfileMenuOpen(false);
+
+    if (!user) {
+      navigate("/sign-in");
+      return;
+    }
+
+    setBusinessConfirmOpen(true);
+  };
+
+  const handleConfirmBusinessSwitch = () => {
+    if (!user) {
+      setBusinessConfirmOpen(false);
+      navigate("/sign-in");
+      return;
+    }
+
+    const isVendor = (user.roles ?? []).includes("VENDOR");
+    setBusinessConfirmOpen(false);
+    navigate(isVendor ? user.nextAction || "/vendor/dashboard" : "/business/onboarding");
+  };
+
+  const handleConfirmAffiliateSwitch = () => {
+    if (!user) {
+      setAffiliateConfirmOpen(false);
+      navigate("/sign-in");
+      return;
+    }
+
+    const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
+    setAffiliateConfirmOpen(false);
+    navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
   };
 
   const utilityLinks = [
@@ -481,42 +597,17 @@ export default function UserHeader() {
            
             <button
               type="button"
-              onClick={() => {
-                setCartMenuOpen(false);
-                setNotificationsMenuOpen(false);
-                setProfileMenuOpen(false);
-                if (!user) {
-                  navigate("/sign-in");
-                  return;
-                }
-
-                const isVendor = (user.roles ?? []).includes("VENDOR");
-                if (isVendor) {
-                  navigate(user.nextAction || "/vendor/dashboard");
-                  return;
-                }
-
-                navigate("/business/onboarding");
-              }}
+              onClick={handleBusinessProgramClick}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Business with StadOnClick"
             >
               <BriefcaseBusiness className="h-4 w-4 text-emerald-500" />
               Business on StadOnClick
             </button>
+                     
             <button
               type="button"
-              onClick={() => {
-                setCartMenuOpen(false);
-                setNotificationsMenuOpen(false);
-                setProfileMenuOpen(false);
-                if (!user) {
-                  navigate("/sign-in");
-                  return;
-                }
-                const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
-                navigate(isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing");
-              }}
+              onClick={handleAffiliateProgramClick}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Affiliate Program"
             >
@@ -526,7 +617,7 @@ export default function UserHeader() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <IconButton
-              icon={<Bookmark className="h-5 w-5 text-rose-500" />}
+              icon={<Heart className="h-5 w-5 text-rose-500" />}
               label="Wishlist"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -536,7 +627,7 @@ export default function UserHeader() {
               }}
             />
             <IconButton
-              icon={<ShoppingCartIcon className="h-5 w-5 text-indigo-600" />}
+              icon={<ShoppingBag className="h-5 w-5 text-amber-600" />}
               label="My orders"
               onClick={() => {
                 setCartMenuOpen(false);
@@ -544,26 +635,26 @@ export default function UserHeader() {
                 setProfileMenuOpen(false);
                 navigate("/orders");
               }}
-              className="border-slate-200 bg-white/90"
+              className="border-amber-200 bg-amber-50 text-amber-600"
             />
             <div ref={cartRef} className="relative">
               <IconButton
-                icon={<ShoppingBag className="h-5 w-5 text-amber-600" />}
+                icon={<ShoppingCartIcon className="h-5 w-5 text-indigo-600" />}
                 label="Cart"
-                badge="3"
+                badge={cartBadge}
                 onClick={() => {
                   setCartMenuOpen((prev) => !prev);
                   setNotificationsMenuOpen(false);
                   setProfileMenuOpen(false);
                 }}
-                className="border-amber-200 bg-amber-50 text-amber-600"
+                className="bg-slate-50"
               />
 
-              <AnimatePresence>
+              <AnimatePresence> 
                 {cartMenuOpen ? (
                   <motion.div
                     {...dropdownMotion}
-                    className="absolute right-0 top-full z-40 mt-2 w-[320px] origin-top-right rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)] will-change-transform"
+                    className="absolute right-0 top-full z-40 mt-2 w-[360px] origin-top-right rounded-3xl border border-slate-200 bg-white shadow-[0_40px_60px_rgba(15,23,42,0.18)] will-change-transform"
                   >
                     <div className="px-5 py-4">
                       <div className="flex items-start justify-between gap-3">
@@ -576,38 +667,49 @@ export default function UserHeader() {
                           </p>
                         </div>
                         <span className="text-xs font-semibold text-sky-500">
-                          {cartPreviewItems.length} items
+                          {cartItemCount} {cartItemCount === 1 ? "item" : "items"}
                         </span>
                       </div>
                       <div className="mt-4 space-y-3">
-                        {cartPreviewItems.map((item) => (
-                          <div
-                            key={item.title}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 px-3 py-2"
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-sm font-semibold text-slate-900">
-                                {item.title}
-                              </span>
-                              <span className="text-xs text-slate-500">
-                                {item.detail}
+                        {hasCartItems ? (
+                          cartPreviewItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-start justify-between gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 px-3 py-2.5"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <span className="block max-w-full truncate text-sm font-semibold text-slate-900">
+                                  {item.title}
+                                </span>
+                                <span className="mt-0.5 block text-xs font-medium text-slate-600">
+                                  {item.quantityLabel}
+                                </span>
+                                {item.description ? (
+                                  <span className="mt-0.5 block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-slate-500">
+                                    {item.description}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <span className="shrink-0 text-sm font-semibold text-slate-900">
+                                {item.price}
                               </span>
                             </div>
-                            <span className="text-sm font-semibold text-slate-900">
-                              {item.price}
-                            </span>
+                          ))
+                        ) : (
+                          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 px-3 py-5 text-center text-sm text-slate-500">
+                            Your cart is empty.
                           </div>
-                        ))}
+                        )}
                       </div>
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
                         <Link
-                          to="/cart"
-                          className="text-sky-600 transition hover:text-sky-900"
+                          to="/orders"
+                          className="font-medium text-sky-600 transition hover:text-sky-900"
                         >
-                          View cart
+                          View orders
                         </Link>
-                        <span className="text-xs font-semibold text-slate-500">
-                          Subtotal ${cartPreviewSubtotal.toFixed(2)}
+                        <span className="text-xs font-semibold text-slate-600">
+                          Subtotal SEK {cartPreviewSubtotal.toFixed(0)}
                         </span>
                       </div>
                     </div>
@@ -737,12 +839,21 @@ export default function UserHeader() {
               <div ref={profileRef} className="relative">
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-300 hover:shadow-sm"
+                  className="flex items-center gap-2 rounded-full  bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-300 hover:shadow-sm"
                   onClick={() => setProfileMenuOpen((prev) => !prev)}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-blue-700">
-                    {userInitial}
-                  </span>
+                  {canShowProfileImage ? (
+                    <img
+                      src={profileImageUrl}
+                      alt={accountName}
+                      className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200"
+                      onError={() => setIsProfileImageBroken(true)}
+                    />
+                  ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-blue-700">
+                      {userInitial}
+                    </span>
+                  )}
                   <span className="sr-only">{accountName}</span>
                 </button>
 
@@ -768,9 +879,18 @@ export default function UserHeader() {
 
                     <a href="/account">
                       <div className="flex items-center hover:bg-gray-200 transition-colors duration-100 cursor-pointer gap-3 px-5 py-4 border-b border-sky-100">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
-                          {userInitial}
-                        </div>
+                        {canShowProfileImage ? (
+                          <img
+                            src={profileImageUrl}
+                            alt={accountName}
+                            className="h-10 w-10 rounded-full object-cover ring-1 ring-slate-200"
+                            onError={() => setIsProfileImageBroken(true)}
+                          />
+                        ) : (
+                          <div className="flex h-15 w-15 items-center justify-center rounded-full bg-sky-50 text-lg font-semibold text-blue-700">
+                            {userInitial}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-slate-900 truncate">
                             {accountName}
@@ -788,7 +908,10 @@ export default function UserHeader() {
                           key={item.label}
                           type="button"
                           className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-900 transition hover:bg-sky-50"
-                          onClick={() => setProfileMenuOpen(false)}
+                          onClick={() => {
+                            setProfileMenuOpen(false);
+                            item.onClick();
+                          }}
                         >
                           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-50 text-blue-700">
                             {item.icon}
@@ -820,7 +943,7 @@ export default function UserHeader() {
             ) : (
               <a
                 href="/sign-in"
-                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-300 hover:shadow-sm"
+                className="flex items-center gap-2 rounded-full  bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-slate-300 hover:shadow-sm"
               >
                 <UserRound className="h-5 w-5 text-slate-500" />
                 Sign In
@@ -1016,6 +1139,152 @@ export default function UserHeader() {
           </AnimatePresence>
         </div>
       </div>
+<Dialog open={affiliateConfirmOpen} onOpenChange={setAffiliateConfirmOpen}>
+  <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-0  bg-white/90 ">
+
+    {/* Gradient Header */}
+    <div className="relative  bg-blue-800 px-6 py-8 text-white">
+      
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_white,_transparent_60%)]" />
+      
+      <div className="relative z-10 flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-md">
+        <Megaphone/>
+        </div>
+
+        <div>
+          <DialogTitle className="text-xl font-semibold">
+            Become an Affiliate
+          </DialogTitle>
+          <p className="text-sm text-indigo-100 mt-1">
+            Turn your network into recurring revenue
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="px-6 py-6 space-y-5">
+
+      <DialogDescription className="text-sm text-slate-600 leading-relaxed">
+        Unlock your affiliate dashboard and start earning commission for every
+        successful booking made through your referral link.
+      </DialogDescription>
+
+      {/* Earnings Highlight Card */}
+      <div className="relative rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 p-5 border border-indigo-100 shadow-sm">
+        <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold">
+          Earning Potential
+        </p>
+        <p className="text-2xl font-bold text-slate-900 mt-1">
+          Up to 10% Commission
+        </p>
+        <p className="text-xs text-slate-500 mt-1">
+          On every completed booking
+        </p>
+      </div>
+
+      {/* Benefits */}
+      <div className="space-y-2 text-sm text-slate-700">
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-600">✔</span>
+          Unique referral tracking link
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-600">✔</span>
+          Real-time commission analytics
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-indigo-600">✔</span>
+          Transparent payout reporting
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-2">
+        <button
+          type="button"
+          onClick={() => setAffiliateConfirmOpen(false)}
+          className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+        >
+          Maybe Later
+        </button>
+
+        <button
+          type="button"
+          onClick={handleConfirmAffiliateSwitch}
+          className="flex-1 rounded-xl  bg-blue-800 px-4 py-2.5 text-sm font-semibold text-white "
+        >
+          Activate & Start Earning
+        </button>
+      </div>
+
+      {/* Small reassurance */}
+      <p className="text-center text-xs text-slate-400 pt-1">
+        You can manage or disable affiliate access anytime.
+      </p>
+
+    </div>
+  </DialogContent>
+</Dialog>
+<Dialog open={businessConfirmOpen} onOpenChange={setBusinessConfirmOpen}>
+  <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-0 bg-white/90">
+    <div className="relative bg-emerald-700 px-6 py-8 text-white">
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_white,_transparent_60%)]" />
+      <div className="relative z-10 flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-md">
+          <BriefcaseBusiness />
+        </div>
+        <div>
+          <DialogTitle className="text-xl font-semibold">
+            Business on StadOnClick
+          </DialogTitle>
+          <p className="text-sm text-emerald-100 mt-1">
+            Manage your services and grow your bookings
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="px-6 py-6 space-y-5">
+      <DialogDescription className="text-sm text-slate-600 leading-relaxed">
+        Continue to your business workspace to manage profile, offerings, media, bookings, and customer insights.
+      </DialogDescription>
+
+      <div className="space-y-2 text-sm text-slate-700">
+        <div className="flex items-center gap-2">
+          <span className="text-emerald-600">âœ”</span>
+          Manage services and pricing
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-emerald-600">âœ”</span>
+          Track leads, bookings, and payouts
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-emerald-600">âœ”</span>
+          Complete KYC and profile setup
+        </div>
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <button
+          type="button"
+          onClick={() => setBusinessConfirmOpen(false)}
+          className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+        >
+          Maybe Later
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirmBusinessSwitch}
+          className="flex-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white"
+        >
+          Continue to Business
+        </button>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
+               
     </header>
   );
 }

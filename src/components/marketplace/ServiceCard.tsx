@@ -1,6 +1,13 @@
-import { ChevronLeft, ChevronRight, Clock, MapPin, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Star } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Service } from "./types"
+import { useAppSelector } from "@/app/hooks"
+import {
+  useAddWishlistItemMutation,
+  useGetWishlistQuery,
+  useRemoveWishlistItemMutation,
+} from "@/services/wishlistApi"
 
 type ServiceCardProps = {
   service: Service
@@ -13,6 +20,17 @@ export default function ServiceCard({
   onViewDetails,
   onEnquiry,
 }: ServiceCardProps) {
+  const navigate = useNavigate()
+  const user = useAppSelector((state) => state.auth.user)
+  const { data: wishlistItems = [] } = useGetWishlistQuery(undefined, {
+    skip: !user,
+  })
+  const [addWishlistItem] = useAddWishlistItemMutation()
+  const [removeWishlistItem] = useRemoveWishlistItemMutation()
+  const wishlisted = wishlistItems.some(
+    (item) => item.serviceId === service.id || item.id === service.id,
+  )
+
   const images = useMemo(() => {
     const list =
       service.images && service.images.length > 0 ? service.images : [service.image]
@@ -89,8 +107,30 @@ export default function ServiceCard({
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-139.5">
-      <div className="relative h-51 overflow-hidden">
+    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-155">
+      <div className="relative h-50">
+        <button
+          type="button"
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className={`absolute right-4 top-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border bg-white/95 shadow-sm transition ${
+            wishlisted
+              ? "border-rose-200 text-rose-500"
+              : "border-slate-200 text-slate-500 hover:border-rose-200 hover:text-rose-500"
+          }`}
+          onClick={async () => {
+            if (!user) {
+              navigate("/sign-in")
+              return
+            }
+            if (wishlisted) {
+              await removeWishlistItem({ serviceId: service.id })
+              return
+            }
+            await addWishlistItem({ serviceId: service.id })
+          }}
+        >
+          <Heart className={`h-4.5 w-4.5 ${wishlisted ? "fill-current" : ""}`} />
+        </button>
         <div
           className={`flex h-full w-full transform-gpu will-change-transform ${transitionEnabled ? "transition-transform duration-500 ease-out" : ""}`}
           style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
@@ -172,13 +212,14 @@ export default function ServiceCard({
           <button
             type="button"
             onClick={() => onViewDetails(service)}
-            className="min-w-33.75 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+            className="min-w-33.75 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
             View all services
           </button>
           <button
             type="button"
-            className="min-w-33.75 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="min-w-33.75 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 transition
+             hover:bg-blue-50"
             onClick={() => onEnquiry(service)}
           >
             <div className="flex items-center justify-center gap-2">

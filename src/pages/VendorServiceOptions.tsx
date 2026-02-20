@@ -284,6 +284,18 @@ const VendorServiceOptions = () => {
                 className="w-24 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
               />
             </div>
+            <div className="flex items-center justify-between">
+              <span>Max quantity</span>
+              <span className="text-xs font-semibold text-slate-700">
+                {primaryOffering?.maxQuantity ?? "N/A"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Remaining quantity</span>
+              <span className="text-xs font-semibold text-slate-700">
+                {primaryOffering?.remainingQuantity ?? "N/A"}
+              </span>
+            </div>
             <p className="text-[11px] text-slate-500">
               Updating pricing updates all linked offerings and slot booking values.
             </p>
@@ -532,27 +544,26 @@ const VendorServiceOptions = () => {
 };
 
 function formatSlotLabel(startTime: string, endTime?: string | null) {
-  const start = new Date(startTime);
-  if (Number.isNaN(start.getTime())) {
-    return "Unknown slot";
-  }
+  const formatSlotTime = (isoString: string) => {
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return "--:--";
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
 
-  const startLabel = start.toLocaleString("en-US", {
-    weekday: "short",
-    hour: "numeric",
-    minute: "numeric",
-  });
+  const startLabel = formatSlotTime(startTime);
 
   if (!endTime) {
     return startLabel;
   }
 
-  const end = new Date(endTime);
-  const endLabel = Number.isNaN(end.getTime())
-    ? "Unknown"
-    : end.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric" });
+  const endLabel = formatSlotTime(endTime);
 
-  return `${startLabel} · ${endLabel}`;
+  return `${startLabel} - ${endLabel}`;
 }
 
 export default VendorServiceOptions;
+

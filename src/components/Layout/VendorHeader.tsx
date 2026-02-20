@@ -522,7 +522,7 @@ const VendorHeader = () => {
                 />
               }
             >
-               <ul className="w-57.5 font-semibold text-dark dark:text-white-light/90">
+               <ul className="w-[280px] font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img

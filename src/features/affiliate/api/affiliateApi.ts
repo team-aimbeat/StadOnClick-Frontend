@@ -51,6 +51,7 @@ export type AffiliateReferralRow = {
   referredUserId: string;
   referredName: string;
   referredEmail: string;
+  profileImageUrl?: string | null;
   bookingId: string | null;
   date: string;
   amount: number;

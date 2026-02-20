@@ -20,6 +20,7 @@ import VendorServices from "@/pages/VendorServices";
 import VendorCategoryDetail from "@/pages/VendorCategoryDetail";
 import VendorServiceOptions from "@/pages/VendorServiceOptions";
 import VendorMedia from "@/pages/VendorMedia";
+import VendorMenu from "@/pages/VendorMenu";
 import VendorCoupons from "@/pages/VendorCoupons";
 import VendorWallet from "@/pages/VendorWallet";
 import VendorPayouts from "@/pages/VendorPayouts";
@@ -42,6 +43,7 @@ import VendorPlaceholder from "@/pages/VendorPlaceholder";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
+import AffiliatesPage from "@/pages/Admin/Affiliates/AffiliatesPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 
@@ -78,7 +80,11 @@ import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
-import AffiliatePlaceholder from "@/pages/AffiliatePlaceholder";
+import AffiliateReferrals from "@/pages/AffiliateReferrals";
+import AffiliateVendorsReferred from "@/pages/AffiliateVendorsReferred";
+import AffiliateCommission from "@/pages/AffiliateCommission";
+import AffiliateWallet from "@/pages/AffiliateWallet";
+import AffiliatePayouts from "@/pages/AffiliatePayouts";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AffiliateLayout from "@/components/Layout/AffiliateLayout";
@@ -88,10 +94,6 @@ import AppLayout from "@/components/Layout/AppLayout";
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
-);
-
-const affiliatePlaceholder = (title: string, description?: string) => (
-  <AffiliatePlaceholder title={title} description={description} />
 );
 
 const appRouter = createBrowserRouter([
@@ -125,6 +127,11 @@ const appRouter = createBrowserRouter([
           },
           {
             path: "/sign-up",
+            element: <Signup />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/signup",
             element: <Signup />,
             errorElement: <ErrorPage />,
           },
@@ -162,74 +169,6 @@ const appRouter = createBrowserRouter([
             path: "/affiliate-marketing",
             element: <AffiliateMarketing />,
           },
-          {
-            path: "/affiliate",
-            element: <AffiliateLayout />,
-            children: [
-              {
-                index: true,
-                element: <Navigate to="/affiliate/overview" replace />,
-              },
-              {
-                path: "overview",
-                element: <AffiliateDashboard />,
-              },
-              {
-                path: "dashboard",
-                element: <Navigate to="/affiliate/overview" replace />,
-              },
-              {
-                path: "referrals",
-                element: affiliatePlaceholder(
-                  "Referrals",
-                  "Track users who signed up through your referral code and their status.",
-                ),
-              },
-              {
-                path: "vendors-referred",
-                element: affiliatePlaceholder(
-                  "Vendors Referred",
-                  "See vendors attributed to your referrals and their conversion progress.",
-                ),
-              },
-              {
-                path: "commission",
-                element: affiliatePlaceholder(
-                  "Commission",
-                  "Review earned, pending, and paid commission transactions.",
-                ),
-              },
-              {
-                path: "wallet",
-                element: affiliatePlaceholder(
-                  "Wallet",
-                  "View your affiliate wallet balance and transaction history.",
-                ),
-              },
-              {
-                path: "payouts",
-                element: affiliatePlaceholder(
-                  "Payouts",
-                  "Manage payout requests and track payout statuses.",
-                ),
-              },
-              {
-                path: "reports",
-                element: affiliatePlaceholder(
-                  "Reports",
-                  "Generate and export affiliate performance reports.",
-                ),
-              },
-              {
-                path: "profile-settings",
-                element: affiliatePlaceholder(
-                  "Profile Settings",
-                  "Manage your affiliate profile details and preferences.",
-                ),
-              },
-            ],
-          },
-  
           {
             path: "/service/:serviceId",
             element: <ServiceDetail />,
@@ -288,6 +227,11 @@ const appRouter = createBrowserRouter([
           {
             path: "vendors",
             element: <VendorsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "affiliates",
+            element: <AffiliatesPage />,
             errorElement: <ErrorPage />,
           },
           {
@@ -546,6 +490,7 @@ const appRouter = createBrowserRouter([
             element: <VendorServiceOptions />,
           },
           { path: "media", element: <VendorMedia /> },
+          { path: "menu", element: <VendorMenu /> },
           { path: "coupons", element: <VendorCoupons /> },
           { path: "wallet", element: <VendorWallet /> },
           { path: "payouts", element: <VendorPayouts /> },
@@ -567,6 +512,44 @@ const appRouter = createBrowserRouter([
       },
     ],
   },
+    {
+            path: "/affiliate",
+            element: <AffiliateLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "overview",
+                element: <AffiliateDashboard />,
+              },
+              {
+                path: "dashboard",
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "referrals",
+                element: <AffiliateReferrals />,
+              },
+              {
+                path: "vendors-referred",
+                element: <AffiliateVendorsReferred />,
+              },
+              {
+                path: "commission",
+                element: <AffiliateCommission />,
+              },
+              {
+                path: "wallet",
+                element: <AffiliateWallet />,
+              },
+              {
+                path: "payouts",
+                element: <AffiliatePayouts />,
+              },
+            ],
+          },
 ]);
 
 export default appRouter;

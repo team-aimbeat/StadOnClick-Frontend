@@ -761,7 +761,8 @@ export const DataTable: React.FC<DataTableProps> = ({
             return safeData;
         }
 
-        let filtered: RowData[] = safeData;
+        // Never mutate source arrays from props/RTK Query cache.
+        let filtered: RowData[] = [...safeData];
 
         if (searchTerm && searchable) {
             filtered = filtered.filter((row) =>
