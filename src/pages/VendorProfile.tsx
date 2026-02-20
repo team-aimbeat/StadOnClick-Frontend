@@ -536,7 +536,7 @@
 
 
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DashboardContainer } from "@/components/dashboard";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
@@ -547,7 +547,7 @@ import leisureCover from "@/assets/images/event.jpg";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { setUser } from "@/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { authApi, useGetCitiesQuery } from "@/features/auth/api/authApi";
+import { authApi, useGetCitiesQuery, useUploadAvatarMutation } from "@/features/auth/api/authApi";
 import { useMockLoader } from "@/lib/useMockLoader";
 import {
   useCreateVendorBusinessProfileMutation,
@@ -582,6 +582,7 @@ const VendorProfile = () => {
     error: profileError,
   } = useGetVendorProfileQuery(undefined, { skip: shouldSkipVendorProfileQuery });
   const { data: citiesResponse, isLoading: isLoadingCities } = useGetCitiesQuery(undefined);
+  const [uploadAvatar, { isLoading: isUploadingAvatar }] = useUploadAvatarMutation();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateVendorProfileMutation();
   const [createBusinessProfile, { isLoading: isCreating }] = useCreateVendorBusinessProfileMutation();
 
@@ -599,6 +600,8 @@ const VendorProfile = () => {
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
   const [invalidHours, setInvalidHours] = useState<number[]>([]);
   const [isVendorAvatarBroken, setIsVendorAvatarBroken] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (profileData?.data) {
@@ -785,6 +788,67 @@ const VendorProfile = () => {
     return `${apiBaseUrl}/${candidate.replace(/^\/+/, "")}`;
   }, [authUser?.profileImageUrl]);
   const showVendorAvatar = Boolean(vendorAvatarUrl) && !isVendorAvatarBroken;
+  const validateImageFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      return false;
+    }
+    const maxSizeInBytes = 5 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      toast.error("Image must be 5MB or smaller.");
+      return false;
+    }
+    return true;
+  };
+  const handleAvatarUploadClick = () => {
+    avatarInputRef.current?.click();
+  };
+  const handleAvatarFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    if (!validateImageFile(file)) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+      const response = await uploadAvatar(formData).unwrap();
+      const uploadedUrl = response?.profileImageUrl;
+
+      if (uploadedUrl && authUser) {
+        dispatch(setUser({ ...authUser, profileImageUrl: uploadedUrl }));
+        setIsVendorAvatarBroken(false);
+      }
+      toast.success("Profile image updated");
+    } catch (error) {
+      toast.error("Unable to upload profile image");
+    }
+  };
+  const handleCoverUploadClick = () => {
+    coverInputRef.current?.click();
+  };
+  const handleCoverFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    if (!validateImageFile(file)) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+      const response = await uploadAvatar(formData).unwrap();
+      const uploadedUrl = response?.profileImageUrl;
+      if (!uploadedUrl) {
+        toast.error("Unable to upload cover image");
+        return;
+      }
+
+      await updateProfile({ seoImageKey: uploadedUrl }).unwrap();
+      toast.success("Cover image updated");
+    } catch (error) {
+      toast.error("Unable to upload cover image");
+    }
+  };
 
   if (loading || isLoadingProfile) {
     return (
@@ -830,7 +894,19 @@ const VendorProfile = () => {
           <div className="absolute inset-0 bg-black/20" />
 
           {/* Change Cover button */}
-          <button className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-lg border border-white/30 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/30 transition">
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleCoverFileChange}
+          />
+          <button
+            type="button"
+            onClick={handleCoverUploadClick}
+            disabled={isUploadingAvatar || isSaving}
+            className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-lg border border-white/30 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/30 transition disabled:cursor-not-allowed disabled:opacity-70"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -863,7 +939,21 @@ const VendorProfile = () => {
                         .toUpperCase()}
                     </div>
                   )}
-                  <button className="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center shadow hover:bg-blue-700 transition">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarFileChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAvatarUploadClick}
+                    disabled={isUploadingAvatar}
+                    className="absolute bottom-0.5 right-0.5 w-6 h-6 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center shadow hover:bg-blue-700 transition disabled:cursor-not-allowed disabled:bg-blue-400"
+                    aria-label="Upload vendor profile image"
+                    title={isUploadingAvatar ? "Uploading..." : "Upload profile image"}
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                     </svg>
