@@ -1030,50 +1030,86 @@ const VendorProfile = () => {
               </div>
 
               {/* Actions */}
-              <div className="px-6 py-5 space-y-4">
-                <div className="grid grid-cols-2 gap-2">
+              <div className="px-6 py-5 space-y-5">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => navigate("/vendor/kyc")}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100"
+                    className="rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <p className="text-xs text-slate-500">Verification</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-800">KYC</p>
+                    <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">Verification</p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-900">KYC</p>
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate("/vendor/wallet")}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-left transition hover:bg-slate-100"
+                    className="rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <p className="text-xs text-slate-500">Finance</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-800">Wallet</p>
+                    <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 9V7a5 5 0 00-10 0v2m-2 0h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z" />
+                      </svg>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">Finance</p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-900">Wallet</p>
                   </button>
                 </div>
 
-                <div className="border-t border-slate-100 pt-3">
+                <div>
                   <p className="mb-2 text-lg font-semibold text-slate-900">Setting</p>
                   <div className="space-y-2">
-                   
+                    <button
+                      type="button"
+                      onClick={() => goToStep(0)}
+                      className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5.121 17.804A9 9 0 1118.88 6.196M15 11a3 3 0 11-6 0 3 3 0 016 0zM4.5 19.5a8.5 8.5 0 0115 0" />
+                          </svg>
+                        </span>
+                        Personal information
+                      </span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => navigate("/vendor/support")}
-                      className="flex w-full items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                      className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                     >
-                      Support
-                      <span>�</span>
+                      <span className="flex items-center gap-2">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 10h8m-8 4h5m3 7H8a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </span>
+                        Support
+                      </span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </button>
-           
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                 >
                   View Public Profile
                 </button>
-                <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-                  <span className="flex-1 truncate text-sm text-slate-400">
+
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                  <span className="flex-1 truncate text-sm text-slate-500">
                     {profile?.slug ? `stadonclick.com/v/${profile.slug}` : "Slug not set"}
                   </span>
                   <button type="button" className="shrink-0 text-slate-400 hover:text-blue-600 transition">
