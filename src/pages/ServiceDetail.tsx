@@ -214,6 +214,9 @@ export default function ServiceDetail() {
   const [failedReviewerImages, setFailedReviewerImages] = useState<
     Record<string, boolean>
   >({});
+  const [selectedMenuImage, setSelectedMenuImage] = useState<string | null>(
+    null,
+  );
 
   const resetCoupon = () => {
     setCouponDiscount(0);
@@ -1300,13 +1303,18 @@ export default function ServiceDetail() {
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                 {menuPreviewImages.length > 0 ? (
                   menuPreviewImages.map((imageUrl, index) => (
-                    <div key={`${imageUrl}-${index}`} className="min-w-[100px] shrink-0">
+                    <button
+                      key={`${imageUrl}-${index}`}
+                      type="button"
+                      className="min-w-[100px] shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      onClick={() => setSelectedMenuImage(imageUrl)}
+                    >
                       <img
                         src={imageUrl}
                         alt={`Menu preview ${index + 1}`}
-                        className="h-48 w-full rounded-2xl object-cover"
+                        className="h-48 w-full rounded-2xl object-cover transition-transform duration-200 hover:scale-[1.02] cursor-zoom-in"
                       />
-                    </div>
+                    </button>
                   ))
                 ) : (
                   <p className="text-sm text-slate-500">No menu images uploaded yet.</p>
@@ -1585,6 +1593,28 @@ export default function ServiceDetail() {
           </div>
         </div>
       </div>
+
+      {selectedMenuImage && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-4"
+          onClick={() => setSelectedMenuImage(null)}
+        >
+          <button
+            type="button"
+            aria-label="Close image preview"
+            className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-xl font-semibold text-white backdrop-blur hover:bg-white/30"
+            onClick={() => setSelectedMenuImage(null)}
+          >
+            ×
+          </button>
+          <img
+            src={selectedMenuImage}
+            alt="Enlarged menu preview"
+            className="max-h-[90vh] max-w-[95vw] rounded-2xl object-contain shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      )}
 
       <BookingModal
         isOpen={isBookingModalOpen}
