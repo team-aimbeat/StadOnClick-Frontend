@@ -2,6 +2,7 @@ import {
   BadgeCheck,
   Check,
   ChevronLeft,
+  Eye,
   Heart,
   MapPinIcon,
   Share2,
@@ -23,7 +24,11 @@ import {
 import { useAppSelector } from "@/app/hooks";
 
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi";
-import { useListMarketplaceServicesQuery } from "@/services/marketplaceApi";
+import {
+  useGetVendorStoreVisitStatsQuery,
+  useListMarketplaceServicesQuery,
+  useTrackVendorStoreVisitMutation,
+} from "@/services/marketplaceApi";
 import { useGetServiceMediaQuery } from "@/services/serviceMediaApi";
 import { useGetServiceMenuMediaQuery } from "@/services/menuMediaApi";
 import {
@@ -40,6 +45,7 @@ import { useApplyCouponMutation } from "@/services/vendorOrdersApi";
 import { useGetPublicVendorCouponsQuery } from "@/services/vendoiCouponsApi";
 import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
 import { useCreateAffiliateServiceLinkMutation } from "@/features/affiliate/api/affiliateApi";
+import { useGetMyReferralSummaryQuery } from "@/features/referrals/api/referralApi";
 import { Button } from "@/components/ui/button";
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge";
@@ -170,9 +176,13 @@ export default function ServiceDetail() {
   const authUser = useAppSelector((state) => state.auth.user);
   const userId = authUser?.id;
   const isAffiliate = (authUser?.roles ?? []).includes("AFFILIATE");
+  const { data: myReferralSummary } = useGetMyReferralSummaryQuery(undefined, {
+    skip: !userId,
+  });
 
   const [createCheckoutSession, { isLoading: isCreatingSession }] =
     useCreateCheckoutSessionMutation();
+  const [trackVendorStoreVisit] = useTrackVendorStoreVisitMutation();
   const [applyCoupon, { isLoading: isApplyingCoupon }] =
     useApplyCouponMutation();
   const [
@@ -204,6 +214,13 @@ export default function ServiceDetail() {
   );
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState("");
+  const [referralCodeInput, setReferralCodeInput] = useState("");
+  const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(
+    null,
+  );
+  const [referralCodeFeedback, setReferralCodeFeedback] = useState<string | null>(
+    null,
+  );
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -230,7 +247,6 @@ export default function ServiceDetail() {
     ? slugToSearchQuery(serviceSlug)
     : undefined;
   const affiliateRef = (searchParams.get("ref") ?? "").trim() || undefined;
-  const referralCodeForCheckout = affiliateRef || undefined;
   const marketplaceParams = serviceIdParam
     ? { serviceId: serviceIdParam, ref: affiliateRef, limit: 12, offset: 0 }
     : slugSearchQuery
@@ -243,6 +259,15 @@ export default function ServiceDetail() {
     useListMarketplaceServicesQuery(marketplaceParams, {
       skip: skipMarketplace,
     });
+
+  useEffect(() => {
+    if (!affiliateRef) return;
+    const normalized = affiliateRef.trim().toUpperCase();
+    if (!normalized) return;
+    setReferralCodeInput(normalized);
+    setAppliedReferralCode(normalized);
+    setReferralCodeFeedback(`Referral code ${normalized} applied`);
+  }, [affiliateRef]);
 
   const matchedMarketplaceService = useMemo(() => {
     if (!marketplaceList?.data || marketplaceList.data.length === 0)
@@ -257,10 +282,37 @@ export default function ServiceDetail() {
   }, [marketplaceList?.data, serviceIdParam, serviceSlug]);
 
   const vendorId = matchedMarketplaceService?.vendorId;
+  const { data: vendorVisitStatsResponse } = useGetVendorStoreVisitStatsQuery(
+    vendorId ?? "",
+    { skip: !vendorId },
+  );
+  const totalVisitors = vendorVisitStatsResponse?.data?.totalVisitors ?? 0;
+  const todayVisitors = vendorVisitStatsResponse?.data?.todayVisitors ?? 0;
   const serviceCity = matchedMarketplaceService?.cityName ?? "—";
   const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
   console.log(rules);
   const lastFetchedSlotsKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!vendorId || typeof window === "undefined") return;
+
+    const now = new Date();
+    const visitDateKey = [
+      now.getUTCFullYear(),
+      String(now.getUTCMonth() + 1).padStart(2, "0"),
+      String(now.getUTCDate()).padStart(2, "0"),
+    ].join("-");
+    const storageKey = `stadonclick.vendorVisit.${vendorId}.${visitDateKey}`;
+
+    if (window.sessionStorage.getItem(storageKey) === "1") return;
+
+    window.sessionStorage.setItem(storageKey, "1");
+    trackVendorStoreVisit({ vendorId })
+      .unwrap()
+      .catch(() => {
+        window.sessionStorage.removeItem(storageKey);
+      });
+  }, [trackVendorStoreVisit, vendorId]);
 
   useEffect(() => {
     if (!bookedOffering?.id || !vendorId) {
@@ -406,6 +458,18 @@ export default function ServiceDetail() {
     }
   };
 
+  const handleApplyReferralCode = () => {
+    const code = referralCodeInput.trim().toUpperCase();
+    if (!code) {
+      setAppliedReferralCode(null);
+      setReferralCodeFeedback(null);
+      return;
+    }
+    setReferralCodeInput(code);
+    setAppliedReferralCode(code);
+    setReferralCodeFeedback(`Referral code ${code} applied`);
+  };
+
   const openBookingModal = (offering: VendorOffering) => {
     setBookedOffering(offering);
     setSelectedSlotId(null);
@@ -497,7 +561,7 @@ export default function ServiceDetail() {
           slotId: item.slotId ?? undefined,
         })),
         promoCode: appliedCoupon?.code || undefined,
-        referralCode: referralCodeForCheckout,
+        referralCode: appliedReferralCode ?? undefined,
       }).unwrap();
 
       if (typeof window !== "undefined") {
@@ -735,9 +799,35 @@ export default function ServiceDetail() {
                     <span className="text-xs text-black">
                       ({reviews?.length || 0}+ verified guest reviews)
                     </span>
+                    <span className="inline-flex ml-5  items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-extrabold tracking-wide text-blue-700 shadow-sm">
+                      <Eye className="h-3.5 w-3.5" />
+                      {totalVisitors} visitors
+                    </span>
+                   <span className="inline-flex items-center rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">
+                       {todayVisitors} today
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                      {myReferralSummary?.referralCode ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">
+                      <span className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">
+                        {myReferralSummary.referralCode}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(
+                            myReferralSummary.referralCode ?? "",
+                          );
+                          toast.success("Referral code copied");
+                        }}
+                        className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-emerald-700"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  ) : null}   
                   <button
                     type="button"
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300"
@@ -750,6 +840,7 @@ export default function ServiceDetail() {
                   >
                     <Heart className="h-4 w-4" />
                   </button>
+              
                 </div>
               </div>
               <ServiceGallery
@@ -993,13 +1084,13 @@ export default function ServiceDetail() {
                   <h3 className="text-lg font-semibold text-slate-900">
                     Your order
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    Added services appear here. Adjust quantity anytime.
-                  </p>
+
                 </div>
-                <span className="text-xs text-slate-400">
-                  {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="text-xs text-slate-400">
+                    {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
               </div>
               {cartItems.length === 0 ? (
                 <p className="text-sm text-slate-500">
@@ -1061,10 +1152,10 @@ export default function ServiceDetail() {
               )}
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <h4 className="text-sm font-semibold text-slate-900">
-                  Wallet & promo
+                  Wallet, promo & referral
                 </h4>
                 <p className="text-xs text-slate-500">
-                  Apply discount or use StadOnClick wallet balance.
+                  Apply promo and user referral codes before checkout.
                 </p>
                 <div className="flex items-center gap-2">
                   <input
@@ -1082,6 +1173,50 @@ export default function ServiceDetail() {
                   >
                     {isApplyingCoupon ? "Checking..." : "Apply"}
                   </Button>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    User referral code
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={referralCodeInput}
+                      onChange={(e) => {
+                        setReferralCodeInput(e.target.value);
+                        setReferralCodeFeedback(null);
+                      }}
+                      placeholder="Enter referral code"
+                      className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none"
+                    />
+                    <Button
+                      variant={"default"}
+                      onClick={handleApplyReferralCode}
+                      disabled={!referralCodeInput.trim()}
+                      className="min-w-[30px] rounded-lg border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  {appliedReferralCode ? (
+                    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+                      <span>
+                        {referralCodeFeedback ??
+                          `Referral code ${appliedReferralCode} applied`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAppliedReferralCode(null);
+                          setReferralCodeInput("");
+                          setReferralCodeFeedback(null);
+                        }}
+                        className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
                 {couponError && (
                   <p className="text-xs font-semibold text-red-600">
