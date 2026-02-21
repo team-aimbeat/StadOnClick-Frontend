@@ -48,6 +48,7 @@ export type VendorRow = RowData & {
   payoutsEnabled: boolean;
   chargesEnabled: boolean;
   totalBookings: number;
+  visitorCount: number;
   totalRevenue: number;
   ratingAvg: number;
   ratingCount: number;
@@ -183,6 +184,7 @@ export default function VendorsPage({
         payoutsEnabled: Boolean(v.payoutsEnabled),
         chargesEnabled: Boolean(v.chargesEnabled),
         totalBookings: Number(v.totalBookings ?? 0),
+        visitorCount: Number(v.visitorCount ?? 0),
         totalRevenue: toNumberSafe(v.totalRevenue),
         ratingAvg: Number(v.ratingAvg ?? 0),
         ratingCount: Number(v.ratingCount ?? 0),
@@ -335,6 +337,14 @@ export default function VendorsPage({
       {
         key: "totalBookings",
         title: "Bookings",
+        sortable: true,
+        render: (value: any) => (
+          <span className="font-semibold text-slate-900">{Number(value ?? 0)}</span>
+        ),
+      },
+      {
+        key: "visitorCount",
+        title: "Visitors",
         sortable: true,
         render: (value: any) => (
           <span className="font-semibold text-slate-900">{Number(value ?? 0)}</span>
