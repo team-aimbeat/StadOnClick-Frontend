@@ -44,6 +44,7 @@ import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import AffiliatesPage from "@/pages/Admin/Affiliates/AffiliatesPage";
+import CustomersPage from "@/pages/Admin/Customers/CustomersPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 
@@ -232,6 +233,11 @@ const appRouter = createBrowserRouter([
           {
             path: "affiliates",
             element: <AffiliatesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "customers",
+            element: <CustomersPage />,
             errorElement: <ErrorPage />,
           },
           {
