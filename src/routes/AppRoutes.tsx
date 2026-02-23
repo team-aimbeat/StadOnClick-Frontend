@@ -58,6 +58,7 @@ import AccessDenied from "@/components/shared/AccessDenied";
 import AdminNotFound from "@/pages/Admin/AdminNotFound";
 import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
 import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
+import VendorSubscriptionsPage from "@/pages/Admin/leads/VendorSubscriptionsPage";
 import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
 import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
 import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
@@ -275,6 +276,11 @@ const appRouter = createBrowserRouter([
           {
             path: "leads/plans",
             element: <LeadPlansPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "leads/subscriptions",
+            element: <VendorSubscriptionsPage />,
             errorElement: <ErrorPage />,
           },
           {

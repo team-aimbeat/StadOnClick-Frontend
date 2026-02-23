@@ -1,4 +1,5 @@
 import type React from "react";
+import { useMemo, useState } from "react";
 import type { Dayjs } from "dayjs";
 import { AnimatePresence, motion } from "framer-motion";
 import { HiOutlinePlusCircle, HiOutlineTrash } from "react-icons/hi2";
@@ -14,7 +15,6 @@ import wellSm from "@/assets/Images/optimized/well-sm.jpg";
 import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
 
 import { DashboardContainer } from "@/components/dashboard";
-import { LocationPicker } from "@/components/forms/LocationPicker";
 import {
   Dialog,
   DialogContent,
@@ -76,12 +76,10 @@ export type VendorServicesWizardProps = {
     title: string;
     description: string;
     terms: string;
-    latitude: string;
-    longitude: string;
   };
   vendorServiceErrors: Record<string, string>;
   handleVendorServiceDetailChange: (
-    field: "title" | "description" | "terms" | "latitude" | "longitude",
+    field: "title" | "description" | "terms",
     value: string,
   ) => void;
   refundPolicy: { type: string; windowHours: string };
@@ -134,6 +132,7 @@ export type VendorServicesWizardProps = {
 };
 
 export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
+  const [categorySearch, setCategorySearch] = useState("");
   const {
     wizardScrollRef,
     isEditing,
@@ -201,6 +200,18 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     handleConfirmedCategoryReset,
   } = props;
   const isMovieBookingsCategory = selectedCategory?.slug === "movie-bookings";
+  const normalizedCategorySearch = categorySearch.trim().toLowerCase();
+  const filteredCategoryOptions = useMemo(() => {
+    if (!normalizedCategorySearch) return categoryOptions;
+    return categoryOptions.filter((category) => {
+      const categoryName = category.name.toLowerCase();
+      const categorySlug = category.slug.toLowerCase();
+      return (
+        categoryName.includes(normalizedCategorySearch) ||
+        categorySlug.includes(normalizedCategorySearch)
+      );
+    });
+  }, [categoryOptions, normalizedCategorySearch]);
 
   return (
     <div ref={wizardScrollRef}>
@@ -396,58 +407,75 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                       ))}
                     </div>
                   ) : categoryOptions.length > 0 ? (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {categoryOptions.map((category) => {
-                        const isSelected = category.id === selectedCategoryId;
-                        const masterVisual =
-                          selectedMasterService &&
-                          masterServiceVisuals[selectedMasterService.slug];
-                        const categoryImage =
-                          categoryVisuals[category.slug] ??
-                          masterVisual ??
-                          fallbackMasterVisual(category.name);
-                        return (
-                          <button
-                            key={category.id}
-                            type="button"
-                            onClick={() => {
-                              const isChangingCategory =
-                                selectedCategoryId && selectedCategoryId !== category.id;
-                              if (isEditing && isChangingCategory) {
-                                setPendingCategoryReset({
-                                  categoryId: category.id,
-                                  masterId: selectedMasterServiceId,
-                                });
-                                return;
-                              }
-                              setSelectedCategoryId(category.id);
-                            }}
-                            className={`rounded-2xl border px-3 py-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
+                    <>
+                      <div className="pb-1">
+                        <input
+                          type="search"
+                          value={categorySearch}
+                          onChange={(event) => setCategorySearch(event.target.value)}
+                          placeholder="Search categories by name or slug"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                        />
+                      </div>
+                      {filteredCategoryOptions.length > 0 ? (
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {filteredCategoryOptions.map((category) => {
+                            const isSelected = category.id === selectedCategoryId;
+                            const masterVisual =
+                              selectedMasterService &&
+                              masterServiceVisuals[selectedMasterService.slug];
+                            const categoryImage =
+                              categoryVisuals[category.slug] ??
+                              masterVisual ??
+                              fallbackMasterVisual(category.name);
+                            return (
+                              <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => {
+                                  const isChangingCategory =
+                                    selectedCategoryId && selectedCategoryId !== category.id;
+                                  if (isEditing && isChangingCategory) {
+                                    setPendingCategoryReset({
+                                      categoryId: category.id,
+                                      masterId: selectedMasterServiceId,
+                                    });
+                                    return;
+                                  }
+                                  setSelectedCategoryId(category.id);
+                                }}
+                                className={`rounded-2xl border px-3 py-3 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500
                               ${isSelected ? "border-blue-500 bg-blue-50 text-slate-900" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}
-                            aria-pressed={isSelected}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                                <img
-                                  src={categoryImage.src}
-                                  alt={categoryImage.alt}
-                                  className="h-full w-full object-cover"
-                                  loading="lazy"
-                                  decoding="async"
-                                  fetchPriority="low"
-                                  srcSet={categoryImage.srcSet}
-                                  sizes="48px"
-                                />
-                              </div>
-                              <div>
-                                <p className="font-semibold">{category.name}</p>
-                                <p className="text-xs text-slate-500">{category.slug}</p>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                                aria-pressed={isSelected}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                                    <img
+                                      src={categoryImage.src}
+                                      alt={categoryImage.alt}
+                                      className="h-full w-full object-cover"
+                                      loading="lazy"
+                                      decoding="async"
+                                      fetchPriority="low"
+                                      srcSet={categoryImage.srcSet}
+                                      sizes="48px"
+                                    />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold">{category.name}</p>
+                                    <p className="text-xs text-slate-500">{category.slug}</p>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500">
+                          No categories match "{categorySearch.trim()}".
+                        </p>
+                      )}
+                    </>
                   ) : (
                     <p className="text-xs text-slate-500">
                       No categories found for this service yet.
@@ -511,6 +539,9 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                     <p className="text-xs text-slate-500">
                       This creates the vendor-level service before adding offerings.
                     </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Location is taken from your Business Profile map settings.
+                    </p>
                   </div>
 
                   {createdServiceId && (
@@ -529,57 +560,6 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                     className="rounded-xl border px-3 py-2 text-sm"
                   />
                 </div>
-
-                <LocationPicker
-                  value={{
-                    lat: vendorServiceDetails.latitude ? Number(vendorServiceDetails.latitude) : null,
-                    lng: vendorServiceDetails.longitude ? Number(vendorServiceDetails.longitude) : null,
-                  }}
-                  onChange={({ lat, lng }) => {
-                    handleVendorServiceDetailChange("latitude", String(lat));
-                    handleVendorServiceDetailChange("longitude", String(lng));
-                  }}
-                />
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lat">
-                      Latitude (optional manual entry)
-                    </label>
-                    <input
-                      id="manual-lat"
-                      type="number"
-                      step="0.000001"
-                      min="-90"
-                      max="90"
-                      value={vendorServiceDetails.latitude}
-                      onChange={(e) => handleVendorServiceDetailChange("latitude", e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                      placeholder="e.g. 28.6139"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-slate-700" htmlFor="manual-lng">
-                      Longitude (optional manual entry)
-                    </label>
-                    <input
-                      id="manual-lng"
-                      type="number"
-                      step="0.000001"
-                      min="-180"
-                      max="180"
-                      value={vendorServiceDetails.longitude}
-                      onChange={(e) => handleVendorServiceDetailChange("longitude", e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                      placeholder="e.g. 77.2090"
-                    />
-                  </div>
-                </div>
-                {(vendorServiceErrors.latitude || vendorServiceErrors.longitude) && (
-                  <p className="text-xs text-rose-600">
-                    {vendorServiceErrors.latitude || vendorServiceErrors.longitude}
-                  </p>
-                )}
 
                 <textarea
                   placeholder="Service description *"
