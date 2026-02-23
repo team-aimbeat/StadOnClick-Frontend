@@ -136,24 +136,44 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         icon: HiHome,
         to: withBase("dashboard"),
       },
-      {
-        id: "support-inbox",
-        label: t("Support Inbox"),
-        icon: HiInboxStack,
-        to: withBase("support/inbox"),
+        {
+        id: "vendor-management",
+        label: t("Vendor"),
+        icon: Users,
+        children: [
+          { label: t("Vendors"), to: withBase("vendors") },
+          { label: t("Vendor Services"), to: withBase("services") },
+          { label: t("Offerings"), to: withBase("offerings") },
+        ],
       },
-      {
-        id: "support-dashboard",
-        label: t("Support Dashboard"),
-        icon: HiChartBar,
-        to: withBase("support/dashboard"),
+         {
+        id: "customers-management",
+        label: t("Customers"),
+        icon: HiUserGroup,
+        children: [{ label: t("Customers"), to: withBase("customers") }],
       },
+    
       {
-        id: "support-chat",
-        label: t("Support Chat"),
-        icon: HiChatBubbleLeftRight,
-        to: withBase("chat"),
+        id: "users-management",
+        label: t("Users"),
+        icon: HiUserGroup,
+        children: [
+          { label: t("Staff Users"), to: withBase("staff") },
+          { label: t("Affiliate Users"), to: withBase("affiliates") },
+        ],
       },
+        {
+        id: "bookings",
+        label: t("Bookings"),
+        icon: HiClipboardDocumentCheck,
+        children: [
+          { label: t("All Bookings"), to: withBase("bookings") },
+          { label: t("Upcoming"), to: withBase("bookings/upcoming") },
+          { label: t("Completed"), to: withBase("bookings/completed") },
+          { label: t("Refunds"), to: withBase("bookings/refunds") },
+        ],
+      },
+    
       ...(isModerator
         ? [
             {
@@ -203,17 +223,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         icon: HiTag,
         to: withBase("coupons"),
       },
-      {
-        id: "bookings",
-        label: t("Bookings"),
-        icon: HiClipboardDocumentCheck,
-        children: [
-          { label: t("All Bookings"), to: withBase("bookings") },
-          { label: t("Upcoming"), to: withBase("bookings/upcoming") },
-          { label: t("Completed"), to: withBase("bookings/completed") },
-          { label: t("Refunds"), to: withBase("bookings/refunds") },
-        ],
-      },
+    
       {
         id: "finance",
         label: t("Finance"),
@@ -222,6 +232,24 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
           { label: t("Platform Wallet"), to: withBase("finance/platform-wallet") },
         ],
+      },
+        {
+        id: "support-inbox",
+        label: t("Support Inbox"),
+        icon: HiInboxStack,
+        to: withBase("support/inbox"),
+      },
+      {
+        id: "support-dashboard",
+        label: t("Support Dashboard"),
+        icon: HiChartBar,
+        to: withBase("support/dashboard"),
+      },
+      {
+        id: "support-chat",
+        label: t("Support Chat"),
+        icon: HiChatBubbleLeftRight,
+        to: withBase("chat"),
       },
       {
         id: "catalog",
@@ -240,17 +268,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Admin Activity"), to: withBase("system/audit") },
         ],
       },
-      {
-        id: "administration",
-        label: t("Administration"),
-        icon: Users,
-        children: [
-          { label: t("Staff"), to: withBase("staff") },
-          { label: t("Customers"), to: withBase("customers") },
-          { label: t("Vendors"), to: withBase("vendors") },
-          { label: t("Affiliate Users"), to: withBase("affiliates") },
-        ],
-      },
+   
       {
         id: "system-health",
         label: t("System Health"),
