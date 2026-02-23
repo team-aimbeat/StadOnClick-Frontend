@@ -64,6 +64,7 @@ const toBookingRow = (booking: VendorBooking): BookingRow => {
     .replace(/\s+/g, " ");
 
   return {
+    bookingId: booking.id,
     id: booking.orderItem?.orderNumber ?? booking.id,
     customer: customerName || "Guest",
     service: booking.vendorService?.category?.name ?? "Service",
