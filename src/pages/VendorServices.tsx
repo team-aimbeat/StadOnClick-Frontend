@@ -86,8 +86,6 @@ type VendorServiceDetails = {
   title: string;
   description: string;
   terms: string;
-  latitude: string;
-  longitude: string;
 };
 
 type RefundPolicyType = "NO_REFUND" | "PARTIAL_BEFORE_WINDOW";
@@ -276,8 +274,6 @@ const VendorServices = () => {
       title: "",
       description: "",
       terms: "",
-      latitude: "",
-      longitude: "",
     });
   const [vendorServiceErrors, setVendorServiceErrors] = useState<
     Record<string, string>
@@ -664,17 +660,6 @@ const VendorServices = () => {
     if (!vendorServiceDetails.terms.trim()) {
       errors.terms = "Terms are required.";
     }
-    if (!vendorServiceDetails.latitude.trim()) {
-      errors.latitude = "Latitude is required.";
-    } else if (Number.isNaN(Number(vendorServiceDetails.latitude))) {
-      errors.latitude = "Enter a valid latitude.";
-    }
-    if (!vendorServiceDetails.longitude.trim()) {
-      errors.longitude = "Longitude is required.";
-    } else if (Number.isNaN(Number(vendorServiceDetails.longitude))) {
-      errors.longitude = "Enter a valid longitude.";
-    }
-
     if (!refundPolicy.type) {
       errors.refundPolicy = "Select a refund policy.";
     } else {
@@ -753,8 +738,6 @@ const VendorServices = () => {
           title: vendorServiceDetails.title.trim(),
           description: vendorServiceDetails.description.trim(),
           terms: vendorServiceDetails.terms.trim(),
-          latitude: Number(vendorServiceDetails.latitude),
-          longitude: Number(vendorServiceDetails.longitude),
           refundPolicy: {
             type: refundPolicy.type,
             windowHours: parsedWindowHours,
@@ -774,8 +757,6 @@ const VendorServices = () => {
           title?: string;
           description?: string;
           terms?: string;
-          latitude?: number;
-          longitude?: number;
           refundPolicy?: { type: RefundPolicyType; windowHours?: number | null };
         } = {
           id: currentServiceId,
@@ -790,13 +771,6 @@ const VendorServices = () => {
 
         const nextTerms = vendorServiceDetails.terms.trim();
         if (nextTerms) updatePayload.terms = nextTerms;
-
-        const latRaw = vendorServiceDetails.latitude.trim();
-        const lngRaw = vendorServiceDetails.longitude.trim();
-        const lat = latRaw ? Number(latRaw) : NaN;
-        const lng = lngRaw ? Number(lngRaw) : NaN;
-        if (Number.isFinite(lat)) updatePayload.latitude = lat;
-        if (Number.isFinite(lng)) updatePayload.longitude = lng;
 
         const parsedWindowHours =
           refundPolicy.type === "NO_REFUND"
@@ -897,8 +871,6 @@ const VendorServices = () => {
       title: "",
       description: "",
       terms: "",
-      latitude: "",
-      longitude: "",
     });
     setRefundPolicy(defaultRefundPolicy);
     setCurrentStep(1);
@@ -924,8 +896,6 @@ const VendorServices = () => {
         title: service.title ?? "",
         description: service.description ?? "",
         terms: service.terms ?? "",
-        latitude: service.latitude?.toString() ?? "",
-        longitude: service.longitude?.toString() ?? "",
       });
       setRefundPolicy(
         service.refundPolicy?.type

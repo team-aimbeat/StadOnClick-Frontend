@@ -544,6 +544,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DashboardContainer } from "@/components/dashboard";
+import { LocationPicker } from "@/components/forms/LocationPicker";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import defaultVendorCover from "@/assets/images/bgsalon.jpg";
@@ -559,6 +560,7 @@ import {
   useGetVendorProfileQuery,
   useUpdateVendorProfileMutation,
 } from "@/features/vendorProfile/api/vendorProfileApi";
+import { vendorServicesApi } from "@/services/vendorServicesApi";
 import type { BusinessHour } from "@/features/vendorProfile/api/vendorProfileApi";
 import toast from "react-hot-toast";
 
@@ -572,6 +574,40 @@ const formSteps = [
   { id: "preview", label: "Preview" },
 ];
 const weekdayOptions = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const parseCoordsFromText = (value: string): { lat: number | null; lng: number | null } => {
+  const taggedMatch = value.match(
+    /coords\s*:\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i,
+  );
+  const match =
+    taggedMatch ?? value.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+  if (!match) return { lat: null, lng: null };
+  const lat = Number(match[1]);
+  const lng = Number(match[2]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { lat: null, lng: null };
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return { lat: null, lng: null };
+  return { lat, lng };
+};
+
+const stripCoordsTag = (value: string) =>
+  value
+    .replace(/\s*\[\s*coords\s*:\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\]\s*$/i, "")
+    .trim();
+
+const buildHeadquartersValue = (
+  headquarters: string,
+  coordinates: { lat: number | null; lng: number | null },
+) => {
+  const cleanHeadquarters = stripCoordsTag(headquarters);
+  const lat = Number(coordinates.lat);
+  const lng = Number(coordinates.lng);
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+
+  if (!hasCoords) return cleanHeadquarters;
+
+  const coordsTag = `coords:${lat.toFixed(6)},${lng.toFixed(6)}`;
+  return cleanHeadquarters ? `${cleanHeadquarters} [${coordsTag}]` : coordsTag;
+};
 
 const VendorProfile = () => {
   const dispatch = useAppDispatch();
@@ -609,6 +645,10 @@ const VendorProfile = () => {
   const [invalidHours, setInvalidHours] = useState<number[]>([]);
   const [isVendorAvatarBroken, setIsVendorAvatarBroken] = useState(false);
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<string>("Mon");
+  const [headquartersCoords, setHeadquartersCoords] = useState<{
+    lat: number | null;
+    lng: number | null;
+  }>({ lat: null, lng: null });
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -618,7 +658,8 @@ const VendorProfile = () => {
       setBusinessName(profile.businessName || "");
       setCityId(profile.city?.id || "");
       setDescription(profile.description || "");
-      setHeadquarters(profile.headquarters || "");
+      setHeadquarters(stripCoordsTag(profile.headquarters || ""));
+      setHeadquartersCoords(parseCoordsFromText(profile.headquarters || ""));
       setServiceOverview(profile.serviceOverview || "");
       setSeoTitle(profile.seoTitle || "");
       setSeoDescription(profile.seoDescription || "");
@@ -717,13 +758,14 @@ const VendorProfile = () => {
       toast.error("Each business hour entry needs at least 2 characters for day and time.");
       return;
     }
+    const headquartersForSave = buildHeadquartersValue(headquarters, headquartersCoords);
     try {
       if (isSetupMode) {
         await createBusinessProfile({
           businessName: businessName.trim(),
           description: description || undefined,
           cityId: cityId || undefined,
-          headquarters: headquarters || undefined,
+          headquarters: headquartersForSave || undefined,
           serviceOverview: serviceOverview || undefined,
           seoTitle: seoTitle || undefined,
           seoDescription: seoDescription || undefined,
@@ -739,7 +781,7 @@ const VendorProfile = () => {
           businessName,
           cityId: cityId || null,
           description: description || null,
-          headquarters: headquarters || null,
+          headquarters: headquartersForSave || null,
           serviceOverview,
           seoTitle: seoTitle || null,
           seoDescription: seoDescription || null,
@@ -753,6 +795,7 @@ const VendorProfile = () => {
       }
       setInvalidHours([]);
       dispatch(authApi.util.invalidateTags(["User"]));
+      dispatch(vendorServicesApi.util.invalidateTags(["VendorServices"]));
       if (authUser) {
         dispatch(
           setUser({
@@ -1206,7 +1249,11 @@ const VendorProfile = () => {
                     <input
                       type="text"
                       value={headquarters}
-                      onChange={(e) => setHeadquarters(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setHeadquarters(value);
+                        setHeadquartersCoords(parseCoordsFromText(value));
+                      }}
                       className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm"
                     />
                   </div>
@@ -1274,10 +1321,25 @@ const VendorProfile = () => {
                       </div>
                     </div>
                     <div className="rounded-xl border border-slate-100 p-5 space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Location Performance</p>
-                      <p className="text-sm text-slate-600">Most viewed areas: Lower Parel, Bandra, Andheri. Consider highlighting availability in these zones.</p>
-                      <div className="h-40 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-100 flex items-center justify-center text-slate-400 text-sm">
-                        Map preview (placeholder)
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Business Location
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Set your headquarters by searching, dropping a pin, or using current location.
+                      </p>
+                      <LocationPicker
+                        label="Business location"
+                        helperText="This will be saved in your business profile."
+                        value={headquartersCoords}
+                        onChange={({ lat, lng, address }) => {
+                          setHeadquartersCoords({ lat, lng });
+                          const fallbackAddress = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                          setHeadquarters(address?.trim() || fallbackAddress);
+                        }}
+                      />
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                        <span className="font-semibold text-slate-700">Headquarters:</span>{" "}
+                        {headquarters || "Not set yet"}
                       </div>
                     </div>
                   </div>

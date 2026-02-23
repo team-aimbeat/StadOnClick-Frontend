@@ -613,6 +613,10 @@ export default function ServiceDetail() {
             )
           : vendorServices[0]
       : undefined;
+  const resolvedLatitude =
+    matchedMarketplaceService?.latitude ?? service?.latitude ?? 0;
+  const resolvedLongitude =
+    matchedMarketplaceService?.longitude ?? service?.longitude ?? 0;
   const isMovieBookingService =
     String(service?.category?.slug ?? "").toLowerCase() === "movie-bookings" ||
     String(matchedMarketplaceService?.categoryName ?? "").toLowerCase() ===
@@ -1290,7 +1294,7 @@ export default function ServiceDetail() {
               </h2>
 
               <a
-                href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+                href={`https://www.google.com/maps?q=${resolvedLatitude},${resolvedLongitude}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-600 hover:underline"
@@ -1301,8 +1305,8 @@ export default function ServiceDetail() {
             </div>
 
             <LocationMap
-              lat={service.latitude}
-              lng={service.longitude}
+              lat={resolvedLatitude}
+              lng={resolvedLongitude}
               name={service.title}
             />
           </div>
