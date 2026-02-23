@@ -1,11 +1,8 @@
 import { useState } from "react";
 import AdminCardShell from "./AdminCardShell";
-
-const leadSourceData = [
-  { label: "Profile", value: 500, color: "#4F7DF3" },
-  { label: "Service", value: 300, color: "#FF9F2D" },
-  { label: "Map", value: 220, color: "#AAB2BD" },
-];
+import { useListCustomersQuery } from "@/features/admin/customers/api/customersApi";
+import { useListAllVendorsQuery } from "@/features/admin/vendors/api/vendorsApi";
+import { useListAllAffiliatesQuery } from "@/features/admin/affiliates/api/affiliatesApi";
 
 const radius = 105;
 const strokeWidth = 36;
@@ -14,9 +11,27 @@ const center = size / 2;
 const circumference = 2 * Math.PI * radius;
 
 const LeadSourceDistributionCard = () => {
-  const total = leadSourceData.reduce((sum, item) => sum + item.value, 0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [period, setPeriod] = useState("Monthly");
+  const { data: customersRes } = useListCustomersQuery({ page: 1, limit: 1 });
+  const { data: vendorsRes } = useListAllVendorsQuery({ page: 1, limit: 1 });
+  const { data: affiliatesRes } = useListAllAffiliatesQuery({ page: 1, limit: 1 });
+
+  const customerCount =
+    customersRes?.meta?.total ?? customersRes?.data?.length ?? 0;
+  const vendorCount = vendorsRes?.meta?.total ?? vendorsRes?.data?.length ?? 0;
+  const affiliateCount =
+    affiliatesRes?.meta?.total ?? affiliatesRes?.data?.length ?? 0;
+
+  const leadSourceData = [
+    { key: "CUSTOMERS", label: "Customers", value: customerCount, color: "#4F7DF3" },
+    { key: "VENDORS", label: "Vendors", value: vendorCount, color: "#FF9F2D" },
+    { key: "AFFILIATES", label: "Affiliate users", value: affiliateCount, color: "#AAB2BD" },
+  ];
+
+  const total = Math.max(
+    1,
+    leadSourceData.reduce((sum, item) => sum + item.value, 0)
+  );
 
   let offsetAccumulator = 0;
   const hoveredSlice =
@@ -26,21 +41,15 @@ const LeadSourceDistributionCard = () => {
     : null;
 
   return (
-    <AdminCardShell title="Users Overview snapshot" subtitle="Lead Source Overview">
+    <AdminCardShell title="System Overview snapshot" subtitle="Users / Vendors / Affiliates">
       <div className="flex h-full flex-col gap-4">
         <div className="flex items-center justify-between">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-            {period}
+            All Time
           </p>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="rounded border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 outline-none"
-          >
-            <option>Monthly</option>
-            <option>Weekly</option>
-            <option>Yearly</option>
-          </select>
+          <span className="rounded border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+            Total records
+          </span>
         </div>
 
         <div className="relative flex flex-1 flex-col items-center justify-center gap-3">

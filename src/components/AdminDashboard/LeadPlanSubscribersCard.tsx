@@ -1,25 +1,27 @@
 import AdminCardShell from "./AdminCardShell";
 import { BarChart, Bar, Tooltip, ResponsiveContainer, XAxis } from "recharts";
-
-const leadPlanStats = {
-  totalSubscribers: 5000,
-  dailyAverage: 20,
-  growthPercent: 10,
-};
-
-const weeklySubscriptions = [
-  { day: "Sun", value: 420 },
-  { day: "Mon", value: 310 },
-  { day: "Tue", value: 480 },
-  { day: "Wed", value: 520 },
-  { day: "Thu", value: 360 },
-  { day: "Fri", value: 450 },
-  { day: "Sat", value: 160 },
+import { useGetLeadPlanSubscribersSummaryQuery } from "@/features/adminLeads/api/adminLeadPlans.api";
+const fallbackWeekly = [
+  { day: "Sun", value: 0 },
+  { day: "Mon", value: 0 },
+  { day: "Tue", value: 0 },
+  { day: "Wed", value: 0 },
+  { day: "Thu", value: 0 },
+  { day: "Fri", value: 0 },
+  { day: "Sat", value: 0 },
 ];
 
 const LeadPlanSubscribersCard = () => {
-  const { totalSubscribers, dailyAverage, growthPercent } = leadPlanStats;
+  const { data } = useGetLeadPlanSubscribersSummaryQuery();
+  const totalSubscribers = data?.totalSubscribers ?? 0;
+  const dailyAverage = data?.dailyAverage ?? 0;
+  const growthPercent = data?.growthPercent ?? 0;
+  const weeklySubscriptions = data?.weeklySubscriptions?.length
+    ? data.weeklySubscriptions
+    : fallbackWeekly;
+  const mostPopularPlan = data?.mostPopularPlan ?? "N/A";
   const isPositive = growthPercent >= 0;
+  const trendText = `${isPositive ? "+" : ""}${growthPercent}%`;
 
   return (
     <AdminCardShell title="Total Vendors Subscribers" subtitle="Lead plans">
@@ -36,9 +38,9 @@ const LeadPlanSubscribersCard = () => {
                   : "border border-rose-200 bg-rose-50 text-rose-700"
               }`}
             >
-              {isPositive ? "+10%" : "-10%"}
+              {trendText}
             </span>
-            <span className="text-slate-700">20 per day</span>
+            <span className="text-slate-700">{dailyAverage} per day</span>
           </div>
         </div>
 
@@ -91,7 +93,7 @@ const LeadPlanSubscribersCard = () => {
         </div>
 
         <div className="text-sm font-semibold text-slate-700">
-          Most popular: <span className="text-slate-900">Basic Plan</span>
+          Most popular: <span className="text-slate-900">{mostPopularPlan}</span>
         </div>
       </div>
     </AdminCardShell>
