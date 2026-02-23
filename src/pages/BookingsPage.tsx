@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Eye, Phone, CalendarClock } from "lucide-react";
+import toast from "react-hot-toast";
 import {
   HiOutlineCheckCircle,
   HiOutlineClock,
@@ -13,7 +14,7 @@ import { ActionConfig } from "@/types/Table/action";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { ListingPage } from "@/components/shared/ListingPage";
-import { useGetBookingsQuery } from "@/services/bookingsApi";
+import { useGetBookingsQuery, useUpdateBookingStatusMutation } from "@/services/bookingsApi";
 
 type BookingsPageProps = {
   defaultStatusFilter?: string;
@@ -22,6 +23,7 @@ type BookingsPageProps = {
 };
 
 export type BookingRow = RowData & {
+  bookingId: string;
   id: string;
   customer: string;
   service: string;
@@ -88,7 +90,9 @@ export default function BookingsPage({
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
   const [bookingRows, setBookingRows] = useState<BookingRow[]>([]);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const { data: backendBookings, isFetching, isError } = useGetBookingsQuery();
+  const [updateBookingStatusMutation] = useUpdateBookingStatusMutation();
   const defaultFilters = useMemo(
     () => (defaultStatusFilter ? { status: defaultStatusFilter } : undefined),
     [defaultStatusFilter]
@@ -100,10 +104,29 @@ export default function BookingsPage({
     }
   }, [backendBookings]);
 
-  const updateBookingStatus = (id: string, nextStatus: BookingRow["status"]) => {
-    setBookingRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, status: nextStatus } : row))
-    );
+  const updateBookingStatus = async (
+    bookingId: string,
+    nextStatus: BookingRow["status"]
+  ) => {
+    try {
+      setStatusUpdatingId(bookingId);
+      await updateBookingStatusMutation({ id: bookingId, status: nextStatus }).unwrap();
+      setBookingRows((prev) =>
+        prev.map((row) =>
+          row.bookingId === bookingId ? { ...row, status: nextStatus } : row
+        )
+      );
+      toast.success(
+        nextStatus === "COMPLETED"
+          ? "Booking marked as completed."
+          : `Booking updated to ${nextStatus.toLowerCase()}.`
+      );
+    } catch (error) {
+      console.error("Failed to update booking status", error);
+      toast.error("Could not update booking status. Please try again.");
+    } finally {
+      setStatusUpdatingId(null);
+    }
   };
 
   const backendStatusMessage = useMemo(() => {
@@ -208,30 +231,34 @@ export default function BookingsPage({
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
           <button
             type="button"
-            onClick={() => updateBookingStatus(row.id, "CONFIRMED")}
-            disabled={row.status === "CONFIRMED" || row.status === "COMPLETED"}
+            onClick={() => void updateBookingStatus(row.bookingId, "CONFIRMED")}
+            disabled={
+              row.status === "CONFIRMED" ||
+              row.status === "COMPLETED" ||
+              statusUpdatingId === row.bookingId
+            }
             className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
           >
             Confirm
           </button>
           <button
             type="button"
-            onClick={() => updateBookingStatus(row.id, "CANCELLED")}
-            disabled={row.status === "CANCELLED"}
+            onClick={() => void updateBookingStatus(row.bookingId, "CANCELLED")}
+            disabled={row.status === "CANCELLED" || statusUpdatingId === row.bookingId}
             className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
-            onClick={() => updateBookingStatus(row.id, "COMPLETED")}
-            disabled={row.status === "COMPLETED"}
+            onClick={() => void updateBookingStatus(row.bookingId, "COMPLETED")}
+            disabled={row.status === "COMPLETED" || statusUpdatingId === row.bookingId}
             className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
           >
             Mark completed
           </button>
           <NavLink
-            to={`/vendor/bookings/${row.id}`}
+            to={`/vendor/bookings/${row.bookingId}`}
             className="text-blue-600 hover:text-blue-500"
           >
             Details
@@ -239,7 +266,7 @@ export default function BookingsPage({
         </div>
       ),
     },
-  ], []);
+  ], [statusUpdatingId, updateBookingStatus]);
 
   const filters = useMemo<FilterConfig[]>(() => [
     {

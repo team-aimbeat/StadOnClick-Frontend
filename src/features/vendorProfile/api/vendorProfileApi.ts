@@ -74,6 +74,7 @@ export interface UpdateVendorProfileRequest {
   businessHours?: BusinessHour[];
   seoTitle?: string | null;
   seoDescription?: string | null;
+  seoImageKey?: string | null;
   seoKeywords?: string[];
   isIndexable?: boolean;
   contactEmail?: string | null;

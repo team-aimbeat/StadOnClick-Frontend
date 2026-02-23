@@ -48,6 +48,7 @@ export type VendorRow = RowData & {
   payoutsEnabled: boolean;
   chargesEnabled: boolean;
   totalBookings: number;
+  visitorCount: number;
   totalRevenue: number;
   ratingAvg: number;
   ratingCount: number;
@@ -160,7 +161,15 @@ export default function VendorsPage({
     [defaultStatusFilter],
   );
 
-  const { data, isLoading, isFetching, isError } = useListAllVendorsQuery();
+  const { data, isLoading, isFetching, isError } = useListAllVendorsQuery({
+    page: 1,
+    limit: 200,
+    status:
+      defaultStatusFilter &&
+      ["PENDING_REVIEW", "ACTIVE", "SUSPENDED", "REJECTED"].includes(defaultStatusFilter.toUpperCase())
+        ? defaultStatusFilter.toUpperCase()
+        : undefined,
+  });
 
   const vendorRows: VendorRow[] = useMemo(() => {
     const apiRows = data?.data ?? [];
@@ -183,6 +192,7 @@ export default function VendorsPage({
         payoutsEnabled: Boolean(v.payoutsEnabled),
         chargesEnabled: Boolean(v.chargesEnabled),
         totalBookings: Number(v.totalBookings ?? 0),
+        visitorCount: Number(v.visitorCount ?? 0),
         totalRevenue: toNumberSafe(v.totalRevenue),
         ratingAvg: Number(v.ratingAvg ?? 0),
         ratingCount: Number(v.ratingCount ?? 0),
@@ -332,9 +342,10 @@ export default function VendorsPage({
           );
         },
       },
+ 
       {
-        key: "totalBookings",
-        title: "Bookings",
+        key: "visitorCount",
+        title: "Visitors",
         sortable: true,
         render: (value: any) => (
           <span className="font-semibold text-slate-900">{Number(value ?? 0)}</span>
@@ -411,17 +422,10 @@ export default function VendorsPage({
               </select>
 
               <NavLink
-                to={`/admin/vendors/${r.id}`}
+                to={`/admin/vendors/${r.id}/profile`}
                 className="text-blue-600 hover:text-blue-500"
               >
-                Details
-              </NavLink>
-
-              <NavLink
-                to={`/admin/vendors/${r.id}/applications`}
-                className="text-slate-700 hover:text-slate-900"
-              >
-                Applications
+                Profile
               </NavLink>
 
               {r.loginEmail ? (

@@ -17,6 +17,7 @@ import {
   HiOutlineBell,
 } from "react-icons/hi2";
 import { IconType } from "react-icons";
+import { LayoutGrid } from "lucide-react";
 
 export type VendorNavChild = {
   label: string;
@@ -88,7 +89,79 @@ export const getVendorNavGroups = ({
       },
     ],
   },
+    {
+    label: "BUSINESS ACCOUNT",
+    items: [
+      {
+        label: "Business Profile",
+        icon: HiOutlineBookmarkSquare,
+        to: "/vendor/profile",
+      },
+      {
+        label: "KYC Documents",
+        icon: HiOutlineShieldCheck,
+        to: "/vendor/kyc",
+        badge: kycDocumentsCount > 0 ? `${kycDocumentsCount}` : undefined,
+      },
+      {
+        label: "Stripe Connect",
+        icon: HiOutlineCreditCard,
+        to: "/vendor/stripe",
+      },
+    ],
+  },
+
   {
+    label: "OPERATIONS",
+    items: [
+      {
+        label: "Bookings",
+        icon: HiOutlineQueueList,
+        badge: allBookings > 0 ? `${allBookings}` : undefined,
+        children: [
+          {
+            label: "Upcoming",
+            to: "/vendor/bookings/upcoming",
+            badge:
+              (upcomingBookings > 0 ? upcomingBookings : pendingBookings) > 0
+                ? `${upcomingBookings > 0 ? upcomingBookings : pendingBookings}`
+                : undefined,
+          },
+          {
+            label: "Completed",
+            to: "/vendor/bookings/completed",
+            badge: completedBookings > 0 ? `${completedBookings}` : undefined,
+          },
+          {
+            label: "Refund Requests",
+            to: "/vendor/bookings/refunds",
+            badge: refundRequestBookings > 0 ? `${refundRequestBookings}` : undefined,
+          },
+        ],
+      },
+      {
+        label: "Services",
+        icon: LayoutGrid ,
+        to: "/vendor/services",
+      },
+      {
+        label: "Photos & Media",
+        icon: HiOutlineCloud,
+        to: "/vendor/media",
+      },
+      {
+        label: "Menu",
+        icon: HiOutlineBookmarkSquare,
+        to: "/vendor/menu",
+      },
+      {
+        label: "Coupons",
+        icon: HiOutlineTicket,
+        to: "/vendor/coupons",
+      },
+    ],
+  },
+    {
     label: "SALES",
     items: [
       {
@@ -123,66 +196,16 @@ export const getVendorNavGroups = ({
           },
         ],
       },
-      {
-        label: "Lead Sources",
-        icon: HiOutlinePresentationChartLine,
-        to: "/vendor/leads/sources",
-      },
-      {
-        label: "Customer Insights",
-        icon: HiOutlineUserGroup,
-        to: "/vendor/insights",
-      },
-    ],
-  },
-  {
-    label: "OPERATIONS",
-    items: [
-      {
-        label: "Bookings",
-        icon: HiOutlineQueueList,
-        badge: allBookings > 0 ? `${allBookings}` : undefined,
-        children: [
-          {
-            label: "Upcoming",
-            to: "/vendor/bookings/upcoming",
-            badge:
-              (upcomingBookings > 0 ? upcomingBookings : pendingBookings) > 0
-                ? `${upcomingBookings > 0 ? upcomingBookings : pendingBookings}`
-                : undefined,
-          },
-          {
-            label: "Completed",
-            to: "/vendor/bookings/completed",
-            badge: completedBookings > 0 ? `${completedBookings}` : undefined,
-          },
-          {
-            label: "Refund Requests",
-            to: "/vendor/bookings/refunds",
-            badge: refundRequestBookings > 0 ? `${refundRequestBookings}` : undefined,
-          },
-        ],
-      },
-      {
-        label: "Services",
-        icon: HiOutlineSparkles,
-        to: "/vendor/services",
-      },
-      {
-        label: "Photos & Media",
-        icon: HiOutlineCloud,
-        to: "/vendor/media",
-      },
-      {
-        label: "Menu",
-        icon: HiOutlineBookmarkSquare,
-        to: "/vendor/menu",
-      },
-      {
-        label: "Coupons",
-        icon: HiOutlineTicket,
-        to: "/vendor/coupons",
-      },
+      // {
+      //   label: "Lead Sources",
+      //   icon: HiOutlinePresentationChartLine,
+      //   to: "/vendor/leads/sources",
+      // },
+      // {
+      //   label: "Customer Insights",
+      //   icon: HiOutlineUserGroup,
+      //   to: "/vendor/insights",
+      // },
     ],
   },
   {
@@ -211,27 +234,7 @@ export const getVendorNavGroups = ({
       },
     ],
   },
-  {
-    label: "SETTINGS",
-    items: [
-      {
-        label: "Business Profile",
-        icon: HiOutlineBookmarkSquare,
-        to: "/vendor/profile",
-      },
-      {
-        label: "KYC Documents",
-        icon: HiOutlineShieldCheck,
-        to: "/vendor/kyc",
-        badge: kycDocumentsCount > 0 ? `${kycDocumentsCount}` : undefined,
-      },
-      {
-        label: "Stripe Connect",
-        icon: HiOutlineCreditCard,
-        to: "/vendor/stripe",
-      },
-    ],
-  },
+
   {
     label: "SUPPORT",
     items: [

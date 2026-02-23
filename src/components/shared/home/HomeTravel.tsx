@@ -22,35 +22,63 @@ const mindItems = [
     slug: "ferry-bus-train-information",
   },
   { name: "Courier Services", image: party, slug: "courier-services" },
-  { name: "Tourist Buses & Boat Tours", image: yoga, slug: "tourist-buses-boat-tours" },
+  {
+    name: "Tourist Buses & Boat Tours",
+    image: yoga,
+    slug: "tourist-buses-boat-tours",
+  },
   {
     name: "Tourist Activities & Attractions",
     image: salon,
     slug: "tourist-activities-attractions",
   },
   { name: "Museums & Exhibitions", image: event, slug: "museums-exhibitions" },
-  { name: "Places to Visit Near the City", image: travelMain, slug: "places-to-visit-near-city" },
+  {
+    name: "Places to Visit Near the City",
+    image: travelMain,
+    slug: "places-to-visit-near-city",
+  },
 ];
 
 const kidsFamilyItems = [
   { name: "Kids Events", image: kidsEvent, slug: "kids-events" },
-  { name: "Kids Play Areas & Activities", image: bowling, slug: "kids-play-areas-activities" },
-  { name: "Educational & Hobby Classes", image: learn, slug: "educational-hobby-classes" },
-  { name: "Birthday Parties & Decorations", image: partyIcon, slug: "birthday-parties-decorations" },
-  { name: "Sports Academies & Coaching", image: football, slug: "sports-academies-coaching" },
-  { name: "Workshops & Short Courses", image: document, slug: "workshops-short-courses" },
+  {
+    name: "Kids Play Areas & Activities",
+    image: bowling,
+    slug: "kids-play-areas-activities",
+  },
+  {
+    name: "Educational & Hobby Classes",
+    image: learn,
+    slug: "educational-hobby-classes",
+  },
+  {
+    name: "Birthday Parties & Decorations",
+    image: partyIcon,
+    slug: "birthday-parties-decorations",
+  },
+  {
+    name: "Sports Academies & Coaching",
+    image: football,
+    slug: "sports-academies-coaching",
+  },
+  {
+    name: "Workshops & Short Courses",
+    image: document,
+    slug: "workshops-short-courses",
+  },
 ];
 
 export default function HomeTravel() {
   const navigate = useNavigate();
 
   return (
-    <section className="mt-8">
+    <section className="">
       <div className="mx-auto max-w-full px-2 sm:px-4 mb-10">
         <h3 className="text-[32px] font-semibold text-black sm:text-2xl tracking-wide">
           Popular in travel
         </h3>
-      
+
         <div className="mt-6 grid grid-cols-3 gap-6 sm:grid-cols-7">
           {mindItems.map((item) => (
             <button

@@ -18,7 +18,7 @@ const VendorBookingDetail = () => {
   }, [dispatch, bookingId]);
 
   const booking = useMemo(
-    () => bookings?.find((row) => row.id === bookingId),
+    () => bookings?.find((row) => row.bookingId === bookingId || row.id === bookingId),
     [bookings, bookingId],
   );
 

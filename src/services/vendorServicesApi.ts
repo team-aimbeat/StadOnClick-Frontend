@@ -50,8 +50,8 @@ export interface CreateVendorServicePayload {
   categoryId: string;
   title: string;
   description: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   refundPolicy: RefundPolicyInput;
 }
 
@@ -70,6 +70,7 @@ export interface UpdateVendorServicePayload {
 export const vendorServicesApi = createApi({
   reducerPath: "vendorServicesApi",
   baseQuery: baseQueryWithReauth,
+  tagTypes: ["VendorServices"],
   endpoints: (builder) => ({
     createVendorService: builder.mutation<VendorServiceEntity, CreateVendorServicePayload>({
       query: (body) => ({
@@ -77,6 +78,7 @@ export const vendorServicesApi = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags: ["VendorServices"],
     }),
     updateVendorService: builder.mutation<VendorServiceEntity, UpdateVendorServicePayload>({
       query: ({ id, ...body }) => ({
@@ -84,6 +86,7 @@ export const vendorServicesApi = createApi({
         method: "PUT",
         body,
       }),
+      invalidatesTags: ["VendorServices"],
     }),
     getVendorServices: builder.query<VendorServiceEntity[], string | void>({
       query: (vendorId) =>
@@ -102,6 +105,7 @@ export const vendorServicesApi = createApi({
           reviews: s.reviews,
           refundPolicy: s.refundPolicy,
         })),
+      providesTags: ["VendorServices"],
     }),
     getVendorProfileStatus: builder.query<any, void>({
       query: () => "/vendor/onboarding/status",

@@ -28,7 +28,14 @@ export const adminVendorApi = createApi({
      */
     listAllVendors: builder.query<
       { data: Vendor[]; meta?: { total?: number } },
-      { page?: number; limit?: number; sortBy?: string; sortOrder?: "asc" | "desc" } | void
+      {
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+        sortOrder?: "asc" | "desc";
+        search?: string;
+        status?: "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED";
+      } | void
     >({
       query: (params) => ({
         url: "/admin/vendors",
@@ -80,6 +87,16 @@ export const adminVendorApi = createApi({
       }),
       invalidatesTags: ["AdminVendors", "AdminVendorApplications"],
     }),
+    getVendorProfileById: builder.query<
+      { success: boolean; data: { vendor: Vendor; service: any; recentBookings: any[] } },
+      string
+    >({
+      query: (id) => ({
+        url: `/admin/vendors/${id}/profile`,
+        method: "GET",
+      }),
+      providesTags: ["AdminVendors"],
+    }),
   }),
 });
 
@@ -89,4 +106,5 @@ export const {
   useApproveVendorApplicationMutation,
   useRejectVendorApplicationMutation,
   useUpdateVendorStatusMutation,
+  useGetVendorProfileByIdQuery,
 } = adminVendorApi;

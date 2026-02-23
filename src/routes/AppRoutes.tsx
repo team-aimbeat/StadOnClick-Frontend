@@ -44,6 +44,7 @@ import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
 import AffiliatesPage from "@/pages/Admin/Affiliates/AffiliatesPage";
+import CustomersPage from "@/pages/Admin/Customers/CustomersPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 
@@ -56,7 +57,11 @@ import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
 import AdminNotFound from "@/pages/Admin/AdminNotFound";
 import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
+import VendorProfileAdminPage from "@/pages/Admin/Vendors/VendorProfileAdminPage";
 import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
+import VendorSubscriptionsPage from "@/pages/Admin/leads/VendorSubscriptionsPage";
+import AdminServicesPage from "@/pages/Admin/Services/AdminServicesPage";
+import AdminOfferingsPage from "@/pages/Admin/Offerings/AdminOfferingsPage";
 import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
 import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
 import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
@@ -230,8 +235,18 @@ const appRouter = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: "vendors/:vendorId/profile",
+            element: <VendorProfileAdminPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: "affiliates",
             element: <AffiliatesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "customers",
+            element: <CustomersPage />,
             errorElement: <ErrorPage />,
           },
           {
@@ -272,6 +287,11 @@ const appRouter = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: "leads/subscriptions",
+            element: <VendorSubscriptionsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: "coupons",
             element: <AdminCouponsPage />,
             errorElement: <ErrorPage />,
@@ -279,6 +299,16 @@ const appRouter = createBrowserRouter([
           {
             path: "bookings",
             element: <AdminBookingsPage defaultStatusFilter="all" />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "services",
+            element: <AdminServicesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "offerings",
+            element: <AdminOfferingsPage />,
             errorElement: <ErrorPage />,
           },
           {
