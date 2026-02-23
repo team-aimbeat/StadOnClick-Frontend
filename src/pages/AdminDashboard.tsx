@@ -464,8 +464,9 @@ const AdminDashboard: React.FC = () => {
                 height={260}
                 primaryColor="#2563EB"
                 secondaryColor="#F97316"
-                primaryLabel="Current Week"
-                secondaryLabel="Last Week"
+                primaryLabel={`Current Year (${new Date().getFullYear()})`}
+                secondaryLabel={`Last Year (${new Date().getFullYear() - 1})`}
+                growthText="vs last year"
                 showLegend
                 showPeriodSelect={false}
                 className="h-full"
