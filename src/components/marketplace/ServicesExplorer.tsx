@@ -40,30 +40,44 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
       ? [service.thumbnailUrl]
       : []
 
-    return {
-      id: service.id,
-      title: service.vendorName || service.title,
-      location: service.cityName ?? "—",
-      rating: service.ratingAvg,
-      reviews: service.ratingCount,
-      image: images[0] ?? bannerImage,
-      images,
-      slug: slugifyServiceTitle(service.title),
-      categoryName: service.categoryName ?? "—",
-      categoryId: service.categoryId,
-      details: (service.offeringsPreview ?? []).map((offering) => ({
-      title: offering.name,
-      subtitle: offering.description ?? undefined,
-      duration: offering.durationLabel ?? undefined,
-      price: formatMoney(offering.salePrice ?? offering.basePrice, offering.currency ?? "INR"),
-      compareAtPrice:
-        offering.basePrice > offering.salePrice
-          ? formatMoney(offering.basePrice, offering.currency ?? "INR")
-          : undefined,
-    })),
+  const details = (service.offeringsPreview ?? []).map((offering) => ({
+    title: offering.name,
+    subtitle: offering.description ?? undefined,
+    duration: offering.durationLabel ?? undefined,
+    price: formatMoney(offering.salePrice ?? offering.basePrice, offering.currency ?? "INR"),
+    compareAtPrice:
+      offering.basePrice > offering.salePrice
+        ? formatMoney(offering.basePrice, offering.currency ?? "INR")
+        : undefined,
+  }))
+
+  const fallbackPrice =
+    service.priceMin != null ? formatMoney(service.priceMin, "SEK") : "Price on request"
+
+  return {
+    id: service.id,
+    vendorId: service.vendorId,
+    title: service.title || service.vendorName,
+    location: service.cityName ?? "-",
+    rating: service.ratingAvg,
+    reviews: service.ratingCount,
+    image: images[0] ?? bannerImage,
+    images,
+    slug: slugifyServiceTitle(service.title),
+    categoryName: service.categoryName ?? "-",
+    categoryId: service.categoryId,
+    details:
+      details.length > 0
+        ? details
+        : [
+            {
+              title: service.title || "Service details",
+              subtitle: "Offering details will be available soon",
+              price: fallbackPrice,
+            },
+          ],
   }
 }
-
 export type ServicesExplorerProps = {
   services?: Service[]
   headerTitle?: string
@@ -404,3 +418,5 @@ export default function ServicesExplorer({
     </section>
   )
 }
+
+

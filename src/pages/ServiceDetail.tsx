@@ -109,6 +109,11 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 });
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
+const formatRuleLabel = (value?: string | null) =>
+  String(value ?? "")
+    .replace(/_/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 
 const resolveReviewerImageUrl = (review: {
   user?: {
@@ -621,7 +626,7 @@ export default function ServiceDetail() {
     String(service?.category?.slug ?? "").toLowerCase() === "movie-bookings" ||
     String(matchedMarketplaceService?.categoryName ?? "").toLowerCase() ===
       "movie bookings";
-  const currentServiceId = service?.id;
+  const currentServiceId = matchedMarketplaceService?.id ?? service?.id;
 
   // 2. Fetch Media (isolated)
   const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(
@@ -640,6 +645,26 @@ export default function ServiceDetail() {
     useGetServiceOfferingsQuery(currentServiceId ?? "", {
       skip: !currentServiceId,
     });
+  const serviceOfferingsFallback = useMemo<VendorOffering[]>(() => {
+    const list = service?.offerings ?? [];
+    return list.map((offering) => ({
+      id: offering.id,
+      serviceId: offering.serviceId ?? currentServiceId ?? "",
+      name: offering.name,
+      description: offering.description ?? null,
+      bookingUrl: offering.bookingUrl ?? null,
+      usesSlots: false,
+      basePrice: Number(offering.basePrice ?? 0),
+      salePrice: Number(offering.salePrice ?? 0),
+      currency: offering.currency ?? "SEK",
+      maxQuantity: offering.maxQuantity ?? null,
+      remainingQuantity: offering.remainingQuantity ?? null,
+      slots: [],
+      rules: [],
+    }));
+  }, [currentServiceId, service?.offerings]);
+  const effectiveOfferings =
+    (offerings?.length ?? 0) > 0 ? offerings ?? [] : serviceOfferingsFallback;
   const { data: vendorCoupons = [] } = useGetPublicVendorCouponsQuery(
     vendorId ?? "",
     { skip: !vendorId },
@@ -671,7 +696,7 @@ export default function ServiceDetail() {
 
   const descriptionRules = useMemo(() => {
     const seen = new Map<string, { label: string; value?: string | null }>();
-    for (const offering of offerings ?? []) {
+    for (const offering of effectiveOfferings ?? []) {
       for (const rule of offering.rules ?? []) {
         const key = `${rule.ruleType}:${rule.value ?? ""}`;
         if (!seen.has(key)) {
@@ -683,7 +708,13 @@ export default function ServiceDetail() {
       }
     }
     return Array.from(seen.values());
-  }, [offerings]);
+  }, [effectiveOfferings]);
+  const marketplaceOfferingsPreview =
+    matchedMarketplaceService?.offeringsPreview ?? [];
+  const hasLiveOfferings = (effectiveOfferings?.length ?? 0) > 0;
+  const packagesCount = hasLiveOfferings
+    ? effectiveOfferings?.length ?? 0
+    : marketplaceOfferingsPreview.length;
 
   const handleSubmitReview = async () => {
     if (!currentServiceId) return;
@@ -956,7 +987,7 @@ export default function ServiceDetail() {
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-slate-500">
-                  {offerings?.length || 0} packages
+                  {packagesCount} packages
                 </span>
               </div>
               <div className="mt-4 flex gap-3">
@@ -978,31 +1009,71 @@ export default function ServiceDetail() {
               <div className="mt-5">
                 {activeTab === "services" ? (
                   <div className="space-y-4">
-                    {offerings?.map((offering) => {
-                      const isMovieBookingOffering = isMovieBookingService;
-                      const slotCount = offering.slots?.length ?? 0;
-                      const requiresSlot = offering.usesSlots || slotCount > 0;
-                      const outOfStock =
-                        !requiresSlot &&
-                        offering.remainingQuantity !== null &&
-                        offering.remainingQuantity <= 0;
-                      const missingBookingUrl =
-                        isMovieBookingOffering && !offering.bookingUrl?.trim();
-                      const buttonLabel = isMovieBookingOffering
-                        ? missingBookingUrl
-                          ? "Booking unavailable"
-                          : "Book now"
-                        : requiresSlot
-                          ? slotCount > 0
-                            ? "Book"
-                            : "Slots unavailable"
-                          : outOfStock
-                            ? "Out of stock"
-                            : "Add to cart";
-                      const isSlotUnavailable =
-                        missingBookingUrl ||
-                        ((requiresSlot && slotCount === 0) || outOfStock);
-                      return (
+                    {hasLiveOfferings ? (
+                      effectiveOfferings?.map((offering) => {
+                        const isMovieBookingOffering = isMovieBookingService;
+                        const slotCount = offering.slots?.length ?? 0;
+                        const requiresSlot = offering.usesSlots || slotCount > 0;
+                        const outOfStock =
+                          !requiresSlot &&
+                          offering.remainingQuantity !== null &&
+                          offering.remainingQuantity <= 0;
+                        const missingBookingUrl =
+                          isMovieBookingOffering && !offering.bookingUrl?.trim();
+                        const buttonLabel = isMovieBookingOffering
+                          ? missingBookingUrl
+                            ? "Booking unavailable"
+                            : "Book now"
+                          : requiresSlot
+                            ? slotCount > 0
+                              ? "Book"
+                              : "Slots unavailable"
+                            : outOfStock
+                              ? "Out of stock"
+                              : "Add to cart";
+                        const isSlotUnavailable =
+                          missingBookingUrl ||
+                          ((requiresSlot && slotCount === 0) || outOfStock);
+                        return (
+                          <div
+                            key={offering.id}
+                            className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                          >
+                            <div>
+                              <p className="text-base font-semibold text-slate-900">
+                                {offering.name}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {offering.id}
+                              </p>
+                              <p className="text-xs font-semibold text-slate-400">
+                                Max Qty: {offering.maxQuantity || "N/A"}
+                              </p>
+                              <p className="text-xs font-semibold text-slate-400">
+                                Remaining: {offering.remainingQuantity ?? "N/A"}
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-3">
+                              <span className="text-lg font-bold text-slate-900">
+                                ${offering.salePrice}
+                              </span>
+                              <button
+                                className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
+                                  isSlotUnavailable
+                                    ? "bg-slate-300 cursor-not-allowed opacity-60"
+                                    : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
+                                }`}
+                                disabled={isSlotUnavailable}
+                                onClick={() => handleBookClick(offering)}
+                              >
+                                {buttonLabel}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : marketplaceOfferingsPreview.length > 0 ? (
+                      marketplaceOfferingsPreview.map((offering) => (
                         <div
                           key={offering.id}
                           className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
@@ -1011,35 +1082,38 @@ export default function ServiceDetail() {
                             <p className="text-base font-semibold text-slate-900">
                               {offering.name}
                             </p>
-                            <p className="text-xs text-slate-500">
-                              {offering.id}
-                            </p>
-                            <p className="text-xs font-semibold text-slate-400">
-                              Max Qty: {offering.maxQuantity || "N/A"}
-                            </p>
-                            <p className="text-xs font-semibold text-slate-400">
-                              Remaining: {offering.remainingQuantity ?? "N/A"}
-                            </p>
+                            {offering.description ? (
+                              <p className="text-xs text-slate-500">
+                                {offering.description}
+                              </p>
+                            ) : null}
+                            {offering.durationLabel ? (
+                              <p className="text-xs font-semibold text-slate-400">
+                                Duration: {offering.durationLabel}
+                              </p>
+                            ) : null}
                           </div>
                           <div className="flex flex-col items-end gap-3">
                             <span className="text-lg font-bold text-slate-900">
-                              ${offering.salePrice}
+                              {formatCurrency(
+                                Number(offering.salePrice ?? offering.basePrice ?? 0),
+                              )}
                             </span>
                             <button
-                              className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
-                                isSlotUnavailable
-                                  ? "bg-slate-300 cursor-not-allowed opacity-60"
-                                  : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
-                              }`}
-                              disabled={isSlotUnavailable}
-                              onClick={() => handleBookClick(offering)}
+                              className="min-w-[30px] cursor-not-allowed rounded-lg border border-slate-200 bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-500 opacity-80"
+                              disabled
+                              type="button"
                             >
-                              {buttonLabel}
+                              Available soon
                             </button>
                           </div>
                         </div>
-                      );
-                    })}
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
+                        No service packages are available yet for this listing.
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
