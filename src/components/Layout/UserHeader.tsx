@@ -26,14 +26,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clearAuth } from "@/features/auth/authSlice";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import AffiliateProgramConfirmationDialog from "@/components/modals/AffiliateProgramConfirmationDialog";
+import BusinessConfirmationDialog from "@/components/modals/BusinessConfirmationDialog";
 import { useLogoutMutation } from "@/features/auth/api/authApi";
 import {
   useGetNotificationsQuery,
@@ -614,23 +608,7 @@ export default function UserHeader() {
           <div className="hidden flex-wrap items-center gap-3 text-xs font-semibold sm:flex">
             <button
               type="button"
-              onClick={() => {
-                setCartMenuOpen(false);
-                setNotificationsMenuOpen(false);
-                setProfileMenuOpen(false);
-                if (!user) {
-                  navigate("/sign-in");
-                  return;
-                }
-
-                const isVendor = (user.roles ?? []).includes("VENDOR");
-                if (isVendor) {
-                  navigate(user.nextAction || "/vendor/dashboard");
-                  return;
-                }
-
-                navigate("/business/onboarding");
-              }}
+              onClick={handleBusinessProgramClick}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Business with StadOnClick"
             >
@@ -640,19 +618,7 @@ export default function UserHeader() {
                      
             <button
               type="button"
-              onClick={() => {
-                setCartMenuOpen(false);
-                setNotificationsMenuOpen(false);
-                setProfileMenuOpen(false);
-                if (!user) {
-                  navigate("/sign-in");
-                  return;
-                }
-                const isAffiliate = (user.roles ?? []).includes("AFFILIATE");
-                navigate(
-                  isAffiliate ? "/affiliate/dashboard" : "/affiliate-marketing",
-                );
-              }}
+              onClick={handleAffiliateProgramClick}
               className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
               aria-label="Affiliate Program"
             >
@@ -1191,151 +1157,16 @@ export default function UserHeader() {
           </AnimatePresence>
         </div>
       </div>
-<Dialog open={affiliateConfirmOpen} onOpenChange={setAffiliateConfirmOpen}>
-  <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-0  bg-white/90 ">
-
-    {/* Gradient Header */}
-    <div className="relative  bg-blue-800 px-6 py-8 text-white">
-      
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_white,_transparent_60%)]" />
-      
-      <div className="relative z-10 flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-md">
-        <Megaphone/>
-        </div>
-
-        <div>
-          <DialogTitle className="text-xl font-semibold">
-            Become an Affiliate
-          </DialogTitle>
-          <p className="text-sm text-indigo-100 mt-1">
-            Turn your network into recurring revenue
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div className="px-6 py-6 space-y-5">
-
-      <DialogDescription className="text-sm text-slate-600 leading-relaxed">
-        Unlock your affiliate dashboard and start earning commission for every
-        successful booking made through your referral link.
-      </DialogDescription>
-
-      {/* Earnings Highlight Card */}
-      <div className="relative rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 p-5 border border-indigo-100 shadow-sm">
-        <p className="text-xs uppercase tracking-wide text-indigo-500 font-semibold">
-          Earning Potential
-        </p>
-        <p className="text-2xl font-bold text-slate-900 mt-1">
-          Up to 10% Commission
-        </p>
-        <p className="text-xs text-slate-500 mt-1">
-          On every completed booking
-        </p>
-      </div>
-
-      {/* Benefits */}
-      <div className="space-y-2 text-sm text-slate-700">
-        <div className="flex items-center gap-2">
-          <span className="text-indigo-600">✔</span>
-          Unique referral tracking link
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-indigo-600">✔</span>
-          Real-time commission analytics
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-indigo-600">✔</span>
-          Transparent payout reporting
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={() => setAffiliateConfirmOpen(false)}
-          className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
-        >
-          Maybe Later
-        </button>
-
-        <button
-          type="button"
-          onClick={handleConfirmAffiliateSwitch}
-          className="flex-1 rounded-xl  bg-blue-800 px-4 py-2.5 text-sm font-semibold text-white "
-        >
-          Activate & Start Earning
-        </button>
-      </div>
-
-      {/* Small reassurance */}
-      <p className="text-center text-xs text-slate-400 pt-1">
-        You can manage or disable affiliate access anytime.
-      </p>
-
-    </div>
-  </DialogContent>
-</Dialog>
-<Dialog open={businessConfirmOpen} onOpenChange={setBusinessConfirmOpen}>
-  <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden border-0 bg-white/90">
-    <div className="relative bg-emerald-700 px-6 py-8 text-white">
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_white,_transparent_60%)]" />
-      <div className="relative z-10 flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-md">
-          <BriefcaseBusiness />
-        </div>
-        <div>
-          <DialogTitle className="text-xl font-semibold">
-            Business on StadOnClick
-          </DialogTitle>
-          <p className="text-sm text-emerald-100 mt-1">
-            Manage your services and grow your bookings
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div className="px-6 py-6 space-y-5">
-      <DialogDescription className="text-sm text-slate-600 leading-relaxed">
-        Continue to your business workspace to manage profile, offerings, media, bookings, and customer insights.
-      </DialogDescription>
-
-      <div className="space-y-2 text-sm text-slate-700">
-        <div className="flex items-center gap-2">
-          <span className="text-emerald-600">âœ”</span>
-          Manage services and pricing
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-emerald-600">âœ”</span>
-          Track leads, bookings, and payouts
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-emerald-600">âœ”</span>
-          Complete KYC and profile setup
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={() => setBusinessConfirmOpen(false)}
-          className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
-        >
-          Maybe Later
-        </button>
-        <button
-          type="button"
-          onClick={handleConfirmBusinessSwitch}
-          className="flex-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          Continue to Business
-        </button>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
+      <AffiliateProgramConfirmationDialog
+        open={affiliateConfirmOpen}
+        onOpenChange={setAffiliateConfirmOpen}
+        onConfirm={handleConfirmAffiliateSwitch}
+      />
+      <BusinessConfirmationDialog
+        open={businessConfirmOpen}
+        onOpenChange={setBusinessConfirmOpen}
+        onConfirm={handleConfirmBusinessSwitch}
+      />
                
     </header>
   );
