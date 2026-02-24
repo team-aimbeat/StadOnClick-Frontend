@@ -1059,8 +1059,12 @@ const VendorProfile = () => {
                 <p className="mt-3 text-base font-semibold text-slate-900 text-center">
                   {profile?.businessName || businessName || "Your Business"}
                 </p>
-                <p className="mt-0.5 text-sm text-slate-400 text-center">
-                  {profile?.headquarters || headquarters || "Location not set"}
+              
+                <p className="mt-1 text-sm text-slate-500 text-center">
+                  Phone: {profile?.contactPhone || contactPhone || "-"}
+                </p>
+                <p className="mt-0.5 text-semibold text-slate-500 text-center break-all">
+                  Email: {profile?.contactEmail || contactEmail || "-"}
                 </p>
               </div>
 
