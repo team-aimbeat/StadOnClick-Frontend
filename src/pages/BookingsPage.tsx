@@ -152,6 +152,13 @@ export default function BookingsPage({
 
   const listingTitle = titleOverride ?? "Bookings";
   const breadcrumb = breadcrumbOverride ?? "Vendor / Bookings";
+  const isRefundView = useMemo(
+    () =>
+      defaultStatusFilter === "refund" ||
+      defaultStatusFilter === "refunded" ||
+      listingTitle.toLowerCase().includes("refund"),
+    [defaultStatusFilter, listingTitle]
+  );
 
   useEffect(() => {
     dispatch(setPageTitle(listingTitle));
@@ -160,11 +167,12 @@ export default function BookingsPage({
   const totals = useMemo(() => {
     const confirmed = bookingRows.filter((b) => b.status === "CONFIRMED").length;
     const pending = bookingRows.filter((b) => b.status === "PENDING").length;
+    const refunded = bookingRows.filter((b) => b.status === "REFUNDED").length;
     const refundRequested = bookingRows.filter((b) => b.status === "REFUND_REQUESTED").length;
     const completed = bookingRows.filter((b) => b.status === "COMPLETED").length;
     const gross = bookingRows.reduce((sum, b) => sum + b.amount, 0);
 
-    return { confirmed, pending, refundRequested, completed, gross };
+    return { confirmed, pending, refunded, refundRequested, completed, gross };
   }, [bookingRows]);
 
   const columns = useMemo<ColumnConfig[]>(() => [
@@ -359,11 +367,11 @@ export default function BookingsPage({
           accentColor: "blue",
         },
         {
-          title: "Pending",
-          value: totals.pending,
-          subtitle: "Awaiting action",
+          title: isRefundView ? "Refunded" : "Pending",
+          value: isRefundView ? totals.refunded : totals.pending,
+          subtitle: isRefundView ? "Completed refunds" : "Awaiting action",
           icon: HiOutlineClock,
-          accentColor: "yellow",
+          accentColor: isRefundView ? "purple" : "yellow",
         },
         {
           title: "Refund Requests",
