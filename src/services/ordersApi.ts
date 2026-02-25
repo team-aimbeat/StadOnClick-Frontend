@@ -134,6 +134,11 @@ export type OrderReceiptQuery = {
   orderId?: string;
 };
 
+export type RequestOrderRefundPayload = {
+  id: string;
+  reason?: string;
+};
+
 export const ordersApi = createApi({
   reducerPath: "ordersApi",
   baseQuery: baseQueryWithReauth,
@@ -144,11 +149,41 @@ export const ordersApi = createApi({
       providesTags: [{ type: "Order", id: "VENDOR_LIST" }],
     }),
     getMyOrders: builder.query<OrdersResponse, void>({
-      query: () => "vendor/orders/me",
+      query: () => "/orders/me",
       providesTags: (result) =>
         result
-          ? result.data.map((order) => ({ type: "Order" as const, id: order.id }))
+          ? [
+              ...result.data.map((order) => ({ type: "Order" as const, id: order.id })),
+              { type: "Order" as const, id: "LIST" },
+            ]
           : [{ type: "Order", id: "LIST" }],
+    }),
+    requestOrderRefund: builder.mutation<
+      {
+        success: boolean;
+        data: {
+          orderId: string;
+          eligibleBookingCount: number;
+          totalBookingCount: number;
+          ineligibleBookings: Array<{
+            bookingId: string;
+            serviceId: string | null;
+            serviceTitle: string;
+            reason: string;
+          }>;
+        };
+      },
+      RequestOrderRefundPayload
+    >({
+      query: ({ id, reason }) => ({
+        url: `/orders/${id}/refund-request`,
+        method: "PATCH",
+        body: { reason },
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Order", id: "LIST" },
+        { type: "Order", id: arg.id },
+      ],
     }),
     getOrderReceipt: builder.query<OrderReceiptResponse, OrderReceiptQuery>({
       query: (params) => ({
@@ -162,4 +197,9 @@ export const ordersApi = createApi({
   }),
 });
 
-export const { useGetVendorOrdersQuery, useGetMyOrdersQuery, useGetOrderReceiptQuery } = ordersApi;
+export const {
+  useGetVendorOrdersQuery,
+  useGetMyOrdersQuery,
+  useGetOrderReceiptQuery,
+  useRequestOrderRefundMutation,
+} = ordersApi;

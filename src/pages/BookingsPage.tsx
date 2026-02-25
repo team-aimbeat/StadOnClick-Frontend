@@ -14,7 +14,10 @@ import { ActionConfig } from "@/types/Table/action";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import { ListingPage } from "@/components/shared/ListingPage";
-import { useGetBookingsQuery, useUpdateBookingStatusMutation } from "@/services/bookingsApi";
+import {
+  useGetBookingsQuery,
+  useUpdateBookingStatusMutation,
+} from "@/services/bookingsApi";
 
 type BookingsPageProps = {
   defaultStatusFilter?: string;
@@ -27,7 +30,13 @@ export type BookingRow = RowData & {
   id: string;
   customer: string;
   service: string;
-  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "REFUND_REQUESTED";
+  status:
+    | "PENDING"
+    | "CONFIRMED"
+    | "COMPLETED"
+    | "CANCELLED"
+    | "REFUND_REQUESTED"
+    | "REFUNDED";
   startTime: string;
   city: string;
   channel: string;
@@ -74,6 +83,12 @@ const statusTone: Record<
     text: "text-rose-700",
     ring: "ring-rose-200",
     label: "Refund Requested",
+  },
+  REFUNDED: {
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    ring: "ring-purple-200",
+    label: "Refunded",
   },
 };
 
@@ -235,6 +250,7 @@ export default function BookingsPage({
             disabled={
               row.status === "CONFIRMED" ||
               row.status === "COMPLETED" ||
+              row.status === "REFUNDED" ||
               statusUpdatingId === row.bookingId
             }
             className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
@@ -244,7 +260,11 @@ export default function BookingsPage({
           <button
             type="button"
             onClick={() => void updateBookingStatus(row.bookingId, "CANCELLED")}
-            disabled={row.status === "CANCELLED" || statusUpdatingId === row.bookingId}
+            disabled={
+              row.status === "CANCELLED" ||
+              row.status === "REFUNDED" ||
+              statusUpdatingId === row.bookingId
+            }
             className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
           >
             Cancel
@@ -252,7 +272,11 @@ export default function BookingsPage({
           <button
             type="button"
             onClick={() => void updateBookingStatus(row.bookingId, "COMPLETED")}
-            disabled={row.status === "COMPLETED" || statusUpdatingId === row.bookingId}
+            disabled={
+              row.status === "COMPLETED" ||
+              row.status === "REFUNDED" ||
+              statusUpdatingId === row.bookingId
+            }
             className="rounded-full border border-slate-200 px-2 py-1 text-slate-600 disabled:opacity-50"
           >
             Mark completed
@@ -279,6 +303,7 @@ export default function BookingsPage({
         { label: "Completed", value: "completed" },
         { label: "Cancelled", value: "cancelled" },
         { label: "Refund Requested", value: "refund" },
+        { label: "Refunded", value: "refunded" },
       ],
     },
     {
