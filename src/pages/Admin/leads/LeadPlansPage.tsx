@@ -501,19 +501,6 @@ export default function LeadPlansPage() {
     [handleOpenEdit, ToggleActionButton, handleCopyPlanId]
   );
 
-  const summarySlot = (
-    <div className="flex flex-wrap gap-4 text-sm text-slate-600">
-      <span>
-        Total plans <span className="font-semibold text-slate-900">{totalPlans}</span>
-      </span>
-      <span>
-        Active <span className="font-semibold text-slate-900">{activePlans}</span>
-      </span>
-      <span>
-        Inactive <span className="font-semibold text-slate-900">{inactivePlans}</span>
-      </span>
-    </div>
-  );
 
   const headerSlot = (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -537,7 +524,7 @@ export default function LeadPlansPage() {
         breadCrumbTitle="Leads & Monetization"
         description="Manage vendor lead subscription plans (pricing, limits, and activation)."
         headerSlot={headerSlot}
-        summarySlot={summarySlot}
+       
         stats={stats}
         tableProps={{
           data: processedPlans,

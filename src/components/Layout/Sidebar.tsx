@@ -214,7 +214,6 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Coupons"), to: withBase("coupons") },
           { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
           { label: t("Sponsorship Plans"), to: withBase("finance/sponsorship-plans") },
-          { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
         ],
       },
       {
