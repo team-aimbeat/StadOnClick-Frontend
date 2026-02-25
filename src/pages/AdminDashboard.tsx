@@ -412,8 +412,12 @@ const AdminDashboard: React.FC = () => {
     const rows = vendorApplicationsResponse?.data ?? [];
     return rows.slice(0, 5).map((application: any) => ({
       vendor: application.vendor?.businessName ?? "Vendor",
-      city: application.vendor?.city?.name ?? "Unknown",
+      status: application.status ?? application.vendor?.status,
       appliedAt: formatRelativeTime(application.submittedAt),
+      profileImageUrl:
+        application.vendor?.user?.profileImageUrl ??
+        application.vendor?.profileImageUrl ??
+        undefined,
     }));
   }, [vendorApplicationsResponse?.data]);
 
