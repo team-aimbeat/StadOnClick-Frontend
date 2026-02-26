@@ -74,6 +74,10 @@ import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorE
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
+import HomeSectionsStudio from "@/pages/Admin/catalog/HomeSectionsStudio";
+import HomeHeroStudio from "@/pages/Admin/catalog/HomeHeroStudio";
+import HomeDealsStudio from "@/pages/Admin/catalog/HomeDealsStudio";
+import HomeOtherSectionsStudio from "@/pages/Admin/catalog/HomeOtherSectionsStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
@@ -381,6 +385,26 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/:tab",
             element: <PreferencesStudio />,
+          },
+          {
+            path: "catalog/home-page",
+            element: <Navigate to="/admin/catalog/home-sections" replace />,
+          },
+          {
+            path: "catalog/home-sections",
+            element: <HomeSectionsStudio />,
+          },
+          {
+            path: "catalog/home-sections/hero",
+            element: <HomeHeroStudio />,
+          },
+          {
+            path: "catalog/home-sections/deals",
+            element: <HomeDealsStudio />,
+          },
+          {
+            path: "catalog/home-sections/other",
+            element: <HomeOtherSectionsStudio />,
           },
           {
             path: "system/health",
