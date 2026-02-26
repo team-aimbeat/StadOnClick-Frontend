@@ -35,6 +35,7 @@ type HeroDynamicContent = {
 const HERO_BANNER_COUNT = 7;
 const ADVERTISE_IMAGE_COUNT = 5;
 const BLOG_CARD_COUNT = 4;
+const TRENDING_CARD_COUNT = 4;
 
 function normalizeHeroBanners(input: unknown): string[] {
   const raw = Array.isArray(input) ? input.map((item) => String(item || "")) : [];
@@ -66,6 +67,20 @@ type BlogsDynamicContent = {
   items: BlogCardContent[];
 };
 
+type TrendingCardContent = {
+  title: string;
+  offers: string;
+  price: string;
+  image: string;
+  link: string;
+};
+
+type TrendingDynamicContent = {
+  heading: string;
+  backgroundImage: string;
+  places: TrendingCardContent[];
+};
+
 function normalizeBlogsContent(input: unknown): BlogsDynamicContent {
   const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
   const rawItems = Array.isArray(source.items) ? source.items : [];
@@ -85,6 +100,27 @@ function normalizeBlogsContent(input: unknown): BlogsDynamicContent {
     title: typeof source.title === "string" ? source.title : "",
     subtitle: typeof source.subtitle === "string" ? source.subtitle : "",
     items,
+  };
+}
+
+function normalizeTrendingContent(input: unknown): TrendingDynamicContent {
+  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const rawPlaces = Array.isArray(source.places) ? source.places : [];
+  const places = Array.from({ length: TRENDING_CARD_COUNT }, (_, index) => {
+    const raw = rawPlaces[index] as Record<string, unknown> | undefined;
+    return {
+      title: typeof raw?.title === "string" ? raw.title : "",
+      offers: typeof raw?.offers === "string" ? raw.offers : "",
+      price: typeof raw?.price === "string" ? raw.price : "",
+      image: typeof raw?.image === "string" ? raw.image : "",
+      link: typeof raw?.link === "string" ? raw.link : "",
+    };
+  });
+
+  return {
+    heading: typeof source.heading === "string" ? source.heading : "",
+    backgroundImage: typeof source.backgroundImage === "string" ? source.backgroundImage : "",
+    places,
   };
 }
 
@@ -154,6 +190,9 @@ export default function Home() {
     images: normalizeAdvertiseImages(undefined),
   });
   const [blogsContent, setBlogsContent] = useState<BlogsDynamicContent>(normalizeBlogsContent(undefined));
+  const [trendingContent, setTrendingContent] = useState<TrendingDynamicContent>(
+    normalizeTrendingContent(undefined),
+  );
 
   useEffect(() => {
     dispatch(setPageTitle("Home"));
@@ -179,6 +218,10 @@ export default function Home() {
       const blogs = (previewPayload as Record<string, unknown>).blogs;
       if (blogs && typeof blogs === "object") {
         setBlogsContent(normalizeBlogsContent(blogs));
+      }
+      const homeTrending = (previewPayload as Record<string, unknown>).homeTrending;
+      if (homeTrending && typeof homeTrending === "object") {
+        setTrendingContent(normalizeTrendingContent(homeTrending));
       }
     }
 
@@ -209,6 +252,10 @@ export default function Home() {
             if (blogs && typeof blogs === "object") {
               setBlogsContent(normalizeBlogsContent(blogs));
             }
+            const homeTrending = (cmsPayload as Record<string, unknown>).homeTrending;
+            if (homeTrending && typeof homeTrending === "object") {
+              setTrendingContent(normalizeTrendingContent(homeTrending));
+            }
           }
           return;
         }
@@ -234,6 +281,10 @@ export default function Home() {
           const blogs = (legacyPayload as Record<string, unknown>).blogs;
           if (blogs && typeof blogs === "object") {
             setBlogsContent(normalizeBlogsContent(blogs));
+          }
+          const homeTrending = (legacyPayload as Record<string, unknown>).homeTrending;
+          if (homeTrending && typeof homeTrending === "object") {
+            setTrendingContent(normalizeTrendingContent(homeTrending));
           }
         }
       } catch {
@@ -263,6 +314,10 @@ export default function Home() {
         const blogs = (payload as Record<string, unknown>).blogs;
         if (blogs && typeof blogs === "object") {
           setBlogsContent(normalizeBlogsContent(blogs));
+        }
+        const homeTrending = (payload as Record<string, unknown>).homeTrending;
+        if (homeTrending && typeof homeTrending === "object") {
+          setTrendingContent(normalizeTrendingContent(homeTrending));
         }
       }
     };
@@ -323,7 +378,7 @@ export default function Home() {
 
         <LazySection minHeight={560}>
           <Suspense fallback={<SectionSkeleton height={560} />}>
-            <HomeTrending />
+            <HomeTrending content={trendingContent} />
           </Suspense>
         </LazySection>
 

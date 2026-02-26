@@ -79,6 +79,7 @@ import HomeHeroStudio from "@/pages/Admin/catalog/HomeHeroStudio";
 import HomeDealsStudio from "@/pages/Admin/catalog/HomeDealsStudio";
 import HomeOtherSectionsStudio from "@/pages/Admin/catalog/HomeOtherSectionsStudio";
 import HomeBlogsStudio from "@/pages/Admin/catalog/HomeBlogsStudio";
+import HomeTrendingStudio from "@/pages/Admin/catalog/HomeTrendingStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
@@ -402,6 +403,10 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/home-sections/deals",
             element: <HomeDealsStudio />,
+          },
+          {
+            path: "catalog/home-sections/trending",
+            element: <HomeTrendingStudio />,
           },
           {
             path: "catalog/home-sections/other",

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 
 const SECTION_KEYS = [
   { key: "homeCategories", label: "Categories Section" },
-  { key: "homeTrending", label: "Trending Section" },
   { key: "homeMind", label: "What's On Mind Section" },
   { key: "homeTravel", label: "Travel Section" },
   { key: "homeSightseeing", label: "Sightseeing Section" },
