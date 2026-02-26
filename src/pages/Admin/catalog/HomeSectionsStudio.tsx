@@ -10,7 +10,7 @@ export default function HomeSectionsStudio() {
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Section Pages</h2>
         <p className="text-sm text-slate-600">Open each child page to edit section-wise content.</p>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-4">
           <Link to="/admin/catalog/home-sections/hero" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Hero Section</p>
             <p className="mt-1 text-xs text-slate-600">Heading, subheading, banners, popular chips.</p>
@@ -19,9 +19,13 @@ export default function HomeSectionsStudio() {
             <p className="text-sm font-semibold text-slate-900">Deals Section</p>
             <p className="mt-1 text-xs text-slate-600">Edit only deals content JSON.</p>
           </Link>
+          <Link to="/admin/catalog/home-sections/blogs" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">Blogs Section</p>
+            <p className="mt-1 text-xs text-slate-600">Edit blogs heading, cards, and images.</p>
+          </Link>
           <Link to="/admin/catalog/home-sections/other" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Other Sections</p>
-            <p className="mt-1 text-xs text-slate-600">Categories, trending, blogs, travel, and more.</p>
+            <p className="mt-1 text-xs text-slate-600">Categories, trending, travel, and more.</p>
           </Link>
         </div>
       </section>

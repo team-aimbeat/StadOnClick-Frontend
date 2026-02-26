@@ -34,6 +34,7 @@ type HeroDynamicContent = {
 
 const HERO_BANNER_COUNT = 7;
 const ADVERTISE_IMAGE_COUNT = 5;
+const BLOG_CARD_COUNT = 4;
 
 function normalizeHeroBanners(input: unknown): string[] {
   const raw = Array.isArray(input) ? input.map((item) => String(item || "")) : [];
@@ -49,6 +50,43 @@ type AdvertiseDynamicContent = {
   images: string[];
   [key: string]: unknown;
 };
+
+type BlogCardContent = {
+  name: string;
+  role: string;
+  description: string;
+  profileImage: string;
+  coverImage: string;
+  buttonText: string;
+};
+
+type BlogsDynamicContent = {
+  title: string;
+  subtitle: string;
+  items: BlogCardContent[];
+};
+
+function normalizeBlogsContent(input: unknown): BlogsDynamicContent {
+  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const rawItems = Array.isArray(source.items) ? source.items : [];
+  const items = Array.from({ length: BLOG_CARD_COUNT }, (_, index) => {
+    const raw = rawItems[index] as Record<string, unknown> | undefined;
+    return {
+      name: typeof raw?.name === "string" ? raw.name : "",
+      role: typeof raw?.role === "string" ? raw.role : "",
+      description: typeof raw?.description === "string" ? raw.description : "",
+      profileImage: typeof raw?.profileImage === "string" ? raw.profileImage : "",
+      coverImage: typeof raw?.coverImage === "string" ? raw.coverImage : "",
+      buttonText: typeof raw?.buttonText === "string" ? raw.buttonText : "",
+    };
+  });
+
+  return {
+    title: typeof source.title === "string" ? source.title : "",
+    subtitle: typeof source.subtitle === "string" ? source.subtitle : "",
+    items,
+  };
+}
 
 function toHeroContentFromPayload(payload: unknown): HeroDynamicContent | null {
   if (!payload || typeof payload !== "object") return null;
@@ -115,6 +153,7 @@ export default function Home() {
   const [advertiseContent, setAdvertiseContent] = useState<AdvertiseDynamicContent>({
     images: normalizeAdvertiseImages(undefined),
   });
+  const [blogsContent, setBlogsContent] = useState<BlogsDynamicContent>(normalizeBlogsContent(undefined));
 
   useEffect(() => {
     dispatch(setPageTitle("Home"));
@@ -136,6 +175,10 @@ export default function Home() {
           ...next,
           images: normalizeAdvertiseImages(next.images),
         });
+      }
+      const blogs = (previewPayload as Record<string, unknown>).blogs;
+      if (blogs && typeof blogs === "object") {
+        setBlogsContent(normalizeBlogsContent(blogs));
       }
     }
 
@@ -162,6 +205,10 @@ export default function Home() {
                 images: normalizeAdvertiseImages(next.images),
               });
             }
+            const blogs = (cmsPayload as Record<string, unknown>).blogs;
+            if (blogs && typeof blogs === "object") {
+              setBlogsContent(normalizeBlogsContent(blogs));
+            }
           }
           return;
         }
@@ -183,6 +230,10 @@ export default function Home() {
               ...next,
               images: normalizeAdvertiseImages(next.images),
             });
+          }
+          const blogs = (legacyPayload as Record<string, unknown>).blogs;
+          if (blogs && typeof blogs === "object") {
+            setBlogsContent(normalizeBlogsContent(blogs));
           }
         }
       } catch {
@@ -208,6 +259,10 @@ export default function Home() {
             ...next,
             images: normalizeAdvertiseImages(next.images),
           });
+        }
+        const blogs = (payload as Record<string, unknown>).blogs;
+        if (blogs && typeof blogs === "object") {
+          setBlogsContent(normalizeBlogsContent(blogs));
         }
       }
     };
@@ -292,7 +347,7 @@ export default function Home() {
 
         <LazySection minHeight={500}>
           <Suspense fallback={<SectionSkeleton height={500} />}>
-            <Blogs />
+            <Blogs content={blogsContent} />
           </Suspense>
         </LazySection>
 

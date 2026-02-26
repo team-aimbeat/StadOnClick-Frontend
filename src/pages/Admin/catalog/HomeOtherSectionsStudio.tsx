@@ -10,7 +10,6 @@ const SECTION_KEYS = [
   { key: "homeTrending", label: "Trending Section" },
   { key: "homeMind", label: "What's On Mind Section" },
   { key: "homeTravel", label: "Travel Section" },
-  { key: "blogs", label: "Blogs Section" },
   { key: "homeSightseeing", label: "Sightseeing Section" },
 ] as const;
 const ADVERTISE_IMAGE_COUNT = 5;
