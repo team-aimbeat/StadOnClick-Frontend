@@ -36,6 +36,7 @@ const HERO_BANNER_COUNT = 7;
 const ADVERTISE_IMAGE_COUNT = 5;
 const BLOG_CARD_COUNT = 4;
 const TRENDING_CARD_COUNT = 4;
+const HOME_DISCOUNT_CARD_COUNT = 5;
 
 function normalizeHeroBanners(input: unknown): string[] {
   const raw = Array.isArray(input) ? input.map((item) => String(item || "")) : [];
@@ -98,6 +99,21 @@ type HomeCategoriesDynamicContent = {
   headingHighlight: string;
   headingSuffix: string;
   cards: HomeCategoryCardContent[];
+};
+
+type HomeDiscountCardContent = {
+  title: string;
+  subtitle: string;
+  price: string;
+  image: string;
+  bgImage: string;
+  slug: string;
+  navigationLink: string;
+};
+
+type HomeDiscountDynamicContent = {
+  heading: string;
+  cards: HomeDiscountCardContent[];
 };
 
 function normalizeBlogsContent(input: unknown): BlogsDynamicContent {
@@ -165,6 +181,28 @@ function normalizeHomeCategories(input: unknown): HomeCategoriesDynamicContent {
     headingPrefix: typeof source.headingPrefix === "string" ? source.headingPrefix : "",
     headingHighlight: typeof source.headingHighlight === "string" ? source.headingHighlight : "",
     headingSuffix: typeof source.headingSuffix === "string" ? source.headingSuffix : "",
+    cards,
+  };
+}
+
+function normalizeHomeDiscount(input: unknown): HomeDiscountDynamicContent {
+  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const rawCards = Array.isArray(source.cards) ? source.cards : [];
+  const cards = Array.from({ length: HOME_DISCOUNT_CARD_COUNT }, (_, index) => {
+    const raw = rawCards[index] as Record<string, unknown> | undefined;
+    return {
+      title: typeof raw?.title === "string" ? raw.title : "",
+      subtitle: typeof raw?.subtitle === "string" ? raw.subtitle : "",
+      price: typeof raw?.price === "string" ? raw.price : "",
+      image: typeof raw?.image === "string" ? raw.image : "",
+      bgImage: typeof raw?.bgImage === "string" ? raw.bgImage : "",
+      slug: typeof raw?.slug === "string" ? raw.slug : "",
+      navigationLink: typeof raw?.navigationLink === "string" ? raw.navigationLink : "",
+    };
+  });
+
+  return {
+    heading: typeof source.heading === "string" ? source.heading : "",
     cards,
   };
 }
@@ -241,6 +279,9 @@ export default function Home() {
   const [homeCategoriesContent, setHomeCategoriesContent] = useState<HomeCategoriesDynamicContent>(
     normalizeHomeCategories(undefined),
   );
+  const [homeDiscountContent, setHomeDiscountContent] = useState<HomeDiscountDynamicContent>(
+    normalizeHomeDiscount(undefined),
+  );
 
   useEffect(() => {
     dispatch(setPageTitle("Home"));
@@ -274,6 +315,10 @@ export default function Home() {
       const homeCategories = (previewPayload as Record<string, unknown>).homeCategories;
       if (homeCategories && typeof homeCategories === "object") {
         setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
+      }
+      const homeDiscount = (previewPayload as Record<string, unknown>).homeDiscount;
+      if (homeDiscount && typeof homeDiscount === "object") {
+        setHomeDiscountContent(normalizeHomeDiscount(homeDiscount));
       }
     }
 
@@ -312,6 +357,10 @@ export default function Home() {
             if (homeCategories && typeof homeCategories === "object") {
               setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
             }
+            const homeDiscount = (cmsPayload as Record<string, unknown>).homeDiscount;
+            if (homeDiscount && typeof homeDiscount === "object") {
+              setHomeDiscountContent(normalizeHomeDiscount(homeDiscount));
+            }
           }
           return;
         }
@@ -345,6 +394,10 @@ export default function Home() {
           const homeCategories = (legacyPayload as Record<string, unknown>).homeCategories;
           if (homeCategories && typeof homeCategories === "object") {
             setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
+          }
+          const homeDiscount = (legacyPayload as Record<string, unknown>).homeDiscount;
+          if (homeDiscount && typeof homeDiscount === "object") {
+            setHomeDiscountContent(normalizeHomeDiscount(homeDiscount));
           }
         }
       } catch {
@@ -382,6 +435,10 @@ export default function Home() {
         const homeCategories = (payload as Record<string, unknown>).homeCategories;
         if (homeCategories && typeof homeCategories === "object") {
           setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
+        }
+        const homeDiscount = (payload as Record<string, unknown>).homeDiscount;
+        if (homeDiscount && typeof homeDiscount === "object") {
+          setHomeDiscountContent(normalizeHomeDiscount(homeDiscount));
         }
       }
     };
@@ -430,7 +487,7 @@ export default function Home() {
 
         <LazySection minHeight={280}>
           <Suspense fallback={<SectionSkeleton height={280} />}>
-            <HomeDiscount />
+            <HomeDiscount content={homeDiscountContent} />
           </Suspense>
         </LazySection>
 

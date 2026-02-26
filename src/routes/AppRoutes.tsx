@@ -77,6 +77,7 @@ import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
 import HomeSectionsStudio from "@/pages/Admin/catalog/HomeSectionsStudio";
 import HomeHeroStudio from "@/pages/Admin/catalog/HomeHeroStudio";
 import HomeDealsStudio from "@/pages/Admin/catalog/HomeDealsStudio";
+import HomeBestDealsStudio from "@/pages/Admin/catalog/HomeBestDealsStudio";
 import HomeOtherSectionsStudio from "@/pages/Admin/catalog/HomeOtherSectionsStudio";
 import HomeBlogsStudio from "@/pages/Admin/catalog/HomeBlogsStudio";
 import HomeTrendingStudio from "@/pages/Admin/catalog/HomeTrendingStudio";
@@ -404,6 +405,10 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/home-sections/deals",
             element: <HomeDealsStudio />,
+          },
+          {
+            path: "catalog/home-sections/best-deals",
+            element: <HomeBestDealsStudio />,
           },
           {
             path: "catalog/home-sections/extra-deals",

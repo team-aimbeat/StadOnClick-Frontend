@@ -258,6 +258,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Home Sections Studio"), to: withBase("catalog/home-sections") },
           { label: t("Hero Section"), to: withBase("catalog/home-sections/hero") },
           { label: t("Deals Section"), to: withBase("catalog/home-sections/deals") },
+          { label: t("Best Deals Section"), to: withBase("catalog/home-sections/best-deals") },
           { label: t("Extra Deals Section"), to: withBase("catalog/home-sections/extra-deals") },
           { label: t("Trending Section"), to: withBase("catalog/home-sections/trending") },
           { label: t("Blogs Section"), to: withBase("catalog/home-sections/blogs") },

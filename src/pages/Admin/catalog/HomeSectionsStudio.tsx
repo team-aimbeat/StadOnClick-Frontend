@@ -10,7 +10,7 @@ export default function HomeSectionsStudio() {
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Section Pages</h2>
         <p className="text-sm text-slate-600">Open each child page to edit section-wise content.</p>
-        <div className="grid gap-3 md:grid-cols-6">
+        <div className="grid gap-3 md:grid-cols-7">
           <Link to="/admin/catalog/home-sections/hero" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Hero Section</p>
             <p className="mt-1 text-xs text-slate-600">Heading, subheading, banners, popular chips.</p>
@@ -18,6 +18,10 @@ export default function HomeSectionsStudio() {
           <Link to="/admin/catalog/home-sections/deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Deals Section</p>
             <p className="mt-1 text-xs text-slate-600">Edit only deals content JSON.</p>
+          </Link>
+          <Link to="/admin/catalog/home-sections/best-deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">Best Deals Section</p>
+            <p className="mt-1 text-xs text-slate-600">Grab best deals heading and cards.</p>
           </Link>
           <Link to="/admin/catalog/home-sections/extra-deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Extra Deals Section</p>
