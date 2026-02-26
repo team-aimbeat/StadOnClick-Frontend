@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from "react";
 import HomeHero from "@/components/shared/home/HomeHero";
 import HomeCategories from "@/components/shared/home/HomeCategories";
+import Blogs from "@/components/shared/home/Blogs";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import LazySection from "@/components/shared/LazySection";
@@ -66,17 +67,24 @@ export default function Home() {
           </Suspense>
         </LazySection>
 
-        <LazySection minHeight={540}>
-          <Suspense fallback={<SectionSkeleton height={540} />}>
+        <LazySection minHeight={340}>
+          <Suspense fallback={<SectionSkeleton height={340} />}>
             <HomeMind />
           </Suspense>
         </LazySection>
 
-        <LazySection minHeight={900}>
-          <Suspense fallback={<SectionSkeleton height={900} />}>
+        <LazySection minHeight={400}>
+          <Suspense fallback={<SectionSkeleton height={400} />}>
             <HomeTravel />
           </Suspense>
         </LazySection>
+
+        <LazySection minHeight={500}>
+          <Suspense fallback={<SectionSkeleton height={500} />}>
+            <Blogs />
+          </Suspense>
+        </LazySection>
+
 
         <LazySection minHeight={620}>
           <Suspense fallback={<SectionSkeleton height={620} />}>
