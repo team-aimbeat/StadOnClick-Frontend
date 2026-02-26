@@ -7,6 +7,7 @@ import banner3 from "@/assets/images/banner3.png";
 import { Search } from "lucide-react";
 
 const banners = [banner1, banner2, banner3];
+const HERO_BANNER_COUNT = 7;
 
 const searchCategories = [
   { label: "Beauty", slug: "salon-deals" },
@@ -26,20 +27,54 @@ const popularChips = [
 
 const locations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad"];
 
-export default function HomeHero() {
+type HomeHeroProps = {
+  heading?: string;
+  subheading?: string;
+  banners?: string[];
+  popularChips?: Array<{ label: string; slug: string }>;
+};
+
+export default function HomeHero({
+  heading,
+  subheading,
+  banners: dynamicBanners,
+  popularChips: dynamicPopularChips,
+}: HomeHeroProps) {
   const navigate = useNavigate();
   const [location] = useState(locations[0]);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [showHeroSearch, setShowHeroSearch] = useState(true);
+  const safeBanners = useMemo(() => {
+    const fallback = Array.from({ length: HERO_BANNER_COUNT }, (_, index) => banners[index % banners.length]);
+    if (!Array.isArray(dynamicBanners) || dynamicBanners.length !== HERO_BANNER_COUNT) {
+      return fallback;
+    }
+    return dynamicBanners.map((item, index) => {
+      const value = String(item || "").trim();
+      return value || fallback[index];
+    });
+  }, [dynamicBanners]);
+  const safePopularChips = useMemo(() => {
+    const incoming = Array.isArray(dynamicPopularChips)
+      ? dynamicPopularChips.filter((chip) => chip?.label && chip?.slug)
+      : [];
+    return incoming.length > 0 ? incoming : popularChips;
+  }, [dynamicPopularChips]);
 
   useEffect(() => {
+    if (!safeBanners.length) return;
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % banners.length);
+      setActiveIndex((prev) => (prev + 1) % safeBanners.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [safeBanners]);
+
+  useEffect(() => {
+    if (activeIndex < safeBanners.length) return;
+    setActiveIndex(0);
+  }, [activeIndex, safeBanners.length]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,7 +105,7 @@ export default function HomeHero() {
   return (
     <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-14 h-[550px] w-screen overflow-hidden">
       {/* BANNERS */}
-      {banners.map((image, index) => (
+      {safeBanners.map((image, index) => (
         <div
           key={index}
           className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
@@ -86,11 +121,11 @@ export default function HomeHero() {
       {/* ================= CONTENT AT VERY BOTTOM ================= */}
       <div className="absolute bottom-8 left-1/2 w-full max-w-5xl -translate-x-1/2 px-6 text-center text-white">
         <h1 className="text-4xl font-semibold sm:text-4xl lg:text-6xl tracking-wide">
-          Discover Services. Book Instantly.
+          {heading?.trim() || "Discover Services. Book Instantly."}
         </h1>
 
         <p className="mt-2 text-sm text-white/80 sm:text-base tracking-wide">
-          Beauty | Sports | Events | Hotels | Vacation
+          {subheading?.trim() || "Beauty | Sports | Events | Hotels | Vacation"}
         </p>
 
         {showHeroSearch && (
@@ -120,9 +155,9 @@ export default function HomeHero() {
         {/* POPULAR */}
         <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm sm:text-base">
           <span className="font-semibold text-white/80 mt-1">Popular:</span>
-          {popularChips.map((chip) => (
+          {safePopularChips.map((chip) => (
             <button
-              key={chip.label}
+              key={`${chip.label}-${chip.slug}`}
               onClick={() => navigate(`/marketplace?category=${chip.slug}`)}
               className="rounded-full bg-black/70 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
             >
@@ -133,7 +168,7 @@ export default function HomeHero() {
 
         {/* DOTS */}
         <div className="mt-5 flex justify-center gap-2">
-          {banners.map((_, i) => (
+          {safeBanners.map((_, i) => (
             <button
               key={i}
               onClick={() => setActiveIndex(i)}
