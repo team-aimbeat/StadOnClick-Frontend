@@ -6,7 +6,6 @@ import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { Button } from "@/components/ui/button";
 
 const SECTION_KEYS = [
-  { key: "homeCategories", label: "Categories Section" },
   { key: "homeMind", label: "What's On Mind Section" },
   { key: "homeTravel", label: "Travel Section" },
   { key: "homeSightseeing", label: "Sightseeing Section" },
@@ -320,7 +319,7 @@ export default function HomeOtherSectionsStudio() {
         </details>
 
         {SECTION_KEYS.map((section) => (
-          <details key={section.key} className="rounded-xl border border-slate-200 bg-white p-3" open={section.key === "homeCategories"}>
+          <details key={section.key} className="rounded-xl border border-slate-200 bg-white p-3" open={section.key === "homeMind"}>
             <summary className="cursor-pointer text-sm font-semibold text-slate-800">{section.label}</summary>
             <textarea
               value={sections[section.key] ?? "{}"}

@@ -81,6 +81,25 @@ type TrendingDynamicContent = {
   places: TrendingCardContent[];
 };
 
+type HomeCategoryCardContent = {
+  category: string;
+  image: string;
+  author: string;
+  title: string;
+  description: string;
+  location: string;
+  price: string;
+  slug: string;
+  restaurantSlug?: string;
+};
+
+type HomeCategoriesDynamicContent = {
+  headingPrefix: string;
+  headingHighlight: string;
+  headingSuffix: string;
+  cards: HomeCategoryCardContent[];
+};
+
 function normalizeBlogsContent(input: unknown): BlogsDynamicContent {
   const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
   const rawItems = Array.isArray(source.items) ? source.items : [];
@@ -121,6 +140,32 @@ function normalizeTrendingContent(input: unknown): TrendingDynamicContent {
     heading: typeof source.heading === "string" ? source.heading : "",
     backgroundImage: typeof source.backgroundImage === "string" ? source.backgroundImage : "",
     places,
+  };
+}
+
+function normalizeHomeCategories(input: unknown): HomeCategoriesDynamicContent {
+  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const rawCards = Array.isArray(source.cards) ? source.cards : [];
+  const cards = Array.from({ length: 5 }, (_, index) => {
+    const raw = rawCards[index] as Record<string, unknown> | undefined;
+    return {
+      category: typeof raw?.category === "string" ? raw.category : "",
+      image: typeof raw?.image === "string" ? raw.image : "",
+      author: typeof raw?.author === "string" ? raw.author : "",
+      title: typeof raw?.title === "string" ? raw.title : "",
+      description: typeof raw?.description === "string" ? raw.description : "",
+      location: typeof raw?.location === "string" ? raw.location : "",
+      price: typeof raw?.price === "string" ? raw.price : "",
+      slug: typeof raw?.slug === "string" ? raw.slug : "",
+      restaurantSlug: typeof raw?.restaurantSlug === "string" ? raw.restaurantSlug : undefined,
+    };
+  });
+
+  return {
+    headingPrefix: typeof source.headingPrefix === "string" ? source.headingPrefix : "",
+    headingHighlight: typeof source.headingHighlight === "string" ? source.headingHighlight : "",
+    headingSuffix: typeof source.headingSuffix === "string" ? source.headingSuffix : "",
+    cards,
   };
 }
 
@@ -193,6 +238,9 @@ export default function Home() {
   const [trendingContent, setTrendingContent] = useState<TrendingDynamicContent>(
     normalizeTrendingContent(undefined),
   );
+  const [homeCategoriesContent, setHomeCategoriesContent] = useState<HomeCategoriesDynamicContent>(
+    normalizeHomeCategories(undefined),
+  );
 
   useEffect(() => {
     dispatch(setPageTitle("Home"));
@@ -222,6 +270,10 @@ export default function Home() {
       const homeTrending = (previewPayload as Record<string, unknown>).homeTrending;
       if (homeTrending && typeof homeTrending === "object") {
         setTrendingContent(normalizeTrendingContent(homeTrending));
+      }
+      const homeCategories = (previewPayload as Record<string, unknown>).homeCategories;
+      if (homeCategories && typeof homeCategories === "object") {
+        setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
       }
     }
 
@@ -256,6 +308,10 @@ export default function Home() {
             if (homeTrending && typeof homeTrending === "object") {
               setTrendingContent(normalizeTrendingContent(homeTrending));
             }
+            const homeCategories = (cmsPayload as Record<string, unknown>).homeCategories;
+            if (homeCategories && typeof homeCategories === "object") {
+              setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
+            }
           }
           return;
         }
@@ -285,6 +341,10 @@ export default function Home() {
           const homeTrending = (legacyPayload as Record<string, unknown>).homeTrending;
           if (homeTrending && typeof homeTrending === "object") {
             setTrendingContent(normalizeTrendingContent(homeTrending));
+          }
+          const homeCategories = (legacyPayload as Record<string, unknown>).homeCategories;
+          if (homeCategories && typeof homeCategories === "object") {
+            setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
           }
         }
       } catch {
@@ -318,6 +378,10 @@ export default function Home() {
         const homeTrending = (payload as Record<string, unknown>).homeTrending;
         if (homeTrending && typeof homeTrending === "object") {
           setTrendingContent(normalizeTrendingContent(homeTrending));
+        }
+        const homeCategories = (payload as Record<string, unknown>).homeCategories;
+        if (homeCategories && typeof homeCategories === "object") {
+          setHomeCategoriesContent(normalizeHomeCategories(homeCategories));
         }
       }
     };
@@ -356,7 +420,7 @@ export default function Home() {
           banners={heroContent?.banners}
           popularChips={heroContent?.popularChips}
         />
-        <HomeCategories />
+        <HomeCategories content={homeCategoriesContent} />
 
         <LazySection minHeight={280}>
           <Suspense fallback={<SectionSkeleton height={280} />}>
