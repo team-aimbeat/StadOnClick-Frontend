@@ -137,7 +137,7 @@ export default function HomeBlogsStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Home Blogs Studio" breadCrumbTitle="Admin / Catalog / Home Sections / Blogs" />
+      <TitleBreadCrumbs title="Home Blogs Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections / Blogs" />
 
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <details className="rounded-xl border border-slate-200 bg-white p-3" open>
@@ -413,3 +413,4 @@ export default function HomeBlogsStudio() {
     </div>
   );
 }
+

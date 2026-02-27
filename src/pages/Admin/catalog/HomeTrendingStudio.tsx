@@ -131,7 +131,7 @@ export default function HomeTrendingStudio() {
     <div className="space-y-6">
       <TitleBreadCrumbs
         title="Home Trending Studio"
-        breadCrumbTitle="Admin / Catalog / Home Sections / Trending"
+        breadCrumbTitle="Admin / Layout Studio / Home Sections / Trending"
       />
 
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -371,3 +371,4 @@ export default function HomeTrendingStudio() {
     </div>
   );
 }
+

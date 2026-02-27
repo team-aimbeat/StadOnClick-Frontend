@@ -184,7 +184,7 @@ export default function HomeHeroStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Home Hero Studio" breadCrumbTitle="Admin / Catalog / Home Hero" />
+      <TitleBreadCrumbs title="Home Hero Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections / Hero" />
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Hero Content</h2>
@@ -415,3 +415,4 @@ export default function HomeHeroStudio() {
     </div>
   );
 }
+

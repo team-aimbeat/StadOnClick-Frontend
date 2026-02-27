@@ -137,7 +137,7 @@ export default function HomeBestDealsStudio() {
     <div className="space-y-6">
       <TitleBreadCrumbs
         title="Home Best Deals Studio"
-        breadCrumbTitle="Admin / Catalog / Home Sections / Best Deals"
+        breadCrumbTitle="Admin / Layout Studio / Home Sections / Best Deals"
       />
 
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -401,3 +401,4 @@ export default function HomeBestDealsStudio() {
     </div>
   );
 }
+

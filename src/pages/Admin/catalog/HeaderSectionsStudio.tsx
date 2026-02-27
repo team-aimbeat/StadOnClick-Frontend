@@ -77,7 +77,7 @@ export default function HeaderSectionsStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Header Sections Studio" breadCrumbTitle="Admin / Catalog / Header Sections" />
+      <TitleBreadCrumbs title="Header Sections Studio" breadCrumbTitle="Admin / Layout Studio / Header Sections" />
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Brand & Search</h2>
@@ -207,7 +207,7 @@ export default function HeaderSectionsStudio() {
 
       <section className="flex flex-wrap items-center gap-2">
         <Button variant="outline" asChild>
-          <Link to="/admin/catalog/header-dropdown">Open Header Dropdown Studio</Link>
+          <Link to="/admin/layout-studio/header-dropdown">Open Header Dropdown Studio</Link>
         </Button>
         <Button onClick={save} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save header changes"}
@@ -216,3 +216,4 @@ export default function HeaderSectionsStudio() {
     </div>
   );
 }
+

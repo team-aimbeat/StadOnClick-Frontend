@@ -144,7 +144,7 @@ export default function HomeExtraDealsStudio() {
     <div className="space-y-6">
       <TitleBreadCrumbs
         title="Home Extra Deals Studio"
-        breadCrumbTitle="Admin / Catalog / Home Sections / Extra Deals"
+        breadCrumbTitle="Admin / Layout Studio / Home Sections / Extra Deals"
       />
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <details className="rounded-xl border border-slate-200 bg-white p-3" open>
@@ -406,3 +406,4 @@ export default function HomeExtraDealsStudio() {
     </div>
   );
 }
+

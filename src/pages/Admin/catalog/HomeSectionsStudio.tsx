@@ -5,49 +5,49 @@ import { Link } from "react-router-dom";
 export default function HomeSectionsStudio() {
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Home Sections Studio" breadCrumbTitle="Admin / Catalog / Home Sections" />
+      <TitleBreadCrumbs title="Home Sections Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections" />
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Section Pages</h2>
         <p className="text-sm text-slate-600">Open each child page to edit section-wise content.</p>
         <div className="grid gap-3 md:grid-cols-10">
-          <Link to="/admin/catalog/home-sections/hero" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/home-sections/hero" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Hero Section</p>
             <p className="mt-1 text-xs text-slate-600">Heading, subheading, banners, popular chips.</p>
           </Link>
-          <Link to="/admin/catalog/home-sections/deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/home-sections/deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Deals Section</p>
             <p className="mt-1 text-xs text-slate-600">Edit only deals content JSON.</p>
           </Link>
-          <Link to="/admin/catalog/home-sections/best-deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/home-sections/best-deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Best Deals Section</p>
             <p className="mt-1 text-xs text-slate-600">Grab best deals heading and cards.</p>
           </Link>
-          <Link to="/admin/catalog/home-sections/extra-deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/home-sections/extra-deals" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Extra Deals Section</p>
             <p className="mt-1 text-xs text-slate-600">Flat up to 50% block heading and category cards.</p>
           </Link>
-          <Link to="/admin/catalog/home-sections/trending" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/home-sections/trending" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Trending Section</p>
             <p className="mt-1 text-xs text-slate-600">Elevated experiences heading, background, and cards.</p>
           </Link>
-          <Link to="/admin/catalog/home-sections/blogs" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/home-sections/blogs" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Blogs Section</p>
             <p className="mt-1 text-xs text-slate-600">Edit blogs heading, cards, and images.</p>
           </Link>
-          <Link to="/admin/catalog/home-sections/other" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/home-sections/other" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Other Sections</p>
             <p className="mt-1 text-xs text-slate-600">Travel, sightseeing, advertise and more.</p>
           </Link>
-          <Link to="/admin/catalog/footer-sections" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/footer-sections" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Footer Sections</p>
             <p className="mt-1 text-xs text-slate-600">Dynamic footer with separate studio pages.</p>
           </Link>
-          <Link to="/admin/catalog/header-sections" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/header-sections" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Header Sections</p>
             <p className="mt-1 text-xs text-slate-600">Dynamic brand, search, actions, and utility links.</p>
           </Link>
-          <Link to="/admin/catalog/header-dropdown" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Link to="/admin/layout-studio/header-dropdown" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Header Dropdown</p>
             <p className="mt-1 text-xs text-slate-600">Dynamic mega-menu badge, title, CTA, and image per category.</p>
           </Link>
@@ -55,7 +55,7 @@ export default function HomeSectionsStudio() {
       </section>
       <section>
         <Button asChild>
-          <Link to="/admin/catalog/home-sections/hero">Open Hero Section</Link>
+          <Link to="/admin/layout-studio/home-sections/hero">Open Hero Section</Link>
         </Button>
       </section>
     </div>

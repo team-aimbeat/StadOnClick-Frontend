@@ -75,7 +75,7 @@ export default function HomeDealsStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Home Deals Studio" breadCrumbTitle="Admin / Catalog / Home Sections / Deals" />
+      <TitleBreadCrumbs title="Home Deals Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections / Deals" />
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Deals Section</h2>
         <textarea
@@ -92,3 +92,4 @@ export default function HomeDealsStudio() {
     </div>
   );
 }
+

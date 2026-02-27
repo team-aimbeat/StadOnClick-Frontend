@@ -206,7 +206,7 @@ export default function HomeOtherSectionsStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Home Other Sections Studio" breadCrumbTitle="Admin / Catalog / Home Sections / Other" />
+      <TitleBreadCrumbs title="Home Other Sections Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections / Other" />
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <details className="rounded-xl border border-slate-200 bg-white p-3" open>
           <summary className="cursor-pointer text-sm font-semibold text-slate-800">Advertise Images (up to 5)</summary>
@@ -433,3 +433,4 @@ export default function HomeOtherSectionsStudio() {
     </div>
   );
 }
+

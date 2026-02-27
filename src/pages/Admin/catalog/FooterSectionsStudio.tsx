@@ -83,7 +83,7 @@ export default function FooterSectionsStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Footer Sections Studio" breadCrumbTitle="Admin / Catalog / Footer Sections" />
+      <TitleBreadCrumbs title="Footer Sections Studio" breadCrumbTitle="Admin / Layout Studio / Footer Sections" />
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -441,3 +441,4 @@ export default function FooterSectionsStudio() {
     </div>
   );
 }
+
