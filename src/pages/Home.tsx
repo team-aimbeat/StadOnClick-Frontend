@@ -60,6 +60,7 @@ type BlogCardContent = {
   profileImage: string;
   coverImage: string;
   buttonText: string;
+  navigationLink: string;
 };
 
 type BlogsDynamicContent = {
@@ -128,6 +129,7 @@ function normalizeBlogsContent(input: unknown): BlogsDynamicContent {
       profileImage: typeof raw?.profileImage === "string" ? raw.profileImage : "",
       coverImage: typeof raw?.coverImage === "string" ? raw.coverImage : "",
       buttonText: typeof raw?.buttonText === "string" ? raw.buttonText : "",
+      navigationLink: typeof raw?.navigationLink === "string" ? raw.navigationLink : "",
     };
   });
 

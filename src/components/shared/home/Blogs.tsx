@@ -14,6 +14,7 @@ type BlogItem = {
   profileImage: string;
   coverImage: string;
   buttonText: string;
+  navigationLink: string;
 };
 
 type BlogsContent = {
@@ -36,6 +37,7 @@ const fallbackItems: BlogItem[] = [
     profileImage: profile1,
     coverImage: cover1,
     buttonText: "Follow",
+    navigationLink: "#",
   },
   {
     name: "Maya Chen",
@@ -44,6 +46,7 @@ const fallbackItems: BlogItem[] = [
     profileImage: profile2,
     coverImage: cover2,
     buttonText: "Follow",
+    navigationLink: "#",
   },
   {
     name: "Hugo Park",
@@ -52,6 +55,7 @@ const fallbackItems: BlogItem[] = [
     profileImage: profile3,
     coverImage: cover3,
     buttonText: "Follow",
+    navigationLink: "#",
   },
   {
     name: "Sofia Allen",
@@ -60,6 +64,7 @@ const fallbackItems: BlogItem[] = [
     profileImage: profile1,
     coverImage: cover4,
     buttonText: "Follow",
+    navigationLink: "#",
   },
 ];
 
@@ -82,6 +87,7 @@ export default function RecentPosts({ content }: BlogsProps) {
         profileImage: String(raw.profileImage ?? "").trim() || fallback.profileImage,
         coverImage: String(raw.coverImage ?? "").trim() || fallback.coverImage,
         buttonText: String(raw.buttonText ?? "").trim() || fallback.buttonText,
+        navigationLink: String(raw.navigationLink ?? "").trim() || fallback.navigationLink,
       };
     });
 
@@ -106,9 +112,10 @@ export default function RecentPosts({ content }: BlogsProps) {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {merged.items.map((profile, index) => (
-            <article
+            <a
               key={`${profile.name}-${index}`}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition hover:-translate-y-2 hover:shadow-lg"
+              href={profile.navigationLink || "#"}
+              className="group block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition hover:-translate-y-2 hover:shadow-lg"
             >
               <div className="relative h-42.5">
                 <img
@@ -125,12 +132,9 @@ export default function RecentPosts({ content }: BlogsProps) {
                     alt={profile.name}
                     className="h-14 w-14 rounded-full border-4 border-white object-cover shadow"
                   />
-                  <button
-                    type="button"
-                    className=" mt-10 rounded-full border border-blue-400 px-4 py-1 text-xs font-semibold text-blue-500 transition hover:border-blue-500 hover:text-blue-600"
-                  >
+                  <span className=" mt-10 inline-flex rounded-full border border-blue-400 px-4 py-1 text-xs font-semibold text-blue-500 transition group-hover:border-blue-500 group-hover:text-blue-600">
                     {profile.buttonText}
-                  </button>
+                  </span>
                 </div>
 
                 <h3 className="mt-3 text-sm font-semibold text-slate-900">
@@ -140,7 +144,7 @@ export default function RecentPosts({ content }: BlogsProps) {
 
                 <p className="mt-4  border-slate-100 pt-3 text-sm text-slate-500">{profile.description}</p>
               </div>
-            </article>
+            </a>
           ))}
         </div>
       </div>
