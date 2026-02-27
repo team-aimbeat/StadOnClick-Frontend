@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ImageIcon, Plus, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -41,6 +41,28 @@ const ADVERTISE_TEXT_FIELDS = [
   { key: "featuredTitle", label: "Featured Title", placeholder: "More Weekend Picks" },
   { key: "featuredCta", label: "Featured CTA", placeholder: "View" },
 ] as const;
+const ADVERTISE_TEXT_GROUPS = [
+  {
+    title: "Left Panel",
+    keys: ["leftBadge", "leftTitleLine1", "leftTitleLine2", "leftDescription", "leftCta"],
+  },
+  {
+    title: "Highlight Block",
+    keys: ["highlightBadge", "highlightTitle", "highlightDescription", "highlightCta"],
+  },
+  {
+    title: "Card One",
+    keys: ["cardOneBadge", "cardOneTitle", "cardOneDescription", "cardOneCta"],
+  },
+  {
+    title: "Card Two",
+    keys: ["cardTwoBadge", "cardTwoTitle", "cardTwoDescription", "cardTwoCta"],
+  },
+  {
+    title: "Featured",
+    keys: ["featuredBadge", "featuredTitle", "featuredCta"],
+  },
+] as const;
 type AdvertiseTextKey = (typeof ADVERTISE_TEXT_FIELDS)[number]["key"];
 type AdvertiseTextState = Record<AdvertiseTextKey, string>;
 
@@ -68,6 +90,14 @@ export default function HomeOtherSectionsStudio() {
     normalizeAdvertiseTexts(undefined),
   );
   const [advertiseUrl, setAdvertiseUrl] = useState("");
+  const filledAdvertiseImages = useMemo(
+    () => advertiseImages.filter((item) => item.trim()).length,
+    [advertiseImages],
+  );
+  const filledAdvertiseTexts = useMemo(
+    () => ADVERTISE_TEXT_FIELDS.filter((field) => advertiseTexts[field.key].trim()).length,
+    [advertiseTexts],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -180,11 +210,17 @@ export default function HomeOtherSectionsStudio() {
         <details className="rounded-xl border border-slate-200 bg-white p-3" open>
           <summary className="cursor-pointer text-sm font-semibold text-slate-800">Advertise Images (up to 5)</summary>
           <div className="mt-3 space-y-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-slate-500">Manage advertise visuals in a compact, card-based layout.</p>
+              <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                {filledAdvertiseImages}/{ADVERTISE_IMAGE_COUNT} filled
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
               <input
                 value={advertiseUrl}
                 onChange={(event) => setAdvertiseUrl(event.target.value)}
-                className="h-10 min-w-[260px] flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm"
+                className="h-10 min-w-[260px] flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm"
                 placeholder="Paste advertise image URL"
               />
               <Button
@@ -208,7 +244,7 @@ export default function HomeOtherSectionsStudio() {
                 <Plus className="mr-2 h-4 w-4" />
                 Add URL
               </Button>
-              <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-dashed border-slate-400 bg-white px-3 text-sm font-medium text-slate-700">
+              <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
                 <Upload className="mr-2 h-4 w-4" />
                 Upload image
                 <input
@@ -238,11 +274,25 @@ export default function HomeOtherSectionsStudio() {
                 />
               </label>
             </div>
-            <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
               {advertiseImages.map((image, index) => (
-                <div key={`advertise-image-${index}`} className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 p-2">
-                  <img src={image || undefined} alt={`advertise-${index + 1}`} className="h-14 w-20 rounded-md object-cover bg-slate-100" />
-                  <p className="min-w-[95px] text-xs font-semibold text-slate-500">Image {index + 1}/5</p>
+                <div
+                  key={`advertise-image-${index}`}
+                  className="group rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="relative mb-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                    {image ? (
+                      <img src={image} alt={`advertise-${index + 1}`} className="aspect-square w-full object-cover" />
+                    ) : (
+                      <div className="flex aspect-square items-center justify-center gap-1 text-slate-400">
+                        <ImageIcon className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">No image</span>
+                      </div>
+                    )}
+                    <p className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                      Image {index + 1}/5
+                    </p>
+                  </div>
                   <input
                     value={image}
                     onChange={(event) =>
@@ -252,66 +302,89 @@ export default function HomeOtherSectionsStudio() {
                         return next;
                       })
                     }
-                    className="h-9 min-w-[240px] flex-1 rounded-lg border border-slate-300 px-2 text-xs"
+                    className="mb-2 h-7 w-full rounded-md border border-slate-300 px-2 text-[11px]"
+                    placeholder="Paste image URL or base64 value"
                   />
-                  <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-2 text-xs font-medium text-slate-700">
-                    Replace
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          if (typeof reader.result !== "string") return;
-                          setAdvertiseImages((prev) => {
-                            const next = [...prev];
-                            next[index] = reader.result as string;
-                            return next;
-                          });
-                        };
-                        reader.readAsDataURL(file);
-                        event.currentTarget.value = "";
-                      }}
-                    />
-                  </label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setAdvertiseImages((prev) => {
-                        const next = [...prev];
-                        next[index] = "";
-                        return next;
-                      })
-                    }
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <label className="inline-flex h-7 flex-1 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-[11px] font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
+                      Replace
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            if (typeof reader.result !== "string") return;
+                            setAdvertiseImages((prev) => {
+                              const next = [...prev];
+                              next[index] = reader.result as string;
+                              return next;
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                    </label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-1.5 text-slate-600 hover:bg-red-50 hover:text-red-600"
+                      onClick={() =>
+                        setAdvertiseImages((prev) => {
+                          const next = [...prev];
+                          next[index] = "";
+                          return next;
+                        })
+                      }
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p className="mb-3 text-sm font-semibold text-slate-800">Advertise Text Content</p>
-              <div className="grid gap-3 md:grid-cols-2">
-                {ADVERTISE_TEXT_FIELDS.map((field) => (
-                  <label key={field.key} className="space-y-1">
-                    <span className="text-xs font-medium text-slate-600">{field.label}</span>
-                    <input
-                      value={advertiseTexts[field.key]}
-                      onChange={(event) =>
-                        setAdvertiseTexts((prev) => ({
-                          ...prev,
-                          [field.key]: event.target.value,
-                        }))
-                      }
-                      className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                      placeholder={field.placeholder}
-                    />
-                  </label>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Advertise Text Content</p>
+                  <p className="text-xs text-slate-500">Grouped editing for faster updates and clearer structure.</p>
+                </div>
+                <p className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                  {filledAdvertiseTexts}/{ADVERTISE_TEXT_FIELDS.length} filled
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {ADVERTISE_TEXT_GROUPS.map((group) => (
+                  <div key={group.title} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{group.title}</p>
+                    <div className="space-y-2">
+                      {group.keys.map((key) => {
+                        const field = ADVERTISE_TEXT_FIELDS.find((item) => item.key === key);
+                        if (!field) return null;
+                        return (
+                          <label key={field.key} className="space-y-1">
+                            <span className="text-xs font-medium text-slate-600">{field.label}</span>
+                            <input
+                              value={advertiseTexts[field.key]}
+                              onChange={(event) =>
+                                setAdvertiseTexts((prev) => ({
+                                  ...prev,
+                                  [field.key]: event.target.value,
+                                }))
+                              }
+                              className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                              placeholder={field.placeholder}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

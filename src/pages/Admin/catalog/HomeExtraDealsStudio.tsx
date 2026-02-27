@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ImageIcon, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -53,6 +53,10 @@ export default function HomeExtraDealsStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
   const [homeCategories, setHomeCategories] = useState<HomeCategoriesState>(normalizeHomeCategories(undefined));
+  const cardsWithImage = useMemo(
+    () => homeCategories.cards.filter((card) => card.image.trim()).length,
+    [homeCategories.cards],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -145,56 +149,81 @@ export default function HomeExtraDealsStudio() {
         <details className="rounded-xl border border-slate-200 bg-white p-3" open>
           <summary className="cursor-pointer text-sm font-semibold text-slate-800">Extra Deals (Categories) Section</summary>
           <div className="mt-3 space-y-3">
-            <div className="grid gap-3 md:grid-cols-3">
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-slate-600">Heading Prefix</span>
-                <input
-                  value={homeCategories.headingPrefix}
-                  onChange={(event) =>
-                    setHomeCategories((prev) => ({
-                      ...prev,
-                      headingPrefix: event.target.value,
-                    }))
-                  }
-                  className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                  placeholder="Flat Up to"
-                />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-slate-600">Heading Highlight</span>
-                <input
-                  value={homeCategories.headingHighlight}
-                  onChange={(event) =>
-                    setHomeCategories((prev) => ({
-                      ...prev,
-                      headingHighlight: event.target.value,
-                    }))
-                  }
-                  className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                  placeholder="50% Off"
-                />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-slate-600">Heading Suffix</span>
-                <input
-                  value={homeCategories.headingSuffix}
-                  onChange={(event) =>
-                    setHomeCategories((prev) => ({
-                      ...prev,
-                      headingSuffix: event.target.value,
-                    }))
-                  }
-                  className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                  placeholder="+ Extra Deals"
-                />
-              </label>
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+              <div className="grid min-w-[260px] flex-1 gap-2 md:grid-cols-3">
+                <label className="space-y-1">
+                  <span className="text-xs font-medium text-slate-600">Heading Prefix</span>
+                  <input
+                    value={homeCategories.headingPrefix}
+                    onChange={(event) =>
+                      setHomeCategories((prev) => ({
+                        ...prev,
+                        headingPrefix: event.target.value,
+                      }))
+                    }
+                    className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                    placeholder="Flat Up to"
+                  />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs font-medium text-slate-600">Heading Highlight</span>
+                  <input
+                    value={homeCategories.headingHighlight}
+                    onChange={(event) =>
+                      setHomeCategories((prev) => ({
+                        ...prev,
+                        headingHighlight: event.target.value,
+                      }))
+                    }
+                    className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                    placeholder="50% Off"
+                  />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs font-medium text-slate-600">Heading Suffix</span>
+                  <input
+                    value={homeCategories.headingSuffix}
+                    onChange={(event) =>
+                      setHomeCategories((prev) => ({
+                        ...prev,
+                        headingSuffix: event.target.value,
+                      }))
+                    }
+                    className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                    placeholder="+ Extra Deals"
+                  />
+                </label>
+              </div>
+              <p className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                {cardsWithImage}/{HOME_CATEGORIES_CARD_COUNT} cards with image
+              </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {homeCategories.cards.map((card, index) => (
-                <div key={`home-categories-card-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="mb-2 text-xs font-semibold text-slate-600">Card {index + 1}/5</p>
-                  <div className="grid gap-3 md:grid-cols-2">
+                <div
+                  key={`home-categories-card-${index}`}
+                  className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-700">Card {index + 1}/5</p>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                      Extra Deal
+                    </span>
+                  </div>
+
+                  <div className="mb-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                    {card.image ? (
+                      <img src={card.image} alt={`extra-deal-card-${index + 1}`} className="aspect-[4/3] w-full object-cover" />
+                    ) : (
+                      <div className="flex aspect-[4/3] items-center justify-center gap-1 text-slate-400">
+                        <ImageIcon className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">No image</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-2">
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Category Label</span>
                       <input
@@ -206,10 +235,11 @@ export default function HomeExtraDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Health & Wellness"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Author/Tag</span>
                       <input
@@ -221,10 +251,11 @@ export default function HomeExtraDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Top picks"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Title</span>
                       <input
@@ -236,10 +267,11 @@ export default function HomeExtraDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Studios, yoga, and spa escapes"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Description</span>
                       <input
@@ -251,10 +283,11 @@ export default function HomeExtraDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Gym, yoga, meditation, massage and spa services."
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Location</span>
                       <input
@@ -266,10 +299,11 @@ export default function HomeExtraDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Stockholm, SE"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Price Text</span>
                       <input
@@ -281,10 +315,11 @@ export default function HomeExtraDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="From $25"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Slug</span>
                       <input
@@ -296,10 +331,11 @@ export default function HomeExtraDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="health-wellness"
                       />
                     </label>
+
                     <div className="space-y-1 md:col-span-2">
                       <span className="text-xs font-medium text-slate-600">Card Image URL</span>
                       <div className="flex items-center gap-2">
@@ -312,10 +348,10 @@ export default function HomeExtraDealsStudio() {
                               return { ...prev, cards: next };
                             })
                           }
-                          className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                          className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                           placeholder="https://..."
                         />
-                        <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-2 text-xs font-medium text-slate-700">
+                        <label className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-xs font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
                           <Upload className="mr-1 h-3.5 w-3.5" />
                           Upload
                           <input

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ImageIcon, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -48,6 +48,10 @@ export default function HomeBestDealsStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
   const [homeDiscount, setHomeDiscount] = useState<HomeDiscountState>(normalizeHomeDiscount(undefined));
+  const cardsWithImages = useMemo(
+    () => homeDiscount.cards.filter((card) => card.image.trim() || card.bgImage.trim()).length,
+    [homeDiscount.cards],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -134,30 +138,77 @@ export default function HomeBestDealsStudio() {
         title="Home Best Deals Studio"
         breadCrumbTitle="Admin / Catalog / Home Sections / Best Deals"
       />
+
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <details className="rounded-xl border border-slate-200 bg-white p-3" open>
           <summary className="cursor-pointer text-sm font-semibold text-slate-800">Grab the Best Deals Today</summary>
-          <div className="mt-3 space-y-3">
-            <label className="space-y-1">
-              <span className="text-xs font-medium text-slate-600">Section Heading</span>
-              <input
-                value={homeDiscount.heading}
-                onChange={(event) =>
-                  setHomeDiscount((prev) => ({
-                    ...prev,
-                    heading: event.target.value,
-                  }))
-                }
-                className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                placeholder="Grab the Best Deals Today"
-              />
-            </label>
 
-            <div className="space-y-2">
+          <div className="mt-3 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+              <label className="min-w-[240px] flex-1 space-y-1">
+                <span className="text-xs font-medium text-slate-600">Section Heading</span>
+                <input
+                  value={homeDiscount.heading}
+                  onChange={(event) =>
+                    setHomeDiscount((prev) => ({
+                      ...prev,
+                      heading: event.target.value,
+                    }))
+                  }
+                  className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                  placeholder="Grab the Best Deals Today"
+                />
+              </label>
+              <p className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                {cardsWithImages}/{HOME_DISCOUNT_CARD_COUNT} cards with image
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {homeDiscount.cards.map((card, index) => (
-                <div key={`home-discount-card-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="mb-2 text-xs font-semibold text-slate-600">Card {index + 1}/5</p>
-                  <div className="grid gap-3 md:grid-cols-2">
+                <div
+                  key={`home-discount-card-${index}`}
+                  className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-700">Card {index + 1}/5</p>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                      Best Deal
+                    </span>
+                  </div>
+
+                  <div className="mb-3 grid grid-cols-2 gap-2">
+                    <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                      {card.image ? (
+                        <img
+                          src={card.image}
+                          alt={`card-${index + 1}-foreground`}
+                          className="aspect-square w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex aspect-square items-center justify-center gap-1 text-slate-400">
+                          <ImageIcon className="h-3.5 w-3.5" />
+                          <span className="text-[11px]">No FG</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                      {card.bgImage ? (
+                        <img
+                          src={card.bgImage}
+                          alt={`card-${index + 1}-background`}
+                          className="aspect-square w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex aspect-square items-center justify-center gap-1 text-slate-400">
+                          <ImageIcon className="h-3.5 w-3.5" />
+                          <span className="text-[11px]">No BG</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-2">
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Title</span>
                       <input
@@ -169,10 +220,11 @@ export default function HomeBestDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Buffet"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Subtitle</span>
                       <input
@@ -184,10 +236,11 @@ export default function HomeBestDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Offers from"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Price</span>
                       <input
@@ -199,10 +252,11 @@ export default function HomeBestDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                        placeholder="₹249"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                        placeholder="Rs 249"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Slug</span>
                       <input
@@ -214,10 +268,11 @@ export default function HomeBestDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="buffet-deals"
                       />
                     </label>
+
                     <label className="space-y-1 md:col-span-2">
                       <span className="text-xs font-medium text-slate-600">Navigation Link</span>
                       <input
@@ -229,10 +284,11 @@ export default function HomeBestDealsStudio() {
                             return { ...prev, cards: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="/marketplace?category=buffet-deals"
                       />
                     </label>
+
                     <div className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Foreground Image URL</span>
                       <div className="flex items-center gap-2">
@@ -245,10 +301,10 @@ export default function HomeBestDealsStudio() {
                               return { ...prev, cards: next };
                             })
                           }
-                          className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                          className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                           placeholder="https://..."
                         />
-                        <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-2 text-xs font-medium text-slate-700">
+                        <label className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-xs font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
                           <Upload className="mr-1 h-3.5 w-3.5" />
                           Upload
                           <input
@@ -274,6 +330,7 @@ export default function HomeBestDealsStudio() {
                         </label>
                       </div>
                     </div>
+
                     <div className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Background Image URL</span>
                       <div className="flex items-center gap-2">
@@ -286,10 +343,10 @@ export default function HomeBestDealsStudio() {
                               return { ...prev, cards: next };
                             })
                           }
-                          className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                          className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                           placeholder="https://..."
                         />
-                        <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-2 text-xs font-medium text-slate-700">
+                        <label className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-xs font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
                           <Upload className="mr-1 h-3.5 w-3.5" />
                           Upload
                           <input
@@ -322,6 +379,7 @@ export default function HomeBestDealsStudio() {
           </div>
         </details>
       </section>
+
       <section className="flex flex-wrap items-center gap-2">
         <Button onClick={save} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save best deals section"}

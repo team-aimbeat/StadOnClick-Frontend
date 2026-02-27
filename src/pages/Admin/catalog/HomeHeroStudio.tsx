@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Eye, Plus, Trash2, Upload } from "lucide-react";
+import { Eye, ImageIcon, Plus, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -130,6 +130,7 @@ export default function HomeHeroStudio() {
     }),
     [draft, fullPayload],
   );
+  const filledBanners = useMemo(() => draft.banners.filter((item) => item.trim()).length, [draft.banners]);
 
   const pushPreview = (target: Window | null) => {
     if (!target) return;
@@ -203,12 +204,20 @@ export default function HomeHeroStudio() {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Background Images (7)</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Background Images</h2>
+            <p className="text-xs text-slate-500">Manage hero visuals in a compact card grid.</p>
+          </div>
+          <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+            {filledBanners}/{HERO_BANNER_COUNT} filled
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
           <input
             value={bannerUrl}
             onChange={(event) => setBannerUrl(event.target.value)}
-            className="h-10 min-w-[260px] flex-1 rounded-xl border border-slate-300 bg-white px-3 text-sm"
+            className="h-10 min-w-[260px] flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm"
             placeholder="Paste banner image URL"
           />
           <Button
@@ -232,7 +241,7 @@ export default function HomeHeroStudio() {
             <Plus className="mr-2 h-4 w-4" />
             Add URL
           </Button>
-          <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-dashed border-slate-400 bg-white px-3 text-sm font-medium text-slate-700">
+          <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
             <Upload className="mr-2 h-4 w-4" />
             Upload image
             <input
@@ -262,11 +271,25 @@ export default function HomeHeroStudio() {
             />
           </label>
         </div>
-        <div className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           {draft.banners.map((banner, index) => (
-            <div key={`hero-banner-${index}`} className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 p-2">
-              <img src={banner || undefined} alt={`banner-${index + 1}`} className="h-14 w-20 rounded-md object-cover bg-slate-100" />
-              <p className="min-w-[80px] text-xs font-semibold text-slate-500">Banner {index + 1}/7</p>
+            <div
+              key={`hero-banner-${index}`}
+              className="group rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="relative mb-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                {banner ? (
+                  <img src={banner} alt={`banner-${index + 1}`} className="aspect-square w-full object-cover" />
+                ) : (
+                  <div className="flex aspect-square w-full items-center justify-center gap-1 text-slate-400">
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    <span className="text-[11px] font-medium">No image</span>
+                  </div>
+                )}
+                <p className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                  Banner {index + 1}/7
+                </p>
+              </div>
               <input
                 value={banner}
                 onChange={(event) =>
@@ -276,43 +299,47 @@ export default function HomeHeroStudio() {
                     return { ...prev, banners: next };
                   })
                 }
-                className="h-9 min-w-[240px] flex-1 rounded-lg border border-slate-300 px-2 text-xs"
+                className="mb-2 h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-[11px]"
+                placeholder="Paste image URL or base64 value"
               />
-              <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-2 text-xs font-medium text-slate-700">
-                Replace
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      if (typeof reader.result !== "string") return;
-                      setDraft((prev) => {
-                        const next = [...prev.banners];
-                        next[index] = reader.result as string;
-                        return { ...prev, banners: next };
-                      });
-                    };
-                    reader.readAsDataURL(file);
-                    event.currentTarget.value = "";
-                  }}
-                />
-              </label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    banners: prev.banners.map((item, i) => (i === index ? "" : item)),
-                  }))
-                }
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <label className="inline-flex h-7 flex-1 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-[11px] font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
+                  Replace
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result !== "string") return;
+                        setDraft((prev) => {
+                          const next = [...prev.banners];
+                          next[index] = reader.result as string;
+                          return { ...prev, banners: next };
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-1.5 text-slate-600 hover:bg-red-50 hover:text-red-600"
+                  onClick={() =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      banners: prev.banners.map((item, i) => (i === index ? "" : item)),
+                    }))
+                  }
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>

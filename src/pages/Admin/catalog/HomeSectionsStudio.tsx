@@ -10,7 +10,7 @@ export default function HomeSectionsStudio() {
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Section Pages</h2>
         <p className="text-sm text-slate-600">Open each child page to edit section-wise content.</p>
-        <div className="grid gap-3 md:grid-cols-7">
+        <div className="grid gap-3 md:grid-cols-10">
           <Link to="/admin/catalog/home-sections/hero" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Hero Section</p>
             <p className="mt-1 text-xs text-slate-600">Heading, subheading, banners, popular chips.</p>
@@ -38,6 +38,18 @@ export default function HomeSectionsStudio() {
           <Link to="/admin/catalog/home-sections/other" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Other Sections</p>
             <p className="mt-1 text-xs text-slate-600">Travel, sightseeing, advertise and more.</p>
+          </Link>
+          <Link to="/admin/catalog/footer-sections" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">Footer Sections</p>
+            <p className="mt-1 text-xs text-slate-600">Dynamic footer with separate studio pages.</p>
+          </Link>
+          <Link to="/admin/catalog/header-sections" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">Header Sections</p>
+            <p className="mt-1 text-xs text-slate-600">Dynamic brand, search, actions, and utility links.</p>
+          </Link>
+          <Link to="/admin/catalog/header-dropdown" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">Header Dropdown</p>
+            <p className="mt-1 text-xs text-slate-600">Dynamic mega-menu badge, title, CTA, and image per category.</p>
           </Link>
         </div>
       </section>

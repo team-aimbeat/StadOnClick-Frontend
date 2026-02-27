@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ImageIcon, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -45,6 +45,10 @@ export default function HomeTrendingStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
   const [homeTrending, setHomeTrending] = useState<HomeTrendingState>(normalizeHomeTrending(undefined));
+  const cardsWithImage = useMemo(
+    () => homeTrending.places.filter((place) => place.image.trim()).length,
+    [homeTrending.places],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -134,68 +138,105 @@ export default function HomeTrendingStudio() {
           <summary className="cursor-pointer text-sm font-semibold text-slate-800">
             Elevated Experiences (Trending)
           </summary>
+
           <div className="mt-3 space-y-3">
-            <div className="grid gap-3 md:grid-cols-2">
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-slate-600">Section Heading</span>
-                <input
-                  value={homeTrending.heading}
-                  onChange={(event) =>
-                    setHomeTrending((prev) => ({
-                      ...prev,
-                      heading: event.target.value,
-                    }))
-                  }
-                  className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                  placeholder="Elevated Experiences Nearby"
-                />
-              </label>
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-slate-600">Background Image URL</span>
-                <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+              <div className="grid min-w-[260px] flex-1 gap-2 md:grid-cols-2">
+                <label className="space-y-1">
+                  <span className="text-xs font-medium text-slate-600">Section Heading</span>
                   <input
-                    value={homeTrending.backgroundImage}
+                    value={homeTrending.heading}
                     onChange={(event) =>
                       setHomeTrending((prev) => ({
                         ...prev,
-                        backgroundImage: event.target.value,
+                        heading: event.target.value,
                       }))
                     }
-                    className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
-                    placeholder="https://..."
+                    className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                    placeholder="Elevated Experiences Nearby"
                   />
-                  <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-2 text-xs font-medium text-slate-700">
-                    <Upload className="mr-1 h-3.5 w-3.5" />
-                    Upload
+                </label>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-slate-600">Background Image URL</span>
+                  <div className="flex items-center gap-2">
                     <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          if (typeof reader.result !== "string") return;
-                          setHomeTrending((prev) => ({
-                            ...prev,
-                            backgroundImage: reader.result as string,
-                          }));
-                        };
-                        reader.readAsDataURL(file);
-                        event.currentTarget.value = "";
-                      }}
+                      value={homeTrending.backgroundImage}
+                      onChange={(event) =>
+                        setHomeTrending((prev) => ({
+                          ...prev,
+                          backgroundImage: event.target.value,
+                        }))
+                      }
+                      className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                      placeholder="https://..."
                     />
-                  </label>
+                    <label className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-xs font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
+                      <Upload className="mr-1 h-3.5 w-3.5" />
+                      Upload
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            if (typeof reader.result !== "string") return;
+                            setHomeTrending((prev) => ({
+                              ...prev,
+                              backgroundImage: reader.result as string,
+                            }));
+                          };
+                          reader.readAsDataURL(file);
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
+              <p className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                {cardsWithImage}/{TRENDING_CARD_COUNT} cards with image
+              </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+              {homeTrending.backgroundImage ? (
+                <img src={homeTrending.backgroundImage} alt="trending-background" className="aspect-[5/1] w-full object-cover" />
+              ) : (
+                <div className="flex aspect-[5/1] items-center justify-center gap-1 text-slate-400">
+                  <ImageIcon className="h-4 w-4" />
+                  <span className="text-xs">No background image</span>
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {homeTrending.places.map((place, index) => (
-                <div key={`trending-card-${index}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="mb-2 text-xs font-semibold text-slate-600">Card {index + 1}/4</p>
-                  <div className="grid gap-3 md:grid-cols-2">
+                <div
+                  key={`trending-card-${index}`}
+                  className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-700">Card {index + 1}/4</p>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                      Trending
+                    </span>
+                  </div>
+
+                  <div className="mb-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                    {place.image ? (
+                      <img src={place.image} alt={`trending-card-${index + 1}`} className="aspect-square w-full object-cover" />
+                    ) : (
+                      <div className="flex aspect-square items-center justify-center gap-1 text-slate-400">
+                        <ImageIcon className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">No image</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Title</span>
                       <input
@@ -207,10 +248,11 @@ export default function HomeTrendingStudio() {
                             return { ...prev, places: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Connaught Place"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Offers Text</span>
                       <input
@@ -222,10 +264,11 @@ export default function HomeTrendingStudio() {
                             return { ...prev, places: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="25 Offers"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Price Text</span>
                       <input
@@ -237,10 +280,11 @@ export default function HomeTrendingStudio() {
                             return { ...prev, places: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="Rs 119"
                       />
                     </label>
+
                     <label className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Redirect Link</span>
                       <input
@@ -252,11 +296,12 @@ export default function HomeTrendingStudio() {
                             return { ...prev, places: next };
                           })
                         }
-                        className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                         placeholder="/marketplace?place=connaught-place"
                       />
                     </label>
-                    <div className="space-y-1 md:col-span-2">
+
+                    <div className="space-y-1">
                       <span className="text-xs font-medium text-slate-600">Card Image URL</span>
                       <div className="flex items-center gap-2">
                         <input
@@ -268,10 +313,10 @@ export default function HomeTrendingStudio() {
                               return { ...prev, places: next };
                             })
                           }
-                          className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs"
+                          className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
                           placeholder="https://..."
                         />
-                        <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-2 text-xs font-medium text-slate-700">
+                        <label className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-xs font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
                           <Upload className="mr-1 h-3.5 w-3.5" />
                           Upload
                           <input
