@@ -82,6 +82,9 @@ import HomeOtherSectionsStudio from "@/pages/Admin/catalog/HomeOtherSectionsStud
 import HomeBlogsStudio from "@/pages/Admin/catalog/HomeBlogsStudio";
 import HomeTrendingStudio from "@/pages/Admin/catalog/HomeTrendingStudio";
 import HomeExtraDealsStudio from "@/pages/Admin/catalog/HomeExtraDealsStudio";
+import FooterSectionsStudio from "@/pages/Admin/catalog/FooterSectionsStudio";
+import HeaderSectionsStudio from "@/pages/Admin/catalog/HeaderSectionsStudio";
+import HeaderDropdownStudio from "@/pages/Admin/catalog/HeaderDropdownStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
@@ -425,6 +428,26 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/home-sections/blogs",
             element: <HomeBlogsStudio />,
+          },
+          {
+            path: "catalog/footer-sections",
+            element: <FooterSectionsStudio />,
+          },
+          {
+            path: "catalog/header-sections",
+            element: <HeaderSectionsStudio />,
+          },
+          {
+            path: "catalog/header-dropdown",
+            element: <HeaderDropdownStudio />,
+          },
+          {
+            path: "catalog/footer-sections/brand",
+            element: <Navigate to="/admin/catalog/footer-sections" replace />,
+          },
+          {
+            path: "catalog/footer-sections/links",
+            element: <Navigate to="/admin/catalog/footer-sections" replace />,
           },
           {
             path: "system/health",
