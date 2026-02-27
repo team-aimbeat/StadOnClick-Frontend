@@ -216,6 +216,23 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Sponsorship Plans"), to: withBase("finance/sponsorship-plans") },
         ],
       },
+       {
+        id: "layout-studio",
+        label: t("Layout Studio"),
+        icon: HiCube,
+        children: [
+          { label: t("Home Sections Studio"), to: withBase("layout-studio/home-sections") },
+          { label: t("Hero Section"), to: withBase("layout-studio/home-sections/hero") },
+          { label: t("Best Deals Section"), to: withBase("layout-studio/home-sections/best-deals") },
+          { label: t("Extra Deals Section"), to: withBase("layout-studio/home-sections/extra-deals") },
+          { label: t("Trending Section"), to: withBase("layout-studio/home-sections/trending") },
+          { label: t("Blogs Section"), to: withBase("layout-studio/home-sections/blogs") },
+          { label: t("Other Sections"), to: withBase("layout-studio/home-sections/other") },
+          { label: t("Header Sections"), to: withBase("layout-studio/header-sections") },
+          { label: t("Header Dropdown"), to: withBase("layout-studio/header-dropdown") },
+          { label: t("Footer Sections"), to: withBase("layout-studio/footer-sections") },
+        ],
+      },
       {
         id: "coupons",
         label: t("Coupons"),
@@ -255,17 +272,10 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("Catalog"),
         icon: HiCube,
         children: [
-          { label: t("Home Sections Studio"), to: withBase("catalog/home-sections") },
-          { label: t("Hero Section"), to: withBase("catalog/home-sections/hero") },
-          { label: t("Deals Section"), to: withBase("catalog/home-sections/deals") },
-          { label: t("Best Deals Section"), to: withBase("catalog/home-sections/best-deals") },
-          { label: t("Extra Deals Section"), to: withBase("catalog/home-sections/extra-deals") },
-          { label: t("Trending Section"), to: withBase("catalog/home-sections/trending") },
-          { label: t("Blogs Section"), to: withBase("catalog/home-sections/blogs") },
-          { label: t("Other Sections"), to: withBase("catalog/home-sections/other") },
           { label: t("Preference Studio"), to: withBase("catalog/interests") },
         ],
       },
+     
       {
         id: "system",
         label: t("System"),
