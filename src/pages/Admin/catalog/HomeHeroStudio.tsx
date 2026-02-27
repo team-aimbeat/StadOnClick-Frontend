@@ -3,6 +3,7 @@ import { Eye, ImageIcon, Plus, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import HomeHero from "@/components/shared/home/HomeHero";
 import { Button } from "@/components/ui/button";
 
 type HeroDraft = {
@@ -374,6 +375,23 @@ export default function HomeHeroStudio() {
             <Plus className="mr-2 h-4 w-4" />
             Add chip
           </Button>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
+          <p className="text-xs text-slate-500">Auto-refreshes as you edit fields</p>
+        </div>
+        <div className="max-h-[680px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
+          <div className="pointer-events-none overflow-hidden rounded-lg border border-slate-200 bg-white">
+            <HomeHero
+              heading={draft.heading}
+              subheading={draft.subheading}
+              banners={draft.banners}
+              popularChips={draft.popularChips}
+            />
+          </div>
         </div>
       </section>
 

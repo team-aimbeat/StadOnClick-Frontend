@@ -3,6 +3,7 @@ import { ImageIcon, Plus, Trash2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import Addvertise from "@/components/shared/home/Addvertise";
 import { Button } from "@/components/ui/button";
 
 const SECTION_KEYS = [
@@ -406,6 +407,23 @@ export default function HomeOtherSectionsStudio() {
             />
           </details>
         ))}
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
+          <p className="text-xs text-slate-500">Advertise section preview</p>
+        </div>
+        <div className="max-h-[680px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
+          <div className="pointer-events-none overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
+            <Addvertise
+              content={{
+                images: advertiseImages,
+                ...advertiseTexts,
+              }}
+            />
+          </div>
+        </div>
       </section>
       <section className="flex flex-wrap items-center gap-2">
         <Button onClick={save} disabled={isSaving}>
