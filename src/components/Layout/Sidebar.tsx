@@ -509,11 +509,11 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                     /* Single link item */
                     <NavLink
                       to={item.to ?? "/"}
-                      className={({ isActive }) =>
+                      className={() =>
                         cn(
                           "flex h-12 w-full items-center rounded-lg px-4 transition-colors",
                           isCollapsed ? "justify-center" : "gap-3",
-                          isActive
+                          active
                             ? "bg-[#4F7DFF] text-white shadow-sm"
                             : "text-slate-700 hover:bg-slate-50 active:bg-slate-100"
                         )
