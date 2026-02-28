@@ -92,6 +92,7 @@ import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
 import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
+import AdminSettings from "@/pages/Admin/AdminSettings";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
@@ -102,11 +103,10 @@ import AffiliateCommission from "@/pages/AffiliateCommission";
 import AffiliateWallet from "@/pages/AffiliateWallet";
 import AffiliatePayouts from "@/pages/AffiliatePayouts";
 import AffiliateStripe from "@/pages/AffiliateStripe";
-import AdminLayout from "@/components/Layout/AdminLayout";
-import VendorLayout from "@/components/Layout/VendorLayout";
-import AffiliateLayout from "@/components/Layout/AffiliateLayout";
-import AppLayout from "@/components/Layout/AppLayout";
-
+import AppLayout from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import VendorLayout from "@/components/layout/VendorLayout";
+import AffiliateLayout from "@/components/layout/AffiliateLayout";
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
@@ -306,6 +306,11 @@ const appRouter = createBrowserRouter([
           {
             path: "coupons",
             element: <AdminCouponsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "settings",
+            element: <AdminSettings />,
             errorElement: <ErrorPage />,
           },
           {

@@ -321,6 +321,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("System"),
         icon: HiCog6Tooth,
         children: [
+          { label: t("Platform Settings"), to: withBase("settings") },
           { label: t("API Docs"), to: withBase("system/docs") },
           { label: t("Admin Activity"), to: withBase("system/audit") },
         ],
