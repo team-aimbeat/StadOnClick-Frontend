@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   AdminTable,
@@ -27,6 +27,7 @@ interface RecentActivitiesProps {
   title?: string;
   activities?: Activity[];
   className?: string;
+  maxRows?: number;
 }
 
 export const recentActivities: Activity[] = [
@@ -71,9 +72,10 @@ export const recentActivities: Activity[] = [
 const statusTone = (status: string): AdminPillTone => {
   const s = status.toLowerCase();
 
-  if (s.includes("delivered")) return "success";
+  if (s.includes("completed")) return "warning";
+  if (s.includes("delivered") || s.includes("confirm")) return "success";
   if (s.includes("pending")) return "warning";
-  if (s.includes("cancel")) return "danger";
+  if (s.includes("cancel") || s.includes("refund")) return "danger";
   if (s.includes("transit")) return "info";
 
   return "neutral";
@@ -83,8 +85,27 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   title = "Recent Activity",
   activities = recentActivities,
   className,
+  maxRows = 5,
 }) => {
-  const hasActivities = activities.length > 0;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(activities.length / maxRows));
+
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
+
+  const visibleActivities = useMemo(() => {
+    const start = (currentPage - 1) * maxRows;
+    return activities.slice(start, start + maxRows);
+  }, [activities, currentPage, maxRows]);
+
+  const hasActivities = visibleActivities.length > 0;
+  const hasMore = totalPages > 1;
+  const pageNumbers = useMemo(
+    () => Array.from({ length: totalPages }, (_, index) => index + 1),
+    [totalPages]
+  );
 
   return (
     <div
@@ -97,9 +118,11 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
         <h3 className="text-base font-semibold text-slate-900">
           {title}
         </h3>
-        <button className="text-xs font-semibold text-slate-500 transition hover:text-slate-700">
-          View All &rarr;
-        </button>
+        {hasMore && (
+          <button className="text-xs font-semibold text-slate-500 transition hover:text-slate-700">
+            View All &rarr;
+          </button>
+        )}
       </div>
       <AdminTable
         className="mt-4 flex-1"
@@ -112,7 +135,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
         ]}
       >
         {hasActivities ? (
-          activities.map((activity) => (
+          visibleActivities.map((activity) => (
             <AdminTableRow key={activity.id}>
               <AdminTableCell>
                 <div className="flex items-center gap-3">
@@ -156,6 +179,25 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
           </div>
         )}
       </AdminTable>
+      {hasMore && (
+        <div className="mt-4 flex items-center justify-end gap-2">
+          {pageNumbers.map((pageNumber) => (
+            <button
+              key={pageNumber}
+              type="button"
+              onClick={() => setCurrentPage(pageNumber)}
+              className={cn(
+                "flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-xs font-semibold transition-colors",
+                currentPage === pageNumber
+                  ? "bg-[#4F7DFF] text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              )}
+            >
+              {pageNumber}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

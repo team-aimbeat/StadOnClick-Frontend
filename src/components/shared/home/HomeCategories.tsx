@@ -19,7 +19,20 @@ type CategoryCard = {
   restaurantSlug?: string
 }
 
-const categories: CategoryCard[] = [
+type HomeCategoriesContent = {
+  headingPrefix: string
+  headingHighlight: string
+  headingSuffix: string
+  cards: CategoryCard[]
+}
+
+type HomeCategoriesProps = {
+  content?: Partial<HomeCategoriesContent>
+}
+
+const CATEGORY_CARD_COUNT = 5
+
+const fallbackCategories: CategoryCard[] = [
   {
     category: "Health & Wellness",
     image: wellness,
@@ -72,22 +85,48 @@ const categories: CategoryCard[] = [
   },
 ]
 
-export default function HomeCategories() {
+const fallbackContent: HomeCategoriesContent = {
+  headingPrefix: "Flat Up to",
+  headingHighlight: "50% Off",
+  headingSuffix: "+ Extra Deals",
+  cards: fallbackCategories,
+}
+
+export default function HomeCategories({ content }: HomeCategoriesProps) {
   const navigate = useNavigate()
+  const rawCards = Array.isArray(content?.cards) ? content.cards : []
+  const cards = Array.from({ length: CATEGORY_CARD_COUNT }, (_, index) => {
+    const fallback = fallbackCategories[index]
+    const raw = rawCards[index] ?? {}
+    return {
+      category: String(raw.category ?? "").trim() || fallback.category,
+      image: String(raw.image ?? "").trim() || fallback.image,
+      author: String(raw.author ?? "").trim() || fallback.author,
+      title: String(raw.title ?? "").trim() || fallback.title,
+      description: String(raw.description ?? "").trim() || fallback.description,
+      location: String(raw.location ?? "").trim() || fallback.location,
+      price: String(raw.price ?? "").trim() || fallback.price,
+      slug: String(raw.slug ?? "").trim() || fallback.slug,
+      restaurantSlug: typeof raw.restaurantSlug === "string" ? raw.restaurantSlug : fallback.restaurantSlug,
+    }
+  })
+  const headingPrefix = String(content?.headingPrefix ?? "").trim() || fallbackContent.headingPrefix
+  const headingHighlight = String(content?.headingHighlight ?? "").trim() || fallbackContent.headingHighlight
+  const headingSuffix = String(content?.headingSuffix ?? "").trim() || fallbackContent.headingSuffix
 
   return (
     <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
       <div className="relative z-10 mx-auto max-w-387.5 px-6 py-12">
       <div className="mb-6">
   <h2 className="text-start text-[28px] sm:text-3xl lg:text-3xl font-semibold tracking-wide text-gray-900">
-    Flat Up to <span className="text-rose-600 font-bold">50% Off</span> + Extra Deals
+    {headingPrefix} <span className="text-rose-600 font-bold">{headingHighlight}</span> {headingSuffix}
   </h2>
 
   <div className="mt-2 h-[3px] w-20 bg-gradient-to-r from-rose-500 to-orange-400 rounded-full"></div>
 </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-          {categories.map((card) => (
+          {cards.map((card) => (
             <article
               key={card.title}
             className="group cursor-pointer overflow-hidden rouded-sm border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"

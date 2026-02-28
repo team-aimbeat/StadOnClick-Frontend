@@ -44,6 +44,18 @@ export type VendorServiceEntity = {
   }[];
   refundPolicy?: RefundPolicyInput | null;
   terms?: string | null;
+  offerings?: {
+    id: string;
+    serviceId: string;
+    name: string;
+    description?: string | null;
+    bookingUrl?: string | null;
+    basePrice: number;
+    salePrice: number;
+    currency?: string | null;
+    maxQuantity?: number | null;
+    remainingQuantity?: number | null;
+  }[];
 };
 
 export interface CreateVendorServicePayload {
@@ -104,6 +116,18 @@ export const vendorServicesApi = createApi({
           media: s.media,
           reviews: s.reviews,
           refundPolicy: s.refundPolicy,
+          offerings: (s.offerings ?? []).map((o: any) => ({
+            id: o.id,
+            serviceId: o.serviceId,
+            name: o.name,
+            description: o.description ?? null,
+            bookingUrl: o.bookingUrl ?? null,
+            basePrice: Number(o.basePrice ?? 0),
+            salePrice: Number(o.salePrice ?? 0),
+            currency: o.currency ?? "SEK",
+            maxQuantity: o.maxQuantity ?? null,
+            remainingQuantity: o.remainingQuantity ?? null,
+          })),
         })),
       providesTags: ["VendorServices"],
     }),

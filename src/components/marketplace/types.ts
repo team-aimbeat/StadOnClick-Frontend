@@ -8,6 +8,7 @@ export type ServiceDetail = {
 
 export type Service = {
   id: string
+  vendorId?: string
   title: string
   location: string
   rating: number

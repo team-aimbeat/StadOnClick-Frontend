@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Service } from "./types"
 import { useAppSelector } from "@/app/hooks"
+import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
+import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
 import {
   useAddWishlistItemMutation,
   useGetWishlistQuery,
@@ -27,9 +29,60 @@ export default function ServiceCard({
   })
   const [addWishlistItem] = useAddWishlistItemMutation()
   const [removeWishlistItem] = useRemoveWishlistItemMutation()
+  const { data: fetchedOfferings = [] } = useGetServiceOfferingsQuery(service.id)
+  const { data: vendorServices = [] } = useGetVendorServicesQuery(service.vendorId ?? "", {
+    skip: !service.vendorId,
+  })
   const wishlisted = wishlistItems.some(
     (item) => item.serviceId === service.id || item.id === service.id,
   )
+
+  const liveOfferingDetails = useMemo(() => {
+    if (!fetchedOfferings.length) return []
+    return fetchedOfferings.slice(0, 3).map((offering) => ({
+      title: offering.name,
+      subtitle: offering.description ?? undefined,
+      duration: undefined,
+      price: new Intl.NumberFormat("sv-SE", {
+        style: "currency",
+        currency: offering.currency || "SEK",
+        maximumFractionDigits: 0,
+      }).format(Number(offering.salePrice ?? offering.basePrice ?? 0)),
+    }))
+  }, [fetchedOfferings])
+
+  const vendorServiceDetails = useMemo(() => {
+    const current = vendorServices.find((item) => item.id === service.id)
+    const offerings = current?.offerings ?? []
+    return offerings.slice(0, 3).map((offering) => ({
+      title: offering.name,
+      subtitle: offering.description ?? undefined,
+      duration: undefined,
+      price: new Intl.NumberFormat("sv-SE", {
+        style: "currency",
+        currency: offering.currency || "SEK",
+        maximumFractionDigits: 0,
+      }).format(Number(offering.salePrice ?? offering.basePrice ?? 0)),
+    }))
+  }, [service.id, vendorServices])
+
+  const detailsToRender = useMemo(() => {
+    const merged = [...liveOfferingDetails, ...vendorServiceDetails, ...service.details]
+      .filter((item) => {
+        const title = (item.title ?? "").trim().toLowerCase()
+        const price = (item.price ?? "").trim().toLowerCase()
+        return !(title === "salon" && price === "price on request")
+      })
+      .filter((item, index, arr) => {
+        const key = `${item.title}|${item.price}`.toLowerCase()
+        return arr.findIndex((candidate) =>
+          `${candidate.title}|${candidate.price}`.toLowerCase() === key,
+        ) === index
+      })
+
+    if (merged.length > 0) return merged.slice(0, 3)
+    return service.details
+  }, [liveOfferingDetails, service.details, vendorServiceDetails])
 
   const images = useMemo(() => {
     const list =
@@ -165,7 +218,7 @@ export default function ServiceCard({
       <div className="flex flex-1 flex-col gap-3 p-5">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-[19px] font-bold text-slate-900">{service.title}</h3>
+              <h3 className="text-[15px] font-bold text-slate-900">{service.title}</h3>
               <div className="mt-1 text-sm font-semibold text-blue-600">
                 {service.categoryName}
               </div>
@@ -183,7 +236,7 @@ export default function ServiceCard({
         </div>
 
         <div className="space-y-3 flex-1">
-          {service.details.map((detail, index) => (
+          {detailsToRender.length > 0 ? detailsToRender.map((detail, index) => (
             <div
               key={`${service.id}-detail-${index}`}
               className="w-70.75 rounded-sm bg-[#F6F6F6] px-4 py-3 h-17 transform-gpu transition-transform duration-200 hover:scale-[1.01]"
@@ -205,7 +258,11 @@ export default function ServiceCard({
                 </div>
               ) : null}
             </div>
-          ))}
+          )) : (
+            <div className="rounded-sm bg-[#F6F6F6] px-4 py-3 text-sm text-slate-600">
+              Offerings are not available for this service yet.
+            </div>
+          )}
         </div>
 
         <div className="mt-auto flex gap-2 pt-1">

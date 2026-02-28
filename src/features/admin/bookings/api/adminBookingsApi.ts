@@ -21,7 +21,25 @@ export const adminBookingsApi = createApi({
         providesTags: ["AdminBookings"],
       }
     ),
+    decideBookingRefund: builder.mutation<
+      { success: boolean; booking: { id: string; status: string } },
+      { id: string; action: "APPROVE" | "REJECT"; reason?: string }
+    >({
+      query: ({ id, action, reason }) => ({
+        url: `/admin/bookings/${id}/refund`,
+        method: "PATCH",
+        body: {
+          action,
+          reason,
+        },
+      }),
+      invalidatesTags: ["AdminBookings"],
+    }),
   }),
 });
 
-export const { useListAdminBookingsQuery, useLazyListAdminBookingsQuery } = adminBookingsApi;
+export const {
+  useDecideBookingRefundMutation,
+  useListAdminBookingsQuery,
+  useLazyListAdminBookingsQuery,
+} = adminBookingsApi;

@@ -1,7 +1,8 @@
 ﻿import { Link, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
+import toast from "react-hot-toast";
 import { useAppSelector } from "@/app/hooks";
-import { useGetMyOrdersQuery } from "@/services/ordersApi";
+import { useGetMyOrdersQuery, useRequestOrderRefundMutation } from "@/services/ordersApi";
 
 const currencyFormatter = new Intl.NumberFormat("sv-SE", {
   style: "currency",
@@ -38,6 +39,7 @@ export default function OrdersPage() {
   const { data, isLoading, isFetching, error } = useGetMyOrdersQuery(undefined, {
     skip: !user,
   });
+  const [requestOrderRefund, { isLoading: isRequestingRefund }] = useRequestOrderRefundMutation();
 
   const orders = data?.data ?? [];
 
@@ -47,6 +49,40 @@ export default function OrdersPage() {
     if (!orders.length) return [];
     return orders;
   }, [orders]);
+
+  const handleRequestRefund = async (orderId: string) => {
+    const reason = window.prompt(
+      "Please add refund reason (optional):",
+      "I want to request a refund."
+    );
+    try {
+      const response = await requestOrderRefund({
+        id: orderId,
+        reason: reason?.trim() || undefined,
+      }).unwrap();
+      const data = response?.data;
+      if (!data) {
+        toast.success("Refund request submitted.");
+        return;
+      }
+
+      if (data.eligibleBookingCount < data.totalBookingCount) {
+        toast.success(
+          `Refund requested for ${data.eligibleBookingCount}/${data.totalBookingCount} service(s) based on service policy.`
+        );
+        return;
+      }
+
+      toast.success("Refund request submitted.");
+    } catch (err) {
+      console.error("Failed to request refund", err);
+      const message =
+        (err as any)?.data?.message === "REFUND_NOT_ELIGIBLE_BY_SERVICE_POLICY"
+          ? "This order is not eligible for refund as per service refund policy/cutoff."
+          : "Unable to submit refund request right now.";
+      toast.error(message);
+    }
+  };
 
   if (!user) {
     return (
@@ -156,19 +192,35 @@ export default function OrdersPage() {
                 </div>
 
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-slate-200 pt-4 text-sm text-slate-500">
-                  <Link
-                    to={
-                      order.items[0]?.offering.serviceId
-                        ? `/service/${order.items[0]?.offering.serviceId}`
-                        : "/marketplace"
+                  <div className="flex items-center gap-3">
+                    <Link
+                      to={
+                        order.items[0]?.offering.serviceId
+                          ? `/service/${order.items[0]?.offering.serviceId}`
+                          : "/marketplace"
+                      }
+                      className="font-semibold text-blue-600 hover:underline"
+                    >
+                      View service details
+                    </Link>
+                    <span className="font-semibold text-slate-900">
+                      {order.items.length} item{order.items.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleRequestRefund(order.id)}
+                    disabled={
+                      isRequestingRefund ||
+                      order.status === "REFUND_REQUESTED" ||
+                      order.status === "REFUNDED" ||
+                      order.status === "PENDING" ||
+                      order.status === "CANCELLED"
                     }
-                    className="font-semibold text-blue-600 hover:underline"
+                    className="rounded-full border border-rose-200 px-4 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    View service details
-                  </Link>
-                  <span className="font-semibold text-slate-900">
-                    {order.items.length} item{order.items.length > 1 ? "s" : ""}
-                  </span>
+                    Request refund
+                  </button>
                 </div>
               </div>
             ))}

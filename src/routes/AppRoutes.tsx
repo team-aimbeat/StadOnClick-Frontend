@@ -74,6 +74,17 @@ import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorE
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
+import HomeSectionsStudio from "@/pages/Admin/catalog/HomeSectionsStudio";
+import HomeHeroStudio from "@/pages/Admin/catalog/HomeHeroStudio";
+import HomeDealsStudio from "@/pages/Admin/catalog/HomeDealsStudio";
+import HomeBestDealsStudio from "@/pages/Admin/catalog/HomeBestDealsStudio";
+import HomeOtherSectionsStudio from "@/pages/Admin/catalog/HomeOtherSectionsStudio";
+import HomeBlogsStudio from "@/pages/Admin/catalog/HomeBlogsStudio";
+import HomeTrendingStudio from "@/pages/Admin/catalog/HomeTrendingStudio";
+import HomeExtraDealsStudio from "@/pages/Admin/catalog/HomeExtraDealsStudio";
+import FooterSectionsStudio from "@/pages/Admin/catalog/FooterSectionsStudio";
+import HeaderSectionsStudio from "@/pages/Admin/catalog/HeaderSectionsStudio";
+import HeaderDropdownStudio from "@/pages/Admin/catalog/HeaderDropdownStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
@@ -381,6 +392,110 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/:tab",
             element: <PreferencesStudio />,
+          },
+          {
+            path: "catalog/home-page",
+            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+          },
+          {
+            path: "layout-studio",
+            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+          },
+          {
+            path: "layout-studio/home-sections",
+            element: <HomeSectionsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/hero",
+            element: <HomeHeroStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/deals",
+            element: <HomeDealsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/best-deals",
+            element: <HomeBestDealsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/extra-deals",
+            element: <HomeExtraDealsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/trending",
+            element: <HomeTrendingStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/other",
+            element: <HomeOtherSectionsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/blogs",
+            element: <HomeBlogsStudio />,
+          },
+          {
+            path: "layout-studio/footer-sections",
+            element: <FooterSectionsStudio />,
+          },
+          {
+            path: "layout-studio/header-sections",
+            element: <HeaderSectionsStudio />,
+          },
+          {
+            path: "layout-studio/header-dropdown",
+            element: <HeaderDropdownStudio />,
+          },
+          {
+            path: "catalog/home-sections",
+            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+          },
+          {
+            path: "catalog/home-sections/hero",
+            element: <Navigate to="/admin/layout-studio/home-sections/hero" replace />,
+          },
+          {
+            path: "catalog/home-sections/deals",
+            element: <Navigate to="/admin/layout-studio/home-sections/deals" replace />,
+          },
+          {
+            path: "catalog/home-sections/best-deals",
+            element: <Navigate to="/admin/layout-studio/home-sections/best-deals" replace />,
+          },
+          {
+            path: "catalog/home-sections/extra-deals",
+            element: <Navigate to="/admin/layout-studio/home-sections/extra-deals" replace />,
+          },
+          {
+            path: "catalog/home-sections/trending",
+            element: <Navigate to="/admin/layout-studio/home-sections/trending" replace />,
+          },
+          {
+            path: "catalog/home-sections/other",
+            element: <Navigate to="/admin/layout-studio/home-sections/other" replace />,
+          },
+          {
+            path: "catalog/home-sections/blogs",
+            element: <Navigate to="/admin/layout-studio/home-sections/blogs" replace />,
+          },
+          {
+            path: "catalog/footer-sections",
+            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
+          },
+          {
+            path: "catalog/header-sections",
+            element: <Navigate to="/admin/layout-studio/header-sections" replace />,
+          },
+          {
+            path: "catalog/header-dropdown",
+            element: <Navigate to="/admin/layout-studio/header-dropdown" replace />,
+          },
+          {
+            path: "catalog/footer-sections/brand",
+            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
+          },
+          {
+            path: "catalog/footer-sections/links",
+            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
           },
           {
             path: "system/health",
