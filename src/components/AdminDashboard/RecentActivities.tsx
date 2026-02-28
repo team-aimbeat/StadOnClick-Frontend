@@ -72,9 +72,10 @@ export const recentActivities: Activity[] = [
 const statusTone = (status: string): AdminPillTone => {
   const s = status.toLowerCase();
 
-  if (s.includes("delivered")) return "success";
+  if (s.includes("completed")) return "warning";
+  if (s.includes("delivered") || s.includes("confirm")) return "success";
   if (s.includes("pending")) return "warning";
-  if (s.includes("cancel")) return "danger";
+  if (s.includes("cancel") || s.includes("refund")) return "danger";
   if (s.includes("transit")) return "info";
 
   return "neutral";
