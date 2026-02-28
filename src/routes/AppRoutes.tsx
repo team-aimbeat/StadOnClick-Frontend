@@ -101,6 +101,7 @@ import AffiliateVendorsReferred from "@/pages/AffiliateVendorsReferred";
 import AffiliateCommission from "@/pages/AffiliateCommission";
 import AffiliateWallet from "@/pages/AffiliateWallet";
 import AffiliatePayouts from "@/pages/AffiliatePayouts";
+import AffiliateStripe from "@/pages/AffiliateStripe";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AffiliateLayout from "@/components/Layout/AffiliateLayout";
@@ -692,6 +693,10 @@ const appRouter = createBrowserRouter([
               {
                 path: "payouts",
                 element: <AffiliatePayouts />,
+              },
+              {
+                path: "stripe",
+                element: <AffiliateStripe />,
               },
             ],
           },

@@ -127,10 +127,36 @@ export type AffiliateStatsResponse = {
   };
 };
 
+export type AffiliateStripeStatus = {
+  connected: boolean;
+  accountId: string | null;
+  onboardingRequired: boolean;
+  onboardingComplete: boolean;
+  detailsSubmitted: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  requirements: {
+    currentlyDue: string[];
+    eventuallyDue: string[];
+    pendingVerification: string[];
+    disabledReason: string | null;
+  };
+  lastOnboardedAt: string | null;
+};
+
+export type AffiliateStripeLinkResponse = {
+  success: boolean;
+  data: {
+    url: string;
+    accountId: string;
+    mode: "onboarding" | "dashboard";
+  };
+};
+
 export const affiliateApi = createApi({
   reducerPath: "affiliateApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["AffiliateDashboard", "AffiliateReferrals", "AffiliateCommissions"],
+  tagTypes: ["AffiliateDashboard", "AffiliateReferrals", "AffiliateCommissions", "AffiliateStripe"],
   endpoints: (builder) => ({
     activateAffiliate: builder.mutation<AffiliateActivationResponse, void>({
       query: () => ({
@@ -186,6 +212,26 @@ export const affiliateApi = createApi({
       }),
       providesTags: ["AffiliateDashboard"],
     }),
+    getAffiliateStripeStatus: builder.query<{ success: boolean; data: AffiliateStripeStatus }, void>({
+      query: () => ({
+        url: "/affiliate/stripe/status",
+        method: "GET",
+      }),
+      providesTags: ["AffiliateStripe"],
+    }),
+    connectAffiliateStripe: builder.mutation<AffiliateStripeLinkResponse, void>({
+      query: () => ({
+        url: "/affiliate/stripe/connect",
+        method: "POST",
+      }),
+      invalidatesTags: ["AffiliateStripe"],
+    }),
+    createAffiliateStripeDashboardLink: builder.mutation<AffiliateStripeLinkResponse, void>({
+      query: () => ({
+        url: "/affiliate/stripe/dashboard-link",
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -196,4 +242,7 @@ export const {
   useGetAffiliateCommissionsQuery,
   useCreateAffiliateServiceLinkMutation,
   useGetAffiliateStatsQuery,
+  useGetAffiliateStripeStatusQuery,
+  useConnectAffiliateStripeMutation,
+  useCreateAffiliateStripeDashboardLinkMutation,
 } = affiliateApi;
