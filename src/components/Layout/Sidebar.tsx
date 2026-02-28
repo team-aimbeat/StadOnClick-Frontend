@@ -353,7 +353,8 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
 
   const isPathActive = (path?: string) => {
     if (!path) return false;
-    return location.pathname.startsWith(path);
+    // Exact match for the base route, OR it's a sub-route (e.g. /admin/coupons/new)
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   const isItemActive = (item: NavItem) => {
