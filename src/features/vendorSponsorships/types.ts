@@ -48,4 +48,5 @@ export type ServiceSponsorship = {
 export type CheckoutResponse = {
   clientSecret?: string;
   sponsorshipId?: string;
+  paymentIntentId?: string;
 };

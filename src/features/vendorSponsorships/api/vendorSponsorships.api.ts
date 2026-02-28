@@ -35,9 +35,11 @@ export const vendorSponsorshipsApi = createApi({
           : [{ type: "SponsorshipPlans" as const, id: "LIST" }],
     }),
 
-    listVendorServices: builder.query<VendorServiceLite[], void>({
-      query: () => ({
-        url: "/vendor/vendor-services", // backend derives vendorId from auth
+    listVendorServices: builder.query<VendorServiceLite[], { userId?: string; vendorId?: string } | void>({
+      query: (arg) => ({
+        url: arg?.vendorId
+          ? `/vendor/vendor-services/${arg.vendorId}`
+          : "/vendor/vendor-services/me",
         method: "GET",
       }),
       transformResponse: (response: VendorServiceLite[] | { data?: VendorServiceLite[] }) => {
@@ -91,12 +93,32 @@ export const vendorSponsorshipsApi = createApi({
         { type: "SponsorshipPlans", id: "LIST" },
       ],
     }),
+    confirmSponsorshipCheckout: builder.mutation<
+      { sponsorshipId: string; status: string; paymentIntentId: string },
+      { sponsorshipId: string; paymentIntentId?: string }
+    >({
+      query: (body) => ({
+        url: "/vendor/sponsorships/confirm",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [
+        { type: "VendorSponsorships", id: "LIST" },
+        { type: "SponsorshipPlans", id: "LIST" },
+      ],
+    }),
 
-    listVendorServicesByMaster: builder.query<VendorServiceLite[], { masterId: string; search?: string }>({
-      query: ({ masterId, search }) => ({
-        url: `/vendor/vendor-services/master/${masterId}/vendor-services`,
+    listVendorServicesByMaster: builder.query<
+      VendorServiceLite[],
+      { masterId: string; search?: string; userId?: string; vendorId?: string }
+    >({
+      query: ({ masterId, search, vendorId }) => ({
+        url: `/vendor/vendor-services/master/${masterId}/services`,
         method: "GET",
-        params: search ? { q: search } : undefined,
+        params: {
+          ...(search ? { q: search } : {}),
+          ...(vendorId ? { vendorId } : {}),
+        },
       }),
       transformResponse: (response: VendorServiceLite[] | { data?: VendorServiceLite[] }) => {
         if (Array.isArray(response)) return response;
@@ -114,4 +136,5 @@ export const {
   useListVendorServicesByMasterQuery,
   useListVendorSponsorshipsQuery,
   useCreateSponsorshipCheckoutMutation,
+  useConfirmSponsorshipCheckoutMutation,
 } = vendorSponsorshipsApi;

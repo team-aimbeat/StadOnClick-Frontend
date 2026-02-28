@@ -9,7 +9,7 @@ import {
   HiOutlineCheck,
 } from "react-icons/hi2";
 
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import {
+  useConfirmSponsorshipCheckoutMutation,
   useCreateSponsorshipCheckoutMutation,
   useListPlansQuery,
   useListVendorServicesQuery,
@@ -30,7 +31,7 @@ import {
 } from "@/features/vendorSponsorships/api/vendorSponsorships.api";
 import type { SponsorshipPlan, VendorServiceLite } from "@/features/vendorSponsorships/types";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
-import { useListServiceMasterCategoriesQuery } from "@/features/serviceCategories/api/serviceCategoriesApi";
+import { useGetMasterCategoriesQuery } from "@/services/serviceCategoriesApi";
 
 const EmptyState = ({
   title,
@@ -332,6 +333,8 @@ const ActiveSponsorships = ({
 
 const VendorPromote = () => {
   const dispatch = useAppDispatch();
+  const authUser = useAppSelector((state) => state.auth.user);
+  const vendorId = authUser?.vendorAccess?.vendorId ?? undefined;
   const {
     data: plans = [],
     isLoading: isPlansLoading,
@@ -343,7 +346,7 @@ const VendorPromote = () => {
     isLoading: isServicesLoading,
     isFetching: isServicesFetching,
     error: servicesError,
-  } = useListVendorServicesQuery();
+  } = useListVendorServicesQuery({ userId: authUser?.id, vendorId });
   const {
     data: sponsorships = [],
     isLoading: isSponsorshipsLoading,
@@ -351,12 +354,13 @@ const VendorPromote = () => {
     error: sponsorshipsError,
   } = useListVendorSponsorshipsQuery();
   const [createCheckout, { isLoading: isCreating }] = useCreateSponsorshipCheckoutMutation();
+  const [confirmCheckout, { isLoading: isConfirming }] = useConfirmSponsorshipCheckoutMutation();
   const {
     data: masterCategories = [],
     isLoading: isMastersLoading,
     isFetching: isMastersFetching,
     error: masterError,
-  } = useListServiceMasterCategoriesQuery();
+  } = useGetMasterCategoriesQuery();
   const [selectedMasterId, setSelectedMasterId] = useState<string | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -368,7 +372,7 @@ const VendorPromote = () => {
     isLoading: isServicesByMasterLoading,
     isFetching: isServicesByMasterFetching,
   } = useListVendorServicesByMasterQuery(
-    { masterId: selectedMasterId ?? "", search: serviceSearch },
+    { masterId: selectedMasterId ?? "", search: serviceSearch, userId: authUser?.id, vendorId },
     { skip: !selectedMasterId }
   );
 
@@ -417,12 +421,25 @@ const VendorPromote = () => {
         serviceId: selectedServiceId,
       }).unwrap();
 
-      if (response?.clientSecret) {
-        setClientSecret(response.clientSecret);
-        toast.success("Payment intent created. Continue in the Stripe modal.");
-      } else {
-        toast.success("Checkout created. Complete the payment to activate the boost.");
+      if (response?.sponsorshipId) {
+        try {
+          await confirmCheckout({
+            sponsorshipId: response.sponsorshipId,
+            paymentIntentId: response.paymentIntentId,
+          }).unwrap();
+          setClientSecret(null);
+          toast.success("Payment confirmed. Sponsorship is now active.");
+          return;
+        } catch (error) {
+          if (response?.clientSecret) {
+            setClientSecret(response.clientSecret);
+          }
+          toast.error(parseError(error));
+          return;
+        }
       }
+
+      toast.success("Checkout created. Complete the payment to activate the boost.");
     } catch (error) {
       toast.error(parseError(error));
     }
@@ -558,14 +575,14 @@ const VendorPromote = () => {
               <button
                 type="button"
                 onClick={handleCheckout}
-                disabled={isCreating || !selectedPlanId || !selectedServiceId}
+                disabled={isCreating || isConfirming || !selectedPlanId || !selectedServiceId}
                 className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-md transition ${
-                  isCreating || !selectedPlanId || !selectedServiceId
+                  isCreating || isConfirming || !selectedPlanId || !selectedServiceId
                     ? "cursor-not-allowed bg-slate-200 text-slate-500"
                     : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg"
                 }`}
               >
-                {isCreating && <HiOutlineArrowPath className="h-4 w-4 animate-spin" />}
+                {(isCreating || isConfirming) && <HiOutlineArrowPath className="h-4 w-4 animate-spin" />}
                 Start checkout
               </button>
             </div>
