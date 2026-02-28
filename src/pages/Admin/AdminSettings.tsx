@@ -17,13 +17,19 @@ import {
 } from "react-icons/hi2";
 
 /* ─── Animated moving dot along a horizontal track ─── */
-function TravelDot({ color = "bg-slate-900" }: { color?: string }) {
+function TravelDot({ color = "bg-slate-900", delay = 0, totalDuration = 3.2 }: { color?: string, delay?: number, totalDuration?: number }) {
   return (
     <motion.span
       className={`absolute top-1/2 -translate-y-1/2 h-2 w-2 rounded-full ${color}`}
       initial={{ left: "0%", opacity: 0 }}
       animate={{ left: ["0%", "95%", "95%"], opacity: [0, 1, 0] }}
-      transition={{ duration: 1.6, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.5 }}
+      transition={{ 
+        duration: 1.6, 
+        ease: "easeInOut", 
+        repeat: Infinity, 
+        repeatDelay: totalDuration - 1.6, // Wait for the other phase
+        delay: delay // Offset start time
+      }}
     />
   );
 }
@@ -78,14 +84,16 @@ function FlowNode({
 function FlowConnector({
   label,
   dotColor,
+  delay = 0,
 }: {
   label?: string;
   dotColor?: string;
+  delay?: number;
 }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-1 min-w-[60px]">
       <div className="relative w-full h-px bg-slate-200 overflow-visible">
-        <TravelDot color={dotColor} />
+        <TravelDot color={dotColor} delay={delay} />
         <HiOutlineArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
       </div>
       {label && (
@@ -427,7 +435,7 @@ const AdminSettings: React.FC = () => {
 
             <div className="flex items-center gap-0 w-full">
               <FlowNode icon={HiOutlineBuildingOffice2} label="StadonClick" sublabel="Releases net balance" accent />
-              <FlowConnector label="Net balance" dotColor="bg-emerald-500" />
+              <FlowConnector label="Net balance" dotColor="bg-emerald-500" delay={1.6} />
               <FlowNode icon={HiOutlineBriefcase} label="Vendor" sublabel="Receives earnings" />
             </div>
 
