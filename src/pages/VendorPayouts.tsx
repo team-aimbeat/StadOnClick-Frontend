@@ -121,7 +121,7 @@ const VendorPayouts = () => {
               <span className="text-sm font-medium opacity-30 mr-1.5">{summary?.currency}</span>
               {summary?.pendingPayoutBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-slate-500 font-medium mt-2">Active withdrawal queue balance</p>
+            <p className="text-xs text-slate-500 font-medium mt-2">Held balance awaiting manual release</p>
           </div>
           
           <div className="space-y-3">
@@ -160,7 +160,7 @@ const VendorPayouts = () => {
         <div className="lg:col-span-2 space-y-6">
           <div className="finance-card rounded-2xl p-8">
             <div className="flex items-center justify-between mb-8">
-               <h3 className="text-sm font-bold text-slate-900">Tactile Settlement Control</h3>
+               <h3 className="text-sm font-bold text-slate-900">Manual release for held funds</h3>
                <div className="px-3 py-1 rounded bg-slate-950 text-[10px] font-bold text-white uppercase tracking-wider leading-none">
                   Manual Entry
                </div>
@@ -275,7 +275,7 @@ const VendorPayouts = () => {
                </p>
             </div>
             <p className="mt-4 text-[11px] text-slate-500 font-medium leading-relaxed mb-8">
-              Protocol will initiate an external sync with Stripe infrastructure. Funds will clear into the merchant account after treasury adjudication.
+              Use this only for held funds that were not automatically routed at payment time. The transfer will be sent to your connected Stripe payout account after review.
             </p>
             <div className="flex flex-col gap-3">
               <button

@@ -104,7 +104,7 @@ export const getVendorNavGroups = ({
         badge: kycDocumentsCount > 0 ? `${kycDocumentsCount}` : undefined,
       },
       {
-        label: "Stripe Connect",
+        label: "Payout Setup",
         icon: HiOutlineCreditCard,
         to: "/vendor/stripe",
       },
