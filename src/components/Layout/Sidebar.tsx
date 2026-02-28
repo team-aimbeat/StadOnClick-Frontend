@@ -1,3 +1,4 @@
+import { skipToken } from "@reduxjs/toolkit/query";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
@@ -23,6 +24,7 @@ import PerfectScrollbar from "react-perfect-scrollbar";
 import { Activity, Users } from "lucide-react";
 
 import { RootState } from "@/app/store";
+import { useListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
 import { cn } from "@/lib/utils";
 import type { IconType } from "react-icons";
@@ -34,6 +36,7 @@ type SidebarProps = {
 type NavChild = {
   label: string;
   to: string;
+  badge?: string;
 };
 
 type NavItem = {
@@ -68,6 +71,42 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
       return `${normalizedBasePath}/${path.replace(/^\//, "")}`;
     },
     [normalizedBasePath]
+  );
+
+  const shouldLoadAdminBookingCounts = Boolean(isAdmin && !isSupportOnly && !isModeratorOnly);
+
+  const { data: allBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts ? { page: 1, limit: 1 } : skipToken
+  );
+  const { data: upcomingBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts
+      ? { page: 1, limit: 1, statuses: "CONFIRMED,PENDING" }
+      : skipToken
+  );
+  const { data: completedBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts
+      ? { page: 1, limit: 1, statuses: "COMPLETED" }
+      : skipToken
+  );
+  const { data: refundBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts
+      ? { page: 1, limit: 1, statuses: "REFUND_REQUESTED" }
+      : skipToken
+  );
+
+  const bookingNavBadges = useMemo(
+    () => ({
+      all: String(allBookingsCountResponse?.meta?.total ?? 0),
+      upcoming: String(upcomingBookingsCountResponse?.meta?.total ?? 0),
+      completed: String(completedBookingsCountResponse?.meta?.total ?? 0),
+      refunds: String(refundBookingsCountResponse?.meta?.total ?? 0),
+    }),
+    [
+      allBookingsCountResponse?.meta?.total,
+      upcomingBookingsCountResponse?.meta?.total,
+      completedBookingsCountResponse?.meta?.total,
+      refundBookingsCountResponse?.meta?.total,
+    ]
   );
 
   const navItems: NavItem[] = useMemo(() => {
@@ -162,15 +201,16 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Affiliate Users"), to: withBase("affiliates") },
         ],
       },
-        {
+      {
         id: "bookings",
         label: t("Bookings"),
         icon: HiClipboardDocumentCheck,
+        badge: bookingNavBadges.all,
         children: [
-          { label: t("All Bookings"), to: withBase("bookings") },
-          { label: t("Upcoming"), to: withBase("bookings/upcoming") },
-          { label: t("Completed"), to: withBase("bookings/completed") },
-          { label: t("Refunds"), to: withBase("bookings/refunds") },
+          { label: t("All Bookings"), to: withBase("bookings"), badge: bookingNavBadges.all },
+          { label: t("Upcoming"), to: withBase("bookings/upcoming"), badge: bookingNavBadges.upcoming },
+          { label: t("Completed"), to: withBase("bookings/completed"), badge: bookingNavBadges.completed },
+          { label: t("Refunds"), to: withBase("bookings/refunds"), badge: bookingNavBadges.refunds },
         ],
       },
     
@@ -293,7 +333,17 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         to: withBase("system/health"),
       },
     ];
-  }, [isModerator, isModeratorOnly, isSupportOnly, t, withBase]);
+  }, [
+    bookingNavBadges.all,
+    bookingNavBadges.completed,
+    bookingNavBadges.refunds,
+    bookingNavBadges.upcoming,
+    isModerator,
+    isModeratorOnly,
+    isSupportOnly,
+    t,
+    withBase,
+  ]);
 
   const accentPalette = useMemo(
     () => ["#F59E0B", "#22C55E", "#EC4899", "#A855F7", "#0EA5E9", "#F97316", "#10B981"],
@@ -378,12 +428,26 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                         </div>
 
                         {!isCollapsed && (
-                          <HiChevronDown
-                            className={cn(
-                              "h-5 w-5 transition-transform duration-200",
-                              isOpen && "rotate-180"
+                          <div className="ml-auto flex items-center gap-2">
+                            {item.badge && (
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-[10px] font-bold",
+                                  displayActive
+                                    ? "bg-white/20 text-white"
+                                    : "bg-slate-100 text-slate-600"
+                                )}
+                              >
+                                {item.badge}
+                              </span>
                             )}
-                          />
+                            <HiChevronDown
+                              className={cn(
+                                "h-5 w-5 transition-transform duration-200",
+                                isOpen && "rotate-180"
+                              )}
+                            />
+                          </div>
                         )}
                       </button>
 
@@ -426,6 +490,11 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                                       }}
                                     />
                                     <span className="truncate">{child.label}</span>
+                                    {child.badge && (
+                                      <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                        {child.badge}
+                                      </span>
+                                    )}
                                   </NavLink>
                                 </li>
                               ))}
