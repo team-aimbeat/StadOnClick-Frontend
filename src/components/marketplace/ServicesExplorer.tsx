@@ -454,7 +454,7 @@ export default function ServicesExplorer({
                   <ServiceCard
                     key={service.id}
                     service={service}
-                    onViewDetails={(item) => navigate(`/service/${item.id}`)}
+                    onViewDetails={(item) => navigate(`/service/${item.slug}`)}
                     onEnquiry={(item) => setEnquiryService(item)}
                   />
                 ))}

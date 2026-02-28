@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
+import { slugifyServiceTitle } from "@/utils/slugify";
 import {
   useGetWishlistQuery,
   useRemoveWishlistItemMutation,
@@ -83,7 +84,7 @@ export default function Wishlist() {
                     </div>
                     <div className="flex items-center justify-between pt-2">
                       <Link
-                        to={`/service/${item.id}`}
+                        to={`/service/${slugifyServiceTitle(item.title)}`}
                         className="text-sm font-semibold text-blue-600 hover:text-blue-700"
                       >
                         View details

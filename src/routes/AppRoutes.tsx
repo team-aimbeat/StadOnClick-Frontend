@@ -186,7 +186,7 @@ const appRouter = createBrowserRouter([
             element: <AffiliateMarketing />,
           },
           {
-            path: "/service/:serviceId",
+            path: "/service/:serviceSlug",
             element: <ServiceDetail />,
           },
           {

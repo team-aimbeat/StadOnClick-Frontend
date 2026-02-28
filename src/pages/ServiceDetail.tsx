@@ -174,8 +174,7 @@ const couponThemes = [
 export default function ServiceDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { serviceId: serviceIdParam, serviceSlug } = useParams<{
-    serviceId?: string;
+  const { serviceSlug } = useParams<{
     serviceSlug?: string;
   }>();
   const authUser = useAppSelector((state) => state.auth.user);
@@ -248,9 +247,15 @@ export default function ServiceDetail() {
   const [fetchOfferingSlots, { data: fetchedSlots }] =
     useLazyGetOfferingSlotsQuery();
 
-  const slugSearchQuery = serviceSlug
-    ? slugToSearchQuery(serviceSlug)
-    : undefined;
+  const isUuidLikeServiceKey = Boolean(
+    serviceSlug &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceSlug),
+  );
+  const serviceIdParam = isUuidLikeServiceKey ? serviceSlug : undefined;
+  const slugSearchQuery =
+    serviceSlug && !isUuidLikeServiceKey
+      ? slugToSearchQuery(serviceSlug)
+      : undefined;
   const affiliateRef = (searchParams.get("ref") ?? "").trim() || undefined;
   const marketplaceParams = serviceIdParam
     ? { serviceId: serviceIdParam, ref: affiliateRef, limit: 12, offset: 0 }
