@@ -321,6 +321,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("System"),
         icon: HiCog6Tooth,
         children: [
+          { label: t("Platform Settings"), to: withBase("settings") },
           { label: t("API Docs"), to: withBase("system/docs") },
           { label: t("Admin Activity"), to: withBase("system/audit") },
         ],
@@ -352,7 +353,8 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
 
   const isPathActive = (path?: string) => {
     if (!path) return false;
-    return location.pathname.startsWith(path);
+    // Exact match for the base route, OR it's a sub-route (e.g. /admin/coupons/new)
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   const isItemActive = (item: NavItem) => {
@@ -507,11 +509,11 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                     /* Single link item */
                     <NavLink
                       to={item.to ?? "/"}
-                      className={({ isActive }) =>
+                      className={() =>
                         cn(
                           "flex h-12 w-full items-center rounded-lg px-4 transition-colors",
                           isCollapsed ? "justify-center" : "gap-3",
-                          isActive
+                          active
                             ? "bg-[#4F7DFF] text-white shadow-sm"
                             : "text-slate-700 hover:bg-slate-50 active:bg-slate-100"
                         )
