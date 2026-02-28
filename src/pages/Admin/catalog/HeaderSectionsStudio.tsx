@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Bell, BriefcaseBusiness, Heart, Megaphone, Plus, Search, ShoppingBag, ShoppingCartIcon, Trash2, UserRound } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -203,6 +203,131 @@ export default function HeaderSectionsStudio() {
           <Plus className="mr-1 h-3.5 w-3.5" />
           Add Utility Link
         </Button>
+      </section>
+
+      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
+            <p className="text-xs text-slate-500">Preview updates instantly as you edit header content.</p>
+          </div>
+          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            Desktop header preview
+          </span>
+        </div>
+
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-inner">
+          <div className="border-b border-slate-200 bg-white">
+            <div className="flex flex-wrap items-center gap-3 px-3 py-2 sm:px-4">
+              <a
+                href={header.brand.logoHref || "#"}
+                className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900"
+              >
+                <div className="h-8 w-8 rounded-full bg-blue-700">
+                  <span className="sr-only">Preview logo</span>
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold tracking-tight text-slate-500">
+                    {header.brand.line1 || "StadOnClick"}
+                  </p>
+                  <p className="text-base font-semibold tracking-tight text-slate-900">
+                    {header.brand.line2 || "Discover Sweden"}
+                  </p>
+                </div>
+              </a>
+
+              <div className="flex min-w-[260px] flex-1 justify-center">
+                <div className="w-full max-w-3xl">
+                  <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3 py-1">
+                    <input
+                      readOnly
+                      value=""
+                      placeholder={header.search.placeholder || "Search placeholder"}
+                      className="flex-1 bg-transparent px-2 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white"
+                    >
+                      <Search className="h-4 w-4" />
+                      {header.search.buttonLabel || "Search"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] text-slate-600 sm:inline-flex"
+                >
+                  <BriefcaseBusiness className="h-4 w-4 text-emerald-500" />
+                  {header.actions.businessLabel || "Business on StadOnClick"}
+                </button>
+                <button
+                  type="button"
+                  className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-[14px] text-slate-600 sm:inline-flex"
+                >
+                  <Megaphone className="h-4 w-4 text-indigo-500" />
+                  {header.actions.affiliateLabel || "Affiliate Program"}
+                </button>
+                <button
+                  type="button"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700"
+                >
+                  <Heart className="h-5 w-5 text-rose-500" />
+                </button>
+                <button
+                  type="button"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600"
+                >
+                  <ShoppingBag className="h-5 w-5 text-amber-600" />
+                </button>
+                <button
+                  type="button"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-blue-700"
+                >
+                  <ShoppingCartIcon className="h-5 w-5 text-indigo-600" />
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-500 px-1 text-[11px] font-semibold text-white">
+                    2
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700"
+                >
+                  <Bell className="h-5 w-5 text-blue-700" />
+                </button>
+                <button
+                  type="button"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700"
+                >
+                  <UserRound className="h-5 w-5 text-slate-500" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 bg-white px-4 py-3">
+            <p className="mb-3 text-xs text-slate-500">Notification utility actions</p>
+            <div className="flex flex-wrap gap-2">
+              {header.notifications.utilityLinks.length ? (
+                header.notifications.utilityLinks.map((item, index) => (
+                  <span
+                    key={`header-preview-${index}`}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700"
+                  >
+                    {item || "Utility link"}
+                  </span>
+                ))
+              ) : (
+                <span className="rounded-full border border-dashed border-slate-300 px-3 py-1.5 text-xs text-slate-400">
+                  No utility links configured
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="flex flex-wrap items-center gap-2">

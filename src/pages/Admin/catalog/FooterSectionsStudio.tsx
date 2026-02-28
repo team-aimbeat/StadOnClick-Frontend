@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Facebook, Globe, Instagram, Linkedin, Plus, Star, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { Button } from "@/components/ui/button";
 import { defaultFooterContent, normalizeFooterContent, type FooterContent } from "@/lib/footerContent";
+
+const previewIconMap = {
+  facebook: Facebook,
+  instagram: Instagram,
+  x: X,
+  linkedin: Linkedin,
+  globe: Globe,
+} as const;
 
 export default function FooterSectionsStudio() {
   const [isSaving, setIsSaving] = useState(false);
@@ -428,6 +436,111 @@ export default function FooterSectionsStudio() {
               <Plus className="mr-1 h-3.5 w-3.5" />
               Add Legal Link
             </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
+            <p className="text-xs text-slate-500">Review the footer composition before you save it.</p>
+          </div>
+          <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            Footer preview
+          </span>
+        </div>
+
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="grid gap-8 border-b border-slate-200 px-5 py-6 lg:grid-cols-[1.6fr,1fr]">
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-slate-50 text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                  {footer.app.qrLabel || "QR"}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                    {footer.app.eyebrow || "Eyebrow"}
+                  </p>
+                  <h3 className="text-2xl font-semibold leading-tight text-slate-900">
+                    {footer.app.title || "Footer headline"}
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    {footer.app.description || "Footer description"}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      {footer.app.buttonLabel || "Button"}
+                    </button>
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                      <Star className="h-4 w-4 text-amber-500" />
+                      {footer.app.ratingText || "Rating text"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Social</p>
+              <div className="flex flex-wrap gap-2">
+                {footer.socialLinks.map((item, index) => {
+                  const Icon = previewIconMap[item.icon] ?? Globe;
+                  return (
+                    <span
+                      key={`footer-social-preview-${index}`}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700"
+                      title={item.label}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-6 border-b border-slate-200 px-5 py-6 md:grid-cols-2 xl:grid-cols-4">
+            {footer.columns.map((column, colIndex) => (
+              <div key={`footer-column-preview-${colIndex}`} className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                  {column.title || `Column ${colIndex + 1}`}
+                </p>
+                <div className="space-y-2">
+                  {column.links.slice(0, 5).map((link, linkIndex) => (
+                    <p key={`footer-column-link-preview-${colIndex}-${linkIndex}`} className="text-sm text-slate-700">
+                      {link.label || "Untitled link"}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Quick Links</p>
+              <div className="flex flex-wrap gap-2">
+                {footer.quickLinks.map((link, index) => (
+                  <span
+                    key={`footer-quick-preview-${index}`}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700"
+                  >
+                    {link.label || "Quick link"}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 px-5 py-4 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
+            <p>{footer.copyright || "Copyright text"}</p>
+            <div className="flex flex-wrap gap-3">
+              {footer.legalLinks.map((link, index) => (
+                <span key={`footer-legal-preview-${index}`}>{link.label || "Legal link"}</span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
