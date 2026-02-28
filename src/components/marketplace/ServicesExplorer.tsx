@@ -348,7 +348,7 @@ export default function ServicesExplorer({
 
   return (
     <section className="min-h-screen bg-[#F9F9F9] py-8">
-      <div className="mx-auto flex max-w-370 gap-8 px-6 lg:px-8">
+      <div className="mx-auto flex items-start max-w-370 gap-8 px-6 lg:px-8">
         <ServicesSidebar
           categories={sidebarCategories}
           locations={sidebarLocations}
