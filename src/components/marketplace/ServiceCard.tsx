@@ -160,7 +160,7 @@ export default function ServiceCard({
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-155">
+    <article className="flex min-h-155 flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25">
       <div className="relative h-50">
         <button
           type="button"
@@ -269,14 +269,13 @@ export default function ServiceCard({
           <button
             type="button"
             onClick={() => onViewDetails(service)}
-            className="min-w-33.75 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="flex-1 min-w-0 rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-600 whitespace-nowrap"
           >
             View all services
           </button>
           <button
             type="button"
-            className="min-w-33.75 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 transition
-             hover:bg-blue-50"
+            className="flex-1 min-w-0 rounded-lg border border-blue-500 px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 whitespace-nowrap"
             onClick={() => onEnquiry(service)}
           >
             <div className="flex items-center justify-center gap-2">
