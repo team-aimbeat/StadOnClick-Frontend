@@ -8,6 +8,7 @@ import cover3 from "@/assets/Images/hotel3.jpg";
 import cover4 from "@/assets/Images/hotel4.jpg";
 
 type BlogItem = {
+  category: string;
   name: string;
   role: string;
   description: string;
@@ -31,6 +32,7 @@ const BLOG_CARD_COUNT = 4;
 
 const fallbackItems: BlogItem[] = [
   {
+    category: "Design",
     name: "Yeray Rosales",
     role: "UI/UX Designer",
     description: "Thoughtful designer focused on clean systems, fast UX, and friendly visual language.",
@@ -40,6 +42,7 @@ const fallbackItems: BlogItem[] = [
     navigationLink: "#",
   },
   {
+    category: "Product",
     name: "Maya Chen",
     role: "Product Designer",
     description: "Thoughtful designer focused on clean systems, fast UX, and friendly visual language.",
@@ -49,6 +52,7 @@ const fallbackItems: BlogItem[] = [
     navigationLink: "#",
   },
   {
+    category: "Visual Art",
     name: "Hugo Park",
     role: "Visual Artist",
     description: "Thoughtful designer focused on clean systems, fast UX, and friendly visual language.",
@@ -58,6 +62,7 @@ const fallbackItems: BlogItem[] = [
     navigationLink: "#",
   },
   {
+    category: "Branding",
     name: "Sofia Allen",
     role: "Brand Strategist",
     description: "Thoughtful designer focused on clean systems, fast UX, and friendly visual language.",
@@ -81,6 +86,7 @@ export default function RecentPosts({ content }: BlogsProps) {
       const fallback = fallbackItems[index];
       const raw = rawItems[index] ?? {};
       return {
+        category: String(raw.category ?? "").trim() || fallback.category,
         name: String(raw.name ?? "").trim() || fallback.name,
         role: String(raw.role ?? "").trim() || fallback.role,
         description: String(raw.description ?? "").trim() || fallback.description,
@@ -140,6 +146,9 @@ export default function RecentPosts({ content }: BlogsProps) {
                 <h3 className="mt-3 text-sm font-semibold text-slate-900">
                   {profile.name}
                 </h3>
+                <p className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                  {profile.category}
+                </p>
                 <p className="text-xs text-slate-500">{profile.role}</p>
 
                 <p className="mt-4  border-slate-100 pt-3 text-sm text-slate-500">{profile.description}</p>

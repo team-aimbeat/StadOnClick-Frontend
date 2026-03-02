@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 const BLOG_CARD_COUNT = 4;
 
 type BlogCardState = {
+  category: string;
   name: string;
   role: string;
   description: string;
@@ -25,18 +26,24 @@ type BlogsContentState = {
 };
 
 function normalizeBlogsContent(input: unknown): BlogsContentState {
-  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const source =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)
+      : {};
   const rawItems = Array.isArray(source.items) ? source.items : [];
   const items = Array.from({ length: BLOG_CARD_COUNT }, (_, index) => {
     const raw = rawItems[index] as Record<string, unknown> | undefined;
     return {
+      category: typeof raw?.category === "string" ? raw.category : "",
       name: typeof raw?.name === "string" ? raw.name : "",
       role: typeof raw?.role === "string" ? raw.role : "",
       description: typeof raw?.description === "string" ? raw.description : "",
-      profileImage: typeof raw?.profileImage === "string" ? raw.profileImage : "",
+      profileImage:
+        typeof raw?.profileImage === "string" ? raw.profileImage : "",
       coverImage: typeof raw?.coverImage === "string" ? raw.coverImage : "",
       buttonText: typeof raw?.buttonText === "string" ? raw.buttonText : "",
-      navigationLink: typeof raw?.navigationLink === "string" ? raw.navigationLink : "",
+      navigationLink:
+        typeof raw?.navigationLink === "string" ? raw.navigationLink : "",
     };
   });
 
@@ -50,9 +57,14 @@ function normalizeBlogsContent(input: unknown): BlogsContentState {
 export default function HomeBlogsStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
-  const [blogsContent, setBlogsContent] = useState<BlogsContentState>(normalizeBlogsContent(undefined));
+  const [blogsContent, setBlogsContent] = useState<BlogsContentState>(
+    normalizeBlogsContent(undefined),
+  );
   const cardsWithImages = useMemo(
-    () => blogsContent.items.filter((item) => item.profileImage.trim() || item.coverImage.trim()).length,
+    () =>
+      blogsContent.items.filter(
+        (item) => item.profileImage.trim() || item.coverImage.trim(),
+      ).length,
     [blogsContent.items],
   );
 
@@ -60,10 +72,15 @@ export default function HomeBlogsStudio() {
     let ignore = false;
     const load = async () => {
       try {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(
+          /\/+$/,
+          "",
+        );
         if (!baseUrl) return;
 
-        const cmsResponse = await fetch(`${baseUrl}/pages/home`, { credentials: "include" });
+        const cmsResponse = await fetch(`${baseUrl}/pages/home`, {
+          credentials: "include",
+        });
         if (cmsResponse.ok) {
           const payload = (await cmsResponse.json()) as Record<string, unknown>;
           if (ignore) return;
@@ -72,9 +89,14 @@ export default function HomeBlogsStudio() {
           return;
         }
 
-        const legacyResponse = await fetch(`${baseUrl}/home-content`, { credentials: "include" });
+        const legacyResponse = await fetch(`${baseUrl}/home-content`, {
+          credentials: "include",
+        });
         if (!legacyResponse.ok) return;
-        const payload = (await legacyResponse.json()) as Record<string, unknown>;
+        const payload = (await legacyResponse.json()) as Record<
+          string,
+          unknown
+        >;
         if (ignore) return;
         setFullPayload(payload);
         setBlogsContent(normalizeBlogsContent(payload.blogs));
@@ -98,6 +120,7 @@ export default function HomeBlogsStudio() {
           title: blogsContent.title,
           subtitle: blogsContent.subtitle,
           items: blogsContent.items.map((item) => ({
+            category: item.category,
             name: item.name,
             role: item.role,
             description: item.description,
@@ -122,8 +145,12 @@ export default function HomeBlogsStudio() {
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null;
-        throw new Error(errorPayload?.message || `Save failed (${response.status})`);
+        const errorPayload = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(
+          errorPayload?.message || `Save failed (${response.status})`,
+        );
       }
 
       setFullPayload(payload);
@@ -137,17 +164,27 @@ export default function HomeBlogsStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Home Blogs Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections / Blogs" />
+      <TitleBreadCrumbs
+        title="Blogs Studio"
+        breadCrumbTitle="Admin / Layout Studio / Home Sections / Blogs"
+      />
 
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <details className="rounded-xl border border-slate-200 bg-white p-3" open>
-          <summary className="cursor-pointer text-sm font-semibold text-slate-800">Blogs Section Content</summary>
+        <details
+          className="rounded-xl  bg-white p-3"
+          open
+        >
+          <summary className="cursor-pointer text-sm font-semibold text-slate-800">
+            Blogs Section Content
+          </summary>
 
           <div className="mt-3 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
               <div className="grid min-w-[260px] flex-1 gap-2 md:grid-cols-2">
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-slate-600">Section Title</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Section Title
+                  </span>
                   <input
                     value={blogsContent.title}
                     onChange={(event) =>
@@ -162,7 +199,9 @@ export default function HomeBlogsStudio() {
                 </label>
 
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-slate-600">Section Subtitle</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Section Subtitle
+                  </span>
                   <input
                     value={blogsContent.subtitle}
                     onChange={(event) =>
@@ -188,7 +227,9 @@ export default function HomeBlogsStudio() {
                   className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-700">Blog Card {index + 1}/4</p>
+                    <p className="text-xs font-semibold text-slate-700">
+                      Blog Card {index + 1}/4
+                    </p>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
                       Blog
                     </span>
@@ -211,7 +252,11 @@ export default function HomeBlogsStudio() {
                     </div>
                     <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                       {item.coverImage ? (
-                        <img src={item.coverImage} alt={`blog-cover-${index + 1}`} className="aspect-square w-full object-cover" />
+                        <img
+                          src={item.coverImage}
+                          alt={`blog-cover-${index + 1}`}
+                          className="aspect-square w-full object-cover"
+                        />
                       ) : (
                         <div className="flex aspect-square items-center justify-center gap-1 text-slate-400">
                           <ImageIcon className="h-3.5 w-3.5" />
@@ -223,13 +268,39 @@ export default function HomeBlogsStudio() {
 
                   <div className="grid gap-2">
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Name</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Category
+                      </span>
+                      <input
+                        value={item.category}
+                        onChange={(event) =>
+                          setBlogsContent((prev) => {
+                            const next = [...prev.items];
+                            next[index] = {
+                              ...next[index],
+                              category: event.target.value,
+                            };
+                            return { ...prev, items: next };
+                          })
+                        }
+                        className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
+                        placeholder="Technology"
+                      />
+                    </label>
+
+                    <label className="space-y-1">
+                      <span className="text-xs font-medium text-slate-600">
+                        Name
+                      </span>
                       <input
                         value={item.name}
                         onChange={(event) =>
                           setBlogsContent((prev) => {
                             const next = [...prev.items];
-                            next[index] = { ...next[index], name: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              name: event.target.value,
+                            };
                             return { ...prev, items: next };
                           })
                         }
@@ -239,13 +310,18 @@ export default function HomeBlogsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Role</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Role
+                      </span>
                       <input
                         value={item.role}
                         onChange={(event) =>
                           setBlogsContent((prev) => {
                             const next = [...prev.items];
-                            next[index] = { ...next[index], role: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              role: event.target.value,
+                            };
                             return { ...prev, items: next };
                           })
                         }
@@ -255,13 +331,18 @@ export default function HomeBlogsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Button Text</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Button Text
+                      </span>
                       <input
                         value={item.buttonText}
                         onChange={(event) =>
                           setBlogsContent((prev) => {
                             const next = [...prev.items];
-                            next[index] = { ...next[index], buttonText: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              buttonText: event.target.value,
+                            };
                             return { ...prev, items: next };
                           })
                         }
@@ -271,13 +352,18 @@ export default function HomeBlogsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Navigation Link</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Navigation Link
+                      </span>
                       <input
                         value={item.navigationLink}
                         onChange={(event) =>
                           setBlogsContent((prev) => {
                             const next = [...prev.items];
-                            next[index] = { ...next[index], navigationLink: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              navigationLink: event.target.value,
+                            };
                             return { ...prev, items: next };
                           })
                         }
@@ -287,13 +373,18 @@ export default function HomeBlogsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Description</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Description
+                      </span>
                       <input
                         value={item.description}
                         onChange={(event) =>
                           setBlogsContent((prev) => {
                             const next = [...prev.items];
-                            next[index] = { ...next[index], description: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              description: event.target.value,
+                            };
                             return { ...prev, items: next };
                           })
                         }
@@ -303,14 +394,19 @@ export default function HomeBlogsStudio() {
                     </label>
 
                     <div className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Profile Image URL</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Profile Image URL
+                      </span>
                       <div className="flex items-center gap-2">
                         <input
                           value={item.profileImage}
                           onChange={(event) =>
                             setBlogsContent((prev) => {
                               const next = [...prev.items];
-                              next[index] = { ...next[index], profileImage: event.target.value };
+                              next[index] = {
+                                ...next[index],
+                                profileImage: event.target.value,
+                              };
                               return { ...prev, items: next };
                             })
                           }
@@ -332,7 +428,10 @@ export default function HomeBlogsStudio() {
                                 if (typeof reader.result !== "string") return;
                                 setBlogsContent((prev) => {
                                   const next = [...prev.items];
-                                  next[index] = { ...next[index], profileImage: reader.result as string };
+                                  next[index] = {
+                                    ...next[index],
+                                    profileImage: reader.result as string,
+                                  };
                                   return { ...prev, items: next };
                                 });
                               };
@@ -345,14 +444,19 @@ export default function HomeBlogsStudio() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Cover Image URL</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Cover Image URL
+                      </span>
                       <div className="flex items-center gap-2">
                         <input
                           value={item.coverImage}
                           onChange={(event) =>
                             setBlogsContent((prev) => {
                               const next = [...prev.items];
-                              next[index] = { ...next[index], coverImage: event.target.value };
+                              next[index] = {
+                                ...next[index],
+                                coverImage: event.target.value,
+                              };
                               return { ...prev, items: next };
                             })
                           }
@@ -374,7 +478,10 @@ export default function HomeBlogsStudio() {
                                 if (typeof reader.result !== "string") return;
                                 setBlogsContent((prev) => {
                                   const next = [...prev.items];
-                                  next[index] = { ...next[index], coverImage: reader.result as string };
+                                  next[index] = {
+                                    ...next[index],
+                                    coverImage: reader.result as string,
+                                  };
                                   return { ...prev, items: next };
                                 });
                               };
@@ -396,7 +503,9 @@ export default function HomeBlogsStudio() {
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
-          <p className="text-xs text-slate-500">Auto-refreshes as you edit fields</p>
+          <p className="text-xs text-slate-500">
+            Auto-refreshes as you edit fields
+          </p>
         </div>
         <div className="max-h-[680px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
           <div className="pointer-events-none overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
@@ -413,4 +522,3 @@ export default function HomeBlogsStudio() {
     </div>
   );
 }
-

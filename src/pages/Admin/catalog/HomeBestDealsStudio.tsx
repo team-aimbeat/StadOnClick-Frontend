@@ -24,7 +24,10 @@ type HomeDiscountState = {
 };
 
 function normalizeHomeDiscount(input: unknown): HomeDiscountState {
-  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const source =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)
+      : {};
   const rawCards = Array.isArray(source.cards) ? source.cards : [];
   const cards = Array.from({ length: HOME_DISCOUNT_CARD_COUNT }, (_, index) => {
     const raw = rawCards[index] as Record<string, unknown> | undefined;
@@ -35,7 +38,8 @@ function normalizeHomeDiscount(input: unknown): HomeDiscountState {
       image: typeof raw?.image === "string" ? raw.image : "",
       bgImage: typeof raw?.bgImage === "string" ? raw.bgImage : "",
       slug: typeof raw?.slug === "string" ? raw.slug : "",
-      navigationLink: typeof raw?.navigationLink === "string" ? raw.navigationLink : "",
+      navigationLink:
+        typeof raw?.navigationLink === "string" ? raw.navigationLink : "",
     };
   });
 
@@ -48,9 +52,14 @@ function normalizeHomeDiscount(input: unknown): HomeDiscountState {
 export default function HomeBestDealsStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
-  const [homeDiscount, setHomeDiscount] = useState<HomeDiscountState>(normalizeHomeDiscount(undefined));
+  const [homeDiscount, setHomeDiscount] = useState<HomeDiscountState>(
+    normalizeHomeDiscount(undefined),
+  );
   const cardsWithImages = useMemo(
-    () => homeDiscount.cards.filter((card) => card.image.trim() || card.bgImage.trim()).length,
+    () =>
+      homeDiscount.cards.filter(
+        (card) => card.image.trim() || card.bgImage.trim(),
+      ).length,
     [homeDiscount.cards],
   );
 
@@ -58,10 +67,15 @@ export default function HomeBestDealsStudio() {
     let ignore = false;
     const load = async () => {
       try {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(
+          /\/+$/,
+          "",
+        );
         if (!baseUrl) return;
 
-        const cmsResponse = await fetch(`${baseUrl}/pages/home`, { credentials: "include" });
+        const cmsResponse = await fetch(`${baseUrl}/pages/home`, {
+          credentials: "include",
+        });
         if (cmsResponse.ok) {
           const payload = (await cmsResponse.json()) as Record<string, unknown>;
           if (ignore) return;
@@ -70,9 +84,14 @@ export default function HomeBestDealsStudio() {
           return;
         }
 
-        const legacyResponse = await fetch(`${baseUrl}/home-content`, { credentials: "include" });
+        const legacyResponse = await fetch(`${baseUrl}/home-content`, {
+          credentials: "include",
+        });
         if (!legacyResponse.ok) return;
-        const payload = (await legacyResponse.json()) as Record<string, unknown>;
+        const payload = (await legacyResponse.json()) as Record<
+          string,
+          unknown
+        >;
         if (ignore) return;
         setFullPayload(payload);
         setHomeDiscount(normalizeHomeDiscount(payload.homeDiscount));
@@ -120,8 +139,12 @@ export default function HomeBestDealsStudio() {
       });
 
       if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null;
-        throw new Error(errorPayload?.message || `Save failed (${response.status})`);
+        const errorPayload = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(
+          errorPayload?.message || `Save failed (${response.status})`,
+        );
       }
 
       setFullPayload(payload);
@@ -136,18 +159,25 @@ export default function HomeBestDealsStudio() {
   return (
     <div className="space-y-6">
       <TitleBreadCrumbs
-        title="Home Best Deals Studio"
+        title="Best Deals Studio"
         breadCrumbTitle="Admin / Layout Studio / Home Sections / Best Deals"
       />
 
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <details className="rounded-xl border border-slate-200 bg-white p-3" open>
-          <summary className="cursor-pointer text-sm font-semibold text-slate-800">Grab the Best Deals Today</summary>
+        <details
+          className="rounded-xl  bg-white p-3"
+          open
+        >
+          <summary className="cursor-pointer text-sm font-semibold text-slate-800">
+            Grab the Best Deals Today
+          </summary>
 
           <div className="mt-3 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
               <label className="min-w-[240px] flex-1 space-y-1">
-                <span className="text-xs font-medium text-slate-600">Section Heading</span>
+                <span className="text-xs font-medium text-slate-600">
+                  Section Heading
+                </span>
                 <input
                   value={homeDiscount.heading}
                   onChange={(event) =>
@@ -172,7 +202,9 @@ export default function HomeBestDealsStudio() {
                   className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-700">Card {index + 1}/5</p>
+                    <p className="text-xs font-semibold text-slate-700">
+                      Card {index + 1}/5
+                    </p>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
                       Best Deal
                     </span>
@@ -211,13 +243,18 @@ export default function HomeBestDealsStudio() {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Title</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Title
+                      </span>
                       <input
                         value={card.title}
                         onChange={(event) =>
                           setHomeDiscount((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], title: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              title: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -227,13 +264,18 @@ export default function HomeBestDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Subtitle</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Subtitle
+                      </span>
                       <input
                         value={card.subtitle}
                         onChange={(event) =>
                           setHomeDiscount((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], subtitle: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              subtitle: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -243,13 +285,18 @@ export default function HomeBestDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Price</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Price
+                      </span>
                       <input
                         value={card.price}
                         onChange={(event) =>
                           setHomeDiscount((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], price: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              price: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -259,13 +306,18 @@ export default function HomeBestDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Slug</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Slug
+                      </span>
                       <input
                         value={card.slug}
                         onChange={(event) =>
                           setHomeDiscount((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], slug: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              slug: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -275,13 +327,18 @@ export default function HomeBestDealsStudio() {
                     </label>
 
                     <label className="space-y-1 md:col-span-2">
-                      <span className="text-xs font-medium text-slate-600">Navigation Link</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Navigation Link
+                      </span>
                       <input
                         value={card.navigationLink}
                         onChange={(event) =>
                           setHomeDiscount((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], navigationLink: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              navigationLink: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -291,14 +348,19 @@ export default function HomeBestDealsStudio() {
                     </label>
 
                     <div className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Foreground Image URL</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Foreground Image URL
+                      </span>
                       <div className="flex items-center gap-2">
                         <input
                           value={card.image}
                           onChange={(event) =>
                             setHomeDiscount((prev) => {
                               const next = [...prev.cards];
-                              next[index] = { ...next[index], image: event.target.value };
+                              next[index] = {
+                                ...next[index],
+                                image: event.target.value,
+                              };
                               return { ...prev, cards: next };
                             })
                           }
@@ -320,7 +382,10 @@ export default function HomeBestDealsStudio() {
                                 if (typeof reader.result !== "string") return;
                                 setHomeDiscount((prev) => {
                                   const next = [...prev.cards];
-                                  next[index] = { ...next[index], image: reader.result as string };
+                                  next[index] = {
+                                    ...next[index],
+                                    image: reader.result as string,
+                                  };
                                   return { ...prev, cards: next };
                                 });
                               };
@@ -333,14 +398,19 @@ export default function HomeBestDealsStudio() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Background Image URL</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Background Image URL
+                      </span>
                       <div className="flex items-center gap-2">
                         <input
                           value={card.bgImage}
                           onChange={(event) =>
                             setHomeDiscount((prev) => {
                               const next = [...prev.cards];
-                              next[index] = { ...next[index], bgImage: event.target.value };
+                              next[index] = {
+                                ...next[index],
+                                bgImage: event.target.value,
+                              };
                               return { ...prev, cards: next };
                             })
                           }
@@ -362,7 +432,10 @@ export default function HomeBestDealsStudio() {
                                 if (typeof reader.result !== "string") return;
                                 setHomeDiscount((prev) => {
                                   const next = [...prev.cards];
-                                  next[index] = { ...next[index], bgImage: reader.result as string };
+                                  next[index] = {
+                                    ...next[index],
+                                    bgImage: reader.result as string,
+                                  };
                                   return { ...prev, cards: next };
                                 });
                               };
@@ -384,7 +457,9 @@ export default function HomeBestDealsStudio() {
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
-          <p className="text-xs text-slate-500">Auto-refreshes as you edit fields</p>
+          <p className="text-xs text-slate-500">
+            Auto-refreshes as you edit fields
+          </p>
         </div>
         <div className="max-h-[680px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
           <div className="pointer-events-none overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
@@ -401,4 +476,3 @@ export default function HomeBestDealsStudio() {
     </div>
   );
 }
-

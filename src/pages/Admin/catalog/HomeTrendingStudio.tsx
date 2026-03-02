@@ -23,7 +23,10 @@ type HomeTrendingState = {
 };
 
 function normalizeHomeTrending(input: unknown): HomeTrendingState {
-  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const source =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)
+      : {};
   const rawPlaces = Array.isArray(source.places) ? source.places : [];
   const places = Array.from({ length: TRENDING_CARD_COUNT }, (_, index) => {
     const raw = rawPlaces[index] as Record<string, unknown> | undefined;
@@ -37,7 +40,8 @@ function normalizeHomeTrending(input: unknown): HomeTrendingState {
   });
   return {
     heading: typeof source.heading === "string" ? source.heading : "",
-    backgroundImage: typeof source.backgroundImage === "string" ? source.backgroundImage : "",
+    backgroundImage:
+      typeof source.backgroundImage === "string" ? source.backgroundImage : "",
     places,
   };
 }
@@ -45,7 +49,9 @@ function normalizeHomeTrending(input: unknown): HomeTrendingState {
 export default function HomeTrendingStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
-  const [homeTrending, setHomeTrending] = useState<HomeTrendingState>(normalizeHomeTrending(undefined));
+  const [homeTrending, setHomeTrending] = useState<HomeTrendingState>(
+    normalizeHomeTrending(undefined),
+  );
   const cardsWithImage = useMemo(
     () => homeTrending.places.filter((place) => place.image.trim()).length,
     [homeTrending.places],
@@ -55,10 +61,15 @@ export default function HomeTrendingStudio() {
     let ignore = false;
     const load = async () => {
       try {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(
+          /\/+$/,
+          "",
+        );
         if (!baseUrl) return;
 
-        const cmsResponse = await fetch(`${baseUrl}/pages/home`, { credentials: "include" });
+        const cmsResponse = await fetch(`${baseUrl}/pages/home`, {
+          credentials: "include",
+        });
         if (cmsResponse.ok) {
           const payload = (await cmsResponse.json()) as Record<string, unknown>;
           if (ignore) return;
@@ -67,9 +78,14 @@ export default function HomeTrendingStudio() {
           return;
         }
 
-        const legacyResponse = await fetch(`${baseUrl}/home-content`, { credentials: "include" });
+        const legacyResponse = await fetch(`${baseUrl}/home-content`, {
+          credentials: "include",
+        });
         if (!legacyResponse.ok) return;
-        const payload = (await legacyResponse.json()) as Record<string, unknown>;
+        const payload = (await legacyResponse.json()) as Record<
+          string,
+          unknown
+        >;
         if (ignore) return;
         setFullPayload(payload);
         setHomeTrending(normalizeHomeTrending(payload.homeTrending));
@@ -114,8 +130,12 @@ export default function HomeTrendingStudio() {
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null;
-        throw new Error(errorPayload?.message || `Save failed (${response.status})`);
+        const errorPayload = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(
+          errorPayload?.message || `Save failed (${response.status})`,
+        );
       }
 
       setFullPayload(payload);
@@ -130,12 +150,15 @@ export default function HomeTrendingStudio() {
   return (
     <div className="space-y-6">
       <TitleBreadCrumbs
-        title="Home Trending Studio"
+        title="Trending Studio"
         breadCrumbTitle="Admin / Layout Studio / Home Sections / Trending"
       />
 
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <details className="rounded-xl border border-slate-200 bg-white p-3" open>
+        <details
+          className="rounded-xl  bg-white p-3"
+          open
+        >
           <summary className="cursor-pointer text-sm font-semibold text-slate-800">
             Elevated Experiences (Trending)
           </summary>
@@ -144,7 +167,9 @@ export default function HomeTrendingStudio() {
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
               <div className="grid min-w-[260px] flex-1 gap-2 md:grid-cols-2">
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-slate-600">Section Heading</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Section Heading
+                  </span>
                   <input
                     value={homeTrending.heading}
                     onChange={(event) =>
@@ -158,7 +183,9 @@ export default function HomeTrendingStudio() {
                   />
                 </label>
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-slate-600">Background Image URL</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Background Image URL
+                  </span>
                   <div className="flex items-center gap-2">
                     <input
                       value={homeTrending.backgroundImage}
@@ -204,7 +231,11 @@ export default function HomeTrendingStudio() {
 
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
               {homeTrending.backgroundImage ? (
-                <img src={homeTrending.backgroundImage} alt="trending-background" className="aspect-[5/1] w-full object-cover" />
+                <img
+                  src={homeTrending.backgroundImage}
+                  alt="trending-background"
+                  className="aspect-[5/1] w-full object-cover"
+                />
               ) : (
                 <div className="flex aspect-[5/1] items-center justify-center gap-1 text-slate-400">
                   <ImageIcon className="h-4 w-4" />
@@ -220,7 +251,9 @@ export default function HomeTrendingStudio() {
                   className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-700">Card {index + 1}/4</p>
+                    <p className="text-xs font-semibold text-slate-700">
+                      Card {index + 1}/4
+                    </p>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
                       Trending
                     </span>
@@ -228,7 +261,11 @@ export default function HomeTrendingStudio() {
 
                   <div className="mb-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                     {place.image ? (
-                      <img src={place.image} alt={`trending-card-${index + 1}`} className="aspect-square w-full object-cover" />
+                      <img
+                        src={place.image}
+                        alt={`trending-card-${index + 1}`}
+                        className="aspect-square w-full object-cover"
+                      />
                     ) : (
                       <div className="flex aspect-square items-center justify-center gap-1 text-slate-400">
                         <ImageIcon className="h-3.5 w-3.5" />
@@ -239,13 +276,18 @@ export default function HomeTrendingStudio() {
 
                   <div className="grid gap-2">
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Title</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Title
+                      </span>
                       <input
                         value={place.title}
                         onChange={(event) =>
                           setHomeTrending((prev) => {
                             const next = [...prev.places];
-                            next[index] = { ...next[index], title: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              title: event.target.value,
+                            };
                             return { ...prev, places: next };
                           })
                         }
@@ -255,13 +297,18 @@ export default function HomeTrendingStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Offers Text</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Offers Text
+                      </span>
                       <input
                         value={place.offers}
                         onChange={(event) =>
                           setHomeTrending((prev) => {
                             const next = [...prev.places];
-                            next[index] = { ...next[index], offers: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              offers: event.target.value,
+                            };
                             return { ...prev, places: next };
                           })
                         }
@@ -271,13 +318,18 @@ export default function HomeTrendingStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Price Text</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Price Text
+                      </span>
                       <input
                         value={place.price}
                         onChange={(event) =>
                           setHomeTrending((prev) => {
                             const next = [...prev.places];
-                            next[index] = { ...next[index], price: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              price: event.target.value,
+                            };
                             return { ...prev, places: next };
                           })
                         }
@@ -287,13 +339,18 @@ export default function HomeTrendingStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Redirect Link</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Redirect Link
+                      </span>
                       <input
                         value={place.link}
                         onChange={(event) =>
                           setHomeTrending((prev) => {
                             const next = [...prev.places];
-                            next[index] = { ...next[index], link: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              link: event.target.value,
+                            };
                             return { ...prev, places: next };
                           })
                         }
@@ -303,14 +360,19 @@ export default function HomeTrendingStudio() {
                     </label>
 
                     <div className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Card Image URL</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Card Image URL
+                      </span>
                       <div className="flex items-center gap-2">
                         <input
                           value={place.image}
                           onChange={(event) =>
                             setHomeTrending((prev) => {
                               const next = [...prev.places];
-                              next[index] = { ...next[index], image: event.target.value };
+                              next[index] = {
+                                ...next[index],
+                                image: event.target.value,
+                              };
                               return { ...prev, places: next };
                             })
                           }
@@ -332,7 +394,10 @@ export default function HomeTrendingStudio() {
                                 if (typeof reader.result !== "string") return;
                                 setHomeTrending((prev) => {
                                   const next = [...prev.places];
-                                  next[index] = { ...next[index], image: reader.result as string };
+                                  next[index] = {
+                                    ...next[index],
+                                    image: reader.result as string,
+                                  };
                                   return { ...prev, places: next };
                                 });
                               };
@@ -354,7 +419,9 @@ export default function HomeTrendingStudio() {
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
-          <p className="text-xs text-slate-500">Auto-refreshes as you edit fields</p>
+          <p className="text-xs text-slate-500">
+            Auto-refreshes as you edit fields
+          </p>
         </div>
         <div className="max-h-[680px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
           <div className="pointer-events-none overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
@@ -371,4 +438,3 @@ export default function HomeTrendingStudio() {
     </div>
   );
 }
-

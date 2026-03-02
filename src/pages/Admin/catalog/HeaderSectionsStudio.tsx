@@ -1,10 +1,25 @@
 import { useEffect, useState } from "react";
-import { Bell, BriefcaseBusiness, Heart, Megaphone, Plus, Search, ShoppingBag, ShoppingCartIcon, Trash2, UserRound } from "lucide-react";
+import {
+  Bell,
+  BriefcaseBusiness,
+  Heart,
+  Megaphone,
+  Plus,
+  Search,
+  ShoppingBag,
+  ShoppingCartIcon,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { Button } from "@/components/ui/button";
-import { defaultHeaderContent, normalizeHeaderContent, type HeaderContent } from "@/lib/headerContent";
+import {
+  defaultHeaderContent,
+  normalizeHeaderContent,
+  type HeaderContent,
+} from "@/lib/headerContent";
 import { Link } from "react-router-dom";
 
 export default function HeaderSectionsStudio() {
@@ -16,10 +31,15 @@ export default function HeaderSectionsStudio() {
     let ignore = false;
     const load = async () => {
       try {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(
+          /\/+$/,
+          "",
+        );
         if (!baseUrl) return;
 
-        const cmsResponse = await fetch(`${baseUrl}/pages/home`, { credentials: "include" });
+        const cmsResponse = await fetch(`${baseUrl}/pages/home`, {
+          credentials: "include",
+        });
         if (cmsResponse.ok) {
           const payload = (await cmsResponse.json()) as Record<string, unknown>;
           if (ignore) return;
@@ -28,9 +48,14 @@ export default function HeaderSectionsStudio() {
           return;
         }
 
-        const legacyResponse = await fetch(`${baseUrl}/home-content`, { credentials: "include" });
+        const legacyResponse = await fetch(`${baseUrl}/home-content`, {
+          credentials: "include",
+        });
         if (!legacyResponse.ok) return;
-        const payload = (await legacyResponse.json()) as Record<string, unknown>;
+        const payload = (await legacyResponse.json()) as Record<
+          string,
+          unknown
+        >;
         if (ignore) return;
         setFullPayload(payload);
         setHeader(normalizeHeaderContent(payload.header));
@@ -62,8 +87,12 @@ export default function HeaderSectionsStudio() {
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null;
-        throw new Error(errorPayload?.message || `Save failed (${response.status})`);
+        const errorPayload = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(
+          errorPayload?.message || `Save failed (${response.status})`,
+        );
       }
 
       setFullPayload(payload);
@@ -77,49 +106,87 @@ export default function HeaderSectionsStudio() {
 
   return (
     <div className="space-y-6">
-      <TitleBreadCrumbs title="Header Sections Studio" breadCrumbTitle="Admin / Layout Studio / Header Sections" />
+      <TitleBreadCrumbs
+        title="Header Studio"
+        breadCrumbTitle="Admin / Layout Studio / Header Sections"
+      />
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Brand & Search</h2>
         <div className="grid gap-2 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="text-xs font-medium text-slate-600">Brand Line 1</span>
+            <span className="text-xs font-medium text-slate-600">
+              Brand Line 1
+            </span>
             <input
               value={header.brand.line1}
-              onChange={(event) => setHeader((prev) => ({ ...prev, brand: { ...prev.brand, line1: event.target.value } }))}
+              onChange={(event) =>
+                setHeader((prev) => ({
+                  ...prev,
+                  brand: { ...prev.brand, line1: event.target.value },
+                }))
+              }
               className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs font-medium text-slate-600">Brand Line 2</span>
+            <span className="text-xs font-medium text-slate-600">
+              Brand Line 2
+            </span>
             <input
               value={header.brand.line2}
-              onChange={(event) => setHeader((prev) => ({ ...prev, brand: { ...prev.brand, line2: event.target.value } }))}
+              onChange={(event) =>
+                setHeader((prev) => ({
+                  ...prev,
+                  brand: { ...prev.brand, line2: event.target.value },
+                }))
+              }
               className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
             />
           </label>
           <label className="space-y-1 md:col-span-2">
-            <span className="text-xs font-medium text-slate-600">Logo Link</span>
+            <span className="text-xs font-medium text-slate-600">
+              Logo Link
+            </span>
             <input
               value={header.brand.logoHref}
-              onChange={(event) => setHeader((prev) => ({ ...prev, brand: { ...prev.brand, logoHref: event.target.value } }))}
+              onChange={(event) =>
+                setHeader((prev) => ({
+                  ...prev,
+                  brand: { ...prev.brand, logoHref: event.target.value },
+                }))
+              }
               className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
               placeholder="/"
             />
           </label>
           <label className="space-y-1 md:col-span-2">
-            <span className="text-xs font-medium text-slate-600">Search Placeholder</span>
+            <span className="text-xs font-medium text-slate-600">
+              Search Placeholder
+            </span>
             <input
               value={header.search.placeholder}
-              onChange={(event) => setHeader((prev) => ({ ...prev, search: { ...prev.search, placeholder: event.target.value } }))}
+              onChange={(event) =>
+                setHeader((prev) => ({
+                  ...prev,
+                  search: { ...prev.search, placeholder: event.target.value },
+                }))
+              }
               className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs font-medium text-slate-600">Search Button Label</span>
+            <span className="text-xs font-medium text-slate-600">
+              Search Button Label
+            </span>
             <input
               value={header.search.buttonLabel}
-              onChange={(event) => setHeader((prev) => ({ ...prev, search: { ...prev.search, buttonLabel: event.target.value } }))}
+              onChange={(event) =>
+                setHeader((prev) => ({
+                  ...prev,
+                  search: { ...prev.search, buttonLabel: event.target.value },
+                }))
+              }
               className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
             />
           </label>
@@ -130,18 +197,38 @@ export default function HeaderSectionsStudio() {
         <h2 className="text-lg font-semibold text-slate-900">Header Actions</h2>
         <div className="grid gap-2 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="text-xs font-medium text-slate-600">Business Button Label</span>
+            <span className="text-xs font-medium text-slate-600">
+              Business Button Label
+            </span>
             <input
               value={header.actions.businessLabel}
-              onChange={(event) => setHeader((prev) => ({ ...prev, actions: { ...prev.actions, businessLabel: event.target.value } }))}
+              onChange={(event) =>
+                setHeader((prev) => ({
+                  ...prev,
+                  actions: {
+                    ...prev.actions,
+                    businessLabel: event.target.value,
+                  },
+                }))
+              }
               className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs font-medium text-slate-600">Affiliate Button Label</span>
+            <span className="text-xs font-medium text-slate-600">
+              Affiliate Button Label
+            </span>
             <input
               value={header.actions.affiliateLabel}
-              onChange={(event) => setHeader((prev) => ({ ...prev, actions: { ...prev.actions, affiliateLabel: event.target.value } }))}
+              onChange={(event) =>
+                setHeader((prev) => ({
+                  ...prev,
+                  actions: {
+                    ...prev.actions,
+                    affiliateLabel: event.target.value,
+                  },
+                }))
+              }
               className="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-xs"
             />
           </label>
@@ -149,17 +236,28 @@ export default function HeaderSectionsStudio() {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Notification Utility Links</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          Notification Utility Links
+        </h2>
         <div className="space-y-2">
           {header.notifications.utilityLinks.map((item, index) => (
-            <div key={`utility-${index}`} className="flex gap-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+            <div
+              key={`utility-${index}`}
+              className="flex gap-2 rounded-md border border-slate-200 bg-slate-50 p-2"
+            >
               <input
                 value={item}
                 onChange={(event) =>
                   setHeader((prev) => {
                     const next = [...prev.notifications.utilityLinks];
                     next[index] = event.target.value;
-                    return { ...prev, notifications: { ...prev.notifications, utilityLinks: next } };
+                    return {
+                      ...prev,
+                      notifications: {
+                        ...prev.notifications,
+                        utilityLinks: next,
+                      },
+                    };
                   })
                 }
                 className="h-8 flex-1 rounded-md border border-slate-300 bg-white px-2 text-xs"
@@ -175,7 +273,9 @@ export default function HeaderSectionsStudio() {
                     ...prev,
                     notifications: {
                       ...prev.notifications,
-                      utilityLinks: prev.notifications.utilityLinks.filter((_, i) => i !== index),
+                      utilityLinks: prev.notifications.utilityLinks.filter(
+                        (_, i) => i !== index,
+                      ),
                     },
                   }))
                 }
@@ -208,8 +308,12 @@ export default function HeaderSectionsStudio() {
       <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
-            <p className="text-xs text-slate-500">Preview updates instantly as you edit header content.</p>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Live Preview
+            </h2>
+            <p className="text-xs text-slate-500">
+              Preview updates instantly as you edit header content.
+            </p>
           </div>
           <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
             Desktop header preview
@@ -242,7 +346,9 @@ export default function HeaderSectionsStudio() {
                     <input
                       readOnly
                       value=""
-                      placeholder={header.search.placeholder || "Search placeholder"}
+                      placeholder={
+                        header.search.placeholder || "Search placeholder"
+                      }
                       className="flex-1 bg-transparent px-2 py-1.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                     />
                     <button
@@ -309,7 +415,9 @@ export default function HeaderSectionsStudio() {
           </div>
 
           <div className="border-t border-slate-200 bg-white px-4 py-3">
-            <p className="mb-3 text-xs text-slate-500">Notification utility actions</p>
+            <p className="mb-3 text-xs text-slate-500">
+              Notification utility actions
+            </p>
             <div className="flex flex-wrap gap-2">
               {header.notifications.utilityLinks.length ? (
                 header.notifications.utilityLinks.map((item, index) => (
@@ -332,7 +440,9 @@ export default function HeaderSectionsStudio() {
 
       <section className="flex flex-wrap items-center gap-2">
         <Button variant="outline" asChild>
-          <Link to="/admin/layout-studio/header-dropdown">Open Header Dropdown Studio</Link>
+          <Link to="/admin/layout-studio/header-dropdown">
+            Open Header Dropdown Studio
+          </Link>
         </Button>
         <Button onClick={save} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save header changes"}
@@ -341,4 +451,3 @@ export default function HeaderSectionsStudio() {
     </div>
   );
 }
-
