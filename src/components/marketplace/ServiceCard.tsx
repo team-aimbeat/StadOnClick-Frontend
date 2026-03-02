@@ -66,6 +66,21 @@ export default function ServiceCard({
     }))
   }, [service.id, vendorServices])
 
+  const displayRating = useMemo(() => {
+    const current = vendorServices.find((item) => item.id === service.id)
+    const ratings = (current?.reviews ?? [])
+      .map((review) => Number(review.rating))
+      .filter((rating) => Number.isFinite(rating) && rating > 0)
+
+    if (ratings.length > 0) {
+      const total = ratings.reduce((sum, rating) => sum + rating, 0)
+      return total / ratings.length
+    }
+
+    const fallbackRating = Number(service.rating ?? 0)
+    return Number.isFinite(fallbackRating) ? fallbackRating : 0
+  }, [service.id, service.rating, vendorServices])
+
   const detailsToRender = useMemo(() => {
     const merged = [...liveOfferingDetails, ...vendorServiceDetails, ...service.details]
       .filter((item) => {
@@ -230,7 +245,7 @@ export default function ServiceCard({
             <div className="flex flex-col items-end">
               <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500">
                      <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
-                {service.rating.toFixed(1)}
+                {displayRating.toFixed(1)}
             </span>
           </div>
         </div>
