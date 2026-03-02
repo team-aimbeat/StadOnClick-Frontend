@@ -1,16 +1,13 @@
-import { useEffect } from "react";
 import { HiOutlineArrowTopRightOnSquare, HiOutlineCheckCircle, HiOutlineExclamationTriangle } from "react-icons/hi2";
 import { toast } from "react-hot-toast";
 
-import { useAppDispatch } from "@/app/hooks";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
-import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import {
-  useConnectStripeMutation,
-  useCreateStripeDashboardLinkMutation,
-  useGetStripeStatusQuery,
-} from "@/features/vendorStripe/api/vendorStripeApi";
+  useConnectAffiliateStripeMutation,
+  useCreateAffiliateStripeDashboardLinkMutation,
+  useGetAffiliateStripeStatusQuery,
+} from "@/features/affiliate/api/affiliateApi";
 
 const formatRequirement = (value: string) =>
   value
@@ -18,38 +15,30 @@ const formatRequirement = (value: string) =>
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
-const VendorStripe = () => {
-  const dispatch = useAppDispatch();
-  const { data: stripeResponse, isLoading, error, refetch } = useGetStripeStatusQuery();
-  const [connectStripe, { isLoading: isConnecting }] = useConnectStripeMutation();
-  const [createDashboardLink, { isLoading: isOpeningDashboard }] =
-    useCreateStripeDashboardLinkMutation();
-
-  useEffect(() => {
-    dispatch(setPageTitle("Payout Setup"));
-  }, [dispatch]);
+export default function AffiliateStripe() {
+  const { data: stripeResponse, isLoading, error, refetch } = useGetAffiliateStripeStatusQuery();
+  const [connectStripe, { isLoading: isConnecting }] = useConnectAffiliateStripeMutation();
+  const [openDashboard, { isLoading: isOpeningDashboard }] =
+    useCreateAffiliateStripeDashboardLinkMutation();
 
   const stripe = stripeResponse?.data;
   const pendingRequirements = stripe?.requirements.currentlyDue ?? [];
-  const canManage = Boolean(stripe?.connected);
 
   const redirectToStripe = async (mode: "connect" | "manage") => {
     try {
       const response =
         mode === "connect"
           ? await connectStripe().unwrap()
-          : await createDashboardLink().unwrap();
-      const target = response.data?.url;
-
-      if (!target) {
+          : await openDashboard().unwrap();
+      if (!response.data?.url) {
         throw new Error("Missing redirect target");
       }
 
-      window.location.assign(target);
+      window.location.assign(response.data.url);
     } catch (err: any) {
       if (err?.data?.code === "STRIPE_CONNECT_NOT_ENABLED") {
         toast.error(
-          "Stripe Connect is not enabled on the platform's Stripe account. Please contact support to resolve this setup issue.",
+          "Stripe Connect is not enabled on the platform's Stripe account. Please contact support to resolve this platform setup issue.",
           { duration: 6000 }
         );
       } else {
@@ -60,7 +49,7 @@ const VendorStripe = () => {
 
   if (isLoading) {
     return (
-      <DashboardContainer className="space-y-4 pt-8">
+      <DashboardContainer className="space-y-4 pb-10">
         <div className="h-8 w-1/3 animate-pulse rounded-full bg-slate-200" />
         <div className="h-56 rounded-2xl border border-slate-200 bg-slate-100 animate-pulse" />
       </DashboardContainer>
@@ -69,30 +58,30 @@ const VendorStripe = () => {
 
   return (
     <DashboardContainer className="space-y-6 pb-10">
-      <TitleBreadCrumbs title="Payout Setup" breadCrumbTitle="Vendor / Payout Setup" />
+      <TitleBreadCrumbs title="Payout Setup" breadCrumbTitle="Affiliate / Payout Setup" />
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
-              Vendor Payouts
+              Affiliate Payouts
             </p>
             <h2 className="mt-2 text-2xl font-bold text-slate-900">
-              {stripe?.connected ? "Your payout account is linked" : "Set up robust payouts to your bank"}
+              {stripe?.connected ? "Your payout account is linked" : "Set up robust bank payouts for commissions"}
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              We use Stripe Express to send your booking earnings directly to your bank account.
-              Once your account is fully verified, payouts for your paid orders will be initiated 
-              automatically. Any earnings held during setup will be settled immediately after verification.
+              We use Stripe Express to send your affiliate commissions directly to your bank account.
+              Once your account is verified, payouts for your payable commissions will be initiated 
+              automatically. Any commissions held during setup will settle instantly after verification.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 lg:w-[320px]">
             <p className="font-semibold text-slate-900">Robust System Features</p>
             <div className="mt-3 space-y-2 text-xs">
-              <p>• <strong>Automated:</strong> No manual payout requests needed.</p>
-              <p>• <strong>Real-time:</strong> Funds allocated immediately upon customer payment.</p>
-              <p>• <strong>Catch-up:</strong> Held funds settle instantly when your bank is ready.</p>
+              <p>• <strong>Automated:</strong> No more manual withdraw requests.</p>
+              <p>• <strong>Real-time:</strong> Commissions allocated when the customer pays.</p>
+              <p>• <strong>Catch-up:</strong> Held funds settle immediately once your bank is ready.</p>
             </div>
           </div>
         </div>
@@ -104,8 +93,8 @@ const VendorStripe = () => {
               <div>
                 <p className="font-semibold">Payout setup is not available right now.</p>
                 <p className="mt-1">
-                  This is usually a platform Stripe configuration issue. Your vendor profile is not the
-                  problem.
+                  This is usually a platform Stripe configuration issue, not an issue with your affiliate
+                  account.
                 </p>
                 <button
                   type="button"
@@ -179,7 +168,7 @@ const VendorStripe = () => {
             </button>
           )}
 
-          {canManage && (
+          {stripe?.connected && (
             <button
               type="button"
               disabled={isOpeningDashboard}
@@ -198,10 +187,10 @@ const VendorStripe = () => {
           <div className="flex items-start gap-3">
             <HiOutlineCheckCircle className="mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <p className="font-semibold">Automatic payouts are enabled.</p>
+              <p className="font-semibold">Automatic affiliate payouts are enabled.</p>
               <p className="mt-1">
-                New paid orders can be routed to your connected Stripe payout account immediately. Final
-                arrival in your bank still depends on Stripe&apos;s payout schedule and bank processing.
+                When a commission is marked payable, it can be transferred to your connected Stripe
+                account immediately. Final bank arrival still depends on Stripe&apos;s payout schedule.
               </p>
             </div>
           </div>
@@ -228,6 +217,4 @@ const VendorStripe = () => {
       )}
     </DashboardContainer>
   );
-};
-
-export default VendorStripe;
+}
