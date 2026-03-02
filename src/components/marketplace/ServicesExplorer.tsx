@@ -17,7 +17,7 @@ import { useGetCitiesQuery } from "@/features/auth/api/authApi"
 
 const PAGE_SIZE = 18
 const PRICE_MIN = 0
-const PRICE_MAX = 500
+const PRICE_MAX = 10000
 const DEFAULT_RATING_FILTER = 4.5
 
 const formatMoney = (amount: number, currency: string) => {
