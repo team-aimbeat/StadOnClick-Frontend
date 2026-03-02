@@ -200,7 +200,7 @@ export default function HomeExtraDealsStudio() {
               </p>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               {homeCategories.cards.map((card, index) => (
                 <div
                   key={`home-categories-card-${index}`}

@@ -359,7 +359,7 @@ export default function HomeOtherSectionsStudio() {
                   {filledAdvertiseTexts}/{ADVERTISE_TEXT_FIELDS.length} filled
                 </p>
               </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                 {ADVERTISE_TEXT_GROUPS.map((group) => (
                   <div key={group.title} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{group.title}</p>
@@ -392,21 +392,7 @@ export default function HomeOtherSectionsStudio() {
           </div>
         </details>
 
-        {SECTION_KEYS.map((section) => (
-          <details key={section.key} className="rounded-xl border border-slate-200 bg-white p-3" open={section.key === "homeMind"}>
-            <summary className="cursor-pointer text-sm font-semibold text-slate-800">{section.label}</summary>
-            <textarea
-              value={sections[section.key] ?? "{}"}
-              onChange={(event) =>
-                setSections((prev) => ({
-                  ...prev,
-                  [section.key]: event.target.value,
-                }))
-              }
-              className="mt-3 min-h-[180px] w-full rounded-xl border border-slate-300 bg-slate-50 p-3 font-mono text-xs text-slate-700"
-            />
-          </details>
-        ))}
+  
       </section>
 
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
