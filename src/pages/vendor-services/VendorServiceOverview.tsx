@@ -536,10 +536,28 @@ export function VendorServiceOverview({
             .sort(([a], [b]) => (a < b ? -1 : 1))
             .map(([date, value]) => ({ date, ...value }));
 
-    const offeringMap = new Map<string, { id: string; name: string; booked: number; revenue: number }>();
+    const selectedOfferings: VendorOffering[] =
+      selectedAnalyticsOfferingId === "ALL"
+        ? offerings
+        : offerings.filter((offering) => offering.id === selectedAnalyticsOfferingId);
+    const selectedOfferingBySlotId = new Map<string, VendorOffering>();
+    for (const offering of selectedOfferings) {
+      for (const slot of offering.slots ?? []) {
+        selectedOfferingBySlotId.set(slot.id, offering);
+      }
+    }
+
+    const offeringMap = new Map<string, { id: string; name: string; booked: number; revenue: number }>(
+      selectedOfferings.map((offering) => [
+        offering.id,
+        { id: offering.id, name: offering.name, booked: 0, revenue: 0 },
+      ]),
+    );
     for (const booking of currentBookings) {
-      const name = booking.vendorService?.title ?? service.title;
-      const key = booking.vendorService?.id ?? service.id;
+      const bookingOffering =
+        (booking.slotId ? selectedOfferingBySlotId.get(booking.slotId) : undefined) ?? undefined;
+      const key = bookingOffering?.id ?? booking.vendorService?.id ?? service.id;
+      const name = bookingOffering?.name ?? booking.vendorService?.title ?? service.title;
       const entry = offeringMap.get(key) ?? { id: key, name, booked: 0, revenue: 0 };
       entry.booked += 1;
       entry.revenue += toAmount(booking.orderItem?.priceFinal);
@@ -547,7 +565,9 @@ export function VendorServiceOverview({
     }
     const previousOfferingMap = new Map<string, number>();
     for (const booking of previousBookings) {
-      const key = booking.vendorService?.id ?? service.id;
+      const bookingOffering =
+        (booking.slotId ? selectedOfferingBySlotId.get(booking.slotId) : undefined) ?? undefined;
+      const key = bookingOffering?.id ?? booking.vendorService?.id ?? service.id;
       previousOfferingMap.set(key, (previousOfferingMap.get(key) ?? 0) + 1);
     }
     const offeringTrends = Array.from(offeringMap.values())
@@ -589,7 +609,10 @@ export function VendorServiceOverview({
             .filter(Boolean)
             .join(" ")
             .trim() || booking.user?.email || "Guest",
-        offeringName: booking.vendorService?.title ?? service.title,
+        offeringName:
+          (booking.slotId ? selectedOfferingBySlotId.get(booking.slotId)?.name : undefined) ??
+          booking.vendorService?.title ??
+          service.title,
         status: booking.status,
         amount: toAmount(booking.orderItem?.priceFinal),
         slotTime: booking.slot?.startTime ?? booking.createdAt,
@@ -614,6 +637,8 @@ export function VendorServiceOverview({
   }, [
     dateFrom,
     dateTo,
+    offerings,
+    selectedAnalyticsOfferingId,
     service.title,
     service.id,
     serviceBookings,
@@ -932,10 +957,10 @@ export function VendorServiceOverview({
           ) : (
             <EmptyState
               icon={<ReceiptText className="h-5 w-5" />}
-              title="No recent transactions"
-              description="Transaction history will appear once bookings are confirmed."
-              actionLabel="Add Offering"
-              onAction={() => setAddOfferingOpen(true)}
+              title="No bookings yet"
+              description="Bookings will appear here once customers place their first order."
+              actionLabel="Manage Offerings"
+              onAction={() => onEditOfferings()}
             />
           )}
         </div>
