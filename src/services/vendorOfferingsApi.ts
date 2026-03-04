@@ -19,6 +19,7 @@ export type VendorRule = {
 };
 
 export type VendorOffering = {
+  createdAt: string | number | Date;
   id: string;
   serviceId: string;
   name: string;

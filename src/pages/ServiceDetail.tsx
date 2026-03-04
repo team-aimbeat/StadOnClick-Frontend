@@ -1066,11 +1066,11 @@ export default function ServiceDetail() {
                               <p className="text-base font-semibold text-slate-900">
                                 {offering.name}
                               </p>
-                              <p className="text-xs text-slate-500">
-                                {offering.id}
-                              </p>
+                            <p className="text-xs font-semibold text-slate-400">
+  Created : {new Date(offering.createdAt).toLocaleString()}
+</p>
                               <p className="text-xs font-semibold text-slate-400">
-                                Max Qty: {offering.maxQuantity || "N/A"}
+                            Qty: {offering.maxQuantity || "N/A"}
                               </p>
                               <p className="text-xs font-semibold text-slate-400">
                                 Remaining: {offering.remainingQuantity ?? "N/A"}
