@@ -9,7 +9,7 @@ import {
   Star,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import salon1 from "@/assets/images/salon1.png";
 import salon2 from "@/assets/images/salon2.png";
 import salon3 from "@/assets/images/salon3.png";
@@ -92,8 +92,9 @@ const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
   if (remaining <= 0) {
     return "unavailable";
   }
-  const threshold = Math.max(1, Math.ceil(capacity * 0.25));
-  return remaining <= threshold ? "few" : "available";
+  // Color should react directly to remaining seats:
+  // full capacity -> green, any booked seat -> amber, 0 -> gray/full.
+  return remaining < capacity ? "few" : "available";
 };
 
 const formatSlotSeats = (slot: VendorSlot) => {
@@ -301,7 +302,6 @@ export default function ServiceDetail() {
   const serviceCity = matchedMarketplaceService?.cityName ?? "—";
   const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
   console.log(rules);
-  const lastFetchedSlotsKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!vendorId || typeof window === "undefined") return;
@@ -325,15 +325,7 @@ export default function ServiceDetail() {
   }, [trackVendorStoreVisit, vendorId]);
 
   useEffect(() => {
-    if (!bookedOffering?.id || !vendorId) {
-      lastFetchedSlotsKeyRef.current = null;
-      return;
-    }
-
-    const requestKey = `${vendorId}:${bookedOffering.id}`;
-    if (lastFetchedSlotsKeyRef.current === requestKey) return;
-
-    lastFetchedSlotsKeyRef.current = requestKey;
+    if (!bookedOffering?.id || !vendorId) return;
     fetchOfferingSlots({
       offeringId: bookedOffering.id,
       vendorId,
@@ -345,13 +337,39 @@ export default function ServiceDetail() {
     [bookedOffering, fetchedSlots],
   );
 
+  const reservedSlotQuantityById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of cartItems) {
+      if (!item.slotId) continue;
+      map.set(item.slotId, (map.get(item.slotId) ?? 0) + Math.max(item.quantity, 1));
+    }
+    return map;
+  }, [cartItems]);
+
+  const slotsForBookedOfferingWithCartHold = useMemo(
+    () =>
+      slotsForBookedOffering.map((slot) => {
+        const reserved = reservedSlotQuantityById.get(slot.id) ?? 0;
+        const nextRemaining = Math.max((slot.remaining ?? 0) - reserved, 0);
+        return {
+          ...slot,
+          remaining: nextRemaining,
+          status:
+            slot.status === "OPEN" && nextRemaining <= 0
+              ? ("FULL" as const)
+              : slot.status,
+        };
+      }),
+    [reservedSlotQuantityById, slotsForBookedOffering],
+  );
+
   const slotsForSelectedDate = useMemo(() => {
-    if (!selectedDate) return slotsForBookedOffering;
-    return slotsForBookedOffering.filter((slot) => {
+    if (!selectedDate) return slotsForBookedOfferingWithCartHold;
+    return slotsForBookedOfferingWithCartHold.filter((slot) => {
       const slotDate = getLocalDateKey(slot.startTime);
       return slotDate === selectedDateIso;
     });
-  }, [slotsForBookedOffering, selectedDateIso, selectedDate]);
+  }, [slotsForBookedOfferingWithCartHold, selectedDateIso, selectedDate]);
 
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
     return slotsForSelectedDate.map((slot) => ({
