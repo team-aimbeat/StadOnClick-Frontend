@@ -9,11 +9,11 @@ import {
   useGetPlatformStripeBalanceQuery
 } from "@/features/admin/finance/api/adminFinanceApi";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { 
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineArrowPath,
-  HiOutlineBuildingStorefront,
   HiOutlineClock,
   HiOutlineBanknotes,
   HiOutlineArrowTrendingUp
@@ -30,6 +30,7 @@ const AdminPayoutsPage = () => {
   const [reviewingPayout, setReviewingPayout] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isReviewModalOpening, setIsReviewModalOpening] = useState(false);
+  const navigate = useNavigate();
 
   const { data: statsResponse, isLoading: isStatsLoading } = useGetPlatformStatsQuery();
   const { data: response, isLoading: isPayoutsLoading, refetch } = useGetPayoutsQuery({ 
@@ -96,6 +97,38 @@ const AdminPayoutsPage = () => {
   const isPayoutBlocked = !!reviewingPayout && platformBalance != null && payoutShortfall > 0;
   const hasPlatformBalance = Boolean(platformBalance);
   const isPlatformBalanceHealthy = (platformBalance?.available ?? 0) >= 0;
+  const ledgerRows = payouts.map((payout: any) => {
+    const amount = Number(payout.amount || 0);
+    const fees = Number(payout.fees || payout.fee || 0);
+    const total = amount - fees;
+    const processedDate = payout.processedAt || payout.reviewedAt || payout.updatedAt || payout.createdAt;
+
+    return {
+      ...payout,
+      ledgerAmount: amount,
+      ledgerFees: fees,
+      ledgerTotal: total,
+      ledgerType: "Charge",
+      ledgerDescription:
+        payout.stripeTransferId || payout.vendor?.contactEmail || (payout.id ? `#${payout.id}` : "—"),
+      createdLabel: payout.createdAt ? dayjs(payout.createdAt).format("MMM D") : "—",
+      availableOnLabel: payout.status === "PENDING" || payout.status === "APPROVED"
+        ? "Pending bank cycle"
+        : processedDate
+          ? dayjs(processedDate).format("MMM D")
+          : "—",
+    };
+  });
+
+  const formatLedgerAmount = (value: number, options?: { sign?: boolean; negative?: boolean }) => {
+    const sign = options?.sign && value > 0 ? "+" : "";
+    const prefix = options?.negative && value > 0 ? "-" : "";
+    return `${sign}${prefix}SEK ${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  };
+
+  const handleOpenAvailability = () => {
+    navigate("/admin/finance/platform-wallet");
+  };
 
   if (isStatsLoading || isPlatformStripeBalanceLoading || (isPayoutsLoading && !response)) {
     return <AdminPayoutsSkeleton />;
@@ -103,15 +136,23 @@ const AdminPayoutsPage = () => {
 
   return (
     <DashboardContainer className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="flex-1" />
-        <button 
-          onClick={() => refetch()}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-medium text-slate-600 hover:text-slate-900 transition-all active:scale-95 shrink-0"
-        >
-          <HiOutlineArrowPath className={`w-3.5 h-3.5 ${isPayoutsLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2 mt-2 md:mt-0">
+          <button
+            onClick={handleOpenAvailability}
+            className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+          >
+            Check availability
+          </button>
+          <button 
+            onClick={() => refetch()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-medium text-slate-600 hover:text-slate-900 transition-all active:scale-95 shrink-0"
+          >
+            <HiOutlineArrowPath className={`w-3.5 h-3.5 ${isPayoutsLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Summary Metrics */}
@@ -229,80 +270,85 @@ const AdminPayoutsPage = () => {
         <DataTable
           title="Settlement Ledger"
           breadCrumbTitle="Finance / Payouts"
-          data={payouts}
+          data={ledgerRows}
         loading={isPayoutsLoading}
         columns={[
           {
-            key: "id",
-            title: "Reference",
+            key: "ledgerAmount",
+            title: "Amount",
+            align: "right",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-black text-slate-900 text-right text-mono-finance tracking-tight">
+                {formatLedgerAmount(payout.ledgerAmount)}
+              </p>
+            ),
+          },
+          {
+            key: "ledgerFees",
+            title: "Fees",
+            align: "right",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-black text-rose-600 text-right text-mono-finance tracking-tight">
+                {formatLedgerAmount(payout.ledgerFees, { negative: true })}
+              </p>
+            ),
+          },
+          {
+            key: "ledgerTotal",
+            title: "Total",
+            align: "right",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-black text-slate-900 text-right text-mono-finance tracking-tight">
+                {formatLedgerAmount(payout.ledgerTotal)}
+              </p>
+            ),
+          },
+          {
+            key: "ledgerType",
+            title: "Type",
             render: (value: string) => (
-              <span className="font-mono text-mono-finance text-[10px] text-slate-400 uppercase">
-                #{value.slice(0, 10)}
+              <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                {value || "Charge"}
               </span>
             ),
           },
           {
-            key: "vendor",
-            title: "Merchant",
+            key: "createdLabel",
+            title: "Description",
             render: (_: any, payout: any) => (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                  <HiOutlineBuildingStorefront className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 leading-none">{payout.vendor?.businessName || "Unknown Vendor"}</p>
-                  <p className="text-[10px] text-slate-400 font-mono mt-1">{payout.vendor?.contactEmail}</p>
-                </div>
-              </div>
-            ),
-          },
-          {
-            key: "amount",
-            title: "Amount",
-            render: (value: any, payout: any) => (
-              <div className="text-right font-black text-base text-mono-finance tracking-tighter">
-                <span className="text-slate-900">
-                  <span className="text-[10px] font-medium mr-1 opacity-40">{payout.currency}</span>
-                  {parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            ),
-          },
-          {
-            key: "status",
-            title: "State",
-            render: (value: string) => (
-              <div className="flex justify-center">
-                <span className={`status-indicator shadow-none border ${
-                  value === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                  value === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                  'bg-rose-50 text-rose-700 border-rose-100'
-                }`}>
-                  <div className={`w-1 h-1 rounded-full ${
-                     value === 'PAID' ? 'bg-emerald-500' : value === 'PENDING' ? 'bg-amber-500' : 'bg-rose-500'
-                  }`} />
-                  {value}
-                </span>
+              <div>
+                <p className="text-sm text-slate-900 font-medium">{payout.ledgerDescription}</p>
+                <p className="text-[11px] text-slate-500 font-mono mt-0.5">{payout.ledgerType === "Charge" ? "stripe charge" : "vendor request"}</p>
               </div>
             ),
           },
           {
             key: "createdAt",
-            title: "Timestamp",
+            title: "Created",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-semibold text-slate-700">{payout.createdLabel}</p>
+            ),
+          },
+          {
+            key: "availableOnLabel",
+            title: "Available on",
             render: (value: string) => (
-              <div>
-                <p className="text-[10px] font-bold text-slate-600">{dayjs(value).format('DD MMM, YYYY')}</p>
-                <p className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">{dayjs(value).format('hh:mm A')}</p>
-              </div>
+              <p className="text-sm font-semibold text-slate-700">{value}</p>
             ),
           },
           {
             key: "actions",
             title: "Action",
             align: "right",
-            cellClassName: "w-[130px]",
+            cellClassName: "w-[220px]",
             render: (_: any, payout: any) => (
-              <div className="w-full flex items-center justify-end">
+              <div className="w-full flex items-center justify-end gap-2">
+                <button
+                  onClick={() => handleOpenAvailability()}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+                >
+                  Check availability
+                </button>
                 {payout.status === 'PENDING' && (
                   <button
                     onClick={() => setReviewingPayout(payout)}
