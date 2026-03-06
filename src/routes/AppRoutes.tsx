@@ -74,6 +74,7 @@ import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorE
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
+import ServiceCatalogStudio from "@/pages/Admin/catalog/ServiceCatalogStudio";
 import HomeSectionsStudio from "@/pages/Admin/catalog/HomeSectionsStudio";
 import HomeHeroStudio from "@/pages/Admin/catalog/HomeHeroStudio";
 import HomeDealsStudio from "@/pages/Admin/catalog/HomeDealsStudio";
@@ -398,6 +399,10 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/:tab",
             element: <PreferencesStudio />,
+          },
+          {
+            path: "catalog/service-categories",
+            element: <ServiceCatalogStudio />,
           },
           {
             path: "catalog/home-page",

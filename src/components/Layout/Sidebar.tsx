@@ -219,6 +219,14 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Affiliate Users"), to: withBase("affiliates") },
         ],
       },
+         {
+        id: "service_master",
+        label: t("Service master"),
+        icon: HiClipboardDocumentCheck,
+        children: [
+    { label: t("Service Masters"), to: withBase("catalog/service-categories") },
+        ],
+      },
       {
         id: "bookings",
         label: t("Bookings"),
