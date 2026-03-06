@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { 
@@ -28,6 +28,7 @@ const AdminPayoutsPage = () => {
 
   const [reviewingPayout, setReviewingPayout] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [isReviewModalOpening, setIsReviewModalOpening] = useState(false);
 
   const { data: statsResponse, isLoading: isStatsLoading } = useGetPlatformStatsQuery();
   const { data: response, isLoading: isPayoutsLoading, refetch } = useGetPayoutsQuery({ 
@@ -35,6 +36,16 @@ const AdminPayoutsPage = () => {
     limit, 
     status: statusFilter === "ALL" ? undefined : statusFilter 
   });
+
+  useEffect(() => {
+    if (!reviewingPayout) {
+      setIsReviewModalOpening(false);
+      return;
+    }
+
+    const tick = window.requestAnimationFrame(() => setIsReviewModalOpening(true));
+    return () => window.cancelAnimationFrame(tick);
+  }, [reviewingPayout]);
 
   const [approvePayout, { isLoading: isApproving }] = useApprovePayoutMutation();
   const [rejectPayout, { isLoading: isRejecting }] = useRejectPayoutMutation();
@@ -77,14 +88,14 @@ const AdminPayoutsPage = () => {
 
   return (
     <DashboardContainer className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <TitleBreadCrumbs title="Settlement Adjudication" breadCrumbTitle="Finance / Payouts" className="flex-1" />
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="flex-1" />
         <button 
           onClick={() => refetch()}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-slate-900 transition-all active:scale-95 shrink-0"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-medium text-slate-600 hover:text-slate-900 transition-all active:scale-95 shrink-0"
         >
           <HiOutlineArrowPath className={`w-3.5 h-3.5 ${isPayoutsLoading ? 'animate-spin' : ''}`} />
-          Sync Queue
+          Refresh
         </button>
       </div>
 
@@ -92,24 +103,24 @@ const AdminPayoutsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           { 
-            label: "Total Outstanding", 
+            label: "Outstanding Amount", 
             value: stats?.pendingLiability, 
             icon: <HiOutlineClock className="w-4 h-4" />, 
-            sub: "Funds pending adjudication",
+            sub: "Awaiting payout approval",
             color: "text-slate-900"
           },
           { 
-            label: "Processed Volume", 
+            label: "Settled Volume", 
             value: stats?.totalPayouts, 
             icon: <HiOutlineBanknotes className="w-4 h-4" />, 
-            sub: "Total settled lifecycle",
+            sub: "Completed transfers",
             color: "text-slate-900"
           },
           { 
             label: "Revenue Yield", 
             value: stats?.totalRevenue, 
             icon: <HiOutlineArrowTrendingUp className="w-4 h-4" />, 
-            sub: "Total platform integrity fee",
+            sub: "Platform commission earned",
             color: "text-emerald-600"
           }
         ].map((item, i) => (
@@ -227,14 +238,16 @@ const AdminPayoutsPage = () => {
           {
             key: "actions",
             title: "Action",
+            align: "right",
+            cellClassName: "w-[130px]",
             render: (_: any, payout: any) => (
-              <div className="text-right">
+              <div className="w-full flex items-center justify-end">
                 {payout.status === 'PENDING' && (
                   <button
                     onClick={() => setReviewingPayout(payout)}
-                    className="px-4 py-2 rounded-lg bg-slate-900 text-[10px] font-black text-white hover:bg-slate-800 transition-all uppercase tracking-widest active:scale-95"
+                    className="px-4 py-2 rounded-lg bg-emerald-700 text-[11px] font-semibold text-white hover:bg-emerald-800 transition-all active:scale-95"
                   >
-                    Adjudicate
+                    Review
                   </button>
                 )}
                 {payout.status === 'PAID' && (
@@ -275,29 +288,53 @@ const AdminPayoutsPage = () => {
 
       {/* Adjudication Modal */}
       {reviewingPayout && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-[2px] animate-in fade-in duration-200">
-          <div className="w-full max-sm bg-white rounded-2xl p-8 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-            <h3 className="text-2xl font-black text-slate-950 tracking-tighter">Settlement Adjudication</h3>
-            <p className="text-[11px] text-slate-500 font-medium mt-1 mb-6 leading-relaxed">Authorize or decline the fund transfer protocol for {reviewingPayout.vendor?.businessName}.</p>
+        <div
+          className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/25 backdrop-blur-[2px] transition-opacity duration-250 ease-out ${
+            isReviewModalOpening ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <div
+            className={`w-full max-w-lg bg-primary-white rounded-[2rem] p-7 shadow-2xl border border-slate-100 transition-all duration-250 ease-out ${
+              isReviewModalOpening ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-1'
+            }`}
+          >
+            <h3 className="text-2xl font-black text-primary-black tracking-tighter">Settlement Adjudication</h3>
+            <p className="text-sm text-slate-500 font-medium mt-2 mb-6 leading-relaxed">
+              Authorize or decline the fund transfer protocol for <span className="font-semibold text-primary-black">{reviewingPayout.vendor?.businessName}</span>.
+            </p>
             
-            <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 mb-8 space-y-4">
+            <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 mb-7 space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Settlement:</span>
-                <p className="text-4xl font-black text-slate-950 text-mono-finance tracking-tighter">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Amount</span>
+                <p className="text-4xl font-black text-primary-black text-mono-finance tracking-tight">
                   <span className="text-sm text-slate-300 mr-1.5">{reviewingPayout.currency}</span>
                   {parseFloat(reviewingPayout.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <p className="text-slate-400 uppercase tracking-wider text-[10px]">Reference</p>
+                  <p className="text-slate-700 font-medium mt-1">#{reviewingPayout.id.slice(0, 10)}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 uppercase tracking-wider text-[10px]">Submitted</p>
+                  <p className="text-slate-700 font-medium mt-1">
+                    {dayjs(reviewingPayout.createdAt).format("DD MMM, YYYY • HH:mm")}
+                  </p>
+                </div>
               </div>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 block mb-2">Rejection Narrative</label>
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 px-1 block mb-2">
+                  Rejection reason
+                </label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   rows={2}
-                  placeholder="Required explicitly only for rejection..."
+                  placeholder="Optional for approval. Required if you reject this payout."
                   className="w-full finance-input-professional text-xs font-bold bg-white"
                 />
               </div>
@@ -306,24 +343,24 @@ const AdminPayoutsPage = () => {
                 <button
                   onClick={() => handleApprovePayout(reviewingPayout.id)}
                   disabled={isApproving || isRejecting}
-                  className="w-full rounded-xl bg-slate-950 py-5 text-[11px] font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-slate-800 active:scale-95 shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
+                  className="w-full rounded-[1.2rem]  bg-secondary-blue py-4 text-[11px] font-extrabold text-primary-white uppercase tracking-[0.14em] hover:bg-secondary-blue/95 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   {isApproving ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
                     <>
                       <HiOutlineCheckCircle className="w-4 h-4" />
-                      Commit Settlement
+                      Approve transfer
                     </>
                   )}
                 </button>
                 <button
                   onClick={handleRejectPayout}
                   disabled={isApproving || isRejecting || !rejectionReason.trim()}
-                  className="w-full rounded-xl bg-rose-600 py-4 text-[10px] font-black text-white uppercase tracking-widest hover:bg-rose-700 transition-all disabled:opacity-20 flex items-center justify-center gap-2"
+                  className="w-full rounded-[1.2rem] border-2 border-primary-red bg-primary-red py-4 text-[11px] font-extrabold text-primary-white uppercase tracking-[0.14em] hover:bg-primary-red/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isRejecting ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
                     <>
                       <HiOutlineXCircle className="w-4 h-4" />
-                      Abort Protocol
+                      Reject transfer
                     </>
                   )}
                 </button>
@@ -332,9 +369,9 @@ const AdminPayoutsPage = () => {
                     setReviewingPayout(null);
                     setRejectionReason("");
                   }}
-                  className="w-full rounded-xl bg-slate-50 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                  className="w-full rounded-[1.2rem] border-2 border-slate-900/10 bg-slate-950/0 py-4 text-[11px] font-extrabold text-slate-700 uppercase tracking-[0.14em] hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95"
                 >
-                  Return to Queue
+                  Cancel
                 </button>
               </div>
             </div>
