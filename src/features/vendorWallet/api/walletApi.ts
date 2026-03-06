@@ -45,11 +45,11 @@ export const vendorWalletApi = createApi({
       providesTags: ["Wallet"],
     }),
 
-    getWalletTransactions: builder.query<TransactionsResponse, { page: number; limit: number }>({
-      query: ({ page, limit }) => ({
+    getWalletTransactions: builder.query<TransactionsResponse, { page: number; limit: number; fromDate?: string; toDate?: string }>({
+      query: ({ page, limit, fromDate, toDate }) => ({
         url: "/vendor/wallet/transactions",
         method: "GET",
-        params: { page, limit },
+        params: { page, limit, fromDate, toDate },
       }),
       providesTags: (result) => 
         result 

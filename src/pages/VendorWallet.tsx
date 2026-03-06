@@ -30,9 +30,16 @@ const VendorWallet = () => {
   const [page, setPage] = useState(1);
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState("");
+  const [dateRangeLabel, setDateRangeLabel] = useState("");
+  const [dateRangeQuery, setDateRangeQuery] = useState<{ fromDate?: string; toDate?: string }>({});
 
   const { data: summaryData, isLoading: isSummaryLoading, error: summaryError } = useGetWalletSummaryQuery();
-  const { data: transactionsData, isLoading: isTransactionsLoading } = useGetWalletTransactionsQuery({ page, limit: 12 });
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useGetWalletTransactionsQuery({
+    page,
+    limit: 12,
+    fromDate: dateRangeQuery.fromDate,
+    toDate: dateRangeQuery.toDate,
+  });
   const [requestPayout, { isLoading: isPayoutRequesting }] = useRequestPayoutMutation();
 
   useEffect(() => {
@@ -42,6 +49,45 @@ const VendorWallet = () => {
   const summary = summaryData?.data;
   const transactions = transactionsData?.data || [];
   const meta = transactionsData?.meta;
+  const pageOffset = (page - 1) * 12;
+
+  const sanitizeLedgerText = (value: string) => {
+    if (!value) return value;
+
+    return value
+      .replace(/ch_[A-Za-z0-9]+/g, (match) => `${match.slice(0, 8)}…`)
+      .replace(
+        /[0-9a-fA-F]{8,}-[0-9a-fA-F-]{27,}/g,
+        (match) => `${match.slice(0, 6)}…${match.slice(-4)}`,
+      );
+  };
+
+  const ledgerRows = transactions.map((tx: any, idx: number) => {
+    const rowNumber = pageOffset + idx + 1;
+    return {
+      ...tx,
+      displayReference: `Txn ${String(rowNumber).padStart(4, "0")}`,
+      displayAmount: Number(tx.amount || 0),
+      displayDescription: tx.description ? sanitizeLedgerText(tx.description) : "Vendor wallet event",
+      displayMeta:
+        tx.sourceType && tx.sourceId
+          ? `${tx.sourceType}: ${sanitizeLedgerText(tx.sourceId)}`
+          : tx.sourceType || tx.type,
+    };
+  });
+
+  const handleDateRangeSelect = (range: string) => {
+    const [fromText, toText] = range.split(" - ").map((segment) => segment.trim());
+    const parsedFrom = dayjs(fromText, "YYYY/MM/DD");
+    const parsedTo = dayjs(toText, "YYYY/MM/DD");
+
+    setDateRangeLabel(range);
+    setDateRangeQuery({
+      fromDate: parsedFrom.isValid() ? parsedFrom.format("YYYY-MM-DD") : undefined,
+      toDate: parsedTo.isValid() ? parsedTo.format("YYYY-MM-DD") : undefined,
+    });
+    setPage(1);
+  };
 
   const handlePayoutRequest = async () => {
     const amount = parseFloat(payoutAmount);
@@ -129,10 +175,12 @@ const VendorWallet = () => {
 
   return (
     <DashboardContainer className="space-y-8 pb-12">
-      <div className="flex items-end justify-between gap-4">
-        <TitleBreadCrumbs title="Treasury Management" breadCrumbTitle="Finance / Wallet" className="flex-1" />
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
-           Status: Operational
+      <div className="space-y-3">
+        <TitleBreadCrumbs title="Treasury Management" breadCrumbTitle="Finance / Wallet" className="w-full" />
+        <div className="flex justify-start md:justify-end">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+             Status: Operational
+          </div>
         </div>
       </div>
 
@@ -190,20 +238,25 @@ const VendorWallet = () => {
               <div className="w-1.5 h-6 bg-slate-900 rounded-full" />
               <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-900">Transaction Ledger</h2>
            </div>
+           {dateRangeLabel && (
+             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+               Range: {dateRangeLabel}
+             </p>
+           )}
         </div>
 
         <DataTable
           title="Transaction Ledger"
           breadCrumbTitle="Finance / Ledger"
-          data={transactions}
+          data={ledgerRows}
           loading={isTransactionsLoading}
           columns={[
             {
               key: "id",
               title: "Reference",
-              render: (value: string) => (
+              render: (_: any, tx: any) => (
                 <span className="font-mono text-mono-finance text-[11px] text-slate-400">
-                  #{value.slice(0, 10).toUpperCase()}
+                  {tx.displayReference}
                 </span>
               ),
             },
@@ -216,8 +269,10 @@ const VendorWallet = () => {
                     {getTransactionIcon(tx.type, tx.direction)}
                   </div>
                   <div>
-                    <p className="text-[13px] font-black text-slate-900 tracking-tight leading-none mb-1">{tx.description || "System Managed Event"}</p>
-                    <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">{tx.type.replace(/_/g, " ")}</p>
+                    <p className="text-[13px] font-black text-slate-900 tracking-tight leading-none mb-1">{tx.displayDescription}</p>
+                    <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">
+                      {tx.displayMeta}
+                    </p>
                   </div>
                 </div>
               ),
@@ -230,7 +285,7 @@ const VendorWallet = () => {
                   <span className={`${tx.direction === "CREDIT" ? "text-emerald-600" : "text-rose-600"}`}>
                     {tx.direction === "CREDIT" ? "+" : "-"}
                     <span className="text-[10px] font-medium mr-0.5 opacity-40">{summary?.currency}</span>
-                    {parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {tx.displayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               ),
@@ -275,6 +330,7 @@ const VendorWallet = () => {
           initialHiddenColumns={[]}
           className="finance-card rounded-2xl overflow-hidden shadow-none border-slate-100"
           noRecordText="Zero ledger records registered"
+          onDateRangeSelect={handleDateRangeSelect}
         />
       </div>
 
