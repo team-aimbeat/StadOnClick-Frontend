@@ -15,15 +15,24 @@ import { useGetStripeStatusQuery } from "@/features/vendorStripe/api/vendorStrip
 import { toast } from "react-hot-toast";
 import { DataTable } from "@/components/shared/DataTable";
 import dayjs from "dayjs";
+import VendorPayoutsSkeleton from "@/components/skeletons/VendorPayoutsSkeleton";
 
 const VendorPayouts = () => {
   const dispatch = useAppDispatch();
   const [requestAmount, setRequestAmount] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [dateRangeLabel, setDateRangeLabel] = useState("");
+  const [dateRangeQuery, setDateRangeQuery] = useState<{ fromDate?: string; toDate?: string }>({});
 
   const { data: summaryData, isLoading: isSummaryLoading } = useGetWalletSummaryQuery();
   const { data: stripeData, isLoading: isStripeLoading } = useGetStripeStatusQuery();
-  const { data: transactionsData, isLoading: isTransactionsLoading } = useGetWalletTransactionsQuery({ page: 1, limit: 50 });
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useGetWalletTransactionsQuery({
+    page: 1,
+    limit: 50,
+    fromDate: dateRangeQuery.fromDate,
+    toDate: dateRangeQuery.toDate,
+  });
   const [requestPayout, { isLoading: isPayoutRequesting }] = useRequestPayoutMutation();
 
   useEffect(() => {
@@ -33,6 +42,41 @@ const VendorPayouts = () => {
   const summary = summaryData?.data;
   const stripe = stripeData?.data;
   const payoutHistory = (transactionsData?.data || []).filter(tx => tx.type === 'PAYOUT' || tx.type === 'REFUND');
+  const readablePayoutRows = payoutHistory.map((tx: any, idx: number) => {
+    const sanitizePayoutText = (value: string) => {
+      if (!value) return value;
+
+      return value
+        .replace(/ch_[A-Za-z0-9]+/g, (match) => `${match.slice(0, 8)}…`)
+        .replace(
+          /[0-9a-fA-F]{8,}-[0-9a-fA-F-]{27,}/g,
+          (match) => `${match.slice(0, 6)}…${match.slice(-4)}`,
+        );
+    };
+
+    return {
+      ...tx,
+      displayReference: `Txn ${String(idx + 1).padStart(4, "0")}`,
+      displayAmount: Number(tx.amount || 0),
+      displayDescription: tx.description ? sanitizePayoutText(tx.description) : "Payout adjustment",
+    };
+  });
+  const filteredPayoutRows = readablePayoutRows.filter((tx: any) => {
+    if (statusFilter === "ALL") return true;
+    if (statusFilter === "PAID") return tx.status === "CONFIRMED";
+    return tx.status === statusFilter;
+  });
+  const handleDateRangeSelect = (range: string) => {
+    const [fromText, toText] = range.split(" - ").map((segment) => segment.trim());
+    const parsedFrom = dayjs(fromText, "YYYY/MM/DD");
+    const parsedTo = dayjs(toText, "YYYY/MM/DD");
+
+    setDateRangeLabel(range);
+    setDateRangeQuery({
+      fromDate: parsedFrom.isValid() ? parsedFrom.format("YYYY-MM-DD") : undefined,
+      toDate: parsedTo.isValid() ? parsedTo.format("YYYY-MM-DD") : undefined,
+    });
+  };
 
   const stripeConnected = stripe?.payoutsEnabled;
 
@@ -54,58 +98,7 @@ const VendorPayouts = () => {
   };
 
   if (isSummaryLoading || isStripeLoading || isTransactionsLoading) {
-    return (
-      <DashboardContainer className="space-y-8 pb-12">
-        {/* Header Skeleton */}
-        <div className="space-y-2">
-           <div className="h-4 w-24 bg-slate-100 rounded animate-pulse" />
-           <div className="h-8 w-48 bg-slate-100 rounded-lg animate-pulse" />
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Left Panel Skeleton */}
-          <div className="finance-card rounded-2xl p-8 space-y-8 border border-slate-100">
-             <div>
-                <div className="h-3 w-32 bg-slate-100 rounded animate-pulse mb-3" />
-                <div className="h-10 w-40 bg-slate-100 rounded-lg animate-pulse" />
-                <div className="h-3 w-32 bg-slate-100 rounded animate-pulse mt-3" />
-             </div>
-             <div className="space-y-3">
-                <div className="h-12 w-full bg-slate-100 rounded-xl animate-pulse" />
-                <div className="h-10 w-full bg-slate-50 rounded-lg animate-pulse" />
-             </div>
-          </div>
-
-          {/* Right Panel Skeleton */}
-          <div className="lg:col-span-2 space-y-6">
-             <div className="finance-card rounded-2xl p-8 border border-slate-100">
-                <div className="flex justify-between mb-8">
-                   <div className="h-4 w-40 bg-slate-100 rounded animate-pulse" />
-                   <div className="h-6 w-24 bg-slate-100 rounded animate-pulse" />
-                </div>
-                <div className="flex gap-4">
-                   <div className="flex-1 h-16 bg-slate-50 rounded-2xl animate-pulse border border-slate-100" />
-                   <div className="w-40 h-16 bg-slate-100 rounded-2xl animate-pulse" />
-                </div>
-             </div>
-
-             <div className="finance-card rounded-2xl overflow-hidden border-slate-100">
-                <div className="h-12 bg-slate-50/50 border-b border-slate-100 w-full" />
-                <div className="p-0">
-                   {[...Array(5)].map((_, i) => (
-                     <div key={i} className="flex justify-between px-6 py-5 border-b border-slate-50">
-                        <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
-                        <div className="h-3 w-24 bg-slate-100 rounded animate-pulse" />
-                        <div className="h-5 w-20 rounded-full bg-slate-100 animate-pulse" />
-                        <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
-                     </div>
-                   ))}
-                </div>
-             </div>
-          </div>
-        </div>
-      </DashboardContainer>
-    );
+    return <VendorPayoutsSkeleton />;
   }
 
   return (
@@ -195,20 +188,47 @@ const VendorPayouts = () => {
           <div className="finance-card rounded-2xl overflow-hidden border-slate-100">
             <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <span className="text-sm font-bold text-slate-700">Settlement Audit Log</span>
-              <span className="text-xs text-slate-500 font-medium">Recent 50 Events</span>
+              <span className="text-xs text-slate-500 font-medium">
+                {dateRangeLabel ? `Range: ${dateRangeLabel}` : "Recent 50 Events"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 bg-white px-6 pt-4">
+              <div className="flex gap-6">
+                {["ALL", "PENDING", "PAID", "REJECTED"].map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setStatusFilter(status)}
+                    className={`relative pb-3 text-[11px] font-black uppercase tracking-widest transition-all ${
+                      statusFilter === status
+                        ? "text-slate-900"
+                        : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    {status}
+                    {statusFilter === status && (
+                      <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-900" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <span className="pb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Showing {filteredPayoutRows.length} entries
+              </span>
             </div>
             <DataTable
               title="Settlement Audit Log"
               breadCrumbTitle="Finance / History"
-              data={payoutHistory}
+              data={filteredPayoutRows}
               loading={isTransactionsLoading}
+              onDateRangeSelect={handleDateRangeSelect}
               columns={[
                 {
                   key: "id",
                   title: "Reference",
-                  render: (value: string) => (
+                  render: (_: any, tx: any) => (
                     <span className="font-mono text-mono-finance text-[10px] text-slate-400">
-                      #{value.slice(0, 10).toUpperCase()}
+                      {tx.displayReference}
                     </span>
                   ),
                 },
@@ -217,7 +237,7 @@ const VendorPayouts = () => {
                   title: "Volume",
                   render: (value: any) => (
                     <div className="font-black text-slate-950 text-mono-finance text-sm tracking-tight text-right pr-12">
-                      {summary?.currency} {parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {summary?.currency} {Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </div>
                   ),
                 },
@@ -248,9 +268,9 @@ const VendorPayouts = () => {
                 {
                   key: "description",
                   title: "Adjudication",
-                  render: (value: string) => (
-                    <span className="text-slate-400 font-medium italic truncate max-w-[120px]" title={value || "System Automated"}>
-                      {value || "System Automated"}
+                  render: (_: any, tx: any) => (
+                    <span className="text-slate-400 font-medium italic truncate max-w-[120px]" title={tx.displayDescription || "System Automated"}>
+                      {tx.displayDescription || "System Automated"}
                     </span>
                   ),
                 },

@@ -16,7 +16,7 @@ type VendorBooking = {
     title?: string;
     category?: { name?: string };
   };
-  orderItem?: { priceFinal?: string; orderNumber?: string; quantity?: number };
+  orderItem?: { orderId?: string; priceFinal?: string; orderNumber?: string; quantity?: number };
 };
 
 type VendorBookingsResponse = {

@@ -5,14 +5,14 @@ import {
   useGetPayoutsQuery, 
   useApprovePayoutMutation, 
   useRejectPayoutMutation,
-  useGetPlatformStatsQuery 
+  useGetPlatformStatsQuery,
+  useGetPlatformStripeBalanceQuery
 } from "@/features/admin/finance/api/adminFinanceApi";
 import { toast } from "react-hot-toast";
-import { 
+import {
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineArrowPath,
-  HiOutlineBuildingStorefront,
   HiOutlineClock,
   HiOutlineBanknotes,
   HiOutlineArrowTrendingUp
@@ -49,6 +49,10 @@ const AdminPayoutsPage = () => {
 
   const [approvePayout, { isLoading: isApproving }] = useApprovePayoutMutation();
   const [rejectPayout, { isLoading: isRejecting }] = useRejectPayoutMutation();
+  const {
+    data: platformStripeBalanceResponse,
+    isLoading: isPlatformStripeBalanceLoading,
+  } = useGetPlatformStripeBalanceQuery({ currency: "SEK" });
 
   const handleApprovePayout = async (payoutId: string) => {
     try {
@@ -81,26 +85,94 @@ const AdminPayoutsPage = () => {
   const stats = statsResponse?.data;
   const payouts = response?.data?.data || [];
   const meta = response?.data?.meta;
+  const platformBalance = platformStripeBalanceResponse?.data?.balances?.find(
+    (entry: any) => entry.currency.toLowerCase() === "sek",
+  );
 
-  if (isStatsLoading || (isPayoutsLoading && !response)) {
+  const requestedAmount = Number(reviewingPayout?.amount || 0);
+  const availableAmount = Number(platformBalance?.available || 0);
+  const payoutShortfall = Math.max(0, requestedAmount - availableAmount);
+  const isPayoutBlocked = !!reviewingPayout && platformBalance != null && payoutShortfall > 0;
+  const hasPlatformBalance = Boolean(platformBalance);
+  const isPlatformBalanceHealthy = (platformBalance?.available ?? 0) >= 0;
+  const ledgerRows = payouts.map((payout: any, idx: number) => {
+    const amount = Number(payout.amount || 0);
+    const fees = Number(payout.fees || payout.fee || 0);
+    const total = amount - fees;
+    const processedDate = payout.processedAt || payout.reviewedAt || payout.updatedAt || payout.createdAt;
+    const pageOffset = (page - 1) * limit;
+    const rowNumber = idx + 1 + pageOffset;
+    const fallbackLabel = `Request ${String(rowNumber).padStart(4, "0")}`;
+    const hasChargeId = Boolean(payout.stripeChargeId);
+    const hasTransferId = Boolean(payout.stripeTransferId);
+    const referenceSource = hasTransferId
+      ? payout.stripeTransferId
+      : hasChargeId
+        ? payout.stripeChargeId
+        : payout.vendor?.id;
+
+    return {
+      ...payout,
+      ledgerAmount: amount,
+      ledgerFees: fees,
+      ledgerTotal: total,
+      ledgerType: "Charge",
+      ledgerDescription: payout.vendor?.businessName || payout.vendor?.contactEmail || "Vendor settlement",
+      ledgerReference: fallbackLabel,
+      ledgerMeta:
+        payout.vendor?.contactEmail ||
+        payout.vendor?.businessName ||
+        (referenceSource ? `${String(referenceSource).slice(0, 14)}…` : "Settlement request"),
+      createdLabel: payout.createdAt ? dayjs(payout.createdAt).format("MMM D") : "—",
+      availableOnLabel: payout.status === "PENDING" || payout.status === "APPROVED"
+        ? "Pending bank cycle"
+        : processedDate
+          ? dayjs(processedDate).format("MMM D")
+          : "—",
+    };
+  });
+
+  const formatLedgerAmount = (value: number, options?: { sign?: boolean; negative?: boolean }) => {
+    const sign = options?.sign && value > 0 ? "+" : "";
+    const prefix = options?.negative && value > 0 ? "-" : "";
+    return `${sign}${prefix}SEK ${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  };
+
+  const handleOpenAvailability = () => {
+    const dashboardLink =
+      import.meta.env.VITE_ADMIN_STRIPE_DASHBOARD_URL?.trim() ||
+      "https://dashboard.stripe.com/test/balance";
+
+    window.open(dashboardLink, "_blank", "noopener,noreferrer");
+  };
+
+  if (isStatsLoading || isPlatformStripeBalanceLoading || (isPayoutsLoading && !response)) {
     return <AdminPayoutsSkeleton />;
   }
 
   return (
     <DashboardContainer className="space-y-8 pb-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="flex-1" />
-        <button 
-          onClick={() => refetch()}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-medium text-slate-600 hover:text-slate-900 transition-all active:scale-95 shrink-0"
-        >
-          <HiOutlineArrowPath className={`w-3.5 h-3.5 ${isPayoutsLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+      <div className="space-y-4">
+        <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="w-full" />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            onClick={handleOpenAvailability}
+            className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+          >
+            Check availability
+          </button>
+          <button 
+            onClick={() => refetch()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-medium text-slate-600 hover:text-slate-900 transition-all active:scale-95 shrink-0"
+          >
+            <HiOutlineArrowPath className={`w-3.5 h-3.5 ${isPayoutsLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
           { 
             label: "Outstanding Amount", 
@@ -140,6 +212,52 @@ const AdminPayoutsPage = () => {
         ))}
       </div>
 
+      <div className="finance-card relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Platform Stripe (SEK)
+            </span>
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-2">
+              <HiOutlineBanknotes className="w-4 h-4 text-slate-600" />
+            </div>
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Available for transfer</p>
+          <p className="mt-1 text-4xl font-black tracking-tight text-slate-900">
+            SEK {(platformBalance?.available ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-slate-500">Incoming</p>
+              <p className="text-base text-slate-900 font-bold mt-1 leading-tight">
+                SEK {platformBalance?.incoming?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}
+              </p>
+            </div>
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-slate-500">Pending</p>
+              <p className="text-base text-slate-900 font-bold mt-1 leading-tight">
+                SEK {platformBalance?.pending?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span
+              className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] ${
+                isPlatformBalanceHealthy
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                  : 'bg-rose-50 border border-rose-200 text-rose-700'
+              }`}
+            >
+              {isPlatformBalanceHealthy ? 'Sufficient liquidity' : 'Liquidity warning'}
+            </span>
+            {!hasPlatformBalance && (
+              <span className="text-[10px] text-slate-500">Live balance fetch failed.</span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Navigation Tabs */}
       <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-1">
         <div className="flex gap-8">
@@ -165,83 +283,91 @@ const AdminPayoutsPage = () => {
         </div>
       </div>
 
-      <DataTable
-        title="Settlement Ledger"
-        breadCrumbTitle="Finance / Payouts"
-        data={payouts}
+        <DataTable
+          title="Settlement Ledger"
+          breadCrumbTitle="Finance / Payouts"
+          data={ledgerRows}
         loading={isPayoutsLoading}
         columns={[
           {
-            key: "id",
-            title: "Reference",
+            key: "ledgerAmount",
+            title: "Amount",
+            align: "right",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-black text-slate-900 text-right text-mono-finance tracking-tight">
+                {formatLedgerAmount(payout.ledgerAmount)}
+              </p>
+            ),
+          },
+          {
+            key: "ledgerFees",
+            title: "Fees",
+            align: "right",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-black text-rose-600 text-right text-mono-finance tracking-tight">
+                {formatLedgerAmount(payout.ledgerFees, { negative: true })}
+              </p>
+            ),
+          },
+          {
+            key: "ledgerTotal",
+            title: "Total",
+            align: "right",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-black text-slate-900 text-right text-mono-finance tracking-tight">
+                {formatLedgerAmount(payout.ledgerTotal)}
+              </p>
+            ),
+          },
+          {
+            key: "ledgerType",
+            title: "Type",
             render: (value: string) => (
-              <span className="font-mono text-mono-finance text-[10px] text-slate-400 uppercase">
-                #{value.slice(0, 10)}
+              <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                {value || "Charge"}
               </span>
             ),
           },
           {
-            key: "vendor",
-            title: "Merchant",
+            key: "createdLabel",
+            title: "Description",
             render: (_: any, payout: any) => (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                  <HiOutlineBuildingStorefront className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 leading-none">{payout.vendor?.businessName || "Unknown Vendor"}</p>
-                  <p className="text-[10px] text-slate-400 font-mono mt-1">{payout.vendor?.contactEmail}</p>
-                </div>
-              </div>
-            ),
-          },
-          {
-            key: "amount",
-            title: "Amount",
-            render: (value: any, payout: any) => (
-              <div className="text-right font-black text-base text-mono-finance tracking-tighter">
-                <span className="text-slate-900">
-                  <span className="text-[10px] font-medium mr-1 opacity-40">{payout.currency}</span>
-                  {parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            ),
-          },
-          {
-            key: "status",
-            title: "State",
-            render: (value: string) => (
-              <div className="flex justify-center">
-                <span className={`status-indicator shadow-none border ${
-                  value === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                  value === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                  'bg-rose-50 text-rose-700 border-rose-100'
-                }`}>
-                  <div className={`w-1 h-1 rounded-full ${
-                     value === 'PAID' ? 'bg-emerald-500' : value === 'PENDING' ? 'bg-amber-500' : 'bg-rose-500'
-                  }`} />
-                  {value}
-                </span>
+              <div>
+                <p className="text-sm text-slate-900 font-medium">{payout.ledgerDescription}</p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  {payout.ledgerMeta}
+                </p>
               </div>
             ),
           },
           {
             key: "createdAt",
-            title: "Timestamp",
+            title: "Created",
+            render: (_: any, payout: any) => (
+              <p className="text-sm font-semibold text-slate-700">{payout.createdLabel}</p>
+            ),
+          },
+          {
+            key: "availableOnLabel",
+            title: "Available on",
             render: (value: string) => (
-              <div>
-                <p className="text-[10px] font-bold text-slate-600">{dayjs(value).format('DD MMM, YYYY')}</p>
-                <p className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">{dayjs(value).format('hh:mm A')}</p>
-              </div>
+              <p className="text-sm font-semibold text-slate-700">{value}</p>
             ),
           },
           {
             key: "actions",
             title: "Action",
             align: "right",
-            cellClassName: "w-[130px]",
+            cellClassName: "w-[220px]",
             render: (_: any, payout: any) => (
-              <div className="w-full flex items-center justify-end">
+              <div className="w-full flex items-center justify-end gap-2">
+                <button
+                  onClick={() => handleOpenAvailability()}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+                  title="Open Stripe dashboard to see fund availability"
+                >
+                  Check availability
+                </button>
                 {payout.status === 'PENDING' && (
                   <button
                     onClick={() => setReviewingPayout(payout)}
@@ -314,7 +440,7 @@ const AdminPayoutsPage = () => {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <p className="text-slate-400 uppercase tracking-wider text-[10px]">Reference</p>
-                  <p className="text-slate-700 font-medium mt-1">#{reviewingPayout.id.slice(0, 10)}</p>
+                  <p className="text-slate-700 font-semibold mt-1">{reviewingPayout.ledgerReference}</p>
                 </div>
                 <div>
                   <p className="text-slate-400 uppercase tracking-wider text-[10px]">Submitted</p>
@@ -342,7 +468,7 @@ const AdminPayoutsPage = () => {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => handleApprovePayout(reviewingPayout.id)}
-                  disabled={isApproving || isRejecting}
+                  disabled={isApproving || isRejecting || isPayoutBlocked}
                   className="w-full rounded-[1.2rem]  bg-secondary-blue py-4 text-[11px] font-extrabold text-primary-white uppercase tracking-[0.14em] hover:bg-secondary-blue/95 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   {isApproving ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
@@ -373,6 +499,25 @@ const AdminPayoutsPage = () => {
                 >
                   Cancel
                 </button>
+              </div>
+              <div className="mt-4 text-[10px] rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-slate-500">
+                <p>
+                  Platform transfer snapshot: available SEK{" "}
+                  {(platformBalance?.available ?? 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                  , pending SEK {(platformBalance?.pending ?? 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                  , incoming SEK {(platformBalance?.incoming ?? 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
+                {isPayoutBlocked && (
+                  <p className="mt-2 text-rose-600 font-semibold">
+                    Approve blocked: shortfall SEK {payoutShortfall.toFixed(2)} (use top-up or smaller payout).
+                  </p>
+                )}
               </div>
             </div>
           </div>
