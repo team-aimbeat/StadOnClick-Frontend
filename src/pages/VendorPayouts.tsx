@@ -15,6 +15,7 @@ import { useGetStripeStatusQuery } from "@/features/vendorStripe/api/vendorStrip
 import { toast } from "react-hot-toast";
 import { DataTable } from "@/components/shared/DataTable";
 import dayjs from "dayjs";
+import VendorPayoutsSkeleton from "@/components/skeletons/VendorPayoutsSkeleton";
 
 const VendorPayouts = () => {
   const dispatch = useAppDispatch();
@@ -97,58 +98,7 @@ const VendorPayouts = () => {
   };
 
   if (isSummaryLoading || isStripeLoading || isTransactionsLoading) {
-    return (
-      <DashboardContainer className="space-y-8 pb-12">
-        {/* Header Skeleton */}
-        <div className="space-y-2">
-           <div className="h-4 w-24 bg-slate-100 rounded animate-pulse" />
-           <div className="h-8 w-48 bg-slate-100 rounded-lg animate-pulse" />
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Left Panel Skeleton */}
-          <div className="finance-card rounded-2xl p-8 space-y-8 border border-slate-100">
-             <div>
-                <div className="h-3 w-32 bg-slate-100 rounded animate-pulse mb-3" />
-                <div className="h-10 w-40 bg-slate-100 rounded-lg animate-pulse" />
-                <div className="h-3 w-32 bg-slate-100 rounded animate-pulse mt-3" />
-             </div>
-             <div className="space-y-3">
-                <div className="h-12 w-full bg-slate-100 rounded-xl animate-pulse" />
-                <div className="h-10 w-full bg-slate-50 rounded-lg animate-pulse" />
-             </div>
-          </div>
-
-          {/* Right Panel Skeleton */}
-          <div className="lg:col-span-2 space-y-6">
-             <div className="finance-card rounded-2xl p-8 border border-slate-100">
-                <div className="flex justify-between mb-8">
-                   <div className="h-4 w-40 bg-slate-100 rounded animate-pulse" />
-                   <div className="h-6 w-24 bg-slate-100 rounded animate-pulse" />
-                </div>
-                <div className="flex gap-4">
-                   <div className="flex-1 h-16 bg-slate-50 rounded-2xl animate-pulse border border-slate-100" />
-                   <div className="w-40 h-16 bg-slate-100 rounded-2xl animate-pulse" />
-                </div>
-             </div>
-
-             <div className="finance-card rounded-2xl overflow-hidden border-slate-100">
-                <div className="h-12 bg-slate-50/50 border-b border-slate-100 w-full" />
-                <div className="p-0">
-                   {[...Array(5)].map((_, i) => (
-                     <div key={i} className="flex justify-between px-6 py-5 border-b border-slate-50">
-                        <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
-                        <div className="h-3 w-24 bg-slate-100 rounded animate-pulse" />
-                        <div className="h-5 w-20 rounded-full bg-slate-100 animate-pulse" />
-                        <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
-                     </div>
-                   ))}
-                </div>
-             </div>
-          </div>
-        </div>
-      </DashboardContainer>
-    );
+    return <VendorPayoutsSkeleton />;
   }
 
   return (

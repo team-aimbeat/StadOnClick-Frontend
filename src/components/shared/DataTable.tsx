@@ -559,6 +559,8 @@ export interface DataTableProps {
     onDismissError?: () => void;
     minHeight?: number;
     onDateRangeSelect?: (dateRange: string) => void;
+    dateControl?: ReactNode;
+    showDefaultDateControl?: boolean;
     showFilterButton?: boolean;
     onFilterClick?: () => void;
 }
@@ -597,6 +599,8 @@ export const DataTable: React.FC<DataTableProps> = ({
     onDismissError = NOOP,
     minHeight = 200,
     onDateRangeSelect = NOOP,
+    dateControl,
+    showDefaultDateControl = true,
     showFilterButton = false,
     onFilterClick = NOOP,
 }) => {
@@ -1031,7 +1035,10 @@ export const DataTable: React.FC<DataTableProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <QuickCalendarDropdown onDateSelect={onDateRangeSelect} selectedDate={selectedDate} setSelectedDate={setSelectedDate} setDateRange={setDateRange} />
+                        {showDefaultDateControl && (
+                            <QuickCalendarDropdown onDateSelect={onDateRangeSelect} selectedDate={selectedDate} setSelectedDate={setSelectedDate} setDateRange={setDateRange} />
+                        )}
+                        {dateControl}
                         {filters.map((filter) => (
                             <FilterDropdown
                                 key={filter.key}
