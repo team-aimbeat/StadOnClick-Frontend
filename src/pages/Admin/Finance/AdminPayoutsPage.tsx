@@ -9,8 +9,7 @@ import {
   useGetPlatformStripeBalanceQuery
 } from "@/features/admin/finance/api/adminFinanceApi";
 import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import { 
+import {
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineArrowPath,
@@ -30,7 +29,6 @@ const AdminPayoutsPage = () => {
   const [reviewingPayout, setReviewingPayout] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isReviewModalOpening, setIsReviewModalOpening] = useState(false);
-  const navigate = useNavigate();
 
   const { data: statsResponse, isLoading: isStatsLoading } = useGetPlatformStatsQuery();
   const { data: response, isLoading: isPayoutsLoading, refetch } = useGetPayoutsQuery({ 
@@ -97,11 +95,21 @@ const AdminPayoutsPage = () => {
   const isPayoutBlocked = !!reviewingPayout && platformBalance != null && payoutShortfall > 0;
   const hasPlatformBalance = Boolean(platformBalance);
   const isPlatformBalanceHealthy = (platformBalance?.available ?? 0) >= 0;
-  const ledgerRows = payouts.map((payout: any) => {
+  const ledgerRows = payouts.map((payout: any, idx: number) => {
     const amount = Number(payout.amount || 0);
     const fees = Number(payout.fees || payout.fee || 0);
     const total = amount - fees;
     const processedDate = payout.processedAt || payout.reviewedAt || payout.updatedAt || payout.createdAt;
+    const pageOffset = (page - 1) * limit;
+    const rowNumber = idx + 1 + pageOffset;
+    const fallbackLabel = `Request ${String(rowNumber).padStart(4, "0")}`;
+    const hasChargeId = Boolean(payout.stripeChargeId);
+    const hasTransferId = Boolean(payout.stripeTransferId);
+    const referenceSource = hasTransferId
+      ? payout.stripeTransferId
+      : hasChargeId
+        ? payout.stripeChargeId
+        : payout.vendor?.id;
 
     return {
       ...payout,
@@ -109,8 +117,12 @@ const AdminPayoutsPage = () => {
       ledgerFees: fees,
       ledgerTotal: total,
       ledgerType: "Charge",
-      ledgerDescription:
-        payout.stripeTransferId || payout.vendor?.contactEmail || (payout.id ? `#${payout.id}` : "—"),
+      ledgerDescription: payout.vendor?.businessName || payout.vendor?.contactEmail || "Vendor settlement",
+      ledgerReference: fallbackLabel,
+      ledgerMeta:
+        payout.vendor?.contactEmail ||
+        payout.vendor?.businessName ||
+        (referenceSource ? `${String(referenceSource).slice(0, 14)}…` : "Settlement request"),
       createdLabel: payout.createdAt ? dayjs(payout.createdAt).format("MMM D") : "—",
       availableOnLabel: payout.status === "PENDING" || payout.status === "APPROVED"
         ? "Pending bank cycle"
@@ -127,7 +139,11 @@ const AdminPayoutsPage = () => {
   };
 
   const handleOpenAvailability = () => {
-    navigate("/admin/finance/platform-wallet");
+    const dashboardLink =
+      import.meta.env.VITE_ADMIN_STRIPE_DASHBOARD_URL?.trim() ||
+      "https://dashboard.stripe.com/test/balance";
+
+    window.open(dashboardLink, "_blank", "noopener,noreferrer");
   };
 
   if (isStatsLoading || isPlatformStripeBalanceLoading || (isPayoutsLoading && !response)) {
@@ -136,9 +152,9 @@ const AdminPayoutsPage = () => {
 
   return (
     <DashboardContainer className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="flex-1" />
-        <div className="flex flex-wrap items-center justify-end gap-2 mt-2 md:mt-0">
+      <div className="space-y-4">
+        <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="w-full" />
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             onClick={handleOpenAvailability}
             className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
@@ -318,7 +334,9 @@ const AdminPayoutsPage = () => {
             render: (_: any, payout: any) => (
               <div>
                 <p className="text-sm text-slate-900 font-medium">{payout.ledgerDescription}</p>
-                <p className="text-[11px] text-slate-500 font-mono mt-0.5">{payout.ledgerType === "Charge" ? "stripe charge" : "vendor request"}</p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  {payout.ledgerMeta}
+                </p>
               </div>
             ),
           },
@@ -346,6 +364,7 @@ const AdminPayoutsPage = () => {
                 <button
                   onClick={() => handleOpenAvailability()}
                   className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+                  title="Open Stripe dashboard to see fund availability"
                 >
                   Check availability
                 </button>
@@ -421,7 +440,7 @@ const AdminPayoutsPage = () => {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <p className="text-slate-400 uppercase tracking-wider text-[10px]">Reference</p>
-                  <p className="text-slate-700 font-medium mt-1">#{reviewingPayout.id.slice(0, 10)}</p>
+                  <p className="text-slate-700 font-semibold mt-1">{reviewingPayout.ledgerReference}</p>
                 </div>
                 <div>
                   <p className="text-slate-400 uppercase tracking-wider text-[10px]">Submitted</p>
