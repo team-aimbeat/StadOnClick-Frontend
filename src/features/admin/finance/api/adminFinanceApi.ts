@@ -66,6 +66,18 @@ export const adminFinanceApi = createApi({
       }),
       providesTags: ["AdminWallet"],
     }),
+
+    getPlatformStripeBalance: builder.query<
+      { status: string; data: { generatedAt: string; balances: { currency: string; available: number; pending: number; incoming: number }[] } },
+      { currency?: string }
+    >({
+      query: (params) => ({
+        url: "/admin/finance/platform-stripe-balance",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["AdminWallet"],
+    }),
   }),
 });
 
@@ -77,4 +89,5 @@ export const {
   useGetPayoutsQuery,
   useGetPlatformStatsQuery,
   useGetPlatformTransactionsQuery,
+  useGetPlatformStripeBalanceQuery,
 } = adminFinanceApi;

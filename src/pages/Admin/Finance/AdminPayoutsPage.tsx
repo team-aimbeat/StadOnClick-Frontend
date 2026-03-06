@@ -5,7 +5,8 @@ import {
   useGetPayoutsQuery, 
   useApprovePayoutMutation, 
   useRejectPayoutMutation,
-  useGetPlatformStatsQuery 
+  useGetPlatformStatsQuery,
+  useGetPlatformStripeBalanceQuery
 } from "@/features/admin/finance/api/adminFinanceApi";
 import { toast } from "react-hot-toast";
 import { 
@@ -49,6 +50,10 @@ const AdminPayoutsPage = () => {
 
   const [approvePayout, { isLoading: isApproving }] = useApprovePayoutMutation();
   const [rejectPayout, { isLoading: isRejecting }] = useRejectPayoutMutation();
+  const {
+    data: platformStripeBalanceResponse,
+    isLoading: isPlatformStripeBalanceLoading,
+  } = useGetPlatformStripeBalanceQuery({ currency: "SEK" });
 
   const handleApprovePayout = async (payoutId: string) => {
     try {
@@ -81,14 +86,24 @@ const AdminPayoutsPage = () => {
   const stats = statsResponse?.data;
   const payouts = response?.data?.data || [];
   const meta = response?.data?.meta;
+  const platformBalance = platformStripeBalanceResponse?.data?.balances?.find(
+    (entry: any) => entry.currency.toLowerCase() === "sek",
+  );
 
-  if (isStatsLoading || (isPayoutsLoading && !response)) {
+  const requestedAmount = Number(reviewingPayout?.amount || 0);
+  const availableAmount = Number(platformBalance?.available || 0);
+  const payoutShortfall = Math.max(0, requestedAmount - availableAmount);
+  const isPayoutBlocked = !!reviewingPayout && platformBalance != null && payoutShortfall > 0;
+  const hasPlatformBalance = Boolean(platformBalance);
+  const isPlatformBalanceHealthy = (platformBalance?.available ?? 0) >= 0;
+
+  if (isStatsLoading || isPlatformStripeBalanceLoading || (isPayoutsLoading && !response)) {
     return <AdminPayoutsSkeleton />;
   }
 
   return (
     <DashboardContainer className="space-y-8 pb-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="flex-1" />
         <button 
           onClick={() => refetch()}
@@ -100,7 +115,7 @@ const AdminPayoutsPage = () => {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
           { 
             label: "Outstanding Amount", 
@@ -140,6 +155,52 @@ const AdminPayoutsPage = () => {
         ))}
       </div>
 
+      <div className="finance-card relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Platform Stripe (SEK)
+            </span>
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-2">
+              <HiOutlineBanknotes className="w-4 h-4 text-slate-600" />
+            </div>
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Available for transfer</p>
+          <p className="mt-1 text-4xl font-black tracking-tight text-slate-900">
+            SEK {(platformBalance?.available ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-slate-500">Incoming</p>
+              <p className="text-base text-slate-900 font-bold mt-1 leading-tight">
+                SEK {platformBalance?.incoming?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}
+              </p>
+            </div>
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-slate-500">Pending</p>
+              <p className="text-base text-slate-900 font-bold mt-1 leading-tight">
+                SEK {platformBalance?.pending?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span
+              className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] ${
+                isPlatformBalanceHealthy
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                  : 'bg-rose-50 border border-rose-200 text-rose-700'
+              }`}
+            >
+              {isPlatformBalanceHealthy ? 'Sufficient liquidity' : 'Liquidity warning'}
+            </span>
+            {!hasPlatformBalance && (
+              <span className="text-[10px] text-slate-500">Live balance fetch failed.</span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Navigation Tabs */}
       <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-1">
         <div className="flex gap-8">
@@ -165,10 +226,10 @@ const AdminPayoutsPage = () => {
         </div>
       </div>
 
-      <DataTable
-        title="Settlement Ledger"
-        breadCrumbTitle="Finance / Payouts"
-        data={payouts}
+        <DataTable
+          title="Settlement Ledger"
+          breadCrumbTitle="Finance / Payouts"
+          data={payouts}
         loading={isPayoutsLoading}
         columns={[
           {
@@ -342,7 +403,7 @@ const AdminPayoutsPage = () => {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => handleApprovePayout(reviewingPayout.id)}
-                  disabled={isApproving || isRejecting}
+                  disabled={isApproving || isRejecting || isPayoutBlocked}
                   className="w-full rounded-[1.2rem]  bg-secondary-blue py-4 text-[11px] font-extrabold text-primary-white uppercase tracking-[0.14em] hover:bg-secondary-blue/95 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   {isApproving ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
@@ -373,6 +434,25 @@ const AdminPayoutsPage = () => {
                 >
                   Cancel
                 </button>
+              </div>
+              <div className="mt-4 text-[10px] rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-slate-500">
+                <p>
+                  Platform transfer snapshot: available SEK{" "}
+                  {(platformBalance?.available ?? 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                  , pending SEK {(platformBalance?.pending ?? 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                  , incoming SEK {(platformBalance?.incoming ?? 0).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
+                {isPayoutBlocked && (
+                  <p className="mt-2 text-rose-600 font-semibold">
+                    Approve blocked: shortfall SEK {payoutShortfall.toFixed(2)} (use top-up or smaller payout).
+                  </p>
+                )}
               </div>
             </div>
           </div>
