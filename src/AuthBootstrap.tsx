@@ -70,9 +70,19 @@ export function AuthBootstrap({ children }: PropsWithChildren) {
       return;
     }
 
+    const runRefresh = async () => {
+      try {
+        await refreshSession().unwrap();
+      } catch {
+        // refresh errors are handled by baseApi; this guard avoids unhandled rejections.
+      }
+    };
+
     const intervalId = window.setInterval(() => {
-      refreshSession();
+      void runRefresh();
     }, 10 * 60 * 1000);
+
+    void runRefresh();
 
     return () => {
       window.clearInterval(intervalId);
