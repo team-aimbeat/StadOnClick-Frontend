@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
@@ -80,20 +81,39 @@ const VendorWallet = () => {
       );
   };
 
+  const extractBookingId = (tx: any) => {
+    if (tx.bookingId) {
+      return tx.bookingId;
+    }
+
+    const rawDescription = typeof tx.description === "string" ? tx.description : "";
+    const bookingMatch = rawDescription.match(/booking\s+([0-9a-fA-F]{8,}-[0-9a-fA-F-]{27,})/i);
+
+    return tx.sourceType === "ORDER" ? undefined : bookingMatch?.[1];
+  };
+
   const ledgerRows = transactions.map((tx: any, idx: number) => {
     const rowNumber = pageOffset + idx + 1;
+    const bookingId = extractBookingId(tx);
+    const cleanedDescription = tx.description
+      ? sanitizeLedgerText(tx.description).replace(
+          /\s+[0-9a-fA-F]{6}\.\.\.[0-9a-fA-F]{4}$/i,
+          "",
+        )
+      : "Vendor wallet event";
 
     return {
       ...tx,
+      bookingId,
       displayReference: `Txn ${String(rowNumber).padStart(4, "0")}`,
       displayAmount: Number(tx.amount || 0),
-      displayDescription: tx.description
-        ? sanitizeLedgerText(tx.description)
-        : "Vendor wallet event",
+      displayDescription: cleanedDescription,
       displayMeta:
-        tx.sourceType && tx.sourceId
-          ? `${tx.sourceType}: ${sanitizeLedgerText(tx.sourceId)}`
-          : tx.sourceType || tx.type,
+        bookingId
+          ? "Open booking details"
+          : tx.sourceType && tx.sourceId
+            ? `${tx.sourceType}: ${sanitizeLedgerText(tx.sourceId)}`
+            : tx.sourceType || tx.type,
     };
   });
 
@@ -370,17 +390,36 @@ const VendorWallet = () => {
               key: "description",
               title: "Activity",
               render: (_: any, tx: any) => (
-                <div className="flex items-center gap-3 py-1">
+                <div className="flex items-start gap-3 py-1">
                   <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm shrink-0">
                     {getTransactionIcon(tx.type, tx.direction)}
                   </div>
-                  <div>
-                    <p className="text-[13px] font-black text-slate-900 tracking-tight leading-none mb-1">
-                      {tx.displayDescription}
-                    </p>
-                    <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">
-                      {tx.displayMeta}
-                    </p>
+                  <div className="min-w-0 space-y-1.5">
+                    {tx.bookingId ? (
+                      <>
+                        <Link
+                          to={`/vendor/bookings/${tx.bookingId}`}
+                          className="block max-w-[280px] truncate text-[13px] font-black tracking-tight leading-5 text-slate-900 transition-colors hover:text-indigo-600"
+                        >
+                          {tx.displayDescription}
+                        </Link>
+                        <Link
+                          to={`/vendor/bookings/${tx.bookingId}`}
+                          className="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-500 transition-colors hover:text-indigo-700"
+                        >
+                          View booking
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <p className="max-w-[280px] text-[13px] font-black text-slate-900 tracking-tight leading-5">
+                          {tx.displayDescription}
+                        </p>
+                        <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">
+                          {tx.displayMeta}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               ),
@@ -423,8 +462,10 @@ const VendorWallet = () => {
             {
               key: "status",
               title: "Status",
+              align: "center",
+              cellClassName: "align-middle",
               render: (value: string) => (
-                <div className="flex justify-center">
+                <div className="flex items-center justify-center">
                   <span
                     className={`status-indicator ${
                       value === "CONFIRMED"

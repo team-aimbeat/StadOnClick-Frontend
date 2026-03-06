@@ -17,6 +17,7 @@ export interface WalletTransaction {
   status: "PENDING" | "CONFIRMED" | "REJECTED" | "REVERSED";
   sourceType: string;
   sourceId: string | null;
+  bookingId?: string | null;
   description: string | null;
   createdAt: string;
 }
