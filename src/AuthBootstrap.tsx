@@ -6,6 +6,19 @@ import { setBootstrapping, setUser } from "@/features/auth/authSlice";
 import ScreenLoader from "@/assets/animations/loader";
 import { getPostLoginRoute } from "@/lib/authRouting";
 
+const ADMIN_ROLES = ["ADMIN", "SUPPORT_ADMIN", "MODERATOR"] as const;
+const VENDOR_ROLES = ["VENDOR"] as const;
+
+function hasAdminAccess(roles?: string[]) {
+  if (!roles?.length) return false;
+  return roles.some((role) => ADMIN_ROLES.includes(role as any));
+}
+
+function hasVendorAccess(roles?: string[]) {
+  if (!roles?.length) return false;
+  return roles.some((role) => VENDOR_ROLES.includes(role as any));
+}
+
 export function AuthBootstrap({ children }: PropsWithChildren) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -46,6 +59,20 @@ export function AuthBootstrap({ children }: PropsWithChildren) {
 
       const isVendor = (user.roles ?? []).includes("VENDOR");
       const nextAction = user.nextAction;
+      const roles = user.roles ?? [];
+      const isAdminAuthEntry = path === "/admin/sign-in" || path === "/admin";
+      const isVendorAuthEntry = path === "/vendor/sign-in";
+
+      if (isAdminAuthEntry && !hasAdminAccess(roles)) {
+        navigate("/admin/access-denied", { replace: true });
+        return;
+      }
+
+      if (isVendorAuthEntry && !hasVendorAccess(roles)) {
+        navigate("/access-denied", { replace: true });
+        return;
+      }
+
       const shouldForceVendorSetup =
         isVendor &&
         !!nextAction &&
@@ -56,10 +83,9 @@ export function AuthBootstrap({ children }: PropsWithChildren) {
         return;
       }
 
-      const isAdminAuthEntry = path === "/admin/sign-in" || path === "/admin";
       const isLegacyModerator = path.startsWith("/moderator");
       if (!isAdminAuthEntry && !isLegacyModerator) return;
-      const target = getPostLoginRoute(user.roles ?? []);
+      const target = getPostLoginRoute(roles);
       if (target && target !== path) {
         navigate(target, { replace: true });
       }
