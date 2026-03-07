@@ -431,10 +431,8 @@ export default function ServiceDetail() {
     (sum, item) => sum + item.offering.salePrice * item.quantity,
     0,
   );
-  const cartTaxRate = 0.12;
-  const cartTaxes = cartSubtotal * cartTaxRate;
   const cartDiscount = couponDiscount;
-  const cartTotal = Math.max(cartSubtotal + cartTaxes - cartDiscount, 0);
+  const cartTotal = Math.max(cartSubtotal - cartDiscount, 0);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -1057,6 +1055,26 @@ export default function ServiceDetail() {
                         const isSlotUnavailable =
                           missingBookingUrl ||
                           ((requiresSlot && slotCount === 0) || outOfStock);
+                        const maxQty = offering.maxQuantity ?? null;
+                        const remainingQty =
+                          offering.remainingQuantity ?? offering.maxQuantity ?? null;
+                        const hasInventory =
+                          maxQty !== null &&
+                          Number.isFinite(maxQty) &&
+                          remainingQty !== null &&
+                          Number.isFinite(remainingQty);
+                        const remainingPercent = hasInventory
+                          ? Math.max(
+                              0,
+                              Math.min(100, (Number(remainingQty) / Number(maxQty)) * 100),
+                            )
+                          : null;
+                        const inventoryBarClass = outOfStock
+                          ? "bg-rose-500"
+                          : hasInventory &&
+                              Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
+                            ? "bg-amber-500"
+                            : "bg-emerald-500";
                         return (
                           <div
                             key={offering.id}
@@ -1066,18 +1084,28 @@ export default function ServiceDetail() {
                               <p className="text-base font-semibold text-slate-900">
                                 {offering.name}
                               </p>
-                            <p className="text-xs font-semibold text-slate-400">
-  Created : {new Date(offering.createdAt).toLocaleString()}
-</p>
                               <p className="text-xs font-semibold text-slate-400">
-                            Qty: {offering.maxQuantity || "N/A"}
+                                Created : {new Date(offering.createdAt).toLocaleString()}
+                              </p>
+                              <p className="text-xs font-semibold text-slate-400">
+                                Qty: {offering.maxQuantity || "N/A"}
                               </p>
                               <p className="text-xs font-semibold text-slate-400">
                                 Remaining: {offering.remainingQuantity ?? "N/A"}
                               </p>
+                              {hasInventory && remainingPercent !== null ? (
+                                <div className="mt-2 max-w-[220px]">
+                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                    <div
+                                      className={`h-full rounded-full ${inventoryBarClass}`}
+                                      style={{ width: `${remainingPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : null}
                             </div>
                             <div className="flex flex-col items-end gap-3">
-                              <span className="text-lg font-bold text-slate-900">
+                              <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xl font-bold text-slate-900">
                                 ${offering.salePrice}
                               </span>
                               <button
@@ -1117,7 +1145,7 @@ export default function ServiceDetail() {
                             ) : null}
                           </div>
                           <div className="flex flex-col items-end gap-3">
-                            <span className="text-lg font-bold text-slate-900">
+                            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-bold text-slate-900">
                               {formatCurrency(
                                 Number(offering.salePrice ?? offering.basePrice ?? 0),
                               )}
@@ -1352,12 +1380,6 @@ export default function ServiceDetail() {
                   <span>Subtotal</span>
                   <span className="text-slate-900">
                     {formatCurrency(cartSubtotal)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Taxes</span>
-                  <span className="text-slate-900">
-                    {formatCurrency(cartTaxes)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-slate-500">

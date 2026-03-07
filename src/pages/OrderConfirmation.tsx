@@ -217,10 +217,6 @@ export default function OrderConfirmationPage() {
                 <span>Subtotal</span>
                 <span className="text-slate-900">{formatCurrency(summary.subtotal)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs">
-                <span>Taxes</span>
-                <span className="text-slate-900">{formatCurrency(summary.tax)}</span>
-              </div>
               <div className="flex items-center justify-between text-xs text-emerald-600">
                 <span>Discount</span>
                 <span>-{formatCurrency(summary.discount)}</span>
