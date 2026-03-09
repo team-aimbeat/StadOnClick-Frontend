@@ -372,7 +372,9 @@ const VendorDocumentsTable = ({
 
   const toolbarSkeleton = isFetching && vendorDocs.length === 0;
   const vendorEmail = user?.email ?? "Vendor";
-  const vendorname = user?.firstName + user.lastName;
+  const vendorname =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    resolvedVendor.name;
   const phone = user?.phone;
 
 

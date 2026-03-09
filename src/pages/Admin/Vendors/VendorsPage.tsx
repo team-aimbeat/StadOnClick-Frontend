@@ -164,11 +164,13 @@ export default function VendorsPage({
   const { data, isLoading, isFetching, isError } = useListAllVendorsQuery({
     page: 1,
     limit: 200,
-    status:
-      defaultStatusFilter &&
-      ["PENDING_REVIEW", "ACTIVE", "SUSPENDED", "REJECTED"].includes(defaultStatusFilter.toUpperCase())
-        ? defaultStatusFilter.toUpperCase()
-        : undefined,
+    status: (() => {
+      const normalized = defaultStatusFilter?.toUpperCase();
+      return normalized &&
+        ["PENDING_REVIEW", "ACTIVE", "SUSPENDED", "REJECTED"].includes(normalized)
+        ? (normalized as VendorRow["status"])
+        : undefined;
+    })(),
   });
 
   const vendorRows: VendorRow[] = useMemo(() => {

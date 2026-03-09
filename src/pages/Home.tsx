@@ -54,6 +54,7 @@ type AdvertiseDynamicContent = {
 };
 
 type BlogCardContent = {
+  category: string;
   name: string;
   role: string;
   description: string;
@@ -123,6 +124,7 @@ function normalizeBlogsContent(input: unknown): BlogsDynamicContent {
   const items = Array.from({ length: BLOG_CARD_COUNT }, (_, index) => {
     const raw = rawItems[index] as Record<string, unknown> | undefined;
     return {
+      category: typeof raw?.category === "string" ? raw.category : "",
       name: typeof raw?.name === "string" ? raw.name : "",
       role: typeof raw?.role === "string" ? raw.role : "",
       description: typeof raw?.description === "string" ? raw.description : "",

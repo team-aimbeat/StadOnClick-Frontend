@@ -86,7 +86,7 @@ export function AddShippingAddressDialog({ open, onOpenChange, onSubmit, isLoadi
   const selectedCounty = watch("county");
   const selectedCity = watch("city");
   const availableCities = React.useMemo(
-    () => citiesByCounty[selectedCounty] ?? [],
+    () => (selectedCounty ? citiesByCounty[selectedCounty] ?? [] : []),
     [selectedCounty]
   );
 
@@ -217,7 +217,7 @@ export function AddShippingAddressDialog({ open, onOpenChange, onSubmit, isLoadi
                   <SelectLabel>{selectedCounty || "Cities"}</SelectLabel>
                   <SelectSeparator />
                   {availableCities.length > 0 ? (
-                    availableCities.map((city) => (
+                    availableCities.map((city: string) => (
                       <SelectItem key={city} value={city}>
                         {city}
                       </SelectItem>

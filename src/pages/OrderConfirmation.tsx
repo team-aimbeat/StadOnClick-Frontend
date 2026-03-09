@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useGetOrderReceiptQuery } from "@/services/ordersApi";
 import { CheckCircle } from "lucide-react";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 const RECEIPT_STORAGE_KEY = "stadonclick.latestOrderReceipt";
 
@@ -13,6 +14,15 @@ const currencyFormatter = new Intl.NumberFormat("sv-SE", {
 });
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
+const getApiErrorMessage = (error: unknown) => {
+  if (!error || typeof error !== "object" || !("data" in error)) {
+    return null;
+  }
+  const data = (error as FetchBaseQueryError & { data?: { message?: string } }).data;
+  return data && typeof data === "object" && "message" in data
+    ? data.message ?? null
+    : null;
+};
 
 const formatDate = (iso?: string) => {
   if (!iso) return "-";
@@ -115,7 +125,7 @@ export default function OrderConfirmationPage() {
         <div className="w-full max-w-md rounded-3xl border border-rose-200 bg-rose-50 p-6 text-center shadow-sm">
           <p className="text-lg font-semibold text-rose-700">We couldn't load your receipt</p>
           <p className="mt-2 text-sm text-rose-700">
-            {error?.data?.message ||
+            {getApiErrorMessage(error) ||
               "Please return to the orders page and select the receipt you want to view."}
           </p>
           <Button className="mt-4" onClick={() => navigate("/orders")}>

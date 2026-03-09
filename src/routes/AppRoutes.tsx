@@ -104,10 +104,10 @@ import AffiliateCommission from "@/pages/AffiliateCommission";
 import AffiliateWallet from "@/pages/AffiliateWallet";
 import AffiliatePayouts from "@/pages/AffiliatePayouts";
 import AffiliateStripe from "@/pages/AffiliateStripe";
-import AppLayout from "@/components/layout/AppLayout";
-import AdminLayout from "@/components/layout/AdminLayout";
-import VendorLayout from "@/components/layout/VendorLayout";
-import AffiliateLayout from "@/components/layout/AffiliateLayout";
+import AppLayout from "@/components/Layout/AppLayout";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import VendorLayout from "@/components/Layout/VendorLayout";
+import AffiliateLayout from "@/components/Layout/AffiliateLayout";
 
 
 const vendorPlaceholder = (title: string, description?: string) => (

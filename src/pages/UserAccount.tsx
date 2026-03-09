@@ -33,7 +33,10 @@ import {
   useUpdateShippingAddressMutation,
 } from "@/features/account/api/accountApi";
 import { useUploadAvatarMutation } from "@/features/auth/api/authApi";
-import type { ShippingAddressFormInput } from "@/features/account/api/accountApi";
+import type {
+  AccountProfile,
+  ShippingAddressFormInput,
+} from "@/features/account/api/accountApi";
 
 type SectionKey = "personal" | "password" | "shipping"  | "personalization";
 
@@ -253,7 +256,7 @@ const UserAccount = () => {
       const payload = {
         firstName: personalForm.firstName || undefined,
         lastName: personalForm.lastName || undefined,
-        gender: personalForm.gender || undefined,
+        gender: (personalForm.gender || undefined) as AccountProfile["gender"],
         phone: personalForm.phone || undefined,
       };
       const response = await updateProfile(payload).unwrap();

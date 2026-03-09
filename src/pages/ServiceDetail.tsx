@@ -669,6 +669,7 @@ export default function ServiceDetail() {
   const serviceOfferingsFallback = useMemo<VendorOffering[]>(() => {
     const list = service?.offerings ?? [];
     return list.map((offering) => ({
+      createdAt: new Date().toISOString(),
       id: offering.id,
       serviceId: offering.serviceId ?? currentServiceId ?? "",
       name: offering.name,
@@ -1168,7 +1169,7 @@ export default function ServiceDetail() {
                   </div>
                 ) : (
                   <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
-                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription} {offerings.rules}
+                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription}
                     </p>
                     <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updated—check the services tab to explore current offerings.`}
                     </p>

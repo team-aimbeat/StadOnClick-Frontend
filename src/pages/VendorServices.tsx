@@ -846,13 +846,19 @@ const VendorServices = () => {
           refundPolicy.type === "NO_REFUND"
             ? null
             : Number(refundPolicy.windowHours);
+        const validWindowHours =
+          parsedWindowHours !== null &&
+          Number.isFinite(parsedWindowHours) &&
+          parsedWindowHours > 0
+            ? parsedWindowHours
+            : null;
         if (
           refundPolicy.type === "NO_REFUND" ||
-          (Number.isFinite(parsedWindowHours) && parsedWindowHours > 0)
+          validWindowHours !== null
         ) {
           updatePayload.refundPolicy = {
             type: refundPolicy.type,
-            windowHours: refundPolicy.type === "NO_REFUND" ? null : parsedWindowHours,
+            windowHours: refundPolicy.type === "NO_REFUND" ? null : validWindowHours,
           };
         }
 

@@ -17,7 +17,9 @@ export interface DataTableSortStatus {
 export interface ColumnConfig {
     key: string;
     title: string | ReactNode;
-    render?: (value: any, row: RowData, index: number) => ReactNode;
+    render?: {
+        bivarianceHack(value: any, row: RowData, index: number): ReactNode;
+    }["bivarianceHack"];
     sortable?: boolean;
     breadCrumbTitle?: string;
     align?: 'left' | 'center' | 'right';

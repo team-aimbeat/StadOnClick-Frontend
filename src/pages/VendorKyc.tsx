@@ -14,7 +14,7 @@ const VendorKyc = () => {
   const dispatch = useAppDispatch();
   const authUser = useAppSelector((state) => state.auth.user);
   const loading = useMockLoader();
-  const uploadModalOpenerRef = useRef<() => void>();
+  const uploadModalOpenerRef = useRef<(() => void) | null>(null);
   const hasVendorRole = Boolean(authUser?.roles?.includes("VENDOR"));
   const authVendorId = authUser?.vendorAccess?.vendorId ?? null;
   const shouldFetchDocuments = Boolean(authUser && hasVendorRole && authVendorId);

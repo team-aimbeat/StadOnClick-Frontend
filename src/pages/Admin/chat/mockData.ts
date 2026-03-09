@@ -4,6 +4,14 @@ import profile9 from "@/assets/images/profile-9.jpeg";
 import profile1 from "@/assets/images/profile-8.jpeg";
 import type { AgentUser, Contact } from "./types";
 
+let messageId = 0;
+const message = (fromUserId: number, toUserId: number, text: string) => ({
+  id: `msg-${++messageId}`,
+  fromUserId,
+  toUserId,
+  text,
+});
+
 export const agentUser: AgentUser = {
   id: 0,
   name: "Alon Smith",
@@ -23,11 +31,11 @@ export const contactsMock: Contact[] = [
     status: "active",
     unreadCount: 2,
     messages: [
-      { fromUserId: 1, toUserId: 0, text: "Hi, I am back from vacation" },
-      { fromUserId: 0, toUserId: 1, text: "How are you?" },
-      { fromUserId: 1, toUserId: 0, text: "Welcome back!" },
-      { fromUserId: 1, toUserId: 0, text: "I am all well" },
-      { fromUserId: 0, toUserId: 1, text: "Coffee?" },
+      message(1, 0, "Hi, I am back from vacation"),
+      message(0, 1, "How are you?"),
+      message(1, 0, "Welcome back!"),
+      message(1, 0, "I am all well"),
+      message(0, 1, "Coffee?"),
     ],
     active: true,
   },
@@ -42,9 +50,9 @@ export const contactsMock: Contact[] = [
     status: "away",
     unreadCount: 0,
     messages: [
-      { fromUserId: 0, toUserId: 2, text: "Hello" },
-      { fromUserId: 0, toUserId: 2, text: "It's me" },
-      { fromUserId: 0, toUserId: 2, text: "I have a question regarding project." },
+      message(0, 2, "Hello"),
+      message(0, 2, "It's me"),
+      message(0, 2, "I have a question regarding project."),
     ],
     active: false,
   },
@@ -59,10 +67,10 @@ export const contactsMock: Contact[] = [
     status: "active",
     unreadCount: 1,
     messages: [
-      { fromUserId: 0, toUserId: 3, text: "Hey Buddy." },
-      { fromUserId: 0, toUserId: 3, text: "What's up" },
-      { fromUserId: 3, toUserId: 0, text: "I am sick" },
-      { fromUserId: 0, toUserId: 3, text: "Not coming to office today." },
+      message(0, 3, "Hey Buddy."),
+      message(0, 3, "What's up"),
+      message(3, 0, "I am sick"),
+      message(0, 3, "Not coming to office today."),
     ],
     active: true,
   },
@@ -77,8 +85,8 @@ export const contactsMock: Contact[] = [
     status: "offline",
     unreadCount: 0,
     messages: [
-      { fromUserId: 0, toUserId: 4, text: "Hi, collect your check" },
-      { fromUserId: 4, toUserId: 0, text: "Ok, I will be there in 10 mins" },
+      message(0, 4, "Hi, collect your check"),
+      message(4, 0, "Ok, I will be there in 10 mins"),
     ],
     active: true,
   },
@@ -93,11 +101,11 @@ export const contactsMock: Contact[] = [
     status: "away",
     unreadCount: 3,
     messages: [
-      { fromUserId: 0, toUserId: 3, text: "Hi, I am back from vacation" },
-      { fromUserId: 0, toUserId: 3, text: "How are you?" },
-      { fromUserId: 0, toUserId: 5, text: "Welcome Back" },
-      { fromUserId: 0, toUserId: 5, text: "I am all well" },
-      { fromUserId: 5, toUserId: 0, text: "Coffee?" },
+      message(0, 3, "Hi, I am back from vacation"),
+      message(0, 3, "How are you?"),
+      message(0, 5, "Welcome Back"),
+      message(0, 5, "I am all well"),
+      message(5, 0, "Coffee?"),
     ],
     active: false,
   },
@@ -112,8 +120,8 @@ export const contactsMock: Contact[] = [
     status: "offline",
     unreadCount: 0,
     messages: [
-      { fromUserId: 0, toUserId: 6, text: "Hi" },
-      { fromUserId: 0, toUserId: 6, text: "Uploaded files to server." },
+      message(0, 6, "Hi"),
+      message(0, 6, "Uploaded files to server."),
     ],
     active: false,
   },

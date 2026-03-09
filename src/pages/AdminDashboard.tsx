@@ -217,6 +217,8 @@ const AdminDashboard: React.FC = () => {
   const bookingsTrend = trendFromValues(todayBookingsCount, yesterdayBookingsCount);
   const usersTrend = trendFromValues(newUsersToday, Math.max(0, newUsersToday - 1));
   const conversionTrend = trendFromValues(conversionRate, conversionYesterday);
+  const gmvTrend = trendFromValues(todayRevenue, yesterdayRevenue);
+  const gmvTrendDirection = gmvTrend.trend === "neutral" ? undefined : gmvTrend.trend;
 
   const platformSnapshotMetrics: SnapshotMetric[] = [
     {
@@ -509,9 +511,9 @@ const AdminDashboard: React.FC = () => {
               <GmvCard
                 title="GMV today"
                 value={Math.round(todayRevenue)}
-                percentage={trendFromValues(todayRevenue, yesterdayRevenue).percentage}
+                percentage={gmvTrend.percentage}
                 periodLabel="vs yesterday"
-                trend={trendFromValues(todayRevenue, yesterdayRevenue).trend}
+                trend={gmvTrendDirection}
                 showChart
                 chartData={gmvChartData}
                 currency="SEK "

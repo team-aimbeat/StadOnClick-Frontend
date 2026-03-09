@@ -216,14 +216,15 @@ export function HeroBannerGridDemo() {
   const handleReplace = (bannerId: string, file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result !== "string") return;
+      const nextImage = reader.result;
+      if (typeof nextImage !== "string") return;
       setBanners((prev) =>
         prev.map((banner) =>
           banner.id === bannerId
             ? {
                 ...banner,
-                source: reader.result,
-                imageSrc: reader.result,
+                source: nextImage,
+                imageSrc: nextImage,
               }
             : banner,
         ),

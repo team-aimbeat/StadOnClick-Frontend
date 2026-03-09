@@ -139,8 +139,9 @@ export const vendorServicesApi = createApi({
     getVendorServices: builder.query<VendorServiceEntity[], string | void>({
       query: (vendorId) =>
         vendorId ? `/vendor/vendor-services/${vendorId}` : "/vendor/vendor-services/me",
-      transformResponse: (response: any[]) =>
-        response.map((s: any) => ({
+      transformResponse: (response: unknown) =>
+        (Array.isArray(response) ? response : []).map((s: any) => ({
+          name: s.name ?? s.title ?? "",
           id: s.id,
           title: s.title,
           description: s.description,

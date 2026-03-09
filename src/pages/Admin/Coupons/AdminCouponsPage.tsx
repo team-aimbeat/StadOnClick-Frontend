@@ -293,7 +293,7 @@ export default function AdminCouponsPage() {
           if (!open) closePreviewModal();
         }}
         coupon={
-          previewModalCoupon
+      previewModalCoupon
             ? {
                 code: previewModalCoupon.code,
                 title: previewModalCoupon.title,
@@ -302,7 +302,6 @@ export default function AdminCouponsPage() {
                 maxUses: previewModalCoupon.maxUses,
                 expiry: previewModalCoupon.expiry,
                 status: previewModalCoupon.status,
-                preview: previewModalCoupon.preview,
               }
             : undefined
         }

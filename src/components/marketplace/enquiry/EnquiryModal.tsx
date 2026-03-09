@@ -10,7 +10,9 @@ type EnquiryModalProps = {
   onClose: () => void
 }
 
-const buildInitialName = (user?: { firstName?: string | null; lastName?: string | null }) => {
+const buildInitialName = (
+  user?: { firstName?: string | null; lastName?: string | null } | null,
+) => {
   const parts = [user?.firstName?.trim(), user?.lastName?.trim()].filter(Boolean)
   return parts.join(" ") || ""
 }
