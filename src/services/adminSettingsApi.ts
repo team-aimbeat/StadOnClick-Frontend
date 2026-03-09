@@ -5,6 +5,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 
 export type SystemSettings = {
   PLATFORM_COMMISSION_RATE: number;
+  CATEGORY_COMMISSION_RATES?: Record<string, number>;
 };
 
 export type SettingsResponse = {

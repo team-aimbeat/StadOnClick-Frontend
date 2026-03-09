@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useGetSettingsQuery, useUpdateSettingsMutation } from "@/services/adminSettingsApi";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import { useListAdminServiceMastersQuery } from "@/features/admin/service-categories/api/adminServiceCategoriesApi";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import {
@@ -15,6 +17,8 @@ import {
   HiOutlineArrowPath,
   HiOutlineInformationCircle,
 } from "react-icons/hi2";
+
+const GLOBAL_SCOPE = "GLOBAL";
 
 /* ─── Animated moving dot along a horizontal track ─── */
 function TravelDot({ color = "bg-slate-900", delay = 0, totalDuration = 3.2 }: { color?: string, delay?: number, totalDuration?: number }) {
@@ -110,17 +114,39 @@ function FlowConnector({
 ═══════════════════════════════════════════════════════════ */
 const AdminSettings: React.FC = () => {
   const { data: settings, isLoading, isError } = useGetSettingsQuery();
+  const { data: masterCategories = [] } = useListAdminServiceMastersQuery();
   const [updateSettings, { isLoading: isUpdating }] = useUpdateSettingsMutation();
 
   const [commissionRate, setCommissionRate] = useState<number>(0.1);
   const [sampleAmount, setSampleAmount] = useState<number>(1000);
   const [justSaved, setJustSaved] = useState(false);
+  const [selectedScope, setSelectedScope] = useState<string>(GLOBAL_SCOPE);
+
+  const categoryRateOverrides = settings?.CATEGORY_COMMISSION_RATES ?? {};
+  const categoryOptions = useMemo(
+    () =>
+      masterCategories.flatMap((master) =>
+        (master.categories ?? []).map((category) => ({
+          id: category.id,
+          label: category.name,
+          masterLabel: master.name,
+        })),
+      ),
+    [masterCategories],
+  );
+  const selectedCategoryOption = categoryOptions.find(
+    (category) => category.id === selectedScope,
+  );
+  const isGlobalScope = selectedScope === GLOBAL_SCOPE;
+  const hasCategoryOverride =
+    !isGlobalScope && Object.prototype.hasOwnProperty.call(categoryRateOverrides, selectedScope);
+  const effectiveRate = isGlobalScope
+    ? settings?.PLATFORM_COMMISSION_RATE ?? 0.1
+    : categoryRateOverrides[selectedScope] ?? settings?.PLATFORM_COMMISSION_RATE ?? 0.1;
 
   useEffect(() => {
-    if (settings?.PLATFORM_COMMISSION_RATE !== undefined) {
-      setCommissionRate(settings.PLATFORM_COMMISSION_RATE);
-    }
-  }, [settings]);
+    setCommissionRate(effectiveRate);
+  }, [effectiveRate]);
 
   const handleSave = async () => {
     if (commissionRate < 0 || commissionRate > 1) {
@@ -128,12 +154,37 @@ const AdminSettings: React.FC = () => {
       return;
     }
     try {
-      await updateSettings({ PLATFORM_COMMISSION_RATE: commissionRate }).unwrap();
-      toast.success("Commission rate saved.");
+      if (isGlobalScope) {
+        await updateSettings({ PLATFORM_COMMISSION_RATE: commissionRate }).unwrap();
+        toast.success("Global commission rate saved.");
+      } else {
+        await updateSettings({
+          CATEGORY_COMMISSION_RATES: {
+            ...categoryRateOverrides,
+            [selectedScope]: commissionRate,
+          },
+        }).unwrap();
+        toast.success("Category commission rate saved.");
+      }
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2500);
     } catch {
       toast.error("Failed to save. Please try again.");
+    }
+  };
+
+  const handleClearOverride = async () => {
+    if (isGlobalScope || !hasCategoryOverride) return;
+
+    const nextOverrides = { ...categoryRateOverrides };
+    delete nextOverrides[selectedScope];
+
+    try {
+      await updateSettings({ CATEGORY_COMMISSION_RATES: nextOverrides }).unwrap();
+      toast.success("Category override removed.");
+      setJustSaved(false);
+    } catch {
+      toast.error("Failed to remove override. Please try again.");
     }
   };
 
@@ -178,7 +229,9 @@ const AdminSettings: React.FC = () => {
               <div>
                 <h2 className="text-sm font-bold text-slate-900">Commission Rate</h2>
                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide mt-0.5">
-                  Global marketplace setting
+                  {isGlobalScope
+                    ? "Global marketplace default"
+                    : `${selectedCategoryOption?.masterLabel ?? "Category"} category override`}
                 </p>
               </div>
               <motion.span
@@ -193,6 +246,37 @@ const AdminSettings: React.FC = () => {
 
             <div className="px-6 py-5 flex-1 flex flex-col justify-between space-y-6">
               <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">
+                      Commission scope
+                    </label>
+                    <Select value={selectedScope} onValueChange={setSelectedScope}>
+                      <SelectTrigger className="w-full rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-800">
+                        <SelectValue placeholder="Select scope" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72 overflow-y-auto">
+                        <SelectItem value={GLOBAL_SCOPE}>Global default</SelectItem>
+                        {categoryOptions.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.masterLabel} - {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {!isGlobalScope && (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Mode
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-slate-700">
+                        {hasCategoryOverride ? "Using category override" : "Inheriting global default"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Slider */}
                 <div>
                   <input
@@ -273,11 +357,21 @@ const AdminSettings: React.FC = () => {
                     </motion.span>
                   ) : (
                     <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      Save commission rate
+                      {isGlobalScope ? "Save global rate" : "Save category rate"}
                     </motion.span>
                   )}
                 </AnimatePresence>
               </button>
+              {!isGlobalScope && hasCategoryOverride && (
+                <button
+                  type="button"
+                  onClick={handleClearOverride}
+                  disabled={isUpdating}
+                  className="w-full rounded-lg border border-slate-200 bg-white py-3 text-xs font-black uppercase tracking-[0.15em] text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50"
+                >
+                  Clear category override
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -373,14 +467,14 @@ const AdminSettings: React.FC = () => {
         <div className="flex gap-3 p-4 bg-slate-50 border border-slate-200 rounded-lg h-full">
           <HiOutlineInformationCircle className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-slate-500 leading-relaxed font-medium">
-            Changes apply to <strong className="text-slate-700">new orders only</strong>. Existing orders retain the rate active at the time of booking. The platform extracts commission during the customer payment; the net balance is remitted to the vendor upon payout request.
+            Changes apply to <strong className="text-slate-700">new orders only</strong>. Existing orders retain the rate active at the time of booking. Categories without an override inherit the global default rate automatically.
           </p>
         </div>
 
         <div className="flex gap-3 p-4 bg-amber-50/50 border border-amber-200/60 rounded-lg h-full">
           <HiOutlineExclamationTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-700 leading-relaxed font-medium">
-            High commission rates may directly impact vendor retention and overall marketplace competitiveness. Review carefully before applying changes globally across StadonClick.
+            High commission rates may directly impact vendor retention and overall marketplace competitiveness. Review carefully before applying changes across category overrides and the global fallback.
           </p>
         </div>
       </div>

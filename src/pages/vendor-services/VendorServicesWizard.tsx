@@ -58,6 +58,10 @@ export type VendorServicesWizardProps = {
   masterServiceOptions: ServiceMasterCategory[];
   isMasterLoading: boolean;
   wizardError: string | null;
+  handleCreateMasterService: (input: {
+    name: string;
+    slug?: string;
+  }) => Promise<{ id: string }>;
   handleSelectMaster: (id: string) => void;
   handleNextFromMaster: () => void;
   selectedMasterService?: ServiceMasterCategory;
@@ -67,6 +71,11 @@ export type VendorServicesWizardProps = {
   categoryError: boolean;
   selectedCategoryId: string;
   setSelectedCategoryId: (id: string) => void;
+  handleCreateServiceCategory: (input: {
+    name: string;
+    slug?: string;
+    masterCategoryId?: string;
+  }) => Promise<{ id: string }>;
   handleNextFromCategory: () => void;
   selectedCategory?: ServiceCategory;
 
@@ -96,11 +105,21 @@ export type VendorServicesWizardProps = {
   fields: any[];
   append: (value: any) => void;
   remove: (index: number) => void;
+  watchedOfferings: Array<{
+    name?: string;
+    description?: string;
+    bookingUrl?: string;
+    basePrice?: number;
+    salePrice?: number;
+    maxQuantity?: number;
+  }>;
   errors: any;
   generalError: string | null;
 
   enableSlots: boolean;
   setEnableSlots: (value: boolean) => void;
+  slotTargetOfferingIndex: number;
+  setSlotTargetOfferingIndex: (value: number) => void;
   slotFields: { startTime: string; endTime: string; capacity: string };
   slotStartDate: Dayjs | null;
   slotEndDate: Dayjs | null;
@@ -116,6 +135,8 @@ export type VendorServicesWizardProps = {
 
   enableRules: boolean;
   setEnableRules: (value: boolean) => void;
+  ruleTargetOfferingIndex: number;
+  setRuleTargetOfferingIndex: (value: number) => void;
   ruleFields: { type: string; value: string };
   handleRuleFieldUpdate: (field: "type" | "value", value: string) => void;
   ruleValidationError: string | null;
@@ -133,6 +154,16 @@ export type VendorServicesWizardProps = {
 
 export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
   const [categorySearch, setCategorySearch] = useState("");
+  const [isMasterCreateOpen, setIsMasterCreateOpen] = useState(false);
+  const [masterDraftName, setMasterDraftName] = useState("");
+  const [masterDraftSlug, setMasterDraftSlug] = useState("");
+  const [masterCreateError, setMasterCreateError] = useState<string | null>(null);
+  const [isCreatingMaster, setIsCreatingMaster] = useState(false);
+  const [isCategoryCreateOpen, setIsCategoryCreateOpen] = useState(false);
+  const [categoryDraftName, setCategoryDraftName] = useState("");
+  const [categoryDraftSlug, setCategoryDraftSlug] = useState("");
+  const [categoryCreateError, setCategoryCreateError] = useState<string | null>(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const {
     wizardScrollRef,
     isEditing,
@@ -147,6 +178,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     masterServiceOptions,
     isMasterLoading,
     wizardError,
+    handleCreateMasterService,
     handleSelectMaster,
     handleNextFromMaster,
     selectedMasterService,
@@ -155,6 +187,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     categoryError,
     selectedCategoryId,
     setSelectedCategoryId,
+    handleCreateServiceCategory,
     handleNextFromCategory,
     handleNextFromDetails,
     createdServiceId,
@@ -174,10 +207,13 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     fields,
     append,
     remove,
+    watchedOfferings,
     errors,
     generalError,
     enableSlots,
     setEnableSlots,
+    slotTargetOfferingIndex,
+    setSlotTargetOfferingIndex,
     slotFields,
     slotStartDate,
     slotEndDate,
@@ -189,6 +225,8 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     slotValidationError,
     enableRules,
     setEnableRules,
+    ruleTargetOfferingIndex,
+    setRuleTargetOfferingIndex,
     ruleFields,
     handleRuleFieldUpdate,
     ruleValidationError,
@@ -212,6 +250,64 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
       );
     });
   }, [categoryOptions, normalizedCategorySearch]);
+
+  const offeringTargetOptions = useMemo(
+    () =>
+      watchedOfferings.map((offering, index) => {
+        const name = offering?.name?.trim();
+        return {
+          value: String(index),
+          label: name ? `${index + 1}. ${name}` : `Offering ${index + 1}`,
+        };
+      }),
+    [watchedOfferings],
+  );
+
+  const handleCreateMaster = async () => {
+    const name = masterDraftName.trim();
+    if (!name) {
+      setMasterCreateError("Master service name is required.");
+      return;
+    }
+    setMasterCreateError(null);
+    setIsCreatingMaster(true);
+    try {
+      await handleCreateMasterService({
+        name,
+        slug: masterDraftSlug.trim() || undefined,
+      });
+      setMasterDraftName("");
+      setMasterDraftSlug("");
+      setIsMasterCreateOpen(false);
+    } catch (error: any) {
+      setMasterCreateError(error?.data?.message || "Unable to create master service.");
+    } finally {
+      setIsCreatingMaster(false);
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    const name = categoryDraftName.trim();
+    if (!name) {
+      setCategoryCreateError("Service category name is required.");
+      return;
+    }
+    setCategoryCreateError(null);
+    setIsCreatingCategory(true);
+    try {
+      await handleCreateServiceCategory({
+        name,
+        slug: categoryDraftSlug.trim() || undefined,
+      });
+      setCategoryDraftName("");
+      setCategoryDraftSlug("");
+      setIsCategoryCreateOpen(false);
+    } catch (error: any) {
+      setCategoryCreateError(error?.data?.message || error?.message || "Unable to create category.");
+    } finally {
+      setIsCreatingCategory(false);
+    }
+  };
 
   return (
     <div ref={wizardScrollRef}>
@@ -305,6 +401,59 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                   <p className="mt-1 text-sm text-slate-500">
                     Choose a master service to unlock categories, details, and offerings.
                   </p>
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMasterCreateOpen((prev) => !prev);
+                        setMasterCreateError(null);
+                      }}
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      {isMasterCreateOpen ? "Close master form" : "Add new master service"}
+                    </button>
+                  </div>
+
+                  {isMasterCreateOpen && (
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="space-y-1 text-sm text-slate-700">
+                          <span className="font-semibold text-slate-600">Master service name *</span>
+                          <input
+                            value={masterDraftName}
+                            onChange={(event) => setMasterDraftName(event.target.value)}
+                            placeholder="e.g. Pet Care Services"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                          />
+                        </label>
+                        <label className="space-y-1 text-sm text-slate-700">
+                          <span className="font-semibold text-slate-600">Slug (optional)</span>
+                          <input
+                            value={masterDraftSlug}
+                            onChange={(event) => setMasterDraftSlug(event.target.value)}
+                            placeholder="pet-care-services"
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                          />
+                        </label>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCreateMaster}
+                          disabled={isCreatingMaster}
+                          className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
+                        >
+                          {isCreatingMaster ? "Creating..." : "Create master"}
+                        </button>
+                        <p className="text-xs text-slate-500">
+                          No default subcategory will be created.
+                        </p>
+                      </div>
+                      {masterCreateError && (
+                        <p className="mt-2 text-xs text-rose-600">{masterCreateError}</p>
+                      )}
+                    </div>
+                  )}
 
                   <div className="mt-5">
                     {isMasterLoading ? (
@@ -379,6 +528,17 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                 <div className="flex gap-2">
                   <button
                     type="button"
+                    onClick={() => {
+                      setIsCategoryCreateOpen((prev) => !prev);
+                      setCategoryCreateError(null);
+                    }}
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
+                    disabled={!selectedMasterServiceId}
+                  >
+                    {isCategoryCreateOpen ? "Close category form" : "Add category"}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => goToStep(1)}
                     className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
                   >
@@ -396,6 +556,46 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
               </div>
 
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                {isCategoryCreateOpen && (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="space-y-1 text-sm text-slate-700">
+                        <span className="font-semibold text-slate-600">Category name *</span>
+                        <input
+                          value={categoryDraftName}
+                          onChange={(event) => setCategoryDraftName(event.target.value)}
+                          placeholder="e.g. Dog Walking"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                        />
+                      </label>
+                      <label className="space-y-1 text-sm text-slate-700">
+                        <span className="font-semibold text-slate-600">Slug (optional)</span>
+                        <input
+                          value={categoryDraftSlug}
+                          onChange={(event) => setCategoryDraftSlug(event.target.value)}
+                          placeholder="dog-walking"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCreateCategory}
+                        disabled={isCreatingCategory || !selectedMasterServiceId}
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
+                      >
+                        {isCreatingCategory ? "Creating..." : "Create category"}
+                      </button>
+                      <p className="text-xs text-slate-500">
+                        Category will be created under selected master service.
+                      </p>
+                    </div>
+                    {categoryCreateError && (
+                      <p className="mt-2 text-xs text-rose-600">{categoryCreateError}</p>
+                    )}
+                  </div>
+                )}
                 {selectedMasterServiceId ? (
                   isCategoryFetching ? (
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -478,7 +678,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                     </>
                   ) : (
                     <p className="text-xs text-slate-500">
-                      No categories found for this service yet.
+                      No categories found for this service yet. Use "Add category" to create one.
                     </p>
                   )
                 ) : (
@@ -934,56 +1134,80 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
 
                     {enableSlots && (
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <div className="grid gap-4 md:grid-cols-3">
-                          <div className="space-y-2 text-sm text-slate-700">
-                            <p className="font-semibold text-slate-600">Start *</p>
-                            <DatePicker
-                              value={slotStartDate}
-                              onChange={(value) => handleSlotDateChange("start", value)}
-                              slotProps={{
-                                textField: { size: "small", fullWidth: true },
-                              }}
-                            />
-                            <TimePicker
-                              value={slotStartTime}
-                              onChange={(value) => handleSlotTimeChange("start", value)}
-                              slotProps={{
-                                textField: { size: "small", fullWidth: true },
-                              }}
-                            />
+                        <div className="space-y-4">
+                          {offeringTargetOptions.length > 1 && (
+                            <label className="space-y-1 text-sm text-slate-700">
+                              <span className="font-semibold text-slate-600">
+                                Apply slot to offering
+                              </span>
+                              <Select
+                                value={String(slotTargetOfferingIndex)}
+                                onValueChange={(value) => setSlotTargetOfferingIndex(Number(value))}
+                              >
+                                <SelectTrigger className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-left text-sm text-slate-700">
+                                  <SelectValue placeholder="Select offering" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {offeringTargetOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </label>
+                          )}
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="space-y-2 text-sm text-slate-700">
+                              <p className="font-semibold text-slate-600">Start *</p>
+                              <DatePicker
+                                value={slotStartDate}
+                                onChange={(value) => handleSlotDateChange("start", value)}
+                                slotProps={{
+                                  textField: { size: "small", fullWidth: true },
+                                }}
+                              />
+                              <TimePicker
+                                value={slotStartTime}
+                                onChange={(value) => handleSlotTimeChange("start", value)}
+                                slotProps={{
+                                  textField: { size: "small", fullWidth: true },
+                                }}
+                              />
+                            </div>
+                            <div className="space-y-2 text-sm text-slate-700">
+                              <p className="font-semibold text-slate-600">End *</p>
+                              <DatePicker
+                                value={slotEndDate}
+                                onChange={(value) => handleSlotDateChange("end", value)}
+                                slotProps={{
+                                  textField: { size: "small", fullWidth: true },
+                                }}
+                              />
+                              <TimePicker
+                                value={slotEndTime}
+                                onChange={(value) => handleSlotTimeChange("end", value)}
+                                slotProps={{
+                                  textField: { size: "small", fullWidth: true },
+                                }}
+                              />
+                            </div>
+                            <label className="space-y-1 text-sm text-slate-700">
+                              <span className="font-semibold text-slate-600">
+                                Capacity *
+                              </span>
+                              <input
+                                type="number"
+                                min="1"
+                                value={slotFields.capacity}
+                                onChange={(event) =>
+                                  handleSlotFieldUpdate("capacity", event.target.value)
+                                }
+                                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                                required
+                              />
+                            </label>
                           </div>
-                          <div className="space-y-2 text-sm text-slate-700">
-                            <p className="font-semibold text-slate-600">End *</p>
-                            <DatePicker
-                              value={slotEndDate}
-                              onChange={(value) => handleSlotDateChange("end", value)}
-                              slotProps={{
-                                textField: { size: "small", fullWidth: true },
-                              }}
-                            />
-                            <TimePicker
-                              value={slotEndTime}
-                              onChange={(value) => handleSlotTimeChange("end", value)}
-                              slotProps={{
-                                textField: { size: "small", fullWidth: true },
-                              }}
-                            />
-                          </div>
-                          <label className="space-y-1 text-sm text-slate-700">
-                            <span className="font-semibold text-slate-600">
-                              Capacity *
-                            </span>
-                            <input
-                              type="number"
-                              min="1"
-                              value={slotFields.capacity}
-                              onChange={(event) =>
-                                handleSlotFieldUpdate("capacity", event.target.value)
-                              }
-                              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
-                              required
-                            />
-                          </label>
                         </div>
                       </LocalizationProvider>
                     )}
@@ -1004,6 +1228,28 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
 
                     {enableRules && (
                       <div className="space-y-3">
+                        {offeringTargetOptions.length > 1 && (
+                          <label className="space-y-1 text-sm text-slate-700">
+                            <span className="font-semibold text-slate-600">
+                              Apply rule to offering
+                            </span>
+                            <Select
+                              value={String(ruleTargetOfferingIndex)}
+                              onValueChange={(value) => setRuleTargetOfferingIndex(Number(value))}
+                            >
+                              <SelectTrigger className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-left text-sm text-slate-700">
+                                <SelectValue placeholder="Select offering" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {offeringTargetOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </label>
+                        )}
                         <label className="space-y-1 text-sm text-slate-700">
                           <span className="font-semibold text-slate-600">
                             Rule type *
