@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type ColumnConfig } from "@/components/shared/DataTable";
-import profile7 from "@/assets/images/profile-7.jpeg";
+import profile7 from "@/assets/Images/profile-7.jpeg";
 
 import {
   useGetVendorKycDocumentsQuery,

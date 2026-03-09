@@ -1,9 +1,9 @@
-import hotel1 from "@/assets/images/hotel1.jpg"
-import hotel2 from "@/assets/images/hotel2.jpg"
-import hotel3 from "@/assets/images/hotel3.jpg"
-import hotel4 from "@/assets/images/hotel4.jpg"
-import hotel5 from "@/assets/images/hotel5.jpg"
-import hotel6 from "@/assets/images/hotel6.jpg"
+import hotel1 from "@/assets/Images/hotel1.jpg"
+import hotel2 from "@/assets/Images/hotel2.jpg"
+import hotel3 from "@/assets/Images/hotel3.jpg"
+import hotel4 from "@/assets/Images/hotel4.jpg"
+import hotel5 from "@/assets/Images/hotel5.jpg"
+import hotel6 from "@/assets/Images/hotel6.jpg"
 
 const makeSvg = (label: string, bg: string, accent: string) => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180">

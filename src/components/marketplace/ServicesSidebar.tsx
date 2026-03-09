@@ -1,6 +1,6 @@
 import { Check, Search, Star } from "lucide-react";
 import { useMemo, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
-import filterIcon from "@/assets/icons/filter.svg";
+import filterIcon from "@/assets/icons/Filter.svg";
 import mapImage from "@/assets/Images/map.png";
 import couponImage from "@/assets/Images/coupon2.png";
 import { useGetWelcomeCouponsQuery, type WelcomeCoupon } from "@/services/welcomeCouponsApi";

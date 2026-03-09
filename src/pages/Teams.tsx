@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import profile7 from "@/assets/images/profile-7.jpeg"
-import profile8 from "@/assets/images/profile-8.jpeg"
-import profile9 from "@/assets/images/profile-9.jpeg"
+import profile7 from "@/assets/Images/profile-7.jpeg"
+import profile8 from "@/assets/Images/profile-8.jpeg"
+import profile9 from "@/assets/Images/profile-9.jpeg"
 import { useAppDispatch } from "@/app/hooks"
 import { setPageTitle } from "@/features/Layout/themeConfigSlice"
 

@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import salon1 from "@/assets/images/salon1.png";
-import salon2 from "@/assets/images/salon2.png";
-import salon3 from "@/assets/images/salon3.png";
+import salon1 from "@/assets/Images/salon1.png";
+import salon2 from "@/assets/Images/salon2.png";
+import salon3 from "@/assets/Images/salon3.png";
 import map from "@/assets/icons/map.png";
 import { BookingModal } from "@/components/booking/BookingModal";
 import {

@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import parkImage from "@/assets/images/trending1.jpg";
-import mallImage from "@/assets/images/trending2.jpg";
-import marketImage from "@/assets/images/trending3.jpg";
-import restaurantImage from "@/assets/images/place4.png";
+import parkImage from "@/assets/Images/trending1.jpg";
+import mallImage from "@/assets/Images/trending2.jpg";
+import marketImage from "@/assets/Images/trending3.jpg";
+import restaurantImage from "@/assets/Images/place4.png";
 import trendingBg from "@/assets/Images/trending.jpg";
 import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton";
 

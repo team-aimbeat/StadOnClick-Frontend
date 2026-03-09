@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import bannerImage from "@/assets/images/bgsalon.jpg"
+import bannerImage from "@/assets/Images/bgsalon.jpg"
 import { ChevronDown } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { slugifyServiceTitle } from "@/utils/slugify"

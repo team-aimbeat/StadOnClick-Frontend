@@ -1,5 +1,5 @@
 import { useState } from "react"
-import facebookIcon from "@/assets/icons/facebook.png"
+import facebookIcon from "@/assets/icons/Facebook.png"
 import googleIcon from "@/assets/icons/google.png"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
