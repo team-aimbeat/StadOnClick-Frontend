@@ -48,6 +48,24 @@ type NavItem = {
   children?: NavChild[];
 };
 
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : normalized;
+
+  const value = Number.parseInt(expanded, 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
@@ -201,6 +219,14 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Affiliate Users"), to: withBase("affiliates") },
         ],
       },
+         {
+        id: "service_master",
+        label: t("Service master"),
+        icon: HiClipboardDocumentCheck,
+        children: [
+    { label: t("Service Masters"), to: withBase("catalog/service-categories") },
+        ],
+      },
       {
         id: "bookings",
         label: t("Bookings"),
@@ -261,16 +287,16 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("Layout Studio"),
         icon: HiCube,
         children: [
-          { label: t("Home Sections Studio"), to: withBase("layout-studio/home-sections") },
+          // { label: t("Home Sections Studio"), to: withBase("layout-studio/home-sections") },
           { label: t("Hero Section"), to: withBase("layout-studio/home-sections/hero") },
           { label: t("Best Deals Section"), to: withBase("layout-studio/home-sections/best-deals") },
           { label: t("Extra Deals Section"), to: withBase("layout-studio/home-sections/extra-deals") },
           { label: t("Trending Section"), to: withBase("layout-studio/home-sections/trending") },
           { label: t("Blogs Section"), to: withBase("layout-studio/home-sections/blogs") },
-          { label: t("Other Sections"), to: withBase("layout-studio/home-sections/other") },
-          { label: t("Header Sections"), to: withBase("layout-studio/header-sections") },
+          { label: t("Advertisment Section"), to: withBase("layout-studio/home-sections/other") },
+          { label: t("Header Section"), to: withBase("layout-studio/header-sections") },
           { label: t("Header Dropdown"), to: withBase("layout-studio/header-dropdown") },
-          { label: t("Footer Sections"), to: withBase("layout-studio/footer-sections") },
+          { label: t("Footer Section"), to: withBase("layout-studio/footer-sections") },
         ],
       },
       {
@@ -464,42 +490,52 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                         >
                           <div className="overflow-hidden">
                             <ul className="ml-10 flex flex-col gap-0.5 px-3 pb-3 pt-1">
-                              {item.children.map((child, idx) => (
-                                <li
-                                  key={child.to}
-                                  className={cn(
-                                    "transition-opacity duration-200",
-                                    isOpen ? "opacity-100" : "opacity-0",
-                                    isOpen && `delay-[${idx * 30}ms]`
-                                  )}
-                                >
-                              <NavLink
-                                to={child.to}
-                                end={child.to === withBase("bookings")}
-                                className={({ isActive }) =>
-                                  cn(
-                                    "group flex h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors",
-                                    isActive
-                                      ? "bg-blue-50 text-[#4F7DFF] font-semibold"
-                                      : "text-slate-600 hover:bg-slate-50 hover:text-[#4F7DFF]"
-                                  )
-                                }
-                              >
-                                    <span
-                                      className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                                      style={{
-                                        backgroundColor: accentPalette[idx % accentPalette.length],
-                                      }}
-                                    />
-                                    <span className="truncate">{child.label}</span>
-                                    {child.badge && (
-                                      <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                        {child.badge}
-                                      </span>
+                              {item.children.map((child, idx) => {
+                                const accentColor = accentPalette[idx % accentPalette.length];
+
+                                return (
+                                  <li
+                                    key={child.to}
+                                    className={cn(
+                                      "transition-opacity duration-200",
+                                      isOpen ? "opacity-100" : "opacity-0",
+                                      isOpen && `delay-[${idx * 30}ms]`
                                     )}
-                                  </NavLink>
-                                </li>
-                              ))}
+                                  >
+                                    <NavLink
+                                      to={child.to}
+                                      end={child.to === withBase("bookings")}
+                                      className={({ isActive }) =>
+                                        cn(
+                                          "group flex h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors",
+                                          isActive
+                                            ? "bg-blue-50 text-[#4F7DFF] font-semibold"
+                                            : "text-slate-600 hover:bg-slate-50 hover:text-[#4F7DFF]"
+                                        )
+                                      }
+                                    >
+                                      <span
+                                        className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                                        style={{
+                                          backgroundColor: accentColor,
+                                        }}
+                                      />
+                                      <span className="truncate">{child.label}</span>
+                                      {child.badge && (
+                                        <span
+                                          className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold"
+                                          style={{
+                                            backgroundColor: hexToRgba(accentColor, 0.14),
+                                            color: accentColor,
+                                          }}
+                                        >
+                                          {child.badge}
+                                        </span>
+                                      )}
+                                    </NavLink>
+                                  </li>
+                                );
+                              })}
                             </ul>
                           </div>
                         </div>

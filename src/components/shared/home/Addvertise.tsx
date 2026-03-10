@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, Flame, MapPin } from "lucide-react";
 
-import heroImage from "@/assets/images/event.svg";
-import highlightImage from "@/assets/images/wheel.svg";
-import bowlingImage from "@/assets/images/bowling.svg";
-import waterImage from "@/assets/images/aqua.svg";
+import heroImage from "@/assets/Images/event.svg";
+import highlightImage from "@/assets/Images/wheel.svg";
+import bowlingImage from "@/assets/Images/bowling.svg";
+import waterImage from "@/assets/Images/aqua.svg";
 import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton";
 
 type AddvertiseContent = {

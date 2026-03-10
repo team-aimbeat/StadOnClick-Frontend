@@ -1,10 +1,10 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import PerfectScrollbar from "react-perfect-scrollbar";
-import profile7 from "@/assets/images/profile-7.jpeg";
-import profile8 from "@/assets/images/profile-8.jpeg";
-import profile9 from "@/assets/images/profile-9.jpeg";
-import profile1 from "@/assets/images/profile-8.jpeg";
+import profile7 from "@/assets/Images/profile-7.jpeg";
+import profile8 from "@/assets/Images/profile-8.jpeg";
+import profile9 from "@/assets/Images/profile-9.jpeg";
+import profile1 from "@/assets/Images/profile-8.jpeg";
 import {
   IconCamera,
   IconCopy,
@@ -282,7 +282,7 @@ const ChatVendor = () => {
             <div className="flex items-center">
               <div className="flex-none">
                 <img
-                  src="/src/assets/images/profile-7.jpeg"
+                  src="/src/assets/Images/profile-7.jpeg"
                   className="rounded-full h-12 w-12 object-cover"
                   alt=""
                 />

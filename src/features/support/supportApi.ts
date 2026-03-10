@@ -52,7 +52,7 @@ export const supportApi = createApi({
       query: (params) => ({
         url: "/vendor/support/tickets",
         method: "GET",
-        params,
+        params: params ?? undefined,
       }),
       transformResponse: (response: ApiResponse<PaginatedTickets<SupportTicket>>) => response.data,
       providesTags: (result) =>
@@ -110,7 +110,7 @@ export const supportApi = createApi({
       query: (params) => ({
         url: "/admin/support/tickets",
         method: "GET",
-        params,
+        params: params ?? undefined,
       }),
       transformResponse: (response: ApiResponse<PaginatedTickets<SupportTicket>>) => response.data,
       providesTags: (result) =>

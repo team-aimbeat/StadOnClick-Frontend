@@ -1,4 +1,6 @@
 {
+  "files": [],
+  "exclude": ["node_modules", "dist-ts", "@"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

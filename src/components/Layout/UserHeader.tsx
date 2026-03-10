@@ -68,6 +68,15 @@ const searchCategories = [
 
 const locations = ["Mumbai", "Delhi", "Bangalore", "Hyderabad"];
 
+type CartPreviewItem = {
+  id?: string;
+  title: string;
+  detail?: string;
+  quantityLabel?: string;
+  description?: string;
+  price: string;
+};
+
 const cartPreviewItems: CartPreviewItem[] = [
   {
     title: "Nordic Spa Evening",

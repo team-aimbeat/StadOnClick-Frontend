@@ -124,7 +124,7 @@ export const escalationApi = createApi({
       query: (params) => ({
         url: "/moderator/escalations",
         method: "GET",
-        params,
+        params: params ?? undefined,
       }),
       transformResponse: (response: ApiResponse<PaginatedEscalations<EscalationInboxItem>>) =>
         response.data,

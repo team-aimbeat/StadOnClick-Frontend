@@ -79,6 +79,42 @@ export interface UpdateVendorServicePayload {
   refundPolicy?: RefundPolicyInput;
 }
 
+export interface CreateVendorMasterServicePayload {
+  name: string;
+  slug?: string;
+  icon?: string;
+  sortOrder?: number;
+  createDefaultCategory?: boolean;
+}
+
+export interface VendorMasterServiceEntity {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface CreateVendorServiceCategoryPayload {
+  masterCategoryId: string;
+  name: string;
+  slug?: string;
+  icon?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+}
+
+export interface VendorServiceCategoryEntity {
+  id: string;
+  masterCategoryId: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export const vendorServicesApi = createApi({
   reducerPath: "vendorServicesApi",
   baseQuery: baseQueryWithReauth,
@@ -103,8 +139,9 @@ export const vendorServicesApi = createApi({
     getVendorServices: builder.query<VendorServiceEntity[], string | void>({
       query: (vendorId) =>
         vendorId ? `/vendor/vendor-services/${vendorId}` : "/vendor/vendor-services/me",
-      transformResponse: (response: any[]) =>
-        response.map((s: any) => ({
+      transformResponse: (response: unknown) =>
+        (Array.isArray(response) ? response : []).map((s: any) => ({
+          name: s.name ?? s.title ?? "",
           id: s.id,
           title: s.title,
           description: s.description,
@@ -134,6 +171,26 @@ export const vendorServicesApi = createApi({
     getVendorProfileStatus: builder.query<any, void>({
       query: () => "/vendor/onboarding/status",
     }),
+    createVendorMasterService: builder.mutation<
+      VendorMasterServiceEntity,
+      CreateVendorMasterServicePayload
+    >({
+      query: (body) => ({
+        url: "/vendor/vendor-services/master",
+        method: "POST",
+        body,
+      }),
+    }),
+    createVendorServiceCategory: builder.mutation<
+      VendorServiceCategoryEntity,
+      CreateVendorServiceCategoryPayload
+    >({
+      query: (body) => ({
+        url: "/vendor/vendor-services/categories",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -142,4 +199,6 @@ export const {
   useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
   useGetVendorProfileStatusQuery,
+  useCreateVendorMasterServiceMutation,
+  useCreateVendorServiceCategoryMutation,
 } = vendorServicesApi;

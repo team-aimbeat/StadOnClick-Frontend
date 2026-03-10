@@ -9,10 +9,10 @@ import {
   Star,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
-import salon1 from "@/assets/images/salon1.png";
-import salon2 from "@/assets/images/salon2.png";
-import salon3 from "@/assets/images/salon3.png";
+import { useEffect, useMemo, useState } from "react";
+import salon1 from "@/assets/Images/salon1.png";
+import salon2 from "@/assets/Images/salon2.png";
+import salon3 from "@/assets/Images/salon3.png";
 import map from "@/assets/icons/map.png";
 import { BookingModal } from "@/components/booking/BookingModal";
 import {
@@ -92,8 +92,9 @@ const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
   if (remaining <= 0) {
     return "unavailable";
   }
-  const threshold = Math.max(1, Math.ceil(capacity * 0.25));
-  return remaining <= threshold ? "few" : "available";
+  // Color should react directly to remaining seats:
+  // full capacity -> green, any booked seat -> amber, 0 -> gray/full.
+  return remaining < capacity ? "few" : "available";
 };
 
 const formatSlotSeats = (slot: VendorSlot) => {
@@ -174,8 +175,7 @@ const couponThemes = [
 export default function ServiceDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { serviceId: serviceIdParam, serviceSlug } = useParams<{
-    serviceId?: string;
+  const { serviceSlug } = useParams<{
     serviceSlug?: string;
   }>();
   const authUser = useAppSelector((state) => state.auth.user);
@@ -248,9 +248,15 @@ export default function ServiceDetail() {
   const [fetchOfferingSlots, { data: fetchedSlots }] =
     useLazyGetOfferingSlotsQuery();
 
-  const slugSearchQuery = serviceSlug
-    ? slugToSearchQuery(serviceSlug)
-    : undefined;
+  const isUuidLikeServiceKey = Boolean(
+    serviceSlug &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceSlug),
+  );
+  const serviceIdParam = isUuidLikeServiceKey ? serviceSlug : undefined;
+  const slugSearchQuery =
+    serviceSlug && !isUuidLikeServiceKey
+      ? slugToSearchQuery(serviceSlug)
+      : undefined;
   const affiliateRef = (searchParams.get("ref") ?? "").trim() || undefined;
   const marketplaceParams = serviceIdParam
     ? { serviceId: serviceIdParam, ref: affiliateRef, limit: 12, offset: 0 }
@@ -296,7 +302,6 @@ export default function ServiceDetail() {
   const serviceCity = matchedMarketplaceService?.cityName ?? "—";
   const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
   console.log(rules);
-  const lastFetchedSlotsKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!vendorId || typeof window === "undefined") return;
@@ -320,15 +325,7 @@ export default function ServiceDetail() {
   }, [trackVendorStoreVisit, vendorId]);
 
   useEffect(() => {
-    if (!bookedOffering?.id || !vendorId) {
-      lastFetchedSlotsKeyRef.current = null;
-      return;
-    }
-
-    const requestKey = `${vendorId}:${bookedOffering.id}`;
-    if (lastFetchedSlotsKeyRef.current === requestKey) return;
-
-    lastFetchedSlotsKeyRef.current = requestKey;
+    if (!bookedOffering?.id || !vendorId) return;
     fetchOfferingSlots({
       offeringId: bookedOffering.id,
       vendorId,
@@ -340,13 +337,39 @@ export default function ServiceDetail() {
     [bookedOffering, fetchedSlots],
   );
 
+  const reservedSlotQuantityById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of cartItems) {
+      if (!item.slotId) continue;
+      map.set(item.slotId, (map.get(item.slotId) ?? 0) + Math.max(item.quantity, 1));
+    }
+    return map;
+  }, [cartItems]);
+
+  const slotsForBookedOfferingWithCartHold = useMemo(
+    () =>
+      slotsForBookedOffering.map((slot) => {
+        const reserved = reservedSlotQuantityById.get(slot.id) ?? 0;
+        const nextRemaining = Math.max((slot.remaining ?? 0) - reserved, 0);
+        return {
+          ...slot,
+          remaining: nextRemaining,
+          status:
+            slot.status === "OPEN" && nextRemaining <= 0
+              ? ("FULL" as const)
+              : slot.status,
+        };
+      }),
+    [reservedSlotQuantityById, slotsForBookedOffering],
+  );
+
   const slotsForSelectedDate = useMemo(() => {
-    if (!selectedDate) return slotsForBookedOffering;
-    return slotsForBookedOffering.filter((slot) => {
+    if (!selectedDate) return slotsForBookedOfferingWithCartHold;
+    return slotsForBookedOfferingWithCartHold.filter((slot) => {
       const slotDate = getLocalDateKey(slot.startTime);
       return slotDate === selectedDateIso;
     });
-  }, [slotsForBookedOffering, selectedDateIso, selectedDate]);
+  }, [slotsForBookedOfferingWithCartHold, selectedDateIso, selectedDate]);
 
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
     return slotsForSelectedDate.map((slot) => ({
@@ -408,10 +431,8 @@ export default function ServiceDetail() {
     (sum, item) => sum + item.offering.salePrice * item.quantity,
     0,
   );
-  const cartTaxRate = 0.12;
-  const cartTaxes = cartSubtotal * cartTaxRate;
   const cartDiscount = couponDiscount;
-  const cartTotal = Math.max(cartSubtotal + cartTaxes - cartDiscount, 0);
+  const cartTotal = Math.max(cartSubtotal - cartDiscount, 0);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -648,6 +669,7 @@ export default function ServiceDetail() {
   const serviceOfferingsFallback = useMemo<VendorOffering[]>(() => {
     const list = service?.offerings ?? [];
     return list.map((offering) => ({
+      createdAt: new Date().toISOString(),
       id: offering.id,
       serviceId: offering.serviceId ?? currentServiceId ?? "",
       name: offering.name,
@@ -1034,6 +1056,26 @@ export default function ServiceDetail() {
                         const isSlotUnavailable =
                           missingBookingUrl ||
                           ((requiresSlot && slotCount === 0) || outOfStock);
+                        const maxQty = offering.maxQuantity ?? null;
+                        const remainingQty =
+                          offering.remainingQuantity ?? offering.maxQuantity ?? null;
+                        const hasInventory =
+                          maxQty !== null &&
+                          Number.isFinite(maxQty) &&
+                          remainingQty !== null &&
+                          Number.isFinite(remainingQty);
+                        const remainingPercent = hasInventory
+                          ? Math.max(
+                              0,
+                              Math.min(100, (Number(remainingQty) / Number(maxQty)) * 100),
+                            )
+                          : null;
+                        const inventoryBarClass = outOfStock
+                          ? "bg-rose-500"
+                          : hasInventory &&
+                              Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
+                            ? "bg-amber-500"
+                            : "bg-emerald-500";
                         return (
                           <div
                             key={offering.id}
@@ -1043,18 +1085,28 @@ export default function ServiceDetail() {
                               <p className="text-base font-semibold text-slate-900">
                                 {offering.name}
                               </p>
-                              <p className="text-xs text-slate-500">
-                                {offering.id}
+                              <p className="text-xs font-semibold text-slate-400">
+                                Created : {new Date(offering.createdAt).toLocaleString()}
                               </p>
                               <p className="text-xs font-semibold text-slate-400">
-                                Max Qty: {offering.maxQuantity || "N/A"}
+                                Qty: {offering.maxQuantity || "N/A"}
                               </p>
                               <p className="text-xs font-semibold text-slate-400">
                                 Remaining: {offering.remainingQuantity ?? "N/A"}
                               </p>
+                              {hasInventory && remainingPercent !== null ? (
+                                <div className="mt-2 max-w-[220px]">
+                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                    <div
+                                      className={`h-full rounded-full ${inventoryBarClass}`}
+                                      style={{ width: `${remainingPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : null}
                             </div>
                             <div className="flex flex-col items-end gap-3">
-                              <span className="text-lg font-bold text-slate-900">
+                              <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xl font-bold text-slate-900">
                                 ${offering.salePrice}
                               </span>
                               <button
@@ -1094,7 +1146,7 @@ export default function ServiceDetail() {
                             ) : null}
                           </div>
                           <div className="flex flex-col items-end gap-3">
-                            <span className="text-lg font-bold text-slate-900">
+                            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-bold text-slate-900">
                               {formatCurrency(
                                 Number(offering.salePrice ?? offering.basePrice ?? 0),
                               )}
@@ -1117,7 +1169,7 @@ export default function ServiceDetail() {
                   </div>
                 ) : (
                   <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
-                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription} {offerings.rules}
+                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription}
                     </p>
                     <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updated—check the services tab to explore current offerings.`}
                     </p>
@@ -1329,12 +1381,6 @@ export default function ServiceDetail() {
                   <span>Subtotal</span>
                   <span className="text-slate-900">
                     {formatCurrency(cartSubtotal)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Taxes</span>
-                  <span className="text-slate-900">
-                    {formatCurrency(cartTaxes)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-slate-500">

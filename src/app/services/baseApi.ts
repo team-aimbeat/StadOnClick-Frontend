@@ -41,11 +41,11 @@ const runRefresh = (
   extraOptions: Parameters<BaseQueryFn>[2]
 ) => {
   if (!refreshInProgress) {
-    refreshInProgress = baseQuery({ url: REFRESH_URL, method: "POST" }, api, extraOptions).finally(
-      () => {
-        refreshInProgress = null;
-      }
-    );
+    refreshInProgress = Promise.resolve(
+      baseQuery({ url: REFRESH_URL, method: "POST" }, api, extraOptions),
+    ).finally(() => {
+      refreshInProgress = null;
+    });
   }
   return refreshInProgress;
 };

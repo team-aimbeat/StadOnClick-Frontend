@@ -1,8 +1,8 @@
-import profileSeven from "@/assets/images/profile-7.jpeg";
-import profileEight from "@/assets/images/profile-8.jpeg";
-import profileNine from "@/assets/images/profile-9.jpeg";
-import profileTen from "@/assets/images/profile-10.jpeg";
-import subscribeBg from "@/assets/images/subscribe.png";
+import profileSeven from "@/assets/Images/profile-7.jpeg";
+import profileEight from "@/assets/Images/profile-8.jpeg";
+import profileNine from "@/assets/Images/profile-9.jpeg";
+import profileTen from "@/assets/Images/profile-10.jpeg";
+import subscribeBg from "@/assets/Images/subscribe.png";
 
 
 const avatars = [

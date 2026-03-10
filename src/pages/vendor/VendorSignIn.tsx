@@ -11,6 +11,8 @@ import { toast } from "react-hot-toast";
 import { useForm, useFormState } from "react-hook-form";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import { AdminStepLogin } from "../components/admin-auth/AdminStepLogin";
+import { getPostLoginRoute } from "@/lib/authRouting";
+import { PortalSwitcher } from "@/components/shared/auth/PortalSwitcher";
 // You can rename this to VendorStepLogin later, but reuse for now.
 
 type FormValues = {
@@ -53,8 +55,12 @@ export default function VendorSignIn() {
 
   // If already vendor, skip login screen
   useEffect(() => {
-    if (authUser?.roles?.length && hasVendorAccess(authUser.roles)) {
-      navigate(authUser.nextAction || "/vendor/dashboard", { replace: true });
+    if (authUser?.roles?.length) {
+      if (!hasVendorAccess(authUser.roles)) {
+        navigate("/access-denied", { replace: true });
+        return;
+      }
+      navigate(authUser.nextAction || getPostLoginRoute(authUser.roles), { replace: true });
     }
   }, [authUser?.nextAction, authUser?.roles, navigate]);
 
@@ -70,14 +76,20 @@ export default function VendorSignIn() {
         }).unwrap();
 
         const user = response?.user ?? response;
+        const isVendor = hasVendorAccess(user?.roles);
 
-        // IMPORTANT: backend MUST include roles in /auth/me
-        // If login response doesn't include roles, it will be filled by /auth/me bootstrap.
+        if (!isVendor) {
+          toast.error("Access denied. Vendor role required.", {
+            id: "vendor-login-denied",
+          });
+          return navigate("/access-denied", { replace: true });
+        }
+
         dispatch(setUser(user));
 
         toast.success("Signed in successfully", { id: "vendor-login-success" });
 
-        navigate(user.nextAction || "/vendor/dashboard", { replace: true });
+        navigate(user.nextAction || getPostLoginRoute(user.roles ?? []), { replace: true });
       } catch (err) {
         const { fieldErrors, formError: normalizedFormError, toastMessage } =
           normalizeApiError(err, "Unable to sign in. Please try again.");
@@ -107,6 +119,8 @@ export default function VendorSignIn() {
         subtitle="Login to manage your business operations in one place."
         showStepper={false}
       >
+        <PortalSwitcher current="vendor" />
+
         <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
           <p className="font-semibold">Vendor portal</p>
           <p className="mt-0.5 text-xs text-blue-800">
@@ -127,17 +141,6 @@ export default function VendorSignIn() {
           portalName="Vendor Portal"
         />
 
-        <div className="mt-4 space-y-2 rounded-xl border border-dashed border-slate-200 p-4 text-center">
-          <p className="text-xs text-slate-500">Looking for user sign in instead?</p>
-          <p className="text-sm text-[#0b59a2]">
-            <a
-              href="/sign-in"
-              className="font-semibold underline transition hover:text-[#094374]"
-            >
-              Go to User Sign in
-            </a>
-          </p>
-        </div>
       </OnboardingFormCard>
     </OnboardingLayout>
   );

@@ -74,6 +74,7 @@ import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorE
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
+import ServiceCatalogStudio from "@/pages/Admin/catalog/ServiceCatalogStudio";
 import HomeSectionsStudio from "@/pages/Admin/catalog/HomeSectionsStudio";
 import HomeHeroStudio from "@/pages/Admin/catalog/HomeHeroStudio";
 import HomeDealsStudio from "@/pages/Admin/catalog/HomeDealsStudio";
@@ -103,10 +104,10 @@ import AffiliateCommission from "@/pages/AffiliateCommission";
 import AffiliateWallet from "@/pages/AffiliateWallet";
 import AffiliatePayouts from "@/pages/AffiliatePayouts";
 import AffiliateStripe from "@/pages/AffiliateStripe";
-import AppLayout from "@/components/layout/AppLayout";
-import AdminLayout from "@/components/layout/AdminLayout";
-import VendorLayout from "@/components/layout/VendorLayout";
-import AffiliateLayout from "@/components/layout/AffiliateLayout";
+import AppLayout from "@/components/Layout/AppLayout";
+import AdminLayout from "@/components/Layout/AdminLayout";
+import VendorLayout from "@/components/Layout/VendorLayout";
+import AffiliateLayout from "@/components/Layout/AffiliateLayout";
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
@@ -187,7 +188,7 @@ const appRouter = createBrowserRouter([
             element: <AffiliateMarketing />,
           },
           {
-            path: "/service/:serviceId",
+            path: "/service/:serviceSlug",
             element: <ServiceDetail />,
           },
           {
@@ -398,6 +399,10 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/:tab",
             element: <PreferencesStudio />,
+          },
+          {
+            path: "catalog/service-categories",
+            element: <ServiceCatalogStudio />,
           },
           {
             path: "catalog/home-page",

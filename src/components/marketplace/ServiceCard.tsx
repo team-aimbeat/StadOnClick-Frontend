@@ -66,6 +66,21 @@ export default function ServiceCard({
     }))
   }, [service.id, vendorServices])
 
+  const displayRating = useMemo(() => {
+    const current = vendorServices.find((item) => item.id === service.id)
+    const ratings = (current?.reviews ?? [])
+      .map((review) => Number(review.rating))
+      .filter((rating) => Number.isFinite(rating) && rating > 0)
+
+    if (ratings.length > 0) {
+      const total = ratings.reduce((sum, rating) => sum + rating, 0)
+      return total / ratings.length
+    }
+
+    const fallbackRating = Number(service.rating ?? 0)
+    return Number.isFinite(fallbackRating) ? fallbackRating : 0
+  }, [service.id, service.rating, vendorServices])
+
   const detailsToRender = useMemo(() => {
     const merged = [...liveOfferingDetails, ...vendorServiceDetails, ...service.details]
       .filter((item) => {
@@ -160,7 +175,7 @@ export default function ServiceCard({
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25 h-155">
+    <article className="flex min-h-155 flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25">
       <div className="relative h-50">
         <button
           type="button"
@@ -230,7 +245,7 @@ export default function ServiceCard({
             <div className="flex flex-col items-end">
               <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500">
                      <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
-                {service.rating.toFixed(1)}
+                {displayRating.toFixed(1)}
             </span>
           </div>
         </div>
@@ -269,14 +284,13 @@ export default function ServiceCard({
           <button
             type="button"
             onClick={() => onViewDetails(service)}
-            className="min-w-33.75 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="flex-1 min-w-0 rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-600 whitespace-nowrap"
           >
             View all services
           </button>
           <button
             type="button"
-            className="min-w-33.75 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 transition
-             hover:bg-blue-50"
+            className="flex-1 min-w-0 rounded-lg border border-blue-500 px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 whitespace-nowrap"
             onClick={() => onEnquiry(service)}
           >
             <div className="flex items-center justify-center gap-2">

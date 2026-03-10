@@ -28,6 +28,8 @@ import {
 } from "@/services/vendorOfferingsApi";
 import {
   useCreateVendorServiceMutation,
+  useCreateVendorMasterServiceMutation,
+  useCreateVendorServiceCategoryMutation,
   useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
   type VendorServiceEntity,
@@ -115,6 +117,8 @@ const VendorServices = () => {
   >(null);
   const [enableSlots, setEnableSlots] = useState(false);
   const [enableRules, setEnableRules] = useState(false);
+  const [slotTargetOfferingIndex, setSlotTargetOfferingIndex] = useState(0);
+  const [ruleTargetOfferingIndex, setRuleTargetOfferingIndex] = useState(0);
   const [slotFields, setSlotFields] = useState<SlotFields>(slotInitialState);
   const [slotStartDate, setSlotStartDate] = useState<Dayjs | null>(null);
   const [slotEndDate, setSlotEndDate] = useState<Dayjs | null>(null);
@@ -169,6 +173,8 @@ const VendorServices = () => {
     setSelectedExistingOfferingId("");
     setEnableSlots(false);
     setEnableRules(false);
+    setSlotTargetOfferingIndex(0);
+    setRuleTargetOfferingIndex(0);
     setSlotFields({ ...slotInitialState });
     setSlotStartDate(null);
     setSlotEndDate(null);
@@ -286,6 +292,8 @@ const VendorServices = () => {
   );
 
   const [createVendorService] = useCreateVendorServiceMutation();
+  const [createVendorMasterService] = useCreateVendorMasterServiceMutation();
+  const [createVendorServiceCategory] = useCreateVendorServiceCategoryMutation();
   const [updateVendorService] = useUpdateVendorServiceMutation();
   const [createOffering] = useCreateOfferingMutation();
   const [createSlot] = useCreateSlotMutation();
@@ -295,12 +303,14 @@ const VendorServices = () => {
     data: masterServices = [],
     isLoading: isMasterLoading,
     isError: masterError,
+    refetch: refetchMasterServices,
   } = useGetMasterCategoriesQuery();
 
   const {
     data: categoryOptions = [],
     isFetching: isCategoryFetching,
     isError: categoryError,
+    refetch: refetchCategoryOptions,
   } = useGetServiceCategoriesByMasterQuery(selectedMasterForQuery, {
     skip: !selectedMasterForQuery,
   });
@@ -313,7 +323,7 @@ const VendorServices = () => {
     skip: !createdServiceId,
   });
 
-  const { register, handleSubmit, formState, reset, setValue, control } =
+  const { register, handleSubmit, formState, reset, setValue, control, watch } =
     useForm<{ offerings: OfferingFormValues[] }>({
       mode: "onBlur",
       defaultValues: {
@@ -334,6 +344,21 @@ const VendorServices = () => {
     control,
     name: "offerings",
   });
+  const watchedOfferings = watch("offerings");
+
+  useEffect(() => {
+    const maxIndex = Math.max((watchedOfferings?.length ?? 1) - 1, 0);
+    if (slotTargetOfferingIndex > maxIndex) {
+      setSlotTargetOfferingIndex(maxIndex);
+    }
+    if (ruleTargetOfferingIndex > maxIndex) {
+      setRuleTargetOfferingIndex(maxIndex);
+    }
+  }, [
+    watchedOfferings?.length,
+    slotTargetOfferingIndex,
+    ruleTargetOfferingIndex,
+  ]);
 
   const { errors } = formState;
 
@@ -411,6 +436,8 @@ const VendorServices = () => {
     setSelectedExistingOfferingId("");
     setEnableSlots(false);
     setEnableRules(false);
+    setSlotTargetOfferingIndex(0);
+    setRuleTargetOfferingIndex(0);
     setSlotFields({ ...slotInitialState });
     setSlotStartDate(null);
     setSlotEndDate(null);
@@ -512,6 +539,49 @@ const VendorServices = () => {
     setWizardError(null);
     goToStep(2);
   };
+
+  const handleCreateMasterService = useCallback(
+    async (input: { name: string; slug?: string }) => {
+      const payload = {
+        name: input.name.trim(),
+        slug: input.slug?.trim() || undefined,
+        createDefaultCategory: false,
+      };
+      const created = await createVendorMasterService(payload).unwrap();
+      await refetchMasterServices();
+      handleSelectMaster(created.id);
+      setWizardError(null);
+      toast.success("Master service created.");
+      return created;
+    },
+    [createVendorMasterService, handleSelectMaster, refetchMasterServices],
+  );
+
+  const handleCreateServiceCategory = useCallback(
+    async (input: { name: string; slug?: string; masterCategoryId?: string }) => {
+      const masterCategoryId = input.masterCategoryId || selectedMasterServiceId;
+      if (!masterCategoryId) {
+        throw new Error("Select a master service first.");
+      }
+      const created = await createVendorServiceCategory({
+        masterCategoryId,
+        name: input.name.trim(),
+        slug: input.slug?.trim() || undefined,
+        isActive: true,
+      }).unwrap();
+      await refetchCategoryOptions();
+      setSelectedCategoryId(created.id);
+      setWizardError(null);
+      toast.success("Service category created.");
+      return created;
+    },
+    [
+      createVendorServiceCategory,
+      refetchCategoryOptions,
+      selectedMasterServiceId,
+      setSelectedCategoryId,
+    ],
+  );
 
   const handleNextFromCategory = () => {
     if (!selectedCategoryId) {
@@ -776,13 +846,19 @@ const VendorServices = () => {
           refundPolicy.type === "NO_REFUND"
             ? null
             : Number(refundPolicy.windowHours);
+        const validWindowHours =
+          parsedWindowHours !== null &&
+          Number.isFinite(parsedWindowHours) &&
+          parsedWindowHours > 0
+            ? parsedWindowHours
+            : null;
         if (
           refundPolicy.type === "NO_REFUND" ||
-          (Number.isFinite(parsedWindowHours) && parsedWindowHours > 0)
+          validWindowHours !== null
         ) {
           updatePayload.refundPolicy = {
             type: refundPolicy.type,
-            windowHours: refundPolicy.type === "NO_REFUND" ? null : parsedWindowHours,
+            windowHours: refundPolicy.type === "NO_REFUND" ? null : validWindowHours,
           };
         }
 
@@ -793,6 +869,7 @@ const VendorServices = () => {
       }
 
       // 2. Create multiple Offerings
+      const createdOfferingIds: string[] = [];
       for (const offeringVals of data.offerings) {
         const payload: CreateOfferingPayload = {
           serviceId: currentServiceId,
@@ -805,14 +882,23 @@ const VendorServices = () => {
         };
         const createdOffering = await createOffering(payload).unwrap();
         setLastCreatedOfferingId(createdOffering.id);
+        createdOfferingIds.push(createdOffering.id);
+      }
 
-        if (enableSlots) {
-          await createSlotFlow(createdOffering.id);
-        }
+      if (enableSlots && createdOfferingIds.length > 0) {
+        const selectedSlotTargetId =
+          createdOfferingIds[
+            Math.min(Math.max(slotTargetOfferingIndex, 0), createdOfferingIds.length - 1)
+          ];
+        await createSlotFlow(selectedSlotTargetId);
+      }
 
-        if (enableRules) {
-          await createRuleFlow(createdOffering.id);
-        }
+      if (enableRules && createdOfferingIds.length > 0) {
+        const selectedRuleTargetId =
+          createdOfferingIds[
+            Math.min(Math.max(ruleTargetOfferingIndex, 0), createdOfferingIds.length - 1)
+          ];
+        await createRuleFlow(selectedRuleTargetId);
       }
 
       setOfferingStep("success");
@@ -832,6 +918,8 @@ const VendorServices = () => {
       setPendingPrefillOfferingId(null);
       setEnableSlots(false);
       setEnableRules(false);
+      setSlotTargetOfferingIndex(0);
+      setRuleTargetOfferingIndex(0);
       setSlotFields({ ...slotInitialState });
       setSlotStartDate(null);
       setSlotEndDate(null);
@@ -1011,6 +1099,7 @@ const VendorServices = () => {
       masterServiceOptions={masterServiceOptions}
       isMasterLoading={isMasterLoading}
       wizardError={wizardError}
+      handleCreateMasterService={handleCreateMasterService}
       handleSelectMaster={handleSelectMaster}
       handleNextFromMaster={handleNextFromMaster}
       selectedMasterService={selectedMasterService}
@@ -1019,6 +1108,7 @@ const VendorServices = () => {
       categoryError={categoryError}
       selectedCategoryId={selectedCategoryId}
       setSelectedCategoryId={setSelectedCategoryId}
+      handleCreateServiceCategory={handleCreateServiceCategory}
       handleNextFromCategory={handleNextFromCategory}
       selectedCategory={selectedCategory}
       handleNextFromDetails={handleNextFromDetails}
@@ -1038,10 +1128,13 @@ const VendorServices = () => {
       fields={fields}
       append={append}
       remove={remove}
+      watchedOfferings={watchedOfferings ?? []}
       errors={errors}
       generalError={generalError}
       enableSlots={enableSlots}
       setEnableSlots={setEnableSlots}
+      slotTargetOfferingIndex={slotTargetOfferingIndex}
+      setSlotTargetOfferingIndex={setSlotTargetOfferingIndex}
       slotFields={slotFields}
       slotStartDate={slotStartDate}
       slotEndDate={slotEndDate}
@@ -1053,6 +1146,8 @@ const VendorServices = () => {
       slotValidationError={slotValidationError}
       enableRules={enableRules}
       setEnableRules={setEnableRules}
+      ruleTargetOfferingIndex={ruleTargetOfferingIndex}
+      setRuleTargetOfferingIndex={setRuleTargetOfferingIndex}
       ruleFields={ruleFields}
       handleRuleFieldUpdate={handleRuleFieldUpdate}
       ruleValidationError={ruleValidationError}

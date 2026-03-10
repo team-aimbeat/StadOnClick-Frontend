@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type ColumnConfig } from "@/components/shared/DataTable";
-import profile7 from "@/assets/images/profile-7.jpeg";
+import profile7 from "@/assets/Images/profile-7.jpeg";
 
 import {
   useGetVendorKycDocumentsQuery,
@@ -372,7 +372,9 @@ const VendorDocumentsTable = ({
 
   const toolbarSkeleton = isFetching && vendorDocs.length === 0;
   const vendorEmail = user?.email ?? "Vendor";
-  const vendorname = user?.firstName + user.lastName;
+  const vendorname =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    resolvedVendor.name;
   const phone = user?.phone;
 
 

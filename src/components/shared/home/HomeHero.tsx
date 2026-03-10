@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import banner1 from "@/assets/images/banner1.png";
-import banner2 from "@/assets/images/banner2.png";
-import banner3 from "@/assets/images/banner3.png";
+import banner1 from "@/assets/Images/banner1.png";
+import banner2 from "@/assets/Images/banner2.png";
+import banner3 from "@/assets/Images/banner3.png";
 import { Search } from "lucide-react";
 
 const banners = [banner1, banner2, banner3];

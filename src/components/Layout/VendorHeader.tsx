@@ -21,9 +21,9 @@ import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 
 import menuHeader from "@/assets/Images/banner1.png";
-import profile7 from "@/assets/images/profile-7.jpeg";
-import profile8 from "@/assets/images/profile-8.jpeg";
-import profile9 from "@/assets/images/profile-9.jpeg";
+import profile7 from "@/assets/Images/profile-7.jpeg";
+import profile8 from "@/assets/Images/profile-8.jpeg";
+import profile9 from "@/assets/Images/profile-9.jpeg";
 
 import { RootState } from "@/app/store";
 import {

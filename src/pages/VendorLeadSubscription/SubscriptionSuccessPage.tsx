@@ -22,6 +22,8 @@ import {
 } from "@/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 
+type InfoItemValue = string | React.ReactElement;
+
 const BackgroundTexture = () => (
   <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
     <div className="absolute left-[-120px] top-16 h-72 w-72 rounded-full bg-emerald-200/30 blur-3xl" />
@@ -35,7 +37,7 @@ const InfoItem = ({
   value,
 }: {
   label: string;
-  value: string | JSX.Element;
+  value: InfoItemValue;
 }) => (
   <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm backdrop-blur">
     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">

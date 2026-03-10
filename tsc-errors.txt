@@ -1,0 +1,398 @@
+src/app/services/baseApi.ts(44,92): error TS2339: Property 'finally' does not exist on type 'MaybePromise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>'.
+  Property 'finally' does not exist on type '{ error: FetchBaseQueryError; data?: undefined; meta?: FetchBaseQueryMeta | undefined; }'.
+src/components/layout/AdminLayout.tsx(4,21): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/Sidebar.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/Sidebar.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./Sidebar" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AdminLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/layout/AdminLayout.tsx(5,25): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AdminHeader.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/AdminHeader.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./AdminHeader" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AdminLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/layout/AdminLayout.tsx(6,20): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/Footer.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/Footer.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./Footer" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AdminLayout.tsx'
+    Imported via "./Footer" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/VendorLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/layout/AffiliateLayout.tsx(4,30): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AffiliateSidebar.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/AffiliateSidebar.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./AffiliateSidebar" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AffiliateLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/layout/AppLayout.tsx(4,24): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/UserFooter.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/UserFooter.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./UserFooter" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AppLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/layout/AppLayout.tsx(5,24): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/UserHeader.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/UserHeader.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./UserHeader" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AppLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/layout/UserHeader.tsx(71,25): error TS2304: Cannot find name 'CartPreviewItem'.
+src/components/layout/VendorLayout.tsx(4,27): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/VendorSidebar.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/VendorSidebar.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./VendorSidebar" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/VendorLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/layout/VendorLayout.tsx(5,26): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/VendorHeader.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/VendorHeader.tsx' only in casing.
+  The file is in the program because:
+    Imported via "./VendorHeader" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/VendorLayout.tsx'
+    Imported via "./VendorHeader" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AffiliateLayout.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/components/marketplace/enquiry/EnquiryModal.tsx(20,53): error TS2345: Argument of type 'AuthUser | null' is not assignable to parameter of type '{ firstName?: string | null | undefined; lastName?: string | null | undefined; } | undefined'.
+  Type 'null' is not assignable to type '{ firstName?: string | null | undefined; lastName?: string | null | undefined; } | undefined'.
+src/components/marketplace/enquiry/EnquiryModal.tsx(26,30): error TS2345: Argument of type 'AuthUser | null' is not assignable to parameter of type '{ firstName?: string | null | undefined; lastName?: string | null | undefined; } | undefined'.
+  Type 'null' is not assignable to type '{ firstName?: string | null | undefined; lastName?: string | null | undefined; } | undefined'.
+src/components/modals/account/AddShippingAddressDialog.tsx(89,26): error TS2538: Type 'null' cannot be used as an index type.
+src/components/modals/account/AddShippingAddressDialog.tsx(89,26): error TS2538: Type 'undefined' cannot be used as an index type.
+src/components/modals/account/AddShippingAddressDialog.tsx(220,42): error TS7006: Parameter 'city' implicitly has an 'any' type.
+src/components/shared/HeroBannerGrid.tsx(220,18): error TS2345: Argument of type '(prev: HeroBanner[]) => { source: string | ArrayBuffer | null; imageSrc: string | ArrayBuffer | null; id: string; }[]' is not assignable to parameter of type 'SetStateAction<HeroBanner[]>'.
+  Type '(prev: HeroBanner[]) => { source: string | ArrayBuffer | null; imageSrc: string | ArrayBuffer | null; id: string; }[]' is not assignable to type '(prevState: HeroBanner[]) => HeroBanner[]'.
+    Type '{ source: string | ArrayBuffer | null; imageSrc: string | ArrayBuffer | null; id: string; }[]' is not assignable to type 'HeroBanner[]'.
+      Type '{ source: string | ArrayBuffer | null; imageSrc: string | ArrayBuffer | null; id: string; }' is not assignable to type 'HeroBanner'.
+        Types of property 'imageSrc' are incompatible.
+          Type 'string | ArrayBuffer | null' is not assignable to type 'string'.
+            Type 'null' is not assignable to type 'string'.
+src/components/shared/VendorDocumentsTable.tsx(290,7): error TS2322: Type '(_value: unknown, row: VendorDoc) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'VendorDoc': id, vendor, avatar, docImage, and 7 more.
+src/components/shared/VendorDocumentsTable.tsx(308,7): error TS2322: Type '(_value: unknown, row: VendorDoc) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'VendorDoc': id, vendor, avatar, docImage, and 7 more.
+src/components/shared/VendorDocumentsTable.tsx(321,7): error TS2322: Type '(_value: unknown, row: VendorDoc) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'VendorDoc': id, vendor, avatar, docImage, and 7 more.
+src/components/shared/VendorDocumentsTable.tsx(333,7): error TS2322: Type '(_value: unknown, row: VendorDoc) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'VendorDoc': id, vendor, avatar, docImage, and 7 more.
+src/components/shared/VendorDocumentsTable.tsx(375,22): error TS18048: 'user.firstName' is possibly 'undefined'.
+src/components/shared/VendorDocumentsTable.tsx(375,40): error TS18048: 'user' is possibly 'undefined'.
+src/components/shared/VendorDocumentsTable.tsx(375,40): error TS18047: 'user.lastName' is possibly 'null'.
+src/components/ui/breadcrumb.tsx(24,6): error TS2322: Type '{ children: ReactI18NextChildren | Iterable<ReactI18NextChildren>; defaultChecked?: boolean | undefined; defaultValue?: string | ... 2 more ... | undefined; ... 274 more ...; className: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'.
+  Type '{ children: ReactI18NextChildren | Iterable<ReactI18NextChildren>; defaultChecked?: boolean | undefined; defaultValue?: string | ... 2 more ... | undefined; ... 274 more ...; className: string; }' is not assignable to type 'HTMLAttributes<HTMLSpanElement>'.
+    Types of property 'onCopy' are incompatible.
+      Type 'ClipboardEventHandler<"span"> | undefined' is not assignable to type 'ClipboardEventHandler<HTMLSpanElement> | undefined'.
+        Type 'ClipboardEventHandler<"span">' is not assignable to type 'ClipboardEventHandler<HTMLSpanElement>'.
+          Type 'string' is not assignable to type 'HTMLSpanElement'.
+src/components/ui/breadcrumb.tsx(44,6): error TS2322: Type '{ children: string; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; suppressHydrationWarning?: boolean | undefined; ... 272 more ...; className: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'.
+  Type '{ children: string; defaultChecked?: boolean | undefined; defaultValue?: string | number | readonly string[] | undefined; suppressContentEditableWarning?: boolean | undefined; suppressHydrationWarning?: boolean | undefined; ... 272 more ...; className: string; }' is not assignable to type 'HTMLAttributes<HTMLSpanElement>'.
+    Types of property 'onCopy' are incompatible.
+      Type 'ClipboardEventHandler<"span"> | undefined' is not assignable to type 'ClipboardEventHandler<HTMLSpanElement> | undefined'.
+        Type 'ClipboardEventHandler<"span">' is not assignable to type 'ClipboardEventHandler<HTMLSpanElement>'.
+          Type 'string' is not assignable to type 'HTMLSpanElement'.
+src/features/escalations/escalationApi.ts(124,7): error TS2322: Type '(params: void | ModeratorListEscalationsQuery) => { url: string; method: string; params: void | ModeratorListEscalationsQuery; }' is not assignable to type '(arg: void | ModeratorListEscalationsQuery) => string | FetchArgs'.
+  Type '{ url: string; method: string; params: void | ModeratorListEscalationsQuery; }' is not assignable to type 'string | FetchArgs'.
+    Type '{ url: string; method: string; params: void | ModeratorListEscalationsQuery; }' is not assignable to type 'FetchArgs'.
+      Types of property 'params' are incompatible.
+        Type 'void | ModeratorListEscalationsQuery' is not assignable to type 'Record<string, any> | undefined'.
+          Type 'void' is not assignable to type 'Record<string, any> | undefined'.
+src/features/Layout/themeConfigSlice.ts(5,26): error TS2304: Cannot find name '__APP_TITLE__'.
+src/features/Layout/themeConfigSlice.ts(5,58): error TS2304: Cannot find name '__APP_TITLE__'.
+src/features/notifications/api/userNotificationsApi.ts(52,7): error TS2322: Type '(result: NotificationsResponse | undefined) => { type: string; id: string; }[]' is not assignable to type 'ResultDescription<"UserNotifications" | "UserNotificationsUnread", NotificationsResponse, void | GetNotificationsArgs, FetchBaseQueryError, {} | undefined> | undefined'.
+  Type '(result: NotificationsResponse | undefined) => { type: string; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"UserNotifications" | "UserNotificationsUnread", NotificationsResponse, void | GetNotificationsArgs, FetchBaseQueryError, {} | undefined>'.
+    Type '{ type: string; id: string; }[]' is not assignable to type 'TagDescriptionArray<"UserNotifications" | "UserNotificationsUnread">'.
+      Type '{ type: string; id: string; }' is not assignable to type 'TagDescription<"UserNotifications" | "UserNotificationsUnread"> | null | undefined'.
+        Type '{ type: string; id: string; }' is not assignable to type 'FullTagDescription<"UserNotifications" | "UserNotificationsUnread">'.
+          Types of property 'type' are incompatible.
+            Type 'string' is not assignable to type '"UserNotifications" | "UserNotificationsUnread"'.
+src/features/support/supportApi.ts(52,7): error TS2322: Type '(params: void | VendorTicketsQuery) => { url: string; method: string; params: void | VendorTicketsQuery; }' is not assignable to type '(arg: void | VendorTicketsQuery) => string | FetchArgs'.
+  Type '{ url: string; method: string; params: void | VendorTicketsQuery; }' is not assignable to type 'string | FetchArgs'.
+    Type '{ url: string; method: string; params: void | VendorTicketsQuery; }' is not assignable to type 'FetchArgs'.
+      Types of property 'params' are incompatible.
+        Type 'void | VendorTicketsQuery' is not assignable to type 'Record<string, any> | undefined'.
+          Type 'void' is not assignable to type 'Record<string, any> | undefined'.
+src/features/support/supportApi.ts(110,7): error TS2322: Type '(params: void | AdminTicketsQuery) => { url: string; method: string; params: void | AdminTicketsQuery; }' is not assignable to type '(arg: void | AdminTicketsQuery) => string | FetchArgs'.
+  Type '{ url: string; method: string; params: void | AdminTicketsQuery; }' is not assignable to type 'string | FetchArgs'.
+    Type '{ url: string; method: string; params: void | AdminTicketsQuery; }' is not assignable to type 'FetchArgs'.
+      Types of property 'params' are incompatible.
+        Type 'void | AdminTicketsQuery' is not assignable to type 'Record<string, any> | undefined'.
+          Type 'void' is not assignable to type 'Record<string, any> | undefined'.
+src/pages/Admin/chat/mockData.ts(26,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(27,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(28,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(29,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(30,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(45,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(46,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(47,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(62,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(63,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(64,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(65,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(80,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(81,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(96,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(97,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(98,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(99,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(100,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(115,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/chat/mockData.ts(116,7): error TS2741: Property 'id' is missing in type '{ fromUserId: number; toUserId: number; text: string; }' but required in type 'Message'.
+src/pages/Admin/Coupons/AdminCouponsPage.tsx(305,17): error TS2322: Type '{ code: string; title: string; discount: number; minOrder: number; maxUses: number; expiry: string; status: "ACTIVE" | "EXPIRED" | "DISABLED"; preview: string; } | undefined' is not assignable to type 'Coupon | undefined'.
+  Object literal may only specify known properties, and 'preview' does not exist in type 'Coupon'.
+src/pages/Admin/kyc/AdminKycAuditLogsPage.tsx(69,7): error TS2322: Type '(_value: any, row: AuditLogRow) => Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'AuditLogRow': id, vendor, vendorAvatar, documentType, and 4 more.
+src/pages/Admin/kyc/AdminKycAuditLogsPage.tsx(84,7): error TS2322: Type '(_value: any, row: AuditLogRow) => Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'AuditLogRow': id, vendor, vendorAvatar, documentType, and 4 more.
+src/pages/Admin/kyc/AdminKycAuditLogsPage.tsx(98,7): error TS2322: Type '(_value: any, row: AuditLogRow) => Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'AuditLogRow': id, vendor, vendorAvatar, documentType, and 4 more.
+src/pages/Admin/kyc/AdminKycDocuments.tsx(175,7): error TS2322: Type '(_value: any, row: TableDoc) => Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'TableDoc': id, vendor, docType, status, and 4 more.
+src/pages/Admin/kyc/AdminKycDocuments.tsx(189,7): error TS2322: Type '(_value: any, row: TableDoc) => Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'TableDoc': id, vendor, docType, status, and 4 more.
+src/pages/Admin/kyc/AdminKycDocuments.tsx(202,7): error TS2322: Type '(_value: any, row: TableDoc) => Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'TableDoc': id, vendor, docType, status, and 4 more.
+src/pages/Admin/kyc/AdminKycDocuments.tsx(212,7): error TS2322: Type '(_value: any, row: TableDoc) => Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is missing the following properties from type 'TableDoc': id, vendor, docType, status, and 4 more.
+src/pages/Admin/leads/VendorSubscriptionsPage.tsx(104,9): error TS2322: Type '(value: string, row: SubscriptionTableRow) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is not assignable to type 'SubscriptionTableRow'.
+      Type 'RowData' is missing the following properties from type '{ id: string; vendor: string; email: string; plan: string; leadsPerDay: number; status: "ACTIVE" | "SUSPENDED" | "CANCELLED" | "EXPIRED"; startsAt: string; endsAt: string; leadsToday: number; receiptNumber: string; }': id, vendor, email, plan, and 6 more.
+src/pages/Admin/leads/VendorSubscriptionsPage.tsx(125,9): error TS2322: Type '(_: string, row: SubscriptionTableRow) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is not assignable to type 'SubscriptionTableRow'.
+      Type 'RowData' is missing the following properties from type '{ id: string; vendor: string; email: string; plan: string; leadsPerDay: number; status: "ACTIVE" | "SUSPENDED" | "CANCELLED" | "EXPIRED"; startsAt: string; endsAt: string; leadsToday: number; receiptNumber: string; }': id, vendor, email, plan, and 6 more.
+src/pages/Admin/Vendors/VendorsPage.tsx(167,5): error TS2322: Type 'string | undefined' is not assignable to type '"REJECTED" | "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | undefined'.
+  Type 'string' is not assignable to type '"REJECTED" | "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | undefined'.
+src/pages/AdminDashboard.tsx(514,17): error TS2322: Type '"neutral" | "up" | "down"' is not assignable to type '"up" | "down" | undefined'.
+  Type '"neutral"' is not assignable to type '"up" | "down" | undefined'.
+src/pages/BookingsPage.tsx(189,7): error TS2322: Type '(value: string, row: BookingRow) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is not assignable to type 'BookingRow'.
+      Type 'RowData' is missing the following properties from type '{ bookingId: string; id: string; customer: string; service: string; status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "REFUND_REQUESTED" | "REFUNDED"; startTime: string; city: string; channel: string; amount: number; contact?: string | undefined; }': bookingId, id, customer, service, and 5 more.
+src/pages/BookingsPage.tsx(206,7): error TS2322: Type '(_: string, row: BookingRow) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is not assignable to type 'BookingRow'.
+      Type 'RowData' is missing the following properties from type '{ bookingId: string; id: string; customer: string; service: string; status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "REFUND_REQUESTED" | "REFUNDED"; startTime: string; city: string; channel: string; amount: number; contact?: string | undefined; }': bookingId, id, customer, service, and 5 more.
+src/pages/BookingsPage.tsx(253,7): error TS2322: Type '(_: string, row: BookingRow) => JSX.Element' is not assignable to type '(value: any, row: RowData, index: number) => ReactNode'.
+  Types of parameters 'row' and 'row' are incompatible.
+    Type 'RowData' is not assignable to type 'BookingRow'.
+      Type 'RowData' is missing the following properties from type '{ bookingId: string; id: string; customer: string; service: string; status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "REFUND_REQUESTED" | "REFUNDED"; startTime: string; city: string; channel: string; amount: number; contact?: string | undefined; }': bookingId, id, customer, service, and 5 more.
+src/pages/Home.tsx(528,20): error TS2322: Type 'BlogsDynamicContent' is not assignable to type 'Partial<BlogsContent>'.
+  Types of property 'items' are incompatible.
+    Type 'BlogCardContent[]' is not assignable to type 'BlogItem[]'.
+      Property 'category' is missing in type 'BlogCardContent' but required in type 'BlogItem'.
+src/pages/OrderConfirmation.tsx(118,21): error TS2339: Property 'data' does not exist on type 'FetchBaseQueryError | SerializedError'.
+  Property 'data' does not exist on type 'SerializedError'.
+src/pages/ServiceDetail.tsx(669,62): error TS2345: Argument of type '() => { id: string; serviceId: string; name: string; description: string | null; bookingUrl: string | null; usesSlots: false; basePrice: number; salePrice: number; currency: string; maxQuantity: number | null; remainingQuantity: number | null; slots: never[]; rules: never[]; }[]' is not assignable to parameter of type '() => VendorOffering[]'.
+  Type '{ id: string; serviceId: string; name: string; description: string | null; bookingUrl: string | null; usesSlots: false; basePrice: number; salePrice: number; currency: string; maxQuantity: number | null; remainingQuantity: number | null; slots: never[]; rules: never[]; }[]' is not assignable to type 'VendorOffering[]'.
+    Property 'createdAt' is missing in type '{ id: string; serviceId: string; name: string; description: string | null; bookingUrl: string | null; usesSlots: false; basePrice: number; salePrice: number; currency: string; maxQuantity: number | null; remainingQuantity: number | null; slots: never[]; rules: never[]; }' but required in type 'VendorOffering'.
+src/pages/ServiceDetail.tsx(1171,118): error TS18048: 'offerings' is possibly 'undefined'.
+src/pages/ServiceDetail.tsx(1171,128): error TS2339: Property 'rules' does not exist on type 'VendorOffering[]'.
+src/pages/UserAccount.tsx(259,44): error TS2345: Argument of type '{ firstName: string | undefined; lastName: string | undefined; gender: string | undefined; phone: string | undefined; }' is not assignable to parameter of type 'Partial<AccountProfile>'.
+  Types of property 'gender' are incompatible.
+    Type 'string | undefined' is not assignable to type '"FEMALE" | "MALE" | "NON_BINARY" | "PREFER_NOT_TO_SAY" | null | undefined'.
+      Type 'string' is not assignable to type '"FEMALE" | "MALE" | "NON_BINARY" | "PREFER_NOT_TO_SAY" | null | undefined'.
+src/pages/VendorKyc.tsx(17,32): error TS2554: Expected 1 arguments, but got 0.
+src/pages/VendorLeadSubscription/SubscriptionSuccessPage.tsx(38,19): error TS2503: Cannot find namespace 'JSX'.
+src/pages/VendorServices.tsx(851,50): error TS18047: 'parsedWindowHours' is possibly 'null'.
+src/routes/AppRoutes.tsx(107,23): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AppLayout.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/AppLayout.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/layout/AppLayout" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/routes/AppRoutes.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+    Imported via "@/components/layout/AppLayout" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/routes/routes.tsx'
+src/routes/AppRoutes.tsx(108,25): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AdminLayout.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/AdminLayout.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/layout/AdminLayout" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/routes/AppRoutes.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/routes/AppRoutes.tsx(109,26): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/VendorLayout.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/VendorLayout.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/layout/VendorLayout" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/routes/AppRoutes.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/routes/AppRoutes.tsx(110,29): error TS1261: Already included file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/layout/AffiliateLayout.tsx' differs from file name 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/Layout/AffiliateLayout.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/layout/AffiliateLayout" from file 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/routes/AppRoutes.tsx'
+    Matched by include pattern 'src' in 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/tsconfig.app.json'
+src/services/vendorServicesApi.ts(142,7): error TS2322: Type '(response: any[]) => { id: any; title: any; description: any; status: any; category: any; latitude: any; longitude: any; terms: any; media: any; reviews: any; refundPolicy: any; offerings: any; }[]' is not assignable to type '(baseQueryReturnValue: unknown, meta: {} | undefined, arg: string | void) => VendorServiceEntity[] | Promise<VendorServiceEntity[]>'.
+  Type '{ id: any; title: any; description: any; status: any; category: any; latitude: any; longitude: any; terms: any; media: any; reviews: any; refundPolicy: any; offerings: any; }[]' is not assignable to type 'VendorServiceEntity[] | Promise<VendorServiceEntity[]>'.
+    Type '{ id: any; title: any; description: any; status: any; category: any; latitude: any; longitude: any; terms: any; media: any; reviews: any; refundPolicy: any; offerings: any; }[]' is not assignable to type 'VendorServiceEntity[]'.
+      Property 'name' is missing in type '{ id: any; title: any; description: any; status: any; category: any; latitude: any; longitude: any; terms: any; media: any; reviews: any; refundPolicy: any; offerings: any; }' but required in type 'VendorServiceEntity'.
+@/components/ui/skeleton.tsx(5,5): error TS17004: Cannot use JSX unless the '--jsx' flag is provided.
+node_modules/@radix-ui/react-accordion/dist/index.d.mts(2,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/@types/react-i18next/index.d.ts(10,10): error TS2614: Module '"i18next"' has no exported member 'TranslationFunction'. Did you mean to use 'import TranslationFunction from "i18next"' instead?
+node_modules/@types/react-i18next/src/I18n.d.ts(2,16): error TS2614: Module '"i18next"' has no exported member 'TranslationFunction'. Did you mean to use 'import TranslationFunction from "i18next"' instead?
+node_modules/@types/react-i18next/src/interpolate.d.ts(2,38): error TS2614: Module '"i18next"' has no exported member 'TranslationFunction'. Did you mean to use 'import TranslationFunction from "i18next"' instead?
+node_modules/@types/react-i18next/src/interpolate.d.ts(4,41): error TS2503: Cannot find namespace 'JSX'.
+node_modules/@types/react-i18next/src/loadNamespaces.d.ts(5,57): error TS2694: Namespace 'React' has no exported member 'StatelessComponent'.
+node_modules/@types/react-i18next/src/props.d.ts(1,24): error TS2614: Module '"i18next"' has no exported member 'TranslationFunction'. Did you mean to use 'import TranslationFunction from "i18next"' instead?
+node_modules/@types/react-i18next/src/trans.d.ts(2,16): error TS2614: Module '"i18next"' has no exported member 'TranslationFunction'. Did you mean to use 'import TranslationFunction from "i18next"' instead?
+node_modules/@types/react-i18next/src/translate.d.ts(2,24): error TS2614: Module '"i18next"' has no exported member 'TranslationFunction'. Did you mean to use 'import TranslationFunction from "i18next"' instead?
+node_modules/@types/react-i18next/src/translate.d.ts(34,83): error TS2694: Namespace 'React' has no exported member 'StatelessComponent'.
+node_modules/@types/react-i18next/src/translate.d.ts(38,83): error TS2694: Namespace 'React' has no exported member 'StatelessComponent'.
+node_modules/react-day-picker/dist/esm/components/Button.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/CaptionLabel.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Chevron.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Day.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/DayButton.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Dropdown.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/DropdownNav.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Footer.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Month.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/MonthCaption.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/MonthGrid.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Months.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/MonthsDropdown.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Nav.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/NextMonthButton.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Option.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/PreviousMonthButton.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Root.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Select.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Week.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Weekday.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Weekdays.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/WeekNumber.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/WeekNumberHeader.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/Weeks.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/components/YearsDropdown.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/DayPicker.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-day-picker/dist/esm/types/props.d.ts(1,13): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-hook-form/dist/form.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-hook-form/dist/types/controller.d.ts(1,13): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-hook-form/dist/types/form.d.ts(1,13): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-hook-form/dist/useFormContext.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-icons/lib/iconBase.d.ts(19,5): error TS2503: Cannot find namespace 'JSX'.
+node_modules/react-router/dist/development/index.d.mts(4,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+node_modules/react-router/dist/development/router-5iOvts3c.d.mts(408,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+node_modules/vite/dist/node/chunks/moduleRunnerTransport.d.ts(1,28): error TS2307: Cannot find module '#types/hmrPayload' or its corresponding type declarations.
+node_modules/vite/dist/node/index.d.ts(3,223): error TS2307: Cannot find module '#types/hmrPayload' or its corresponding type declarations.
+node_modules/vite/dist/node/index.d.ts(4,139): error TS2307: Cannot find module '#types/customEvent' or its corresponding type declarations.
+node_modules/vite/dist/node/index.d.ts(7,41): error TS2307: Cannot find module 'rollup/parseAst' or its corresponding type declarations.
+  There are types at 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/rollup/dist/parseAst.d.ts', but this result could not be resolved under your current 'moduleResolution' setting. Consider updating to 'node16', 'nodenext', or 'bundler'.
+node_modules/vite/dist/node/index.d.ts(21,45): error TS2307: Cannot find module '#types/internal/terserOptions' or its corresponding type declarations.
+node_modules/vite/dist/node/index.d.ts(23,109): error TS2307: Cannot find module '#types/internal/cssPreprocessorOptions' or its corresponding type declarations.
+node_modules/vite/dist/node/index.d.ts(24,101): error TS2307: Cannot find module '#types/internal/lightningcssOptions' or its corresponding type declarations.
+node_modules/vite/dist/node/index.d.ts(25,97): error TS2307: Cannot find module '#types/importGlob' or its corresponding type declarations.
+node_modules/vite/dist/node/index.d.ts(26,56): error TS2307: Cannot find module '#types/metadata' or its corresponding type declarations.
+node_modules/vite/dist/node/module-runner.d.ts(2,49): error TS2307: Cannot find module '#types/hot' or its corresponding type declarations.
+node_modules/vite/dist/node/module-runner.d.ts(3,36): error TS2307: Cannot find module '#types/hmrPayload' or its corresponding type declarations.
+node_modules/vite/dist/node/module-runner.d.ts(4,41): error TS2307: Cannot find module '#types/customEvent' or its corresponding type declarations.
+dist-ts/app/components/AdminDashboard/ChartCard.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/AdminDashboard/GmvChartCard.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/AdminDashboard/Mapcity.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/AdminDashboard/RecentActivities.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/AdminDashboard/table/AdminPill.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/AdminDashboard/table/AdminTable.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/BusinessDetailsForm.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/CategorySelectionCard.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/dashboard/index.d.ts(1,36): error TS6142: Module './DashboardContainer' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/dashboard/DashboardContainer.tsx', but '--jsx' is not set.
+dist-ts/app/components/dashboard/index.d.ts(2,34): error TS6142: Module './DashboardSection' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/dashboard/DashboardSection.tsx', but '--jsx' is not set.
+dist-ts/app/components/dashboard/index.d.ts(3,31): error TS6142: Module './DashboardGrid' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/dashboard/DashboardGrid.tsx', but '--jsx' is not set.
+dist-ts/app/components/dashboard/index.d.ts(4,30): error TS6142: Module './DashboardCol' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/dashboard/DashboardCol.tsx', but '--jsx' is not set.
+dist-ts/app/components/KycStatusCard.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/SeoAdvancedSection.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/shared/DashCard.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/shared/DataTable.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/shared/ListingPage.d.ts(2,37): error TS6142: Module '@/components/shared/DataTable' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/shared/DataTable.tsx', but '--jsx' is not set.
+dist-ts/app/components/shared/TableHeader.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/shared/TitleBreadCrumbs.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/VendorInfoForm.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/VendorSetupSummary.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/components/VendorSetupSummary.d.ts(2,28): error TS6142: Module './VendorInfoForm' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/VendorInfoForm.tsx', but '--jsx' is not set.
+dist-ts/app/components/VendorSetupSummary.d.ts(3,33): error TS6142: Module './BusinessDetailsForm' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/BusinessDetailsForm.tsx', but '--jsx' is not set.
+dist-ts/app/features/account/api/accountApi.d.ts(65,58): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/affiliates/api/affiliatesApi.d.ts(58,45): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/bookings/api/adminBookingsApi.d.ts(15,41): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/coupons/api/adminCouponsApi.d.ts(16,39): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/customers/api/customersApi.d.ts(48,43): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/finance/api/adminFinanceApi.d.ts(76,38): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/offerings/api/adminOfferingsApi.d.ts(34,43): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/service-categories/api/adminServiceCategoriesApi.d.ts(80,83): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/services/api/adminServicesApi.d.ts(32,41): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/staff/adminStaffApi.d.ts(12,35): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/admin/vendors/api/vendorsApi.d.ts(70,66): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/adminLeads/api/adminLeadPlans.api.d.ts(87,43): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/adminSponsorships/api/adminSponsorships.api.d.ts(12,53): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/affiliate/api/affiliateApi.d.ts(164,110): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/auth/api/authApi.d.ts(53,23): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/escalations/escalationApi.d.ts(57,92): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/leads/api/leadsApi.d.ts(22,31): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/notifications/api/userNotificationsApi.d.ts(41,77): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/preferences/api/preferencesApi.d.ts(47,37): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/referrals/api/referralApi.d.ts(40,38): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/serviceCategories/api/serviceCategoriesApi.d.ts(20,35): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/support/supportApi.d.ts(69,98): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/systemHealth/systemHealthApi.d.ts(5,39): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/vendorLeadSubscriptions/api/vendorLeadSubscriptions.api.d.ts(15,80): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/vendorNotifications/api/vendorNotificationsApi.d.ts(15,53): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/vendorProfile/api/vendorProfileApi.d.ts(102,41): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/vendorSponsorships/api/vendorSponsorships.api.d.ts(27,91): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/vendorStripe/api/vendorStripeApi.d.ts(35,39): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/features/vendorWallet/api/walletApi.d.ts(47,50): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/hooks/useAutoScrollToBottom.d.ts(1,13): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/pages/Admin/AdminSettings.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/pages/Admin/Vendors/VendorApplicationsPage.d.ts(1,30): error TS6142: Module '@/components/shared/DataTable' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/shared/DataTable.tsx', but '--jsx' is not set.
+dist-ts/app/pages/Admin/Vendors/VendorsPage.d.ts(1,30): error TS6142: Module '@/components/shared/DataTable' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/shared/DataTable.tsx', but '--jsx' is not set.
+dist-ts/app/pages/AdminDashboard.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/pages/BookingsPage.d.ts(1,25): error TS6142: Module '@/components/shared/DataTable' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/components/shared/DataTable.tsx', but '--jsx' is not set.
+dist-ts/app/pages/vendor-services/MasterServiceCard.d.ts(1,8): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/pages/vendor-services/VendorServicesWizard.d.ts(1,13): error TS1259: Module '"C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@types/react/index"' can only be default-imported using the 'esModuleInterop' flag
+dist-ts/app/services/adminKycApi.d.ts(57,31): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/adminSettingsApi.d.ts(12,41): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/bookingsApi.d.ts(1,28): error TS6142: Module '@/pages/BookingsPage' was resolved to 'C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/src/pages/BookingsPage.tsx', but '--jsx' is not set.
+dist-ts/app/services/bookingsApi.d.ts(44,31): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/checkoutApi.d.ts(25,26): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/leadsApi.d.ts(18,23): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/marketplaceApi.d.ts(71,42): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/menuMediaApi.d.ts(20,33): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/ordersApi.d.ts(142,26): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/serviceCategoriesApi.d.ts(21,73): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/serviceMediaApi.d.ts(21,39): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/serviceReviewsApi.d.ts(21,42): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/vendoiCouponsApi.d.ts(17,29): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/vendorKycApi.d.ts(26,41): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/vendorOfferingsApi.d.ts(65,44): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/vendorOrdersApi.d.ts(64,41): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/vendorServicesApi.d.ts(115,43): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/welcomeCouponsApi.d.ts(17,43): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.
+dist-ts/app/services/wishlistApi.d.ts(23,31): error TS2344: Type 'unique symbol | unique symbol' does not satisfy the constraint 'unique symbol'.
+  Type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/react/index").reactHooksModuleName' is not assignable to type 'typeof import("C:/Users/MY PC/OneDrive/Desktop/StadonClick/StadOnClick-Frontend/node_modules/@reduxjs/toolkit/dist/query/index").coreModuleName'.

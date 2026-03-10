@@ -12,6 +12,7 @@ import { useForm, useFormState } from "react-hook-form";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import { AdminStepLogin } from "../components/admin-auth/AdminStepLogin";
 import { getPostLoginRoute } from "@/lib/authRouting";
+import { PortalSwitcher } from "@/components/shared/auth/PortalSwitcher";
 
 type FormValues = {
   email: string;
@@ -54,6 +55,10 @@ export default function AdminSignIn() {
   useEffect(() => {
     const roles = authUser?.roles ?? [];
     if (!roles.length) return;
+    if (!hasAdminAccess(roles)) {
+      navigate("/admin/access-denied", { replace: true });
+      return;
+    }
     navigate(getPostLoginRoute(roles), { replace: true });
   }, [authUser?.roles, navigate]);
 
@@ -114,6 +119,8 @@ export default function AdminSignIn() {
         subtitle="Login to manage vendors, approvals, KYC, lead plans, and platform settings."
         showStepper={false}
       >
+        <PortalSwitcher current="admin" />
+
         <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
           <p className="font-semibold">Restricted access</p>
           <p className="mt-0.5 text-xs text-rose-700">
@@ -133,19 +140,6 @@ export default function AdminSignIn() {
           passwordPlaceholder="Enter your password"
         />
 
-        <div className="mt-4 space-y-2 rounded-xl border border-dashed border-slate-200 p-4 text-center">
-          <p className="text-xs text-slate-500">
-            Looking for the user sign in instead?
-          </p>
-          <p className="text-sm text-[#0b59a2]">
-            <a
-              href="/sign-in"
-              className="font-semibold underline transition hover:text-[#094374]"
-            >
-              Go to User Sign in
-            </a>
-          </p>
-        </div>
       </OnboardingFormCard>
     </OnboardingLayout>
   );

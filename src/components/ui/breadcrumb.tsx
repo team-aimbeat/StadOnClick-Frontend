@@ -19,7 +19,7 @@ function BreadcrumbItem({
   className,
   children,
   ...props
-}: React.HTMLAttributes<"span">) {
+}: React.HTMLAttributes<HTMLSpanElement>) {
   return (
     <span className={cn("flex items-center gap-1 text-slate-500", className)} {...props}>
       {children}
@@ -39,7 +39,7 @@ const BreadcrumbLink = React.forwardRef<
 ))
 BreadcrumbLink.displayName = "BreadcrumbLink"
 
-function BreadcrumbSeparator({ className, ...props }: React.HTMLAttributes<"span">) {
+function BreadcrumbSeparator({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
   return (
     <span className={cn("text-slate-300", className)} aria-hidden="true" {...props}>
       {'>'}

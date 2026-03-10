@@ -27,25 +27,37 @@ type HomeCategoriesState = {
 };
 
 function normalizeHomeCategories(input: unknown): HomeCategoriesState {
-  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const source =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)
+      : {};
   const rawCards = Array.isArray(source.cards) ? source.cards : [];
-  const cards = Array.from({ length: HOME_CATEGORIES_CARD_COUNT }, (_, index) => {
-    const raw = rawCards[index] as Record<string, unknown> | undefined;
-    return {
-      category: typeof raw?.category === "string" ? raw.category : "",
-      image: typeof raw?.image === "string" ? raw.image : "",
-      author: typeof raw?.author === "string" ? raw.author : "",
-      title: typeof raw?.title === "string" ? raw.title : "",
-      description: typeof raw?.description === "string" ? raw.description : "",
-      location: typeof raw?.location === "string" ? raw.location : "",
-      price: typeof raw?.price === "string" ? raw.price : "",
-      slug: typeof raw?.slug === "string" ? raw.slug : "",
-    };
-  });
+  const cards = Array.from(
+    { length: HOME_CATEGORIES_CARD_COUNT },
+    (_, index) => {
+      const raw = rawCards[index] as Record<string, unknown> | undefined;
+      return {
+        category: typeof raw?.category === "string" ? raw.category : "",
+        image: typeof raw?.image === "string" ? raw.image : "",
+        author: typeof raw?.author === "string" ? raw.author : "",
+        title: typeof raw?.title === "string" ? raw.title : "",
+        description:
+          typeof raw?.description === "string" ? raw.description : "",
+        location: typeof raw?.location === "string" ? raw.location : "",
+        price: typeof raw?.price === "string" ? raw.price : "",
+        slug: typeof raw?.slug === "string" ? raw.slug : "",
+      };
+    },
+  );
   return {
-    headingPrefix: typeof source.headingPrefix === "string" ? source.headingPrefix : "",
-    headingHighlight: typeof source.headingHighlight === "string" ? source.headingHighlight : "",
-    headingSuffix: typeof source.headingSuffix === "string" ? source.headingSuffix : "",
+    headingPrefix:
+      typeof source.headingPrefix === "string" ? source.headingPrefix : "",
+    headingHighlight:
+      typeof source.headingHighlight === "string"
+        ? source.headingHighlight
+        : "",
+    headingSuffix:
+      typeof source.headingSuffix === "string" ? source.headingSuffix : "",
     cards,
   };
 }
@@ -53,7 +65,9 @@ function normalizeHomeCategories(input: unknown): HomeCategoriesState {
 export default function HomeExtraDealsStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
-  const [homeCategories, setHomeCategories] = useState<HomeCategoriesState>(normalizeHomeCategories(undefined));
+  const [homeCategories, setHomeCategories] = useState<HomeCategoriesState>(
+    normalizeHomeCategories(undefined),
+  );
   const cardsWithImage = useMemo(
     () => homeCategories.cards.filter((card) => card.image.trim()).length,
     [homeCategories.cards],
@@ -63,10 +77,15 @@ export default function HomeExtraDealsStudio() {
     let ignore = false;
     const load = async () => {
       try {
-        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+        const baseUrl = (import.meta.env.VITE_API_URL ?? "").replace(
+          /\/+$/,
+          "",
+        );
         if (!baseUrl) return;
 
-        const cmsResponse = await fetch(`${baseUrl}/pages/home`, { credentials: "include" });
+        const cmsResponse = await fetch(`${baseUrl}/pages/home`, {
+          credentials: "include",
+        });
         if (cmsResponse.ok) {
           const payload = (await cmsResponse.json()) as Record<string, unknown>;
           if (ignore) return;
@@ -75,9 +94,14 @@ export default function HomeExtraDealsStudio() {
           return;
         }
 
-        const legacyResponse = await fetch(`${baseUrl}/home-content`, { credentials: "include" });
+        const legacyResponse = await fetch(`${baseUrl}/home-content`, {
+          credentials: "include",
+        });
         if (!legacyResponse.ok) return;
-        const payload = (await legacyResponse.json()) as Record<string, unknown>;
+        const payload = (await legacyResponse.json()) as Record<
+          string,
+          unknown
+        >;
         if (ignore) return;
         setFullPayload(payload);
         setHomeCategories(normalizeHomeCategories(payload.homeCategories));
@@ -127,8 +151,12 @@ export default function HomeExtraDealsStudio() {
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
-        const errorPayload = (await response.json().catch(() => null)) as { message?: string } | null;
-        throw new Error(errorPayload?.message || `Save failed (${response.status})`);
+        const errorPayload = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+        throw new Error(
+          errorPayload?.message || `Save failed (${response.status})`,
+        );
       }
 
       setFullPayload(payload);
@@ -143,17 +171,24 @@ export default function HomeExtraDealsStudio() {
   return (
     <div className="space-y-6">
       <TitleBreadCrumbs
-        title="Home Extra Deals Studio"
+        title="Extra Deals Studio"
         breadCrumbTitle="Admin / Layout Studio / Home Sections / Extra Deals"
       />
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <details className="rounded-xl border border-slate-200 bg-white p-3" open>
-          <summary className="cursor-pointer text-sm font-semibold text-slate-800">Extra Deals (Categories) Section</summary>
+        <details
+          className="rounded-xl  bg-white p-3"
+          open
+        >
+          <summary className="cursor-pointer text-sm font-semibold text-slate-800">
+            Extra Deals (Categories) Section
+          </summary>
           <div className="mt-3 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
               <div className="grid min-w-[260px] flex-1 gap-2 md:grid-cols-3">
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-slate-600">Heading Prefix</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Heading Prefix
+                  </span>
                   <input
                     value={homeCategories.headingPrefix}
                     onChange={(event) =>
@@ -167,7 +202,9 @@ export default function HomeExtraDealsStudio() {
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-slate-600">Heading Highlight</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Heading Highlight
+                  </span>
                   <input
                     value={homeCategories.headingHighlight}
                     onChange={(event) =>
@@ -181,7 +218,9 @@ export default function HomeExtraDealsStudio() {
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-slate-600">Heading Suffix</span>
+                  <span className="text-xs font-medium text-slate-600">
+                    Heading Suffix
+                  </span>
                   <input
                     value={homeCategories.headingSuffix}
                     onChange={(event) =>
@@ -200,14 +239,16 @@ export default function HomeExtraDealsStudio() {
               </p>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               {homeCategories.cards.map((card, index) => (
                 <div
                   key={`home-categories-card-${index}`}
                   className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-700">Card {index + 1}/5</p>
+                    <p className="text-xs font-semibold text-slate-700">
+                      Card {index + 1}/5
+                    </p>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
                       Extra Deal
                     </span>
@@ -215,7 +256,11 @@ export default function HomeExtraDealsStudio() {
 
                   <div className="mb-3 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                     {card.image ? (
-                      <img src={card.image} alt={`extra-deal-card-${index + 1}`} className="aspect-[4/3] w-full object-cover" />
+                      <img
+                        src={card.image}
+                        alt={`extra-deal-card-${index + 1}`}
+                        className="aspect-[4/3] w-full object-cover"
+                      />
                     ) : (
                       <div className="flex aspect-[4/3] items-center justify-center gap-1 text-slate-400">
                         <ImageIcon className="h-3.5 w-3.5" />
@@ -226,13 +271,18 @@ export default function HomeExtraDealsStudio() {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Category Label</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Category Label
+                      </span>
                       <input
                         value={card.category}
                         onChange={(event) =>
                           setHomeCategories((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], category: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              category: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -242,13 +292,18 @@ export default function HomeExtraDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Author/Tag</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Author/Tag
+                      </span>
                       <input
                         value={card.author}
                         onChange={(event) =>
                           setHomeCategories((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], author: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              author: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -258,13 +313,18 @@ export default function HomeExtraDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Title</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Title
+                      </span>
                       <input
                         value={card.title}
                         onChange={(event) =>
                           setHomeCategories((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], title: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              title: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -274,13 +334,18 @@ export default function HomeExtraDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Description</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Description
+                      </span>
                       <input
                         value={card.description}
                         onChange={(event) =>
                           setHomeCategories((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], description: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              description: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -290,13 +355,18 @@ export default function HomeExtraDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Location</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Location
+                      </span>
                       <input
                         value={card.location}
                         onChange={(event) =>
                           setHomeCategories((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], location: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              location: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -306,13 +376,18 @@ export default function HomeExtraDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Price Text</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Price Text
+                      </span>
                       <input
                         value={card.price}
                         onChange={(event) =>
                           setHomeCategories((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], price: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              price: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -322,13 +397,18 @@ export default function HomeExtraDealsStudio() {
                     </label>
 
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-slate-600">Slug</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Slug
+                      </span>
                       <input
                         value={card.slug}
                         onChange={(event) =>
                           setHomeCategories((prev) => {
                             const next = [...prev.cards];
-                            next[index] = { ...next[index], slug: event.target.value };
+                            next[index] = {
+                              ...next[index],
+                              slug: event.target.value,
+                            };
                             return { ...prev, cards: next };
                           })
                         }
@@ -338,14 +418,19 @@ export default function HomeExtraDealsStudio() {
                     </label>
 
                     <div className="space-y-1 md:col-span-2">
-                      <span className="text-xs font-medium text-slate-600">Card Image URL</span>
+                      <span className="text-xs font-medium text-slate-600">
+                        Card Image URL
+                      </span>
                       <div className="flex items-center gap-2">
                         <input
                           value={card.image}
                           onChange={(event) =>
                             setHomeCategories((prev) => {
                               const next = [...prev.cards];
-                              next[index] = { ...next[index], image: event.target.value };
+                              next[index] = {
+                                ...next[index],
+                                image: event.target.value,
+                              };
                               return { ...prev, cards: next };
                             })
                           }
@@ -367,7 +452,10 @@ export default function HomeExtraDealsStudio() {
                                 if (typeof reader.result !== "string") return;
                                 setHomeCategories((prev) => {
                                   const next = [...prev.cards];
-                                  next[index] = { ...next[index], image: reader.result as string };
+                                  next[index] = {
+                                    ...next[index],
+                                    image: reader.result as string,
+                                  };
                                   return { ...prev, cards: next };
                                 });
                               };
@@ -389,7 +477,9 @@ export default function HomeExtraDealsStudio() {
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
-          <p className="text-xs text-slate-500">Auto-refreshes as you edit fields</p>
+          <p className="text-xs text-slate-500">
+            Auto-refreshes as you edit fields
+          </p>
         </div>
         <div className="max-h-[680px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
           <div className="pointer-events-none overflow-hidden rounded-lg border border-slate-200 bg-white p-2">
@@ -406,4 +496,3 @@ export default function HomeExtraDealsStudio() {
     </div>
   );
 }
-
