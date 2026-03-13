@@ -47,6 +47,7 @@ import AffiliatesPage from "@/pages/Admin/Affiliates/AffiliatesPage";
 import CustomersPage from "@/pages/Admin/Customers/CustomersPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
+import AdminOrdersPage from "@/pages/Admin/OrdersPage";
 
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
@@ -317,6 +318,11 @@ const appRouter = createBrowserRouter([
           {
             path: "bookings",
             element: <AdminBookingsPage defaultStatusFilter="all" />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "orders",
+            element: <AdminOrdersPage />,
             errorElement: <ErrorPage />,
           },
           {

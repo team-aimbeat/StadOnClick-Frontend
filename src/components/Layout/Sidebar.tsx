@@ -18,6 +18,7 @@ import {
   HiInboxStack,
   HiChatBubbleLeftRight,
   HiBell,
+  HiDocumentText,
   HiTag,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
@@ -238,6 +239,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Completed"), to: withBase("bookings/completed"), badge: bookingNavBadges.completed },
           { label: t("Refunds"), to: withBase("bookings/refunds"), badge: bookingNavBadges.refunds },
         ],
+      },
+      {
+        id: "orders",
+        label: t("Orders"),
+        icon: HiDocumentText,
+        to: withBase("orders"),
       },
     
       ...(isModerator

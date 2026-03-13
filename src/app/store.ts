@@ -50,6 +50,7 @@ import { adminServicesApi } from "@/features/admin/services/api/adminServicesApi
 import { adminOfferingsApi } from "@/features/admin/offerings/api/adminOfferingsApi";
 import { adminSettingsApi } from "@/services/adminSettingsApi";
 import { adminServiceCategoriesApi } from "@/features/admin/service-categories/api/adminServiceCategoriesApi";
+import { adminOrdersApi } from "@/features/admin/orders/api/adminOrdersApi";
 
 export const store = configureStore({
   reducer: {
@@ -104,6 +105,7 @@ export const store = configureStore({
     [adminOfferingsApi.reducerPath]: adminOfferingsApi.reducer,
     [adminSettingsApi.reducerPath]: adminSettingsApi.reducer,
     [adminServiceCategoriesApi.reducerPath]: adminServiceCategoriesApi.reducer,
+    [adminOrdersApi.reducerPath]: adminOrdersApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -151,7 +153,8 @@ export const store = configureStore({
       .concat(adminServicesApi.middleware)
       .concat(adminOfferingsApi.middleware)
       .concat(adminSettingsApi.middleware)
-      .concat(adminServiceCategoriesApi.middleware),
+      .concat(adminServiceCategoriesApi.middleware)
+      .concat(adminOrdersApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
