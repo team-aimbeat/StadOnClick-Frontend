@@ -133,6 +133,7 @@ type AdminBookingRow = RowData & {
   status: AdminBookingStatus;
   amount: number;
   createdAt: string;
+  year: string;
   reviewCount: number;
 };
 
@@ -247,6 +248,7 @@ export default function AdminBookingsPage({
         slotEnd: item.slot?.endTime,
         status: item.status,
         amount: Number.isFinite(amount) ? amount : 0,
+        year: String(dayjs(item.slot?.startTime ?? item.createdAt).year()),
         reviewCount: item.vendorService?._count?.reviews ?? 0,
         createdAt: item.createdAt,
       };
@@ -293,8 +295,18 @@ export default function AdminBookingsPage({
         label: "Status",
         options: STATUS_FILTER_OPTIONS,
       },
+      {
+        key: "year",
+        label: "Year",
+        options: [
+          { label: "All years", value: "all" },
+          ...Array.from(new Set(bookingRows.map((row) => row.year)))
+            .sort((a, b) => Number(b) - Number(a))
+            .map((year) => ({ label: year, value: year })),
+        ],
+      },
     ],
-    []
+    [bookingRows]
   );
 
   const initialActiveFilters = useMemo(

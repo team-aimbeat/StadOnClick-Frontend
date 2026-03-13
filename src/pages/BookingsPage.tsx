@@ -41,6 +41,7 @@ export type BookingRow = RowData & {
   city: string;
   channel: string;
   amount: number;
+  year: string;
   contact?: string;
 };
 
@@ -173,6 +174,22 @@ export default function BookingsPage({
     const gross = bookingRows.reduce((sum, b) => sum + b.amount, 0);
 
     return { confirmed, pending, refunded, refundRequested, completed, gross };
+  }, [bookingRows]);
+
+  const bookingYearOptions = useMemo(() => {
+    const years = Array.from(
+      new Set(
+        bookingRows
+          .map((booking) => new Date(booking.startTime).getFullYear())
+          .filter((year) => Number.isFinite(year))
+          .map((year) => String(year))
+      )
+    ).sort((a, b) => Number(b) - Number(a));
+
+    return [
+      { label: "All", value: "all" },
+      ...years.map((year) => ({ label: year, value: year })),
+    ];
   }, [bookingRows]);
 
   const columns = useMemo<ColumnConfig[]>(() => [
@@ -326,7 +343,12 @@ export default function BookingsPage({
         { label: "WhatsApp", value: "whatsapp" },
       ],
     },
-  ], []);
+    {
+      key: "year",
+      label: "Year",
+      options: bookingYearOptions,
+    },
+  ], [bookingYearOptions]);
 
   const sortOptions = useMemo(
     () => [

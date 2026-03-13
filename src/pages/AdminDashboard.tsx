@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { IconType } from "react-icons";
 import {
   DashboardCol,
@@ -177,6 +177,22 @@ const AdminDashboard: React.FC = () => {
   const vendors = (vendorsResponse?.data ?? []) as Array<Record<string, unknown>>;
   const platformStats = platformStatsResponse?.data;
 
+  const bookingTrendYearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, index) => currentYear - index);
+  }, []);
+
+  const [selectedBookingTrendYear, setSelectedBookingTrendYear] = useState<string>(
+    String(new Date().getFullYear()),
+  );
+
+  useEffect(() => {
+    if (!bookingTrendYearOptions.length) return;
+    if (!bookingTrendYearOptions.includes(Number(selectedBookingTrendYear))) {
+      setSelectedBookingTrendYear(String(bookingTrendYearOptions[0]));
+    }
+  }, [bookingTrendYearOptions, selectedBookingTrendYear]);
+
   const todayRevenue = useMemo(
     () =>
       todayBookings.reduce((sum, booking) => {
@@ -270,8 +286,7 @@ const AdminDashboard: React.FC = () => {
 
   const bookingsChartData = useMemo(() => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const now = new Date();
-    const year = now.getFullYear();
+    const year = Number(selectedBookingTrendYear) || new Date().getFullYear();
     const currentYearSeries = new Array<number>(12).fill(0);
     const previousYearSeries = new Array<number>(12).fill(0);
 
@@ -290,7 +305,7 @@ const AdminDashboard: React.FC = () => {
       value1: Math.round(currentYearSeries[index]),
       value2: Math.round(previousYearSeries[index]),
     }));
-  }, [allBookings]);
+  }, [allBookings, selectedBookingTrendYear]);
 
   const gmvChartData = useMemo(() => {
     const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -470,11 +485,14 @@ const AdminDashboard: React.FC = () => {
                 height={260}
                 primaryColor="#2563EB"
                 secondaryColor="#F97316"
-                primaryLabel={`Current Year (${new Date().getFullYear()})`}
-                secondaryLabel={`Last Year (${new Date().getFullYear() - 1})`}
+                primaryLabel={`Selected Year (${selectedBookingTrendYear})`}
+                secondaryLabel={`Last Year (${Number(selectedBookingTrendYear) - 1})`}
                 growthText="vs last year"
                 showLegend
-                showPeriodSelect={false}
+                showPeriodSelect
+                activePeriod={selectedBookingTrendYear}
+                periodOptions={bookingTrendYearOptions.map(String)}
+                onPeriodChange={setSelectedBookingTrendYear}
                 className="h-full"
                 animate={false}
               />

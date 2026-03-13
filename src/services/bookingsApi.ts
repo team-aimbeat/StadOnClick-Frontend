@@ -73,6 +73,7 @@ const toBookingRow = (booking: VendorBooking): BookingRow => {
     city: booking.vendorService?.category?.name ?? "Unknown",
     channel: "Marketplace",
     amount: Number(booking.orderItem?.priceFinal ?? 0),
+    year: String(new Date(booking.slot?.startTime ?? booking.createdAt).getFullYear()),
     contact: booking.user?.email,
   };
 };
