@@ -12,6 +12,7 @@ import profile7 from "@/assets/Images/profile-7.jpeg";
 import profile8 from "@/assets/Images/profile-8.jpeg";
 import profile9 from "@/assets/Images/profile-9.jpeg";
 import profile10 from "@/assets/Images/profile-10.jpeg";
+import IconDownload from "@/components/icons/IconDownload";
 
 interface Activity {
   id: string | number;
@@ -107,6 +108,129 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
     [totalPages]
   );
 
+  const handleExportExcel = () => {
+    if (!activities.length || typeof window === "undefined") return;
+
+    const escapeHtml = (value: string | number | undefined) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+    const rows = activities
+      .map(
+        (activity) => `
+          <tr>
+            <td>${escapeHtml(activity.name)}</td>
+            <td>${escapeHtml(activity.category)}</td>
+            <td>${escapeHtml(activity.id)}</td>
+            <td>${escapeHtml(activity.retained)}</td>
+            <td>${escapeHtml(activity.price)}</td>
+            <td>${escapeHtml(activity.status)}</td>
+          </tr>`,
+      )
+      .join("");
+
+    const tableHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="utf-8" />
+        </head>
+        <body>
+          <table border="1">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Category</th>
+                <th>ID</th>
+                <th>Retained</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </body>
+      </html>`;
+
+    const blob = new Blob([tableHtml], { type: "application/vnd.ms-excel;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    link.href = url;
+    link.download = `recent-activity-${stamp}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportPdf = () => {
+    if (!activities.length || typeof window === "undefined") return;
+
+    const escapeHtml = (value: string | number | undefined) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+    const rows = activities
+      .map(
+        (activity) => `
+          <tr>
+            <td>${escapeHtml(activity.name)}</td>
+            <td>${escapeHtml(activity.category)}</td>
+            <td>${escapeHtml(activity.id)}</td>
+            <td>${escapeHtml(activity.retained)}</td>
+            <td>${escapeHtml(activity.price)}</td>
+            <td>${escapeHtml(activity.status)}</td>
+          </tr>`,
+      )
+      .join("");
+
+    const printWindow = window.open("", "_blank", "width=1000,height=700");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Recent Activity</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; }
+            h1 { font-size: 20px; margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 12px; }
+            th { background: #f8fafc; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; }
+          </style>
+        </head>
+        <body>
+          <h1>Recent Activity</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Category</th>
+                <th>ID</th>
+                <th>Retained</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   return (
     <div
       className={cn(
@@ -118,11 +242,33 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
         <h3 className="text-base font-semibold text-slate-900">
           {title}
         </h3>
-        {hasMore && (
-          <button className="text-xs font-semibold text-slate-500 transition hover:text-slate-700">
-            View All &rarr;
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {activities.length > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              >
+                <IconDownload className="h-3.5 w-3.5" />
+                Excel
+              </button>
+              <button
+                type="button"
+                onClick={handleExportPdf}
+                className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              >
+                <IconDownload className="h-3.5 w-3.5" />
+                PDF
+              </button>
+            </>
+          )}
+          {hasMore && (
+            <button className="text-xs font-semibold text-slate-500 transition hover:text-slate-700">
+              View All &rarr;
+            </button>
+          )}
+        </div>
       </div>
       <AdminTable
         className="mt-4 flex-1"
