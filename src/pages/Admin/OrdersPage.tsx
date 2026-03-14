@@ -1,6 +1,7 @@
 import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarClock, Eye, ReceiptText } from "lucide-react";
+import { CalendarClock, Eye, ReceiptText, XCircle } from "lucide-react";
 import dayjs from "dayjs";
+import toast from "react-hot-toast";
 import {
   HiOutlineBanknotes,
   HiOutlineClipboardDocumentList,
@@ -25,7 +26,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { useLazyListAdminOrdersQuery } from "@/features/admin/orders/api/adminOrdersApi";
+import {
+  useCancelAdminOrderMutation,
+  useLazyListAdminOrdersQuery,
+} from "@/features/admin/orders/api/adminOrdersApi";
 import type {
   AdminOrderItem,
   AdminOrderStatus,
@@ -37,6 +41,8 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
   currency: "INR",
   maximumFractionDigits: 0,
 });
+
+const REVERSED_ORDER_STATUSES = new Set(["CANCELLED", "REFUNDED"]);
 
 const STATUS_FILTER_OPTIONS: FilterConfig["options"] = [
   { label: "All orders", value: "all" },
@@ -136,11 +142,14 @@ export default function AdminOrdersPage() {
   const [activeTotalFilter, setActiveTotalFilter] = useState<{ min?: string; max?: string }>({});
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeOrder, setActiveOrder] = useState<AdminOrderRow | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<AdminOrderRow | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
 
   const hasTotalFilter = Boolean(activeTotalFilter.min || activeTotalFilter.max);
   const [fetchOrders, { data, isFetching, isError }] = useLazyListAdminOrdersQuery();
+  const [cancelAdminOrder, { isLoading: isCancellingOrder }] = useCancelAdminOrderMutation();
 
-  useEffect(() => {
+  const loadOrders = useCallback(() => {
     fetchOrders({
       page,
       limit: rowsPerPage,
@@ -163,10 +172,15 @@ export default function AdminOrdersPage() {
     page,
     rowsPerPage,
     searchTerm,
-    sortStatus,
+    sortStatus.columnAccessor,
+    sortStatus.direction,
     statusFilter,
     yearFilter,
   ]);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   useEffect(() => {
     dispatch(setPageTitle("Admin orders"));
@@ -209,7 +223,9 @@ export default function AdminOrdersPage() {
 
   const totals = useMemo(
     () =>
-      orderRows.reduce(
+      orderRows
+        .filter((row) => !REVERSED_ORDER_STATUSES.has(String(row.status).toUpperCase()))
+        .reduce(
         (acc, row) => {
           acc.orderCount += 1;
           acc.totalValue += row.totalFinal;
@@ -389,9 +405,44 @@ export default function AdminOrdersPage() {
         icon: Eye,
         onClick: (row) => setActiveOrder(row),
       },
+      {
+        component: ({ row }) =>
+          row.status === "CANCELLED" || row.status === "REFUNDED" ? null : (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setCancelTarget(row);
+                setCancelReason("");
+              }}
+              className="group inline-flex items-center justify-center rounded-full p-2 text-gray-600 transition-all duration-150 hover:bg-rose-50 hover:text-rose-600"
+              title="Cancel order"
+            >
+              <XCircle className="h-4 w-4" />
+            </button>
+          ),
+      },
     ],
     []
   );
+
+  const handleConfirmCancelOrder = useCallback(async () => {
+    if (!cancelTarget) return;
+
+    try {
+      await cancelAdminOrder({
+        id: cancelTarget.id,
+        reason: cancelReason.trim() || undefined,
+      }).unwrap();
+      toast.success("Order cancelled successfully.");
+      setCancelTarget(null);
+      setCancelReason("");
+      setActiveOrder(null);
+      loadOrders();
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Unable to cancel this order.");
+    }
+  }, [cancelAdminOrder, cancelReason, cancelTarget, loadOrders]);
 
   const clearDateRange = useCallback(() => {
     setDateRangeLabel("");
@@ -769,12 +820,73 @@ export default function AdminOrdersPage() {
           )}
 
           <DialogFooter>
+            {activeOrder &&
+              activeOrder.status !== "CANCELLED" &&
+              activeOrder.status !== "REFUNDED" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCancelTarget(activeOrder);
+                  setCancelReason("");
+                }}
+                className="rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-500"
+              >
+                Cancel order
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setActiveOrder(null)}
               className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               Close
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(cancelTarget)} onOpenChange={(open) => !open && setCancelTarget(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Cancel order</DialogTitle>
+            <DialogDescription>
+              This will cancel the order and reverse the related order ledger entries. Paid orders
+              will be refunded before the local reversal is applied.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              Use this only when the order must be fully rolled back.
+            </div>
+            <label className="block space-y-2 text-sm text-slate-700">
+              <span className="font-medium">Reason (optional)</span>
+              <textarea
+                value={cancelReason}
+                onChange={(event) => setCancelReason(event.target.value)}
+                rows={4}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 outline-none focus:border-blue-500"
+                placeholder="Explain why this order is being cancelled."
+              />
+            </label>
+          </div>
+
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setCancelTarget(null)}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              disabled={isCancellingOrder}
+            >
+              Keep order
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmCancelOrder}
+              className="rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-60"
+              disabled={isCancellingOrder}
+            >
+              {isCancellingOrder ? "Cancelling..." : "Cancel order"}
             </button>
           </DialogFooter>
         </DialogContent>

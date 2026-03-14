@@ -57,6 +57,7 @@ type SnapshotMetric = {
 };
 
 const formatDateOnly = (date: Date) => date.toISOString().slice(0, 10);
+const REVERSED_BOOKING_STATUSES = new Set(["CANCELLED", "REFUNDED"]);
 
 const toNumberSafe = (value: unknown) => {
   if (typeof value === "number") return value;
@@ -108,6 +109,9 @@ const monthKey = (dateValue: string | Date) => {
   const date = new Date(dateValue);
   return `${date.getFullYear()}-${date.getMonth()}`;
 };
+
+const isActiveBooking = (booking: { status?: string | null }) =>
+  !REVERSED_BOOKING_STATUSES.has(String(booking.status ?? "").toUpperCase());
 
 const categoryIconFor = (name: string) => {
   const normalized = name.toLowerCase();
@@ -171,9 +175,18 @@ const AdminDashboard: React.FC = () => {
   });
   const { data: kycDocs = [], isLoading: kycLoading } = useGetAllVendorKycDocumentsQuery();
 
-  const allBookings = allBookingsResponse?.data ?? [];
-  const todayBookings = todayBookingsResponse?.data ?? [];
-  const yesterdayBookings = yesterdayBookingsResponse?.data ?? [];
+  const allBookings = useMemo(
+    () => (allBookingsResponse?.data ?? []).filter(isActiveBooking),
+    [allBookingsResponse?.data],
+  );
+  const todayBookings = useMemo(
+    () => (todayBookingsResponse?.data ?? []).filter(isActiveBooking),
+    [todayBookingsResponse?.data],
+  );
+  const yesterdayBookings = useMemo(
+    () => (yesterdayBookingsResponse?.data ?? []).filter(isActiveBooking),
+    [yesterdayBookingsResponse?.data],
+  );
   const vendors = (vendorsResponse?.data ?? []) as Array<Record<string, unknown>>;
   const platformStats = platformStatsResponse?.data;
 
@@ -213,8 +226,8 @@ const AdminDashboard: React.FC = () => {
     [yesterdayBookings],
   );
 
-  const todayBookingsCount = todayBookingsResponse?.meta?.total ?? todayBookings.length;
-  const yesterdayBookingsCount = yesterdayBookingsResponse?.meta?.total ?? yesterdayBookings.length;
+  const todayBookingsCount = todayBookings.length;
+  const yesterdayBookingsCount = yesterdayBookings.length;
 
   const activeVendorsCount = useMemo(
     () => vendors.filter((vendor) => String(vendor.status ?? "").toUpperCase() === "ACTIVE").length,

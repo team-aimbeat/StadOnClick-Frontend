@@ -22,7 +22,22 @@ export const adminOrdersApi = createApi({
         providesTags: ["AdminOrders"],
       }
     ),
+    cancelAdminOrder: builder.mutation<
+      { success: boolean; data: unknown },
+      { id: string; reason?: string }
+    >({
+      query: ({ id, reason }) => ({
+        url: `/admin/orders/${id}/cancel`,
+        method: "PATCH",
+        body: reason ? { reason } : {},
+      }),
+      invalidatesTags: ["AdminOrders"],
+    }),
   }),
 });
 
-export const { useListAdminOrdersQuery, useLazyListAdminOrdersQuery } = adminOrdersApi;
+export const {
+  useListAdminOrdersQuery,
+  useLazyListAdminOrdersQuery,
+  useCancelAdminOrderMutation,
+} = adminOrdersApi;
