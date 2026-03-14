@@ -36,6 +36,11 @@ const AdminPayoutsPage = () => {
     limit, 
     status: statusFilter === "ALL" ? undefined : statusFilter 
   });
+  const { data: pendingPayoutsResponse, isLoading: isPendingPayoutsLoading } = useGetPayoutsQuery({
+    page: 1,
+    limit: 100,
+    status: "PENDING",
+  });
 
   useEffect(() => {
     if (!reviewingPayout) {
@@ -85,9 +90,11 @@ const AdminPayoutsPage = () => {
   const stats = statsResponse?.data;
   const payouts = response?.data?.data || [];
   const meta = response?.data?.meta;
+  const pendingPayoutMeta = pendingPayoutsResponse?.data?.meta;
   const platformBalance = platformStripeBalanceResponse?.data?.balances?.find(
     (entry: any) => entry.currency.toLowerCase() === "sek",
   );
+  const pendingPayoutRequestCount = pendingPayoutMeta?.total ?? 0;
 
   const requestedAmount = Number(reviewingPayout?.amount || 0);
   const availableAmount = Number(platformBalance?.available || 0);
@@ -146,7 +153,12 @@ const AdminPayoutsPage = () => {
     window.open(dashboardLink, "_blank", "noopener,noreferrer");
   };
 
-  if (isStatsLoading || isPlatformStripeBalanceLoading || (isPayoutsLoading && !response)) {
+  if (
+    isStatsLoading ||
+    isPlatformStripeBalanceLoading ||
+    isPendingPayoutsLoading ||
+    (isPayoutsLoading && !response)
+  ) {
     return <AdminPayoutsSkeleton />;
   }
 
@@ -172,7 +184,7 @@ const AdminPayoutsPage = () => {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { 
             label: "Outstanding Amount", 
@@ -194,6 +206,16 @@ const AdminPayoutsPage = () => {
             icon: <HiOutlineArrowTrendingUp className="w-4 h-4" />, 
             sub: "Platform commission earned",
             color: "text-emerald-600"
+          },
+          {
+            label: "Pending Requests",
+            value: pendingPayoutRequestCount,
+            icon: <HiOutlineBanknotes className="w-4 h-4" />,
+            sub: `${stats?.currency ?? "SEK"} ${(stats?.pendingLiability ?? 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })} awaiting review`,
+            color: "text-amber-600",
+            isCount: true,
           }
         ].map((item, i) => (
           <div key={i} className="finance-card rounded-lg border border-slate-100 p-6 bg-white">
@@ -201,12 +223,20 @@ const AdminPayoutsPage = () => {
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.label}</span>
               <div className="text-slate-300">{item.icon}</div>
             </div>
-            <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="text-xs font-bold text-slate-300">{stats?.currency}</span>
-              <p className={`text-3xl font-black tracking-tighter text-mono-finance ${item.color}`}>
-                {item.value?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </p>
-            </div>
+            {item.isCount ? (
+              <div className="mb-1">
+                <p className={`text-3xl font-black tracking-tighter text-mono-finance ${item.color}`}>
+                  {Number(item.value ?? 0).toLocaleString()}
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-baseline gap-1.5 mb-1">
+                <span className="text-xs font-bold text-slate-300">{stats?.currency}</span>
+                <p className={`text-3xl font-black tracking-tighter text-mono-finance ${item.color}`}>
+                  {Number(item.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            )}
             <p className="text-[10px] text-slate-400 font-medium">{item.sub}</p>
           </div>
         ))}
