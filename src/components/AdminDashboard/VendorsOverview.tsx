@@ -79,7 +79,7 @@ const VendorsOverview = ({ categories = defaultVendorCategories }: VendorsOvervi
     <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">Vendors Overview</h3>
+          <h3 className="text-sm font-semibold text-slate-900">Top Selling Vendor Services</h3>
           <p className="text-xs text-slate-500">Distribution by category</p>
         </div>
         <span className="text-xs font-semibold text-slate-600">Total vendors: {totalVendors}</span>
