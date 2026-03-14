@@ -25,6 +25,8 @@ type CustomerRow = RowData & {
   walletBalance: number;
   createdAt: string;
   lastLoginAt: string | null;
+  isAffiliate: boolean;
+  affiliateTransitionDate: string | null;
 };
 
 const BACKEND_SORT_KEYS = new Set(["createdAt", "updatedAt", "firstName", "email", "lastLoginAt"]);
@@ -119,6 +121,8 @@ export default function CustomersPage() {
       walletBalance: Number(customer.walletBalance ?? 0),
       createdAt: customer.createdAt,
       lastLoginAt: customer.lastLoginAt ?? null,
+      isAffiliate: Boolean(customer.affiliateProfile?.id),
+      affiliateTransitionDate: customer.affiliateProfile?.createdAt ?? null,
     }));
   }, [data]);
 
@@ -204,6 +208,40 @@ export default function CustomersPage() {
         title: "Wallet",
         sortable: true,
         render: (value) => <span className="font-semibold text-slate-900">{money.format(Number(value ?? 0))}</span>,
+      },
+      {
+        key: "isAffiliate",
+        title: "Affiliate",
+        sortable: false,
+        render: (_value, row) => {
+          const r = row as CustomerRow;
+          return r.isAffiliate ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+              <span className="h-2 w-2 rounded-full bg-current" />
+              Affiliate User
+            </span>
+          ) : (
+            <span className="text-sm text-slate-400">-</span>
+          );
+        },
+      },
+      {
+        key: "affiliateTransitionDate",
+        title: "Affiliate Since",
+        sortable: false,
+        render: (value) =>
+          value ? (
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              <CalendarClock className="h-4 w-4 text-slate-500" />
+              {new Date(String(value)).toLocaleDateString("en-SE", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
+            </div>
+          ) : (
+            "-"
+          ),
       },
       {
         key: "lastLoginAt",

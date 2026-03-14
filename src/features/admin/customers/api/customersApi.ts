@@ -17,6 +17,11 @@ export type AdminCustomer = {
   referralCode?: string | null;
   createdAt: string;
   lastLoginAt?: string | null;
+  affiliateProfile?: {
+    id: string;
+    createdAt: string;
+    status: "ACTIVE" | "INACTIVE";
+  } | null;
   city?: {
     id: string;
     name: string;
