@@ -61,6 +61,33 @@ export const adminFinanceApi = createApi({
       providesTags: ["AdminWallet"],
     }),
 
+    getPlatformCityAnalytics: builder.query<
+      {
+        status: string;
+        data: {
+          period: "today" | "weekly" | "monthly";
+          generatedAt: string;
+          data: Array<{
+            name: string;
+            percent: number;
+            users: number;
+            orders: number;
+            revenue: number;
+            activeVendors: number;
+            topCategory: string;
+          }>;
+        };
+      },
+      { period?: "today" | "weekly" | "monthly"; limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/admin/finance/platform-city-analytics",
+        method: "GET",
+        params: params ?? undefined,
+      }),
+      providesTags: ["AdminWallet"],
+    }),
+
     getPlatformTransactions: builder.query<
       { status: string; data: { data: any[]; meta: any } },
       { page?: number; limit?: number; fromDate?: string; toDate?: string }
@@ -106,6 +133,7 @@ export const {
   useRejectPayoutMutation,
   useGetPayoutsQuery,
   useGetPlatformStatsQuery,
+  useGetPlatformCityAnalyticsQuery,
   useGetPlatformTransactionsQuery,
   useGetPlatformStripeBalanceQuery,
   useGetPlatformPayoutArrivalsQuery,

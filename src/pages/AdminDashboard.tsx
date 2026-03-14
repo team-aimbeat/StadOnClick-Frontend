@@ -38,12 +38,14 @@ import {
 import {
   useGetPlatformStatsQuery,
   useGetPayoutsQuery,
+  useGetPlatformCityAnalyticsQuery,
 } from "@/features/admin/finance/api/adminFinanceApi";
 import { useListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
 import {
   useListAllVendorsQuery,
   useListVendorApplicationsQuery,
 } from "@/features/admin/vendors/api/vendorsApi";
+import type { Vendor } from "@/features/admin/vendors/types/vendor.types";
 import { useGetAllVendorKycDocumentsQuery } from "@/services/adminKycApi";
 
 type SnapshotMetric = {
@@ -173,6 +175,14 @@ const AdminDashboard: React.FC = () => {
     limit: 5,
     status: "PENDING",
   });
+  const [selectedCityPeriod, setSelectedCityPeriod] = useState<"today" | "weekly" | "monthly">(
+    "today",
+  );
+  const { data: cityAnalyticsResponse, isLoading: cityAnalyticsLoading } =
+    useGetPlatformCityAnalyticsQuery({
+      period: selectedCityPeriod,
+      limit: 5,
+    });
   const { data: kycDocs = [], isLoading: kycLoading } = useGetAllVendorKycDocumentsQuery();
 
   const allBookings = useMemo(
@@ -187,7 +197,7 @@ const AdminDashboard: React.FC = () => {
     () => (yesterdayBookingsResponse?.data ?? []).filter(isActiveBooking),
     [yesterdayBookingsResponse?.data],
   );
-  const vendors = (vendorsResponse?.data ?? []) as Array<Record<string, unknown>>;
+  const vendors = (vendorsResponse?.data ?? []) as Vendor[];
   const platformStats = platformStatsResponse?.data;
 
   const bookingTrendYearOptions = useMemo(() => {
@@ -379,28 +389,10 @@ const AdminDashboard: React.FC = () => {
       }));
   }, [allBookings]);
 
-  const topRegions = useMemo(() => {
-    const counts = new Map<string, number>();
-    let total = 0;
-
-    for (const booking of allBookings) {
-      const region = booking.vendorProfile?.city?.name ?? booking.vendorProfile?.country ?? "Unknown";
-      const normalized = String(region).trim();
-      if (!normalized) continue;
-      counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
-      total += 1;
-    }
-
-    if (!total) return [];
-
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => ({
-        name,
-        percent: Number(((count / total) * 100).toFixed(2)),
-      }));
-  }, [allBookings]);
+  const topRegions = useMemo(
+    () => cityAnalyticsResponse?.data?.data ?? [],
+    [cityAnalyticsResponse?.data?.data],
+  );
 
   const pendingPayoutItems = useMemo(() => {
     const rows = payoutsResponse?.data?.data ?? [];
@@ -460,7 +452,8 @@ const AdminDashboard: React.FC = () => {
     payoutsLoading ||
     refundsLoading ||
     kycLoading ||
-    vendorAppsLoading;
+    vendorAppsLoading ||
+    cityAnalyticsLoading;
 
   if (loading) return <AdminDashboardSkeleton />;
 
@@ -517,7 +510,12 @@ const AdminDashboard: React.FC = () => {
               <LeadSourceDistributionCard />
             </DashboardCol>
             <DashboardCol span={6}>
-              <Mapcity regions={topRegions} />
+              <Mapcity
+                regions={topRegions}
+                period={selectedCityPeriod}
+                onPeriodChange={setSelectedCityPeriod}
+                isLoading={cityAnalyticsLoading}
+              />
             </DashboardCol>
             <DashboardCol span={6}>
               <VendorsOverview categories={vendorOverviewCategories} />
