@@ -96,6 +96,29 @@ export interface VendorMasterServiceEntity {
   sortOrder: number;
 }
 
+export interface VendorMasterServiceRequestEntity {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+  sortOrder: number;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  adminNotes?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  approvedMasterCategory?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  reviewedByUser?: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+  } | null;
+}
+
 export interface CreateVendorServiceCategoryPayload {
   masterCategoryId: string;
   name: string;
@@ -113,6 +136,36 @@ export interface VendorServiceCategoryEntity {
   icon?: string | null;
   isActive: boolean;
   sortOrder: number;
+}
+
+export interface VendorServiceCategoryRequestEntity {
+  id: string;
+  masterCategoryId: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+  sortOrder: number;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  adminNotes?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  masterCategory?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  approvedCategory?: {
+    id: string;
+    name: string;
+    slug: string;
+    masterCategoryId: string;
+  } | null;
+  reviewedByUser?: {
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+  } | null;
 }
 
 export const vendorServicesApi = createApi({
@@ -172,7 +225,7 @@ export const vendorServicesApi = createApi({
       query: () => "/vendor/onboarding/status",
     }),
     createVendorMasterService: builder.mutation<
-      VendorMasterServiceEntity,
+      VendorMasterServiceRequestEntity,
       CreateVendorMasterServicePayload
     >({
       query: (body) => ({
@@ -180,9 +233,18 @@ export const vendorServicesApi = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags: ["VendorServices"],
+    }),
+    getMyVendorMasterServiceRequests: builder.query<VendorMasterServiceRequestEntity[], void>({
+      query: () => "/vendor/vendor-services/master-requests/me",
+      providesTags: ["VendorServices"],
+    }),
+    getMyVendorServiceCategoryRequests: builder.query<VendorServiceCategoryRequestEntity[], void>({
+      query: () => "/vendor/vendor-services/category-requests/me",
+      providesTags: ["VendorServices"],
     }),
     createVendorServiceCategory: builder.mutation<
-      VendorServiceCategoryEntity,
+      VendorServiceCategoryRequestEntity,
       CreateVendorServiceCategoryPayload
     >({
       query: (body) => ({
@@ -190,6 +252,7 @@ export const vendorServicesApi = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags: ["VendorServices"],
     }),
   }),
 });
@@ -200,5 +263,7 @@ export const {
   useGetVendorServicesQuery,
   useGetVendorProfileStatusQuery,
   useCreateVendorMasterServiceMutation,
+  useGetMyVendorMasterServiceRequestsQuery,
+  useGetMyVendorServiceCategoryRequestsQuery,
   useCreateVendorServiceCategoryMutation,
 } = vendorServicesApi;

@@ -30,6 +30,8 @@ import {
   useCreateVendorServiceMutation,
   useCreateVendorMasterServiceMutation,
   useCreateVendorServiceCategoryMutation,
+  useGetMyVendorMasterServiceRequestsQuery,
+  useGetMyVendorServiceCategoryRequestsQuery,
   useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
   type VendorServiceEntity,
@@ -305,6 +307,14 @@ const VendorServices = () => {
     isError: masterError,
     refetch: refetchMasterServices,
   } = useGetMasterCategoriesQuery();
+  const {
+    data: masterServiceRequests = [],
+    refetch: refetchMasterServiceRequests,
+  } = useGetMyVendorMasterServiceRequestsQuery();
+  const {
+    data: categoryServiceRequests = [],
+    refetch: refetchCategoryServiceRequests,
+  } = useGetMyVendorServiceCategoryRequestsQuery();
 
   const {
     data: categoryOptions = [],
@@ -548,13 +558,25 @@ const VendorServices = () => {
         createDefaultCategory: false,
       };
       const created = await createVendorMasterService(payload).unwrap();
-      await refetchMasterServices();
-      handleSelectMaster(created.id);
+      await refetchMasterServiceRequests();
+      if (created.status === "APPROVED" && created.approvedMasterCategory?.id) {
+        await refetchMasterServices();
+        handleSelectMaster(created.approvedMasterCategory.id);
+      }
       setWizardError(null);
-      toast.success("Master service created.");
+      toast.success(
+        created.status === "APPROVED"
+          ? "Master service approved and available."
+          : "Approval request submitted to admin.",
+      );
       return created;
     },
-    [createVendorMasterService, handleSelectMaster, refetchMasterServices],
+    [
+      createVendorMasterService,
+      handleSelectMaster,
+      refetchMasterServiceRequests,
+      refetchMasterServices,
+    ],
   );
 
   const handleCreateServiceCategory = useCallback(
@@ -569,14 +591,22 @@ const VendorServices = () => {
         slug: input.slug?.trim() || undefined,
         isActive: true,
       }).unwrap();
-      await refetchCategoryOptions();
-      setSelectedCategoryId(created.id);
+      await refetchCategoryServiceRequests();
+      if (created.status === "APPROVED" && created.approvedCategory?.id) {
+        await refetchCategoryOptions();
+        setSelectedCategoryId(created.approvedCategory.id);
+      }
       setWizardError(null);
-      toast.success("Service category created.");
+      toast.success(
+        created.status === "APPROVED"
+          ? "Service category approved and available."
+          : "Category approval request submitted to admin.",
+      );
       return created;
     },
     [
       createVendorServiceCategory,
+      refetchCategoryServiceRequests,
       refetchCategoryOptions,
       selectedMasterServiceId,
       setSelectedCategoryId,
@@ -1100,12 +1130,14 @@ const VendorServices = () => {
       isMasterLoading={isMasterLoading}
       wizardError={wizardError}
       handleCreateMasterService={handleCreateMasterService}
+      masterServiceRequests={masterServiceRequests}
       handleSelectMaster={handleSelectMaster}
       handleNextFromMaster={handleNextFromMaster}
       selectedMasterService={selectedMasterService}
       categoryOptions={categoryOptions}
       isCategoryFetching={isCategoryFetching}
       categoryError={categoryError}
+      categoryServiceRequests={categoryServiceRequests}
       selectedCategoryId={selectedCategoryId}
       setSelectedCategoryId={setSelectedCategoryId}
       handleCreateServiceCategory={handleCreateServiceCategory}

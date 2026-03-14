@@ -10,6 +10,10 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
 import type { ServiceCategory, ServiceMasterCategory } from "@/services/serviceCategoriesApi";
 import type { VendorOffering } from "@/services/vendorOfferingsApi";
+import type {
+  VendorMasterServiceRequestEntity,
+  VendorServiceCategoryRequestEntity,
+} from "@/services/vendorServicesApi";
 import well from "@/assets/Images/well.jpg";
 import wellSm from "@/assets/Images/optimized/well-sm.jpg";
 import type { Visual } from "@/pages/vendor-services/vendorServicesVisuals";
@@ -56,12 +60,13 @@ export type VendorServicesWizardProps = {
 
   selectedMasterServiceId: string;
   masterServiceOptions: ServiceMasterCategory[];
+  masterServiceRequests: VendorMasterServiceRequestEntity[];
   isMasterLoading: boolean;
   wizardError: string | null;
   handleCreateMasterService: (input: {
     name: string;
     slug?: string;
-  }) => Promise<{ id: string }>;
+  }) => Promise<{ id: string; status: "PENDING" | "APPROVED" | "REJECTED"; approvedMasterCategory?: { id: string } | null }>;
   handleSelectMaster: (id: string) => void;
   handleNextFromMaster: () => void;
   selectedMasterService?: ServiceMasterCategory;
@@ -69,13 +74,18 @@ export type VendorServicesWizardProps = {
   categoryOptions: ServiceCategory[];
   isCategoryFetching: boolean;
   categoryError: boolean;
+  categoryServiceRequests: VendorServiceCategoryRequestEntity[];
   selectedCategoryId: string;
   setSelectedCategoryId: (id: string) => void;
   handleCreateServiceCategory: (input: {
     name: string;
     slug?: string;
     masterCategoryId?: string;
-  }) => Promise<{ id: string }>;
+  }) => Promise<{
+    id: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    approvedCategory?: { id: string } | null;
+  }>;
   handleNextFromCategory: () => void;
   selectedCategory?: ServiceCategory;
 
@@ -176,6 +186,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     setCurrentStep,
     selectedMasterServiceId,
     masterServiceOptions,
+    masterServiceRequests,
     isMasterLoading,
     wizardError,
     handleCreateMasterService,
@@ -185,6 +196,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
     categoryOptions,
     isCategoryFetching,
     categoryError,
+    categoryServiceRequests,
     selectedCategoryId,
     setSelectedCategoryId,
     handleCreateServiceCategory,
@@ -250,6 +262,14 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
       );
     });
   }, [categoryOptions, normalizedCategorySearch]);
+  const filteredCategoryRequests = useMemo(
+    () =>
+      categoryServiceRequests.filter(
+        (request) =>
+          !selectedMasterServiceId || request.masterCategoryId === selectedMasterServiceId,
+      ),
+    [categoryServiceRequests, selectedMasterServiceId],
+  );
 
   const offeringTargetOptions = useMemo(
     () =>
@@ -399,7 +419,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                     Select your core offering
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
-                    Choose a master service to unlock categories, details, and offerings.
+                    Choose an approved master service to unlock categories, details, and offerings.
                   </p>
                   <div className="mt-3">
                     <button
@@ -410,7 +430,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                       }}
                       className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                      {isMasterCreateOpen ? "Close master form" : "Add new master service"}
+                      {isMasterCreateOpen ? "Close request form" : "Request new master service"}
                     </button>
                   </div>
 
@@ -443,10 +463,10 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                           disabled={isCreatingMaster}
                           className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
                         >
-                          {isCreatingMaster ? "Creating..." : "Create master"}
+                          {isCreatingMaster ? "Submitting..." : "Submit request"}
                         </button>
                         <p className="text-xs text-slate-500">
-                          No default subcategory will be created.
+                          Admin approval is required before vendors can use it.
                         </p>
                       </div>
                       {masterCreateError && (
@@ -454,6 +474,76 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                       )}
                     </div>
                   )}
+
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          Master service approval requests
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Track pending, approved, and rejected requests from admins.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-3">
+                      {masterServiceRequests.length === 0 ? (
+                        <p className="text-xs text-slate-500">
+                          No requests submitted yet.
+                        </p>
+                      ) : (
+                        masterServiceRequests.map((request) => {
+                          const statusTone =
+                            request.status === "APPROVED"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : request.status === "REJECTED"
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200";
+                          return (
+                            <div
+                              key={request.id}
+                              className="rounded-xl border border-slate-200 bg-white px-3 py-3"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">
+                                    {request.name}
+                                  </p>
+                                  <p className="text-xs text-slate-500">{request.slug}</p>
+                                </div>
+                                <span
+                                  className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusTone}`}
+                                >
+                                  {request.status}
+                                </span>
+                              </div>
+                              {request.adminNotes && (
+                                <p className="mt-2 text-xs text-slate-600">
+                                  Admin note: {request.adminNotes}
+                                </p>
+                              )}
+                              {request.status === "APPROVED" && request.approvedMasterCategory?.id && (
+                                <div className="mt-3 flex items-center justify-between gap-2">
+                                  <p className="text-xs text-emerald-700">
+                                    Approved and ready to use.
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleSelectMaster(request.approvedMasterCategory!.id)
+                                    }
+                                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
+                                  >
+                                    Use approved master
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
 
                   <div className="mt-5">
                     {isMasterLoading ? (
@@ -535,7 +625,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                     className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors duration-200 hover:bg-slate-100"
                     disabled={!selectedMasterServiceId}
                   >
-                    {isCategoryCreateOpen ? "Close category form" : "Add category"}
+                    {isCategoryCreateOpen ? "Close category form" : "Request category"}
                   </button>
                   <button
                     type="button"
@@ -585,10 +675,10 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                         disabled={isCreatingCategory || !selectedMasterServiceId}
                         className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
                       >
-                        {isCreatingCategory ? "Creating..." : "Create category"}
+                        {isCreatingCategory ? "Submitting..." : "Submit request"}
                       </button>
                       <p className="text-xs text-slate-500">
-                        Category will be created under selected master service.
+                        Admin approval is required before vendors can use it.
                       </p>
                     </div>
                     {categoryCreateError && (
@@ -596,6 +686,73 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                     )}
                   </div>
                 )}
+                {selectedMasterServiceId ? (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        Category approval requests
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Requests for the selected master service.
+                      </p>
+                    </div>
+                    <div className="mt-3 space-y-3">
+                      {filteredCategoryRequests.length === 0 ? (
+                        <p className="text-xs text-slate-500">
+                          No category requests submitted for this master service yet.
+                        </p>
+                      ) : (
+                        filteredCategoryRequests.map((request) => {
+                          const statusTone =
+                            request.status === "APPROVED"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : request.status === "REJECTED"
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200";
+                          return (
+                            <div
+                              key={request.id}
+                              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">
+                                    {request.name}
+                                  </p>
+                                  <p className="text-xs text-slate-500">{request.slug}</p>
+                                </div>
+                                <span
+                                  className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusTone}`}
+                                >
+                                  {request.status}
+                                </span>
+                              </div>
+                              {request.adminNotes && (
+                                <p className="mt-2 text-xs text-slate-600">
+                                  Admin note: {request.adminNotes}
+                                </p>
+                              )}
+                              {request.status === "APPROVED" && request.approvedCategory?.id && (
+                                <div className="mt-3 flex items-center justify-between gap-2">
+                                  <p className="text-xs text-emerald-700">
+                                    Approved and ready to use.
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedCategoryId(request.approvedCategory!.id)}
+                                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
+                                  >
+                                    Use approved category
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                ) : null}
                 {selectedMasterServiceId ? (
                   isCategoryFetching ? (
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -678,7 +835,7 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                     </>
                   ) : (
                     <p className="text-xs text-slate-500">
-                      No categories found for this service yet. Use "Add category" to create one.
+                      No approved categories found for this service yet. Use "Request category" to submit one.
                     </p>
                   )
                 ) : (
