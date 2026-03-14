@@ -18,10 +18,28 @@ import { DataTable } from "@/components/shared/DataTable";
 import dayjs from "dayjs";
 import PlatformWalletSkeleton from "@/components/skeletons/PlatformWalletSkeleton";
 
+const parseCalendarRange = (value: string): { fromDate?: string; toDate?: string } => {
+  const [fromText, toText] = value.split(" - ").map((segment) => segment.trim());
+  const parsedFrom = dayjs(fromText, "YYYY/MM/DD");
+  const parsedTo = dayjs(toText, "YYYY/MM/DD");
+
+  return {
+    fromDate: parsedFrom.isValid() ? parsedFrom.format("YYYY-MM-DD") : undefined,
+    toDate: parsedTo.isValid() ? parsedTo.format("YYYY-MM-DD") : undefined,
+  };
+};
+
 const AdminPlatformWalletPage = () => {
   const [page, setPage] = useState(1);
+  const [dateRangeLabel, setDateRangeLabel] = useState("");
+  const [dateRangeQuery, setDateRangeQuery] = useState<{ fromDate?: string; toDate?: string }>({});
   const { data: statsData, isLoading: isStatsLoading, refetch: refetchStats } = useGetPlatformStatsQuery();
-  const { data: txResponse, isLoading: isTxLoading, refetch: refetchTx } = useGetPlatformTransactionsQuery({ page, limit: 12 });
+  const { data: txResponse, isLoading: isTxLoading, refetch: refetchTx } = useGetPlatformTransactionsQuery({
+    page,
+    limit: 12,
+    fromDate: dateRangeQuery.fromDate,
+    toDate: dateRangeQuery.toDate,
+  });
   const { data: arrivalsResponse, isLoading: isArrivalsLoading, refetch: refetchArrivals } = useGetPlatformPayoutArrivalsQuery({ currency: "SEK" });
   const { data: platformBalanceResponse, isLoading: isPlatformBalanceLoading, refetch: refetchPlatformBalance } = useGetPlatformStripeBalanceQuery({ currency: "SEK" });
   
@@ -39,6 +57,23 @@ const AdminPlatformWalletPage = () => {
     refetchTx();
     refetchArrivals();
     refetchPlatformBalance();
+  };
+
+  const clearDateRange = () => {
+    setDateRangeLabel("");
+    setDateRangeQuery({});
+    setPage(1);
+  };
+
+  const handleDateRangeSelect = (range: string) => {
+    if (!range) {
+      clearDateRange();
+      return;
+    }
+
+    setDateRangeLabel(range);
+    setDateRangeQuery(parseCalendarRange(range));
+    setPage(1);
   };
 
   if ((isStatsLoading && !stats) || (isArrivalsLoading && !arrivalsResponse) || (isPlatformBalanceLoading && !platformBalanceResponse)) {
@@ -242,18 +277,34 @@ const AdminPlatformWalletPage = () => {
       {/* Transaction Ledger */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
-           <div className="flex items-center gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
               <div className="w-1.5 h-6 bg-slate-900 rounded-full" />
               <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-900">Revenue Ledger</h2>
-           </div>
+            </div>
+            {dateRangeLabel && (
+              <div className="flex items-center gap-2 pl-4 text-sm text-slate-500">
+                <span>Filtered by: {dateRangeLabel}</span>
+                <button
+                  type="button"
+                  onClick={clearDateRange}
+                  className="text-slate-600 underline-offset-2 hover:text-slate-900"
+                >
+                  Clear range
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <DataTable
+          key={dateRangeLabel || "all-dates"}
           title="Revenue Ledger"
           breadCrumbTitle="Finance / Audit"
           data={transactions}
           loading={isTxLoading}
           className="border border-slate-200 rounded-lg overflow-hidden"
+          onDateRangeSelect={handleDateRangeSelect}
           columns={[
             {
               key: "id",

@@ -21,10 +21,23 @@ import { DataTable } from "@/components/shared/DataTable";
 import dayjs from "dayjs";
 import AdminPayoutsSkeleton from "@/components/skeletons/AdminPayoutsSkeleton";
 
+const parseCalendarRange = (value: string): { fromDate?: string; toDate?: string } => {
+  const [fromText, toText] = value.split(" - ").map((segment) => segment.trim());
+  const parsedFrom = dayjs(fromText, "YYYY/MM/DD");
+  const parsedTo = dayjs(toText, "YYYY/MM/DD");
+
+  return {
+    fromDate: parsedFrom.isValid() ? parsedFrom.format("YYYY-MM-DD") : undefined,
+    toDate: parsedTo.isValid() ? parsedTo.format("YYYY-MM-DD") : undefined,
+  };
+};
+
 const AdminPayoutsPage = () => {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [limit] = useState(20);
+  const [dateRangeLabel, setDateRangeLabel] = useState("");
+  const [dateRangeQuery, setDateRangeQuery] = useState<{ fromDate?: string; toDate?: string }>({});
 
   const [reviewingPayout, setReviewingPayout] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -34,12 +47,16 @@ const AdminPayoutsPage = () => {
   const { data: response, isLoading: isPayoutsLoading, refetch } = useGetPayoutsQuery({ 
     page, 
     limit, 
-    status: statusFilter === "ALL" ? undefined : statusFilter 
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+    fromDate: dateRangeQuery.fromDate,
+    toDate: dateRangeQuery.toDate,
   });
   const { data: pendingPayoutsResponse, isLoading: isPendingPayoutsLoading } = useGetPayoutsQuery({
     page: 1,
     limit: 100,
     status: "PENDING",
+    fromDate: dateRangeQuery.fromDate,
+    toDate: dateRangeQuery.toDate,
   });
 
   useEffect(() => {
@@ -126,6 +143,10 @@ const AdminPayoutsPage = () => {
       ledgerType: "Charge",
       ledgerDescription: payout.vendor?.businessName || payout.vendor?.contactEmail || "Vendor settlement",
       ledgerReference: fallbackLabel,
+      ledgerComment:
+        payout.rejectionReason?.trim() ||
+        payout.reviewNote?.trim() ||
+        (payout.status === "PAID" ? "Approved and settled" : payout.status === "PENDING" ? "Awaiting review" : "—"),
       ledgerMeta:
         payout.vendor?.contactEmail ||
         payout.vendor?.businessName ||
@@ -151,6 +172,23 @@ const AdminPayoutsPage = () => {
       "https://dashboard.stripe.com/test/balance";
 
     window.open(dashboardLink, "_blank", "noopener,noreferrer");
+  };
+
+  const clearDateRange = () => {
+    setDateRangeLabel("");
+    setDateRangeQuery({});
+    setPage(1);
+  };
+
+  const handleDateRangeSelect = (range: string) => {
+    if (!range) {
+      clearDateRange();
+      return;
+    }
+
+    setDateRangeLabel(range);
+    setDateRangeQuery(parseCalendarRange(range));
+    setPage(1);
   };
 
   if (
@@ -308,17 +346,32 @@ const AdminPayoutsPage = () => {
             </button>
           ))}
         </div>
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
           Showing {payouts.length} entries
         </div>
       </div>
 
+      {dateRangeLabel && (
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <span>Filtered by: {dateRangeLabel}</span>
+          <button
+            type="button"
+            onClick={clearDateRange}
+            className="text-slate-600 underline-offset-2 hover:text-slate-900"
+          >
+            Clear range
+          </button>
+        </div>
+      )}
+
         <DataTable
+          key={`${statusFilter}-${dateRangeLabel || "all-dates"}`}
           title="Settlement Ledger"
           breadCrumbTitle="Finance / Payouts"
           data={ledgerRows}
-        loading={isPayoutsLoading}
-        columns={[
+          loading={isPayoutsLoading}
+          onDateRangeSelect={handleDateRangeSelect}
+          columns={[
           {
             key: "ledgerAmount",
             title: "Amount",
@@ -385,6 +438,25 @@ const AdminPayoutsPage = () => {
             ),
           },
           {
+            key: "ledgerComment",
+            title: "Comments",
+            render: (value: string, payout: any) => {
+              const isRejected = payout.status === "REJECTED";
+              const isPaid = payout.status === "PAID";
+
+              return (
+                <p
+                  className={`text-sm font-medium ${
+                    isRejected ? "text-rose-600" : isPaid ? "text-emerald-700" : "text-slate-600"
+                  }`}
+                  title={value}
+                >
+                  {value || "—"}
+                </p>
+              );
+            },
+          },
+          {
             key: "actions",
             title: "Action",
             align: "right",
@@ -414,33 +486,28 @@ const AdminPayoutsPage = () => {
                 )}
                 {payout.status === 'REJECTED' && (
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="text-[11px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-1.5">
                       <HiOutlineXCircle className="w-4 h-4" />
                       Rejected
                     </span>
-                    {payout.rejectionReason && (
-                      <p className="text-[9px] text-rose-400 mt-0.5 max-w-[120px] truncate italic" title={payout.rejectionReason}>
-                        {payout.rejectionReason}
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
             ),
           },
         ]}
-        controlledPagination={{
-          page: page,
-          pageSize: limit,
-          totalPages: meta?.totalPages || 1,
-          totalRecords: meta?.total || 0,
-        }}
-        onPaginationChange={({ page: newPage }) => setPage(newPage)}
-        selectable={false}
-        showSerialNumber={false}
-        className="border border-slate-100 rounded-lg overflow-hidden shadow-none"
-        noRecordText="No historical transfer events registered"
-      />
+          controlledPagination={{
+            page: page,
+            pageSize: limit,
+            totalPages: meta?.totalPages || 1,
+            totalRecords: meta?.total || 0,
+          }}
+          onPaginationChange={({ page: newPage }) => setPage(newPage)}
+          selectable={false}
+          showSerialNumber={false}
+          className="border border-slate-100 rounded-lg overflow-hidden shadow-none"
+          noRecordText="No historical transfer events registered"
+        />
 
       {/* Adjudication Modal */}
       {reviewingPayout && (

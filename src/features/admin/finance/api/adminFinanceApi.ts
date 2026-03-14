@@ -41,7 +41,10 @@ export const adminFinanceApi = createApi({
       invalidatesTags: ["AdminWallet"],
     }),
 
-    getPayouts: builder.query<{ status: string; data: { data: any[]; meta: any } }, { page?: number; limit?: number; status?: string }>({
+    getPayouts: builder.query<
+      { status: string; data: { data: any[]; meta: any } },
+      { page?: number; limit?: number; status?: string; fromDate?: string; toDate?: string }
+    >({
       query: (params) => ({
         url: "/admin/finance/payouts",
         method: "GET",
@@ -58,7 +61,10 @@ export const adminFinanceApi = createApi({
       providesTags: ["AdminWallet"],
     }),
 
-    getPlatformTransactions: builder.query<{ status: string; data: { data: any[]; meta: any } }, { page?: number; limit?: number }>({
+    getPlatformTransactions: builder.query<
+      { status: string; data: { data: any[]; meta: any } },
+      { page?: number; limit?: number; fromDate?: string; toDate?: string }
+    >({
       query: (params) => ({
         url: "/admin/finance/platform-transactions",
         method: "GET",
