@@ -3,6 +3,7 @@ import {
   Bell,
   Bookmark,
   BriefcaseBusiness,
+  Crown,
   ChevronLeft,
   ChevronRight,
   Heart,
@@ -47,6 +48,9 @@ import {
   useLazyGetServiceCategoriesByMasterQuery,
   type ServiceCategory,
 } from "@/services/serviceCategoriesApi";
+import {
+  useGetMyPlanQuery,
+} from "@/features/userSubscriptions/api/userSubscriptionsApi";
 import { plannedCategories } from "@/data/vendorServiceCategories";
 import {
   CART_UPDATED_EVENT,
@@ -155,6 +159,9 @@ export default function UserHeader() {
     isFetching: isNotificationsFetching,
     error: notificationsError,
   } = useGetNotificationsQuery({ page: 1, limit: 5 }, { skip: !user });
+  const { data: userPlanRes, isFetching: isUserPlanFetching } = useGetMyPlanQuery(undefined, {
+    skip: !user,
+  });
   const { data: unreadResponse } = useGetUnreadCountQuery(undefined, {
     skip: !user,
   });
@@ -701,6 +708,24 @@ export default function UserHeader() {
             </button>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <IconButton
+              icon={<Crown className="h-5 w-5 text-emerald-600" />}
+              label="Subscriptions"
+              badge={
+                user
+                  ? isUserPlanFetching
+                    ? "..."
+                    : userPlanRes?.data?.plan?.planName ?? "None"
+                  : undefined
+              }
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/subscriptions");
+              }}
+              className="border-emerald-200 bg-emerald-50 text-emerald-700"
+            />
             <IconButton
               icon={<Heart className="h-5 w-5 text-rose-500" />}
               label="Wishlist"
