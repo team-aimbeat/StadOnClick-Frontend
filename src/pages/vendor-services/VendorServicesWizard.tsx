@@ -40,6 +40,7 @@ import { MasterServiceCard } from "@/pages/vendor-services/MasterServiceCard";
 import { MasterServiceHero } from "@/pages/vendor-services/MasterServiceHero";
 import { formatCurrency } from "@/pages/vendor-services/vendorServicesUtils";
 import { categoryVisuals, masterServiceVisuals } from "@/pages/vendor-services/vendorServicesVisuals";
+import { DEAL_DURATION_OPTIONS, calculateDiscountPercent } from "@/utils/deals";
 
 const fallbackMasterVisual = (alt: string): Visual => ({
   src: well,
@@ -121,6 +122,9 @@ export type VendorServicesWizardProps = {
     bookingUrl?: string;
     basePrice?: number;
     salePrice?: number;
+    dealMode?: "duration" | "endTime";
+    dealDurationHours?: number;
+    dealEndTime?: string;
     maxQuantity?: number;
   }>;
   errors: any;
@@ -1260,6 +1264,77 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                             </p>
                           )}
                         </label>
+
+                        <div className="space-y-3 rounded-2xl border border-orange-200 bg-orange-50/70 p-4 md:col-span-2">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">
+                              Limited Time Deal
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              Place the discount window under base price, sale price, and max quantity.
+                            </p>
+                          </div>
+
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <label className="space-y-1 text-sm text-slate-700">
+                              <span className="font-semibold text-slate-600">
+                                Deal setup
+                              </span>
+                              <select
+                                {...register(`offerings.${index}.dealMode` as const)}
+                                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                              >
+                                <option value="duration">Choose duration</option>
+                                <option value="endTime">Custom end time</option>
+                              </select>
+                            </label>
+
+                            {watchedOfferings[index]?.dealMode !== "endTime" ? (
+                              <label className="space-y-1 text-sm text-slate-700">
+                                <span className="font-semibold text-slate-600">
+                                  Deal duration
+                                </span>
+                                <select
+                                  {...register(`offerings.${index}.dealDurationHours` as const, {
+                                    setValueAs: (value: string) =>
+                                      value === "" || value == null ? undefined : Number(value),
+                                  })}
+                                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                                >
+                                  {DEAL_DURATION_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            ) : (
+                              <label className="space-y-1 text-sm text-slate-700">
+                                <span className="font-semibold text-slate-600">
+                                  Deal end time
+                                </span>
+                                <input
+                                  type="datetime-local"
+                                  {...register(`offerings.${index}.dealEndTime` as const)}
+                                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring focus:ring-blue-200/50"
+                                />
+                              </label>
+                            )}
+                          </div>
+
+                          <div className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-orange-600">
+                            Discount Preview:{" "}
+                            {calculateDiscountPercent(
+                              Number(watchedOfferings[index]?.basePrice ?? 0),
+                              Number(watchedOfferings[index]?.salePrice ?? 0),
+                            ) > 0
+                              ? `🔥 ${calculateDiscountPercent(
+                                  Number(watchedOfferings[index]?.basePrice ?? 0),
+                                  Number(watchedOfferings[index]?.salePrice ?? 0),
+                                )}% OFF`
+                              : "Enter a sale price lower than the base price"}
+                          </div>
+                        </div>
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -1273,6 +1348,9 @@ export const VendorServicesWizard = (props: VendorServicesWizardProps) => {
                         bookingUrl: "",
                         basePrice: 0,
                         salePrice: 0,
+                        dealMode: "duration",
+                        dealDurationHours: Number(DEAL_DURATION_OPTIONS[0].value),
+                        dealEndTime: "",
                       })
                     }
                     className="flex items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-semibold text-slate-500 transition-colors duration-200 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50"

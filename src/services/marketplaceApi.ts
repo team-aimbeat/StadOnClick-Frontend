@@ -8,6 +8,11 @@ export type MarketplaceServiceOfferingPreview = {
   description: string | null;
   basePrice: number;
   salePrice: number;
+  discountPercent: number;
+  dealStartTime: string | null;
+  dealEndTime: string | null;
+  isDealActive: boolean;
+  effectivePrice: number;
   currency: string;
   durationLabel?: string | null;
 };
@@ -93,6 +98,24 @@ export const marketplaceApi = createApi({
         };
       },
     }),
+    listActiveDeals: builder.query<ListMarketplaceServicesResponse, Omit<ListMarketplaceServicesParams, "serviceId"> | void>({
+      query: (params) => {
+        const safeParams = params ?? {};
+        const normalizedParams: Record<string, unknown> = { ...safeParams };
+        if (Array.isArray(safeParams.categoryIds)) {
+          normalizedParams.categoryIds = safeParams.categoryIds.join(",");
+        }
+        if (Array.isArray(safeParams.cityIds)) {
+          normalizedParams.cityIds = safeParams.cityIds.join(",");
+        }
+
+        return {
+          url: "/marketplace/deals",
+          method: "GET",
+          params: normalizedParams,
+        };
+      },
+    }),
     trackVendorStoreVisit: builder.mutation<{ message: string }, { vendorId: string }>({
       query: ({ vendorId }) => ({
         url: `/marketplace/vendors/${vendorId}/visit`,
@@ -117,6 +140,7 @@ export const marketplaceApi = createApi({
 export const {
   useLazyListMarketplaceServicesQuery,
   useListMarketplaceServicesQuery,
+  useListActiveDealsQuery,
   useGetVendorStoreVisitStatsQuery,
   useTrackVendorStoreVisitMutation,
 } =

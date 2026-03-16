@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Service } from "./types"
 import { useAppSelector } from "@/app/hooks"
+import { DealTimer } from "@/components/marketplace/DealTimer"
 import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
 import {
@@ -10,6 +11,7 @@ import {
   useGetWishlistQuery,
   useRemoveWishlistItemMutation,
 } from "@/services/wishlistApi"
+import { getEffectivePrice, isDealActive } from "@/utils/deals"
 
 type ServiceCardProps = {
   service: Service
@@ -47,7 +49,29 @@ export default function ServiceCard({
         style: "currency",
         currency: offering.currency || "SEK",
         maximumFractionDigits: 0,
-      }).format(Number(offering.salePrice ?? offering.basePrice ?? 0)),
+      }).format(
+        Number(
+          getEffectivePrice({
+            basePrice: offering.basePrice,
+            salePrice: offering.salePrice,
+            dealStartTime: offering.dealStartTime,
+            dealEndTime: offering.dealEndTime,
+            effectivePrice: offering.effectivePrice,
+            isDealActive: offering.isDealActive,
+          }),
+        ),
+      ),
+      compareAtPrice:
+        isDealActive(offering.dealEndTime, offering.dealStartTime)
+          ? new Intl.NumberFormat("sv-SE", {
+              style: "currency",
+              currency: offering.currency || "SEK",
+              maximumFractionDigits: 0,
+            }).format(Number(offering.basePrice ?? 0))
+          : undefined,
+      discountPercent: Number(offering.discountPercent ?? 0),
+      dealEndTime: offering.dealEndTime ?? undefined,
+      isDealActive: isDealActive(offering.dealEndTime, offering.dealStartTime),
     }))
   }, [fetchedOfferings])
 
@@ -62,7 +86,29 @@ export default function ServiceCard({
         style: "currency",
         currency: offering.currency || "SEK",
         maximumFractionDigits: 0,
-      }).format(Number(offering.salePrice ?? offering.basePrice ?? 0)),
+      }).format(
+        Number(
+          getEffectivePrice({
+            basePrice: offering.basePrice,
+            salePrice: offering.salePrice,
+            dealStartTime: offering.dealStartTime,
+            dealEndTime: offering.dealEndTime,
+            effectivePrice: offering.effectivePrice,
+            isDealActive: offering.isDealActive,
+          }),
+        ),
+      ),
+      compareAtPrice:
+        offering.isDealActive
+          ? new Intl.NumberFormat("sv-SE", {
+              style: "currency",
+              currency: offering.currency || "SEK",
+              maximumFractionDigits: 0,
+            }).format(Number(offering.basePrice ?? 0))
+          : undefined,
+      discountPercent: Number(offering.discountPercent ?? 0),
+      dealEndTime: offering.dealEndTime ?? undefined,
+      isDealActive: Boolean(offering.isDealActive),
     }))
   }, [service.id, vendorServices])
 
@@ -254,22 +300,41 @@ export default function ServiceCard({
           {detailsToRender.length > 0 ? detailsToRender.map((detail, index) => (
             <div
               key={`${service.id}-detail-${index}`}
-              className="w-70.75 rounded-sm bg-[#F6F6F6] px-4 py-3 h-17 transform-gpu transition-transform duration-200 hover:scale-[1.01]"
+              className="w-70.75 rounded-sm bg-[#F6F6F6] px-4 py-3 transform-gpu transition-transform duration-200 hover:scale-[1.01]"
             >
 
               <div className="mt-0.5 flex items-baseline justify-between gap-3">
                 <p className="min-w-0 text-sm font-black leading-snug text-slate-900">
                   {detail.title}
                 </p>
-                <span className="shrink-0 text-[18px] font-black text-slate-900">
-                  {detail.price}
-                </span>
+                <div className="shrink-0 text-right">
+                  <span className="text-[18px] font-black text-slate-900">
+                    {detail.price}
+                  </span>
+                  {detail.compareAtPrice ? (
+                    <p className="text-[11px] font-semibold text-slate-400 line-through">
+                      {detail.compareAtPrice}
+                    </p>
+                  ) : null}
+                </div>
               </div>
 
               {detail.duration ? (
                 <div className="mt-1 flex items-center gap-2 text-xs font-medium text-slate-500">
                   <Clock className="h-4 w-4" />
                   <span>{detail.duration}</span>
+                </div>
+              ) : null}
+
+              {detail.isDealActive && detail.discountPercent ? (
+                <div className="mt-2 rounded-md bg-white/70 px-2.5 py-2">
+                  <p className="text-xs font-black text-orange-600">
+                    🔥 {detail.discountPercent}% OFF
+                  </p>
+                  <DealTimer
+                    endTime={detail.dealEndTime}
+                    className="mt-1 text-[11px] font-semibold text-slate-500"
+                  />
                 </div>
               ) : null}
             </div>

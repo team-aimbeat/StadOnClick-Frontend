@@ -47,12 +47,14 @@ import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
 import { useCreateAffiliateServiceLinkMutation } from "@/features/affiliate/api/affiliateApi";
 import { useGetMyReferralSummaryQuery } from "@/features/referrals/api/referralApi";
 import { Button } from "@/components/ui/button";
+import { DealTimer } from "@/components/marketplace/DealTimer";
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge";
 import { LocationMap } from "@/components/marketplace/Map/LocationMap";
 import toast from "react-hot-toast";
 import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify";
 import { clearStoredCart, setStoredCart } from "@/utils/cartStorage";
+import { calculateDiscountPercent, getEffectivePrice } from "@/utils/deals";
 
 const formatSlotLabel = (start: string, end?: string | null) => {
   const formatTime = (value: string) => {
@@ -428,7 +430,7 @@ export default function ServiceDetail() {
   };
 
   const cartSubtotal = cartItems.reduce(
-    (sum, item) => sum + item.offering.salePrice * item.quantity,
+    (sum, item) => sum + getEffectivePrice(item.offering) * item.quantity,
     0,
   );
   const cartDiscount = couponDiscount;
@@ -446,8 +448,8 @@ export default function ServiceDetail() {
         title: item.offering.name,
         description: item.offering.description ?? "Premium experience",
         quantity: item.quantity,
-        unitPrice: item.offering.salePrice,
-        totalPrice: item.offering.salePrice * item.quantity,
+        unitPrice: getEffectivePrice(item.offering),
+        totalPrice: getEffectivePrice(item.offering) * item.quantity,
       })),
     );
   }, [cartItems]);
@@ -678,6 +680,20 @@ export default function ServiceDetail() {
       usesSlots: false,
       basePrice: Number(offering.basePrice ?? 0),
       salePrice: Number(offering.salePrice ?? 0),
+      discountPercent:
+        offering.discountPercent == null ? null : Number(offering.discountPercent),
+      dealStartTime: offering.dealStartTime ?? null,
+      dealEndTime: offering.dealEndTime ?? null,
+      isDealActive: Boolean(offering.isDealActive),
+      effectivePrice:
+        offering.effectivePrice == null
+          ? getEffectivePrice({
+              basePrice: Number(offering.basePrice ?? 0),
+              salePrice: Number(offering.salePrice ?? 0),
+              dealStartTime: offering.dealStartTime ?? null,
+              dealEndTime: offering.dealEndTime ?? null,
+            })
+          : Number(offering.effectivePrice),
       currency: offering.currency ?? "SEK",
       maxQuantity: offering.maxQuantity ?? null,
       remainingQuantity: offering.remainingQuantity ?? null,
@@ -1033,6 +1049,10 @@ export default function ServiceDetail() {
                   <div className="space-y-4">
                     {hasLiveOfferings ? (
                       effectiveOfferings?.map((offering) => {
+                        const displayPrice = getEffectivePrice(offering);
+                        const activeDiscountPercent =
+                          Number(offering.discountPercent ?? 0) ||
+                          calculateDiscountPercent(offering.basePrice, offering.salePrice);
                         const isMovieBookingOffering = isMovieBookingService;
                         const slotCount = offering.slots?.length ?? 0;
                         const requiresSlot = offering.usesSlots || slotCount > 0;
@@ -1106,9 +1126,25 @@ export default function ServiceDetail() {
                               ) : null}
                             </div>
                             <div className="flex flex-col items-end gap-3">
-                              <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xl font-bold text-slate-900">
-                                ${offering.salePrice}
-                              </span>
+                              <div className="rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-right">
+                                <p className="text-xl font-bold text-slate-900">
+                                  {formatCurrency(displayPrice)}
+                                </p>
+                                {offering.isDealActive ? (
+                                  <>
+                                    <p className="text-xs font-semibold text-slate-400 line-through">
+                                      {formatCurrency(offering.basePrice)}
+                                    </p>
+                                    <p className="text-xs font-black text-orange-600">
+                                      🔥 {activeDiscountPercent}% OFF
+                                    </p>
+                                    <DealTimer
+                                      endTime={offering.dealEndTime}
+                                      className="text-[11px] font-semibold text-slate-500"
+                                    />
+                                  </>
+                                ) : null}
+                              </div>
                               <button
                                 className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
                                   isSlotUnavailable
@@ -1146,11 +1182,27 @@ export default function ServiceDetail() {
                             ) : null}
                           </div>
                           <div className="flex flex-col items-end gap-3">
-                            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-bold text-slate-900">
-                              {formatCurrency(
-                                Number(offering.salePrice ?? offering.basePrice ?? 0),
-                              )}
-                            </span>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-right">
+                              <p className="text-sm font-bold text-slate-900">
+                                {formatCurrency(
+                                  Number(offering.effectivePrice ?? offering.salePrice ?? offering.basePrice ?? 0),
+                                )}
+                              </p>
+                              {offering.isDealActive ? (
+                                <>
+                                  <p className="text-[11px] font-semibold text-slate-400 line-through">
+                                    {formatCurrency(Number(offering.basePrice ?? 0))}
+                                  </p>
+                                  <p className="text-[11px] font-black text-orange-600">
+                                    🔥 {Number(offering.discountPercent ?? 0)}% OFF
+                                  </p>
+                                  <DealTimer
+                                    endTime={offering.dealEndTime}
+                                    className="text-[11px] font-semibold text-slate-500"
+                                  />
+                                </>
+                              ) : null}
+                            </div>
                             <button
                               className="min-w-[30px] cursor-not-allowed rounded-lg border border-slate-200 bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-500 opacity-80"
                               disabled
@@ -1250,7 +1302,7 @@ export default function ServiceDetail() {
                       </div>
                       <div className="w-[136px] shrink-0 text-right">
                         <p className="text-sm font-semibold text-slate-900">
-                          {formatCurrency(item.offering.salePrice)} per person
+                          {formatCurrency(getEffectivePrice(item.offering))} per person
                         </p>
                         <div className="mt-2 flex items-center justify-end gap-2 rounded-full px-2 py-1">
                           <button
