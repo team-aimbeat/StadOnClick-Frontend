@@ -302,6 +302,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         children: [
           { label: t("Lead Plans"), to: withBase("leads/plans") },
           { label: t("Coupons"), to: withBase("coupons") },
+          { label: t("Subscription Plans"), to: withBase("subscription-plans") },
           { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
           { label: t("Sponsorship Plans"), to: withBase("finance/sponsorship-plans") },
         ],
