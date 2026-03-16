@@ -37,6 +37,7 @@ import {
   type VendorServiceEntity,
 } from "@/services/vendorServicesApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
+import { DEAL_DURATION_OPTIONS } from "@/utils/deals";
 import { VendorServicesWizard } from "./vendor-services/VendorServicesWizard";
 import { VendorServiceOverview } from "./vendor-services/VendorServiceOverview";
 
@@ -48,6 +49,9 @@ type OfferingFormValues = {
   bookingUrl?: string;
   basePrice: number;
   salePrice: number;
+  dealMode?: "duration" | "endTime";
+  dealDurationHours?: number;
+  dealEndTime?: string;
   maxQuantity?: number;
 };
 
@@ -102,6 +106,44 @@ type RefundPolicyForm = {
 const defaultRefundPolicy: RefundPolicyForm = {
   type: "PARTIAL_BEFORE_WINDOW",
   windowHours: "48",
+};
+
+const DEAL_DURATION_VALUES = DEAL_DURATION_OPTIONS.map((option) =>
+  Number(option.value),
+);
+
+const deriveOfferingDealForm = (offering?: {
+  dealStartTime?: string | null;
+  dealEndTime?: string | null;
+}) => {
+  if (!offering?.dealEndTime) {
+    return {
+      dealMode: "duration" as const,
+      dealDurationHours: DEAL_DURATION_VALUES[0],
+      dealEndTime: "",
+    };
+  }
+
+  if (offering.dealStartTime) {
+    const startTime = new Date(offering.dealStartTime).getTime();
+    const endTime = new Date(offering.dealEndTime).getTime();
+    if (Number.isFinite(startTime) && Number.isFinite(endTime) && endTime > startTime) {
+      const diffHours = Math.round((endTime - startTime) / (1000 * 60 * 60));
+      if (DEAL_DURATION_VALUES.includes(diffHours)) {
+        return {
+          dealMode: "duration" as const,
+          dealDurationHours: diffHours,
+          dealEndTime: "",
+        };
+      }
+    }
+  }
+
+  return {
+    dealMode: "endTime" as const,
+    dealDurationHours: undefined,
+    dealEndTime: offering.dealEndTime.slice(0, 16),
+  };
 };
 
 const VendorServices = () => {
@@ -344,6 +386,9 @@ const VendorServices = () => {
             bookingUrl: "",
             basePrice: 0,
             salePrice: 0,
+            dealMode: "duration",
+            dealDurationHours: DEAL_DURATION_VALUES[0],
+            dealEndTime: "",
             maxQuantity: undefined,
           },
         ],
@@ -480,6 +525,10 @@ const VendorServices = () => {
     setValue("offerings.0.bookingUrl", offering.bookingUrl ?? "");
     setValue("offerings.0.basePrice", offering.basePrice);
     setValue("offerings.0.salePrice", offering.salePrice);
+    const dealForm = deriveOfferingDealForm(offering);
+    setValue("offerings.0.dealMode", dealForm.dealMode);
+    setValue("offerings.0.dealDurationHours", dealForm.dealDurationHours);
+    setValue("offerings.0.dealEndTime", dealForm.dealEndTime);
     setValue("offerings.0.maxQuantity", offering.maxQuantity ?? undefined);
   }, [existingOfferings, selectedExistingOfferingId, setValue]);
 
@@ -901,6 +950,24 @@ const VendorServices = () => {
       // 2. Create multiple Offerings
       const createdOfferingIds: string[] = [];
       for (const offeringVals of data.offerings) {
+        if (offeringVals.salePrice >= offeringVals.basePrice) {
+          throw new Error("Sale price must be less than base price.");
+        }
+
+        if (
+          offeringVals.dealMode === "duration" &&
+          !offeringVals.dealDurationHours
+        ) {
+          throw new Error("Select a deal duration for the discounted price.");
+        }
+
+        if (
+          offeringVals.dealMode === "endTime" &&
+          !offeringVals.dealEndTime
+        ) {
+          throw new Error("Select a custom deal end time for the discounted price.");
+        }
+
         const payload: CreateOfferingPayload = {
           serviceId: currentServiceId,
           name: offeringVals.name.trim(),
@@ -908,6 +975,14 @@ const VendorServices = () => {
           bookingUrl: offeringVals.bookingUrl?.trim() || undefined,
           basePrice: offeringVals.basePrice,
           salePrice: offeringVals.salePrice,
+          dealDurationHours:
+            offeringVals.dealMode === "duration"
+              ? Number(offeringVals.dealDurationHours)
+              : undefined,
+          dealEndTime:
+            offeringVals.dealMode === "endTime" && offeringVals.dealEndTime
+              ? new Date(offeringVals.dealEndTime).toISOString()
+              : undefined,
           maxQuantity: offeringVals.maxQuantity,
         };
         const createdOffering = await createOffering(payload).unwrap();

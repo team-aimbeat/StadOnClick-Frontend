@@ -52,6 +52,11 @@ export type VendorServiceEntity = {
     bookingUrl?: string | null;
     basePrice: number;
     salePrice: number;
+    discountPercent?: number | null;
+    dealStartTime?: string | null;
+    dealEndTime?: string | null;
+    isDealActive?: boolean;
+    effectivePrice?: number;
     currency?: string | null;
     maxQuantity?: number | null;
     remainingQuantity?: number | null;
@@ -214,6 +219,13 @@ export const vendorServicesApi = createApi({
             bookingUrl: o.bookingUrl ?? null,
             basePrice: Number(o.basePrice ?? 0),
             salePrice: Number(o.salePrice ?? 0),
+            discountPercent:
+              o.discountPercent == null ? null : Number(o.discountPercent),
+            dealStartTime: o.dealStartTime ?? null,
+            dealEndTime: o.dealEndTime ?? null,
+            isDealActive: Boolean(o.isDealActive),
+            effectivePrice:
+              o.effectivePrice == null ? undefined : Number(o.effectivePrice),
             currency: o.currency ?? "SEK",
             maxQuantity: o.maxQuantity ?? null,
             remainingQuantity: o.remainingQuantity ?? null,
