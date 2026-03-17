@@ -381,6 +381,11 @@ const appRouter = createBrowserRouter([
                 errorElement: <ErrorPage />,
               },
               {
+                path: "orders",
+                element: <AdminOrdersPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
                 path: "finance/payouts",
                 element: <AdminPayoutsPage />,
                 errorElement: <ErrorPage />,
