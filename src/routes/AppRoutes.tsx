@@ -318,6 +318,16 @@ const appRouter = createBrowserRouter([
                 errorElement: <ErrorPage />,
               },
               {
+                path: "compliance/kyc",
+                element: <AdminKycDocumentsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "compliance/kyc/audit",
+                element: <AdminKycAuditLogsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
                 path: "coupons",
                 element: <AdminCouponsPage />,
                 errorElement: <ErrorPage />,
