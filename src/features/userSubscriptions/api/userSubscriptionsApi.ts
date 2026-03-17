@@ -45,8 +45,33 @@ export const userSubscriptionsApi = createApi({
         { type: "UserPlans", id: "LIST" },
       ],
     }),
+    createCheckoutSession: builder.mutation<{ data: { checkoutUrl: string; sessionId: string } }, { planId: string }>(
+      {
+        query: ({ planId }) => ({
+          url: "/subscriptions/checkout",
+          method: "POST",
+          body: { planId },
+        }),
+      }
+    ),
+    confirmCheckoutSession: builder.mutation<{ data: UserPlanResponse }, { sessionId: string }>({
+      query: ({ sessionId }) => ({
+        url: "/subscriptions/checkout/confirm",
+        method: "POST",
+        body: { sessionId },
+      }),
+      invalidatesTags: [
+        { type: "UserPlan", id: "ME" },
+        { type: "UserPlans", id: "LIST" },
+      ],
+    }),
   }),
 });
 
 export const { useListPlansQuery, useGetMyPlanQuery, usePurchasePlanMutation } =
   userSubscriptionsApi;
+
+export const {
+  useCreateCheckoutSessionMutation,
+  useConfirmCheckoutSessionMutation,
+} = userSubscriptionsApi;

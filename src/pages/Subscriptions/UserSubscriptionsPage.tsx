@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { Check, Sparkles } from "lucide-react";
@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   useListPlansQuery,
-  usePurchasePlanMutation,
   useGetMyPlanQuery,
+  useCreateCheckoutSessionMutation,
+  useConfirmCheckoutSessionMutation,
 } from "@/features/userSubscriptions/api/userSubscriptionsApi";
 
 const palette = [
   { bg: "from-emerald-50 via-white to-emerald-100", accent: "text-emerald-600", border: "border-emerald-200" },
-  { bg: "from-slate-900 via-slate-800 to-slate-900", accent: "text-amber-300", border: "border-amber-400" },
+  { bg: "from-amber-200 via-amber-500 to-amber-200", accent: "text-amber-600", border: "border-amber-400" },
   { bg: "from-amber-50 via-white to-amber-100", accent: "text-amber-600", border: "border-amber-200" },
 ];
 
@@ -22,7 +23,8 @@ export default function UserSubscriptionsPage() {
   const authUser = useSelector((state: RootState) => state.auth.user);
   const { data: plansRes, isLoading } = useListPlansQuery();
   const { data: myPlan } = useGetMyPlanQuery(undefined, { skip: !authUser });
-  const [purchasePlan, { isLoading: isPurchasing }] = usePurchasePlanMutation();
+  const [createCheckoutSession, { isLoading: isStartingCheckout }] = useCreateCheckoutSessionMutation();
+  const [confirmCheckoutSession, { isLoading: isConfirmingCheckout }] = useConfirmCheckoutSessionMutation();
   const [billingCycle] = useState<"annual" | "monthly">("annual");
 
   const plans = plansRes?.data ?? [];
@@ -39,13 +41,43 @@ export default function UserSubscriptionsPage() {
       return;
     }
     try {
-      await purchasePlan({ planId }).unwrap();
-      toast.success("Subscription activated");
+      const res = await createCheckoutSession({ planId }).unwrap();
+      const checkoutUrl = res?.data?.checkoutUrl;
+      if (!checkoutUrl) {
+        toast.error("Unable to start checkout");
+        return;
+      }
+      window.location.href = checkoutUrl;
     } catch (err: any) {
-      const message = err?.data?.message ?? "Unable to purchase plan";
+      const message = err?.data?.message ?? "Unable to start checkout";
       toast.error(message);
     }
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (!sessionId) return;
+
+    const finalize = async () => {
+      try {
+        await confirmCheckoutSession({ sessionId }).unwrap();
+        toast.success("Subscription activated");
+      } catch (err: any) {
+        const message = err?.data?.message ?? "Payment not completed";
+        toast.error(message);
+      } finally {
+        params.delete("session_id");
+        params.delete("planId");
+        const newQuery = params.toString();
+        const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ""}`;
+        window.history.replaceState({}, "", newUrl);
+      }
+    };
+
+    void finalize();
+  }, [confirmCheckoutSession]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
@@ -59,7 +91,7 @@ export default function UserSubscriptionsPage() {
             </p>
             {activePlanId && myPlan?.data ? (
               <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                Active: {myPlan.data.plan.planName} · ends {new Date(myPlan.data.endDate).toLocaleDateString()}
+                Active: {myPlan.data.plan.planName} ï¿½ ends {new Date(myPlan.data.endDate).toLocaleDateString()}
               </Badge>
             ) : (
               <Badge variant="outline">No active subscription</Badge>
@@ -86,7 +118,7 @@ export default function UserSubscriptionsPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           {isLoading ? (
-            <div className="col-span-full text-sm text-slate-500">Loading plans…</div>
+            <div className="col-span-full text-sm text-slate-500">Loading plansï¿½</div>
           ) : sortedPlans.length === 0 ? (
             <div className="col-span-full text-sm text-slate-500">No plans available.</div>
           ) : (
@@ -133,10 +165,10 @@ export default function UserSubscriptionsPage() {
                     <Button
                       className="w-full rounded-full text-base font-semibold"
                       size="lg"
-                      disabled={isActive || isPurchasing}
+                      disabled={isActive || isStartingCheckout || isConfirmingCheckout}
                       onClick={() => handlePurchase(plan.id)}
                     >
-                      {isActive ? "Your current plan" : "Start now"}
+                      {isActive ? "Your current plan" : isStartingCheckout ? "Redirectingâ€¦" : "Start now"}
                     </Button>
                   </div>
                 </div>
