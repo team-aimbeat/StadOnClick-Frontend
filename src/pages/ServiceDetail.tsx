@@ -2,6 +2,7 @@ import {
   BadgeCheck,
   Check,
   ChevronLeft,
+  Eye,
   Heart,
   MapPinIcon,
   Share2,
@@ -9,9 +10,10 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import salon1 from "@/assets/images/salon1.png";
-import salon2 from "@/assets/images/salon2.png";
-import salon3 from "@/assets/images/salon3.png";
+import salon1 from "@/assets/Images/salon1.png";
+import salon2 from "@/assets/Images/salon2.png";
+import salon3 from "@/assets/Images/salon3.png";
+import map from "@/assets/icons/map.png";
 import { BookingModal } from "@/components/booking/BookingModal";
 import {
   slotStatusLegend,
@@ -22,34 +24,46 @@ import {
 import { useAppSelector } from "@/app/hooks";
 
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi";
-import { useListMarketplaceServicesQuery } from "@/services/marketplaceApi";
+import {
+  useGetVendorStoreVisitStatsQuery,
+  useListMarketplaceServicesQuery,
+  useTrackVendorStoreVisitMutation,
+} from "@/services/marketplaceApi";
 import { useGetServiceMediaQuery } from "@/services/serviceMediaApi";
+import { useGetServiceMenuMediaQuery } from "@/services/menuMediaApi";
 import {
   useGetServiceOfferingsQuery,
   useLazyGetOfferingSlotsQuery,
   VendorOffering,
   VendorSlot,
 } from "@/services/vendorOfferingsApi";
-import { DateTime } from "luxon";
 import {
   useGetServiceReviewsQuery,
   useCreateReviewMutation,
 } from "@/services/serviceReviewsApi";
 import { useApplyCouponMutation } from "@/services/vendorOrdersApi";
+import { useGetPublicVendorCouponsQuery } from "@/services/vendoiCouponsApi";
 import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
 import { useCreateAffiliateServiceLinkMutation } from "@/features/affiliate/api/affiliateApi";
+import { useGetMyReferralSummaryQuery } from "@/features/referrals/api/referralApi";
 import { Button } from "@/components/ui/button";
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge";
 import { LocationMap } from "@/components/marketplace/Map/LocationMap";
 import toast from "react-hot-toast";
 import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify";
-
-const STOCKHOLM_TIMEZONE = "Europe/Stockholm";
+import { clearStoredCart, setStoredCart } from "@/utils/cartStorage";
 
 const formatSlotLabel = (start: string, end?: string | null) => {
-  const formatTime = (value: string) =>
-    DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE).toFormat("HH:mm");
+  const formatTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "--:--";
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
 
   const startLabel = formatTime(start);
   if (!end) return startLabel;
@@ -57,13 +71,15 @@ const formatSlotLabel = (start: string, end?: string | null) => {
   return `${startLabel} - ${endLabel}`;
 };
 
-const getStockholmDateKey = (value?: Date | string) => {
+const getLocalDateKey = (value?: Date | string) => {
   if (!value) return "";
-  const dt =
-    typeof value === "string"
-      ? DateTime.fromISO(value).setZone(STOCKHOLM_TIMEZONE)
-      : DateTime.fromJSDate(value).setZone(STOCKHOLM_TIMEZONE);
-  return dt.toISODate();
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "";
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 };
 
 const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
@@ -73,8 +89,12 @@ const determineSlotStatus = (slot: VendorSlot): SlotStatus => {
 
   const capacity = Math.max(slot.capacity ?? 1, 1);
   const remaining = Math.max(slot.remaining ?? 0, 0);
-  const threshold = Math.max(1, Math.ceil(capacity * 0.25));
-  return remaining <= threshold ? "few" : "available";
+  if (remaining <= 0) {
+    return "unavailable";
+  }
+  // Color should react directly to remaining seats:
+  // full capacity -> green, any booked seat -> amber, 0 -> gray/full.
+  return remaining < capacity ? "few" : "available";
 };
 
 const formatSlotSeats = (slot: VendorSlot) => {
@@ -90,6 +110,42 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 });
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
+const formatRuleLabel = (value?: string | null) =>
+  String(value ?? "")
+    .replace(/_/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const resolveReviewerImageUrl = (review: {
+  user?: {
+    profileImageUrl?: string | null;
+    avatar?: string | null;
+    image?: string | null;
+    profileImage?: string | null;
+  } | null;
+  profileImageUrl?: string | null;
+  avatar?: string | null;
+  image?: string | null;
+}) => {
+  const candidate =
+    review.user?.profileImageUrl?.trim() ||
+    review.user?.avatar?.trim() ||
+    review.user?.image?.trim() ||
+    review.user?.profileImage?.trim() ||
+    review.profileImageUrl?.trim() ||
+    review.avatar?.trim() ||
+    review.image?.trim() ||
+    "";
+
+  if (!candidate) return "";
+  if (/^https?:\/\//i.test(candidate) || candidate.startsWith("data:")) {
+    return candidate;
+  }
+
+  const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+  if (!apiBaseUrl) return candidate;
+  return `${apiBaseUrl}/${candidate.replace(/^\/+/, "")}`;
+};
 
 type CartItem = {
   offering: VendorOffering;
@@ -97,23 +153,47 @@ type CartItem = {
   slotId: string | null;
 };
 
+const couponThemes = [
+  {
+    leftPanel: "bg-[#E9ECF2]",
+    rightPanel: "bg-gradient-to-r from-[#2A2236] via-[#7A1D34] to-[#E30B24]",
+  },
+  {
+    leftPanel: "bg-[#E8F2EE]",
+    rightPanel: "bg-gradient-to-r from-[#12322C] via-[#1D6B59] to-[#26B68A]",
+  },
+  {
+    leftPanel: "bg-[#EAF0FA]",
+    rightPanel: "bg-gradient-to-r from-[#1E2A4A] via-[#2E4FA4] to-[#4F7DF3]",
+  },
+  {
+    leftPanel: "bg-[#F8ECE7]",
+    rightPanel: "bg-gradient-to-r from-[#40210F] via-[#8E3E1B] to-[#E66A2C]",
+  },
+] as const;
+
 export default function ServiceDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { serviceId: serviceIdParam, serviceSlug } = useParams<{
-    serviceId?: string;
+  const { serviceSlug } = useParams<{
     serviceSlug?: string;
   }>();
   const authUser = useAppSelector((state) => state.auth.user);
   const userId = authUser?.id;
   const isAffiliate = (authUser?.roles ?? []).includes("AFFILIATE");
+  const { data: myReferralSummary } = useGetMyReferralSummaryQuery(undefined, {
+    skip: !userId,
+  });
 
   const [createCheckoutSession, { isLoading: isCreatingSession }] =
     useCreateCheckoutSessionMutation();
+  const [trackVendorStoreVisit] = useTrackVendorStoreVisitMutation();
   const [applyCoupon, { isLoading: isApplyingCoupon }] =
     useApplyCouponMutation();
-  const [createAffiliateServiceLink, { data: affiliateLinkRes, isLoading: isGeneratingAffiliateLink }] =
-    useCreateAffiliateServiceLinkMutation();
+  const [
+    createAffiliateServiceLink,
+    { data: affiliateLinkRes, isLoading: isGeneratingAffiliateLink },
+  ] = useCreateAffiliateServiceLinkMutation();
 
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
@@ -125,11 +205,7 @@ export default function ServiceDetail() {
     () => new Date(),
   );
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-  const selectedDateIso = selectedDate
-    ? DateTime.fromJSDate(selectedDate)
-        .setZone(STOCKHOLM_TIMEZONE, { keepLocalTime: true })
-        .toISODate()
-    : "";
+  const selectedDateIso = selectedDate ? getLocalDateKey(selectedDate) : "";
   const formattedSelectedDate = selectedDate
     ? new Intl.DateTimeFormat("default", {
         weekday: "short",
@@ -143,6 +219,13 @@ export default function ServiceDetail() {
   );
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState("");
+  const [referralCodeInput, setReferralCodeInput] = useState("");
+  const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(
+    null,
+  );
+  const [referralCodeFeedback, setReferralCodeFeedback] = useState<string | null>(
+    null,
+  );
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -150,23 +233,31 @@ export default function ServiceDetail() {
     value: number;
   } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
-
+  const [failedReviewerImages, setFailedReviewerImages] = useState<
+    Record<string, boolean>
+  >({});
+  const [selectedMenuImage, setSelectedMenuImage] = useState<string | null>(
+    null,
+  );
 
   const resetCoupon = () => {
     setCouponDiscount(0);
     setAppliedCoupon(null);
     setCouponError(null);
-    
-    
   };
   const [fetchOfferingSlots, { data: fetchedSlots }] =
     useLazyGetOfferingSlotsQuery();
 
-  const slugSearchQuery = serviceSlug
-    ? slugToSearchQuery(serviceSlug)
-    : undefined;
+  const isUuidLikeServiceKey = Boolean(
+    serviceSlug &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceSlug),
+  );
+  const serviceIdParam = isUuidLikeServiceKey ? serviceSlug : undefined;
+  const slugSearchQuery =
+    serviceSlug && !isUuidLikeServiceKey
+      ? slugToSearchQuery(serviceSlug)
+      : undefined;
   const affiliateRef = (searchParams.get("ref") ?? "").trim() || undefined;
-  const referralCodeForCheckout = affiliateRef || undefined;
   const marketplaceParams = serviceIdParam
     ? { serviceId: serviceIdParam, ref: affiliateRef, limit: 12, offset: 0 }
     : slugSearchQuery
@@ -180,11 +271,20 @@ export default function ServiceDetail() {
       skip: skipMarketplace,
     });
 
+  useEffect(() => {
+    if (!affiliateRef) return;
+    const normalized = affiliateRef.trim().toUpperCase();
+    if (!normalized) return;
+    setReferralCodeInput(normalized);
+    setAppliedReferralCode(normalized);
+    setReferralCodeFeedback(`Referral code ${normalized} applied`);
+  }, [affiliateRef]);
+
   const matchedMarketplaceService = useMemo(() => {
     if (!marketplaceList?.data || marketplaceList.data.length === 0)
       return undefined;
     if (serviceIdParam) {
-      return marketplaceList.data[0];
+      return marketplaceList.data.find((row) => row.id === serviceIdParam);
     }
     if (!serviceSlug) return undefined;
     return marketplaceList.data.find(
@@ -193,30 +293,83 @@ export default function ServiceDetail() {
   }, [marketplaceList?.data, serviceIdParam, serviceSlug]);
 
   const vendorId = matchedMarketplaceService?.vendorId;
+  const { data: vendorVisitStatsResponse } = useGetVendorStoreVisitStatsQuery(
+    vendorId ?? "",
+    { skip: !vendorId },
+  );
+  const totalVisitors = vendorVisitStatsResponse?.data?.totalVisitors ?? 0;
+  const todayVisitors = vendorVisitStatsResponse?.data?.todayVisitors ?? 0;
   const serviceCity = matchedMarketplaceService?.cityName ?? "—";
   const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
   console.log(rules);
+
   useEffect(() => {
-    if (bookedOffering) {
-      fetchOfferingSlots({
-        offeringId: bookedOffering.id,
-        vendorId: vendorId,
+    if (!vendorId || typeof window === "undefined") return;
+
+    const now = new Date();
+    const visitDateKey = [
+      now.getUTCFullYear(),
+      String(now.getUTCMonth() + 1).padStart(2, "0"),
+      String(now.getUTCDate()).padStart(2, "0"),
+    ].join("-");
+    const storageKey = `stadonclick.vendorVisit.${vendorId}.${visitDateKey}`;
+
+    if (window.sessionStorage.getItem(storageKey) === "1") return;
+
+    window.sessionStorage.setItem(storageKey, "1");
+    trackVendorStoreVisit({ vendorId })
+      .unwrap()
+      .catch(() => {
+        window.sessionStorage.removeItem(storageKey);
       });
-    }
-  }, [bookedOffering, fetchOfferingSlots]);
+  }, [trackVendorStoreVisit, vendorId]);
+
+  useEffect(() => {
+    if (!bookedOffering?.id || !vendorId) return;
+    fetchOfferingSlots({
+      offeringId: bookedOffering.id,
+      vendorId,
+    });
+  }, [bookedOffering?.id, fetchOfferingSlots, vendorId]);
 
   const slotsForBookedOffering = useMemo(
     () => (bookedOffering ? (fetchedSlots ?? bookedOffering.slots ?? []) : []),
     [bookedOffering, fetchedSlots],
   );
 
+  const reservedSlotQuantityById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of cartItems) {
+      if (!item.slotId) continue;
+      map.set(item.slotId, (map.get(item.slotId) ?? 0) + Math.max(item.quantity, 1));
+    }
+    return map;
+  }, [cartItems]);
+
+  const slotsForBookedOfferingWithCartHold = useMemo(
+    () =>
+      slotsForBookedOffering.map((slot) => {
+        const reserved = reservedSlotQuantityById.get(slot.id) ?? 0;
+        const nextRemaining = Math.max((slot.remaining ?? 0) - reserved, 0);
+        return {
+          ...slot,
+          remaining: nextRemaining,
+          status:
+            slot.status === "OPEN" && nextRemaining <= 0
+              ? ("FULL" as const)
+              : slot.status,
+        };
+      }),
+    [reservedSlotQuantityById, slotsForBookedOffering],
+  );
+
   const slotsForSelectedDate = useMemo(() => {
-    if (!selectedDate) return slotsForBookedOffering;
-    return slotsForBookedOffering.filter((slot) => {
-      const slotDate = getStockholmDateKey(slot.startTime);
+    if (!selectedDate) return slotsForBookedOfferingWithCartHold;
+    return slotsForBookedOfferingWithCartHold.filter((slot) => {
+      const slotDate = getLocalDateKey(slot.startTime);
       return slotDate === selectedDateIso;
     });
-  }, [slotsForBookedOffering, selectedDateIso, selectedDate]);
+  }, [slotsForBookedOfferingWithCartHold, selectedDateIso, selectedDate]);
 
   const bookingSlotOptions = useMemo<SlotOption[]>(() => {
     return slotsForSelectedDate.map((slot) => ({
@@ -256,7 +409,11 @@ export default function ServiceDetail() {
       prev
         .map((item) => {
           if (item.offering.id !== offeringId) return item;
-          const nextQuantity = Math.max(item.quantity + delta, 1);
+          const maxAllowed = item.offering.remainingQuantity ?? Number.POSITIVE_INFINITY;
+          const nextQuantity = Math.min(
+            Math.max(item.quantity + delta, 1),
+            Math.max(maxAllowed, 1),
+          );
           return { ...item, quantity: nextQuantity };
         })
         .filter((item) => item.quantity > 0),
@@ -274,15 +431,35 @@ export default function ServiceDetail() {
     (sum, item) => sum + item.offering.salePrice * item.quantity,
     0,
   );
-  const cartTaxRate = 0.12;
-  const cartTaxes = cartSubtotal * cartTaxRate;
   const cartDiscount = couponDiscount;
-  const cartTotal = cartSubtotal + cartTaxes;
+  const cartTotal = Math.max(cartSubtotal - cartDiscount, 0);
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      clearStoredCart();
+      return;
+    }
+
+    setStoredCart(
+      cartItems.map((item) => ({
+        id: item.offering.id,
+        title: item.offering.name,
+        description: item.offering.description ?? "Premium experience",
+        quantity: item.quantity,
+        unitPrice: item.offering.salePrice,
+        totalPrice: item.offering.salePrice * item.quantity,
+      })),
+    );
+  }, [cartItems]);
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return;
     if (cartItems.length === 0) {
       toast.success("Add services to your cart before applying a coupon.");
+      return;
+    }
+    if (!vendorId) {
+      toast.error("Unable to resolve the vendor for this booking.");
       return;
     }
 
@@ -307,6 +484,18 @@ export default function ServiceDetail() {
     }
   };
 
+  const handleApplyReferralCode = () => {
+    const code = referralCodeInput.trim().toUpperCase();
+    if (!code) {
+      setAppliedReferralCode(null);
+      setReferralCodeFeedback(null);
+      return;
+    }
+    setReferralCodeInput(code);
+    setAppliedReferralCode(code);
+    setReferralCodeFeedback(`Referral code ${code} applied`);
+  };
+
   const openBookingModal = (offering: VendorOffering) => {
     setBookedOffering(offering);
     setSelectedSlotId(null);
@@ -314,9 +503,25 @@ export default function ServiceDetail() {
   };
 
   const handleBookClick = (offering: VendorOffering) => {
+    if (isMovieBookingService) {
+      const url = offering.bookingUrl?.trim();
+      if (!url) {
+        toast.error("Booking URL is not configured for this movie offering.");
+        return;
+      }
+      if (typeof window !== "undefined") {
+        window.location.assign(url);
+      }
+      return;
+    }
+
     const slots = offering.slots ?? [];
     const slotCount = slots.length;
     const requiresSlot = offering.usesSlots || slotCount > 0;
+    const outOfStock =
+      !requiresSlot &&
+      offering.remainingQuantity !== null &&
+      offering.remainingQuantity <= 0;
 
     if (requiresSlot) {
       if (slotCount === 0) {
@@ -324,6 +529,10 @@ export default function ServiceDetail() {
         return;
       }
       openBookingModal(offering);
+      return;
+    }
+    if (outOfStock) {
+      toast.error("This offering is currently out of stock.");
       return;
     }
 
@@ -378,7 +587,7 @@ export default function ServiceDetail() {
           slotId: item.slotId ?? undefined,
         })),
         promoCode: appliedCoupon?.code || undefined,
-        referralCode: referralCodeForCheckout,
+        referralCode: appliedReferralCode ?? undefined,
       }).unwrap();
 
       if (typeof window !== "undefined") {
@@ -430,7 +639,15 @@ export default function ServiceDetail() {
             )
           : vendorServices[0]
       : undefined;
-  const currentServiceId = service?.id;
+  const resolvedLatitude =
+    matchedMarketplaceService?.latitude ?? service?.latitude ?? 0;
+  const resolvedLongitude =
+    matchedMarketplaceService?.longitude ?? service?.longitude ?? 0;
+  const isMovieBookingService =
+    String(service?.category?.slug ?? "").toLowerCase() === "movie-bookings" ||
+    String(matchedMarketplaceService?.categoryName ?? "").toLowerCase() ===
+      "movie bookings";
+  const currentServiceId = matchedMarketplaceService?.id ?? service?.id;
 
   // 2. Fetch Media (isolated)
   const { data: media, isLoading: mediaLoading } = useGetServiceMediaQuery(
@@ -439,12 +656,41 @@ export default function ServiceDetail() {
       skip: !currentServiceId,
     },
   );
+  const { data: menuMedia = [], isLoading: menuMediaLoading } =
+    useGetServiceMenuMediaQuery(currentServiceId ?? "", {
+      skip: !currentServiceId,
+    });
 
   // 3. Fetch Offerings (isolated)
   const { data: offerings, isLoading: offeringsLoading } =
     useGetServiceOfferingsQuery(currentServiceId ?? "", {
       skip: !currentServiceId,
     });
+  const serviceOfferingsFallback = useMemo<VendorOffering[]>(() => {
+    const list = service?.offerings ?? [];
+    return list.map((offering) => ({
+      createdAt: new Date().toISOString(),
+      id: offering.id,
+      serviceId: offering.serviceId ?? currentServiceId ?? "",
+      name: offering.name,
+      description: offering.description ?? null,
+      bookingUrl: offering.bookingUrl ?? null,
+      usesSlots: false,
+      basePrice: Number(offering.basePrice ?? 0),
+      salePrice: Number(offering.salePrice ?? 0),
+      currency: offering.currency ?? "SEK",
+      maxQuantity: offering.maxQuantity ?? null,
+      remainingQuantity: offering.remainingQuantity ?? null,
+      slots: [],
+      rules: [],
+    }));
+  }, [currentServiceId, service?.offerings]);
+  const effectiveOfferings =
+    (offerings?.length ?? 0) > 0 ? offerings ?? [] : serviceOfferingsFallback;
+  const { data: vendorCoupons = [] } = useGetPublicVendorCouponsQuery(
+    vendorId ?? "",
+    { skip: !vendorId },
+  );
 
   const { data: reviews, isLoading: reviewsLoading } =
     useGetServiceReviewsQuery(currentServiceId ?? "", {
@@ -472,7 +718,7 @@ export default function ServiceDetail() {
 
   const descriptionRules = useMemo(() => {
     const seen = new Map<string, { label: string; value?: string | null }>();
-    for (const offering of offerings ?? []) {
+    for (const offering of effectiveOfferings ?? []) {
       for (const rule of offering.rules ?? []) {
         const key = `${rule.ruleType}:${rule.value ?? ""}`;
         if (!seen.has(key)) {
@@ -484,7 +730,13 @@ export default function ServiceDetail() {
       }
     }
     return Array.from(seen.values());
-  }, [offerings]);
+  }, [effectiveOfferings]);
+  const marketplaceOfferingsPreview =
+    matchedMarketplaceService?.offeringsPreview ?? [];
+  const hasLiveOfferings = (effectiveOfferings?.length ?? 0) > 0;
+  const packagesCount = hasLiveOfferings
+    ? effectiveOfferings?.length ?? 0
+    : marketplaceOfferingsPreview.length;
 
   const handleSubmitReview = async () => {
     if (!currentServiceId) return;
@@ -513,6 +765,7 @@ export default function ServiceDetail() {
     marketplaceLoading ||
     servicesLoading ||
     mediaLoading ||
+    menuMediaLoading ||
     offeringsLoading ||
     reviewsLoading
   ) {
@@ -525,8 +778,23 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        Service not found
+      <div className="flex min-h-screen items-center justify-center bg-[#F1F3F7] px-4">
+        <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
+            Sign in to view services
+          </h2>
+          <p className="mt-3 text-sm text-slate-600">
+            We need to know who you are before showing your bookings and
+            purchases.
+          </p>
+          <Button
+            type="button"
+            onClick={() => navigate("/sign-in")}
+            className="mt-6 h-11 w-full rounded-full bg-blue-600 text-base font-semibold text-white hover:bg-blue-700"
+          >
+            Go to sign in
+          </Button>
+        </div>
       </div>
     );
   }
@@ -534,6 +802,10 @@ export default function ServiceDetail() {
   const galleryImages = media
     ?.filter((m) => m.type === "IMAGE")
     .map((m) => m.signedUrl) || [salon1, salon2, salon3];
+  const menuPreviewImages =
+    menuMedia
+      ?.filter((m) => m.type === "IMAGE")
+      .map((m) => m.signedUrl) || [];
   const tabs: { id: "services" | "description"; label: string }[] = [
     { id: "services", label: "Services" },
     { id: "description", label: "Description" },
@@ -584,9 +856,35 @@ export default function ServiceDetail() {
                     <span className="text-xs text-black">
                       ({reviews?.length || 0}+ verified guest reviews)
                     </span>
+                    <span className="inline-flex ml-5  items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-extrabold tracking-wide text-blue-700 shadow-sm">
+                      <Eye className="h-3.5 w-3.5" />
+                      {totalVisitors} visitors
+                    </span>
+                   <span className="inline-flex items-center rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">
+                       {todayVisitors} today
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                      {myReferralSummary?.referralCode ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">
+                      <span className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">
+                        {myReferralSummary.referralCode}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(
+                            myReferralSummary.referralCode ?? "",
+                          );
+                          toast.success("Referral code copied");
+                        }}
+                        className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-emerald-700"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  ) : null}   
                   <button
                     type="button"
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300"
@@ -599,6 +897,7 @@ export default function ServiceDetail() {
                   >
                     <Heart className="h-4 w-4" />
                   </button>
+              
                 </div>
               </div>
               <ServiceGallery
@@ -626,22 +925,31 @@ export default function ServiceDetail() {
                       onClick={async () => {
                         if (!service.id) return;
                         try {
-                          await createAffiliateServiceLink({ serviceId: service.id }).unwrap();
+                          await createAffiliateServiceLink({
+                            serviceId: service.id,
+                          }).unwrap();
                         } catch (error: any) {
-                          toast.error(error?.data?.message || "Unable to generate affiliate link.");
+                          toast.error(
+                            error?.data?.message ||
+                              "Unable to generate affiliate link.",
+                          );
                         }
                       }}
                       disabled={isGeneratingAffiliateLink}
                       className="ml-auto"
                     >
-                      {isGeneratingAffiliateLink ? "Generating..." : "Generate Link"}
+                      {isGeneratingAffiliateLink
+                        ? "Generating..."
+                        : "Generate Link"}
                     </Button>
                   </div>
 
                   {affiliateLinkRes?.data?.url ? (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs text-blue-800">Referral code</p>
-                      <p className="text-sm font-semibold text-blue-900">{affiliateLinkRes.data.code}</p>
+                      <p className="text-sm font-semibold text-blue-900">
+                        {affiliateLinkRes.data.code}
+                      </p>
                       <p className="text-xs text-blue-800">Shareable link</p>
                       <div className="rounded-lg border border-blue-200 bg-white p-2 text-xs font-mono break-all text-slate-700">
                         {affiliateLinkRes.data.url}
@@ -650,7 +958,9 @@ export default function ServiceDetail() {
                         type="button"
                         variant="outline"
                         onClick={async () => {
-                          await navigator.clipboard.writeText(affiliateLinkRes.data.url);
+                          await navigator.clipboard.writeText(
+                            affiliateLinkRes.data.url,
+                          );
                           toast.success("Affiliate link copied");
                         }}
                       >
@@ -687,7 +997,7 @@ export default function ServiceDetail() {
         </div>
 
         <div className="grid gap-6 grid-cols-5">
-          <div className="col-span-3">
+          <div className="col-span-3 min-w-0">
             <div className="space-y-5 rounded-3xl bg-white p-8 ">
               <div className="flex items-center justify-between">
                 <div>
@@ -699,7 +1009,7 @@ export default function ServiceDetail() {
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-slate-500">
-                  {offerings?.length || 0} packages
+                  {packagesCount} packages
                 </span>
               </div>
               <div className="mt-4 flex gap-3">
@@ -721,16 +1031,101 @@ export default function ServiceDetail() {
               <div className="mt-5">
                 {activeTab === "services" ? (
                   <div className="space-y-4">
-                    {offerings?.map((offering) => {
-                      const slotCount = offering.slots?.length ?? 0;
-                      const requiresSlot = offering.usesSlots || slotCount > 0;
-                      const buttonLabel = requiresSlot
-                        ? slotCount > 0
-                          ? "Book"
-                          : "Slots unavailable"
-                        : "Add to cart";
-                      const isSlotUnavailable = requiresSlot && slotCount === 0;
-                      return (
+                    {hasLiveOfferings ? (
+                      effectiveOfferings?.map((offering) => {
+                        const isMovieBookingOffering = isMovieBookingService;
+                        const slotCount = offering.slots?.length ?? 0;
+                        const requiresSlot = offering.usesSlots || slotCount > 0;
+                        const outOfStock =
+                          !requiresSlot &&
+                          offering.remainingQuantity !== null &&
+                          offering.remainingQuantity <= 0;
+                        const missingBookingUrl =
+                          isMovieBookingOffering && !offering.bookingUrl?.trim();
+                        const buttonLabel = isMovieBookingOffering
+                          ? missingBookingUrl
+                            ? "Booking unavailable"
+                            : "Book now"
+                          : requiresSlot
+                            ? slotCount > 0
+                              ? "Book"
+                              : "Slots unavailable"
+                            : outOfStock
+                              ? "Out of stock"
+                              : "Add to cart";
+                        const isSlotUnavailable =
+                          missingBookingUrl ||
+                          ((requiresSlot && slotCount === 0) || outOfStock);
+                        const maxQty = offering.maxQuantity ?? null;
+                        const remainingQty =
+                          offering.remainingQuantity ?? offering.maxQuantity ?? null;
+                        const hasInventory =
+                          maxQty !== null &&
+                          Number.isFinite(maxQty) &&
+                          remainingQty !== null &&
+                          Number.isFinite(remainingQty);
+                        const remainingPercent = hasInventory
+                          ? Math.max(
+                              0,
+                              Math.min(100, (Number(remainingQty) / Number(maxQty)) * 100),
+                            )
+                          : null;
+                        const inventoryBarClass = outOfStock
+                          ? "bg-rose-500"
+                          : hasInventory &&
+                              Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
+                            ? "bg-amber-500"
+                            : "bg-emerald-500";
+                        return (
+                          <div
+                            key={offering.id}
+                            className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                          >
+                            <div>
+                              <p className="text-base font-semibold text-slate-900">
+                                {offering.name}
+                              </p>
+                              <p className="text-xs font-semibold text-slate-400">
+                                Created : {new Date(offering.createdAt).toLocaleString()}
+                              </p>
+                              <p className="text-xs font-semibold text-slate-400">
+                                Qty: {offering.maxQuantity || "N/A"}
+                              </p>
+                              <p className="text-xs font-semibold text-slate-400">
+                                Remaining: {offering.remainingQuantity ?? "N/A"}
+                              </p>
+                              {hasInventory && remainingPercent !== null ? (
+                                <div className="mt-2 max-w-[220px]">
+                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                    <div
+                                      className={`h-full rounded-full ${inventoryBarClass}`}
+                                      style={{ width: `${remainingPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                            <div className="flex flex-col items-end gap-3">
+                              <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xl font-bold text-slate-900">
+                                ${offering.salePrice}
+                              </span>
+                              <button
+                                className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
+                                  isSlotUnavailable
+                                    ? "bg-slate-300 cursor-not-allowed opacity-60"
+                                    : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
+                                }`}
+                                disabled={isSlotUnavailable}
+                                onClick={() => handleBookClick(offering)}
+                              >
+                                {buttonLabel}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : marketplaceOfferingsPreview.length > 0 ? (
+                      marketplaceOfferingsPreview.map((offering) => (
                         <div
                           key={offering.id}
                           className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
@@ -739,40 +1134,44 @@ export default function ServiceDetail() {
                             <p className="text-base font-semibold text-slate-900">
                               {offering.name}
                             </p>
-                            <p className="text-xs text-slate-500">
-                              {offering.id}
-                            </p>
-                            <p className="text-xs font-semibold text-slate-400">
-                              Max Qty: {offering.maxQuantity || "N/A"}
-                            </p>
+                            {offering.description ? (
+                              <p className="text-xs text-slate-500">
+                                {offering.description}
+                              </p>
+                            ) : null}
+                            {offering.durationLabel ? (
+                              <p className="text-xs font-semibold text-slate-400">
+                                Duration: {offering.durationLabel}
+                              </p>
+                            ) : null}
                           </div>
                           <div className="flex flex-col items-end gap-3">
-                            <span className="text-lg font-bold text-slate-900">
-                              ${offering.salePrice}
+                            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-bold text-slate-900">
+                              {formatCurrency(
+                                Number(offering.salePrice ?? offering.basePrice ?? 0),
+                              )}
                             </span>
                             <button
-                              className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
-                                isSlotUnavailable
-                                  ? "bg-slate-300 cursor-not-allowed opacity-60"
-                                  : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
-                              }`}
-                              disabled={isSlotUnavailable}
-                              onClick={() => handleBookClick(offering)}
+                              className="min-w-[30px] cursor-not-allowed rounded-lg border border-slate-200 bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-500 opacity-80"
+                              disabled
+                              type="button"
                             >
-                              {buttonLabel}
+                              Available soon
                             </button>
                           </div>
                         </div>
-                      );
-                    })}
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
+                        No service packages are available yet for this listing.
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-                    <p className="text-sm text-slate-500">
-                      {serviceDescription} {offerings.rules}
+                  <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
+                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription}
                     </p>
-                    <p className="text-xs text-slate-400">
-                      {`We keep this experience updated—check the services tab to explore current offerings.`}
+                    <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updated—check the services tab to explore current offerings.`}
                     </p>
                     {descriptionRules.length > 0 && (
                       <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
@@ -815,13 +1214,13 @@ export default function ServiceDetail() {
                   <h3 className="text-lg font-semibold text-slate-900">
                     Your order
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    Added services appear here. Adjust quantity anytime.
-                  </p>
+
                 </div>
-                <span className="text-xs text-slate-400">
-                  {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="text-xs text-slate-400">
+                    {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
               </div>
               {cartItems.length === 0 ? (
                 <p className="text-sm text-slate-500">
@@ -832,13 +1231,13 @@ export default function ServiceDetail() {
                   {cartItems.map((item) => (
                     <div
                       key={item.offering.id}
-                      className="flex items-start justify-between gap-4"
+                      className="flex items-start justify-between gap-4 overflow-hidden"
                     >
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-slate-900">
+                      <div className="min-w-0 flex-1">
+                        <p className="max-w-full break-words text-sm font-semibold text-slate-900">
                           {item.offering.name}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="max-w-full overflow-hidden break-all text-xs text-slate-500">
                           {item.offering.description ?? "Premium experience"}
                         </p>
                         <button
@@ -849,11 +1248,11 @@ export default function ServiceDetail() {
                           Remove
                         </button>
                       </div>
-                      <div className="text-right">
+                      <div className="w-[136px] shrink-0 text-right">
                         <p className="text-sm font-semibold text-slate-900">
                           {formatCurrency(item.offering.salePrice)} per person
                         </p>
-                        <div className="mt-2 flex items-center justify-end gap-2 rounded-full  px-2 py-1">
+                        <div className="mt-2 flex items-center justify-end gap-2 rounded-full px-2 py-1">
                           <button
                             type="button"
                             className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
@@ -883,10 +1282,10 @@ export default function ServiceDetail() {
               )}
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <h4 className="text-sm font-semibold text-slate-900">
-                  Wallet & promo
+                  Wallet, promo & referral
                 </h4>
                 <p className="text-xs text-slate-500">
-                  Apply discount or use StadOnClick wallet balance.
+                  Apply promo and user referral codes before checkout.
                 </p>
                 <div className="flex items-center gap-2">
                   <input
@@ -904,6 +1303,50 @@ export default function ServiceDetail() {
                   >
                     {isApplyingCoupon ? "Checking..." : "Apply"}
                   </Button>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    User referral code
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={referralCodeInput}
+                      onChange={(e) => {
+                        setReferralCodeInput(e.target.value);
+                        setReferralCodeFeedback(null);
+                      }}
+                      placeholder="Enter referral code"
+                      className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none"
+                    />
+                    <Button
+                      variant={"default"}
+                      onClick={handleApplyReferralCode}
+                      disabled={!referralCodeInput.trim()}
+                      className="min-w-[30px] rounded-lg border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  {appliedReferralCode ? (
+                    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+                      <span>
+                        {referralCodeFeedback ??
+                          `Referral code ${appliedReferralCode} applied`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAppliedReferralCode(null);
+                          setReferralCodeInput("");
+                          setReferralCodeFeedback(null);
+                        }}
+                        className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
                 {couponError && (
                   <p className="text-xs font-semibold text-red-600">
@@ -941,12 +1384,6 @@ export default function ServiceDetail() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Taxes</span>
-                  <span className="text-slate-900">
-                    {formatCurrency(cartTaxes)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-500">
                   <span>Discount</span>
                   <span className="text-emerald-600">
                     −{formatCurrency(cartDiscount)}
@@ -968,29 +1405,128 @@ export default function ServiceDetail() {
           </div>
         </div>
 
-        <div className="space-y-5">
-          <div className="space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* ================= LEFT SIDE - LOCATION ================= */}
+          <div className="lg:col-span-3 space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-900">
                 {service.title}'s Location
               </h2>
 
               <a
-                href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}`}
+                href={`https://www.google.com/maps?q=${resolvedLatitude},${resolvedLongitude}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold text-blue-600 hover:underline"
+                className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-600 hover:underline"
               >
-                Directions
+                <img src={map} className="h-5 w-5" />
+                <span>Google Maps</span>
               </a>
             </div>
 
             <LocationMap
-              lat={service.latitude}
-              lng={service.longitude}
+              lat={resolvedLatitude}
+              lng={resolvedLongitude}
               name={service.title}
             />
           </div>
+
+          {/* ================= RIGHT SIDE - COUPONS ================= */}
+          {vendorCoupons.length > 0 && (
+            <div className="lg:col-span-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-slate-900">Coupons</h4>
+
+              <div className="space-y-3">
+                {vendorCoupons.slice(0, 4).map((coupon, index) => {
+                  const theme = couponThemes[index % couponThemes.length];
+
+                  return (
+                    <div
+                      key={coupon.code}
+                      className="relative overflow-hidden rounded-2xl shadow-sm"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-[122px_1fr]">
+                        {/* LEFT PANEL */}
+                        <div
+                          className={`relative px-3 py-4 text-center ${theme.leftPanel}`}
+                        >
+                          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-700">
+                            Shopping Coupon
+                          </p>
+
+                          <p className="mt-2 text-[30px] font-black leading-none text-slate-900">
+                            {coupon.discountType === "FLAT"
+                              ? `${formatCurrency(coupon.discount)}`
+                              : `${coupon.discount}%`}
+                          </p>
+
+                          <p className="text-[28px] font-black leading-none text-slate-900">
+                            OFF
+                          </p>
+
+                          <div className="mt-3 space-y-1 text-[11px] text-slate-600">
+                            <p>Min order {formatCurrency(coupon.minOrder)}</p>
+                            <p>Max uses {coupon.maxUses}</p>
+                          </div>
+
+                          <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                        </div>
+
+                        {/* RIGHT PANEL */}
+                        <div
+                          className={`relative px-4 py-4 text-white ${theme.rightPanel}`}
+                        >
+                          <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+
+                          <div className="pl-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
+                              STADONCLICK.COM
+                            </p>
+
+                            <p className="mt-1 text-lg font-bold leading-tight">
+                              {coupon.title}
+                            </p>
+
+                            <p className="mt-2 text-xs text-white/85">
+                              Valid until{" "}
+                              <span className="font-semibold text-white">
+                                {new Intl.DateTimeFormat("en-US", {
+                                  month: "long",
+                                  year: "numeric",
+                                }).format(new Date(coupon.expiry))}
+                              </span>
+                            </p>
+
+                            <p className="mt-2 text-base font-bold tracking-[0.22em]">
+                              Code : {coupon.code}
+                            </p>
+
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                              <p className="text-[11px] text-white/90">
+                                Apply this code at checkout to unlock the offer.
+                              </p>
+
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                className="h-8 shrink-0 rounded-md border border-white/40 bg-white/20 px-3 text-xs font-semibold text-white hover:bg-white/30"
+                                onClick={() => {
+                                  setPromoCode(coupon.code);
+                                  setCouponError(null);
+                                }}
+                              >
+                                Use code
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="max-w-[800px]">
@@ -1022,15 +1558,24 @@ export default function ServiceDetail() {
                 View uploaded menu photos from the restaurant
               </p>
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="min-w-[100px] shrink-0">
-                    <img
-                      src={galleryImages[i % galleryImages.length]}
-                      alt={`Menu preview ${i}`}
-                      className="h-48 w-full rounded-2xl object-cover"
-                    />
-                  </div>
-                ))}
+                {menuPreviewImages.length > 0 ? (
+                  menuPreviewImages.map((imageUrl, index) => (
+                    <button
+                      key={`${imageUrl}-${index}`}
+                      type="button"
+                      className="min-w-[100px] shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      onClick={() => setSelectedMenuImage(imageUrl)}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={`Menu preview ${index + 1}`}
+                        className="h-48 w-full rounded-2xl object-cover transition-transform duration-200 hover:scale-[1.02] cursor-zoom-in"
+                      />
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">No menu images uploaded yet.</p>
+                )}
               </div>
             </div>
           </div>
@@ -1143,50 +1688,79 @@ export default function ServiceDetail() {
                   .join(" ") ||
                 "Anonymous User";
               const reviewerInitial = reviewerName.charAt(0).toUpperCase();
+              const reviewerImageUrl = resolveReviewerImageUrl(
+                review as typeof review & {
+                  user?: {
+                    profileImageUrl?: string | null;
+                    avatar?: string | null;
+                    image?: string | null;
+                    profileImage?: string | null;
+                  } | null;
+                  profileImageUrl?: string | null;
+                  avatar?: string | null;
+                  image?: string | null;
+                },
+              );
+              const showReviewerImage =
+                !!reviewerImageUrl && !failedReviewerImages[review.id];
 
               return (
-              <article
-                key={review.id}
-                className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
-              >
-                <div className="flex gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
-                    {reviewerInitial}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[15px] font-bold text-slate-900">
-                        {reviewerName}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
-                      >
-                        <Check className="h-3 w-3 stroke-[3px]" />
-                        Verified
-                      </Badge>
+                <article
+                  key={review.id}
+                  className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                >
+                  <div className="flex gap-4">
+                    {showReviewerImage ? (
+                      <img
+                        src={reviewerImageUrl}
+                        alt={reviewerName}
+                        className="h-12 w-12 shrink-0 rounded-full object-cover"
+                        onError={() =>
+                          setFailedReviewerImages((prev) => ({
+                            ...prev,
+                            [review.id]: true,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
+                        {reviewerInitial}
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[15px] font-bold text-slate-900">
+                          {reviewerName}
+                        </p>
+                        <Badge
+                          variant="outline"
+                          className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
+                        >
+                          <Check className="h-3 w-3 stroke-[3px]" />
+                          Verified
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className={`h-3 w-3 ${
+                              s <= review.rating
+                                ? "fill-orange-400 text-orange-400"
+                                : "text-slate-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className={`h-3 w-3 ${
-                            s <= review.rating
-                              ? "fill-orange-400 text-orange-400"
-                              : "text-slate-200"
-                          }`}
-                        />
-                      ))}
-                    </div>
                   </div>
-                </div>
-                <p className="text-[15px] leading-relaxed text-slate-600">
-                  {review.comment}
-                </p>
-                <div className="text-[13px] font-medium text-slate-400">
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </div>
-              </article>
+                  <p className="text-[15px] leading-relaxed text-slate-600">
+                    {review.comment}
+                  </p>
+                  <div className="text-[13px] font-medium text-slate-400">
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -1277,6 +1851,28 @@ export default function ServiceDetail() {
         </div>
       </div>
 
+      {selectedMenuImage && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-4"
+          onClick={() => setSelectedMenuImage(null)}
+        >
+          <button
+            type="button"
+            aria-label="Close image preview"
+            className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-xl font-semibold text-white backdrop-blur hover:bg-white/30"
+            onClick={() => setSelectedMenuImage(null)}
+          >
+            ×
+          </button>
+          <img
+            src={selectedMenuImage}
+            alt="Enlarged menu preview"
+            className="max-h-[90vh] max-w-[95vw] rounded-2xl object-contain shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      )}
+
       <BookingModal
         isOpen={isBookingModalOpen}
         serviceName={service.title}
@@ -1299,3 +1895,5 @@ export default function ServiceDetail() {
     </section>
   );
 }
+
+

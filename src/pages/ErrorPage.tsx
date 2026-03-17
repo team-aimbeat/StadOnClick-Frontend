@@ -39,7 +39,7 @@ export default function ErrorPage() {
 
         <div className="flex items-center justify-center gap-3">
           <Button asChild variant="default">
-            <Link to="/">Go to sign up</Link>
+            <Link to="/sign-up">Go to sign up</Link>
           </Button>
           <Button variant="outline" onClick={() => window.location.reload()}>
             Refresh

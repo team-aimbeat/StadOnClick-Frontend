@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import AppLayout from "@/components/layout/AppLayout";
+import AppLayout from "@/components/Layout/AppLayout";
 import SignIn from "@/pages/user-onboarding/SignIn";
 import SignUp from "@/pages/user-onboarding/SignUp";
 

@@ -20,6 +20,7 @@ interface ChartCardProps {
   title?: string;
   value?: string | number;
   data: BarData[];
+  currency?: string;
   height?: number;
   primaryColor?: string;
   secondaryColor?: string;
@@ -31,6 +32,10 @@ interface ChartCardProps {
   periodOptions?: string[];
   onPeriodChange?: (period: string) => void;
   className?: string;
+  showGrowth?: boolean;
+  growthPercentage?: number;
+  growthTrend?: "up" | "down" | "neutral";
+  growthText?: string;
   animate?: boolean;
   animationDuration?: number;
   animationEasing?: "ease" | "ease-in" | "ease-out" | "ease-in-out" | "linear";
@@ -53,8 +58,9 @@ export const bookingsData = [
 
 const ChartCard: React.FC<ChartCardProps> = ({
   title = "Bookings Trend",
-  value = "3,456,773",
+  value,
   data = bookingsData,
+  currency = "SEK",
   height = 220,
   primaryColor = "#2563EB",
   secondaryColor = "#F97316",
@@ -66,11 +72,47 @@ const ChartCard: React.FC<ChartCardProps> = ({
   periodOptions = ["Week", "Month", "Year"],
   onPeriodChange,
   className,
+  showGrowth = true,
+  growthPercentage,
+  growthTrend,
+  growthText = "vs last period",
   animate = false,
   animationDuration = 0,
   animationEasing = "ease-out",
 }) => {
-  const showGrowthPlaceholder = true;
+  const totalPrimary = data.reduce((sum, point) => sum + Number(point.value1 || 0), 0);
+  const totalSecondary = data.reduce((sum, point) => sum + Number(point.value2 || 0), 0);
+  const resolvedValue = value ?? Math.round(totalPrimary).toLocaleString();
+
+  const computedGrowth = (() => {
+    if (typeof growthPercentage === "number") {
+      const trend =
+        growthTrend ?? (growthPercentage > 0 ? "up" : growthPercentage < 0 ? "down" : "neutral");
+      return { percent: Math.abs(growthPercentage), trend };
+    }
+
+    if (totalSecondary <= 0) {
+      return {
+        percent: totalPrimary > 0 ? 100 : 0,
+        trend: totalPrimary > 0 ? ("up" as const) : ("neutral" as const),
+      };
+    }
+
+    const delta = ((totalPrimary - totalSecondary) / totalSecondary) * 100;
+    return {
+      percent: Number(Math.abs(delta).toFixed(1)),
+      trend: delta > 0 ? ("up" as const) : delta < 0 ? ("down" as const) : ("neutral" as const),
+    };
+  })();
+
+  const growthTone =
+    computedGrowth.trend === "up"
+      ? "text-emerald-700"
+      : computedGrowth.trend === "down"
+        ? "text-rose-700"
+        : "text-slate-600";
+  const growthArrow =
+    computedGrowth.trend === "up" ? "+" : computedGrowth.trend === "down" ? "-" : "";
 
   return (
     <div
@@ -83,18 +125,24 @@ const ChartCard: React.FC<ChartCardProps> = ({
         <div>
           <p className="text-sm font-semibold text-slate-900">{title}</p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-3xl font-semibold text-slate-900">{value}</span>
-            <span className="text-sm font-medium text-slate-500">SEK</span>
+            <span className="text-3xl font-semibold text-slate-900">{resolvedValue}</span>
+            <span className="text-sm font-medium text-slate-500">{currency}</span>
           </div>
           <p className="text-xs text-slate-500">Total booking value</p>
         </div>
         <div className="flex items-start justify-end gap-4">
-          {showGrowthPlaceholder && (
+          {showGrowth && (
             <div className="text-right">
-              <div className="flex items-center justify-end gap-1 text-sm font-semibold text-emerald-700">
-                ↑ 4.2%
+              <div
+                className={cn(
+                  "flex items-center justify-end gap-1 text-sm font-semibold",
+                  growthTone
+                )}
+              >
+                {growthArrow}
+                {computedGrowth.percent}%
               </div>
-              <p className="text-xs text-slate-500">vs last period</p>
+              <p className="text-xs text-slate-500">{growthText}</p>
             </div>
           )}
           {showPeriodSelect && (
@@ -154,14 +202,14 @@ const ChartCard: React.FC<ChartCardProps> = ({
                 name: string | number | undefined
               ): [string, string] => {
                 const labelMap: Record<string, string> = {
-                  value1: "Current week",
-                  value2: "Last week",
+                  value1: primaryLabel,
+                  value2: secondaryLabel,
                 };
                 const numeric = Number(value ?? 0);
                 const labelKey = name !== undefined ? String(name) : "";
                 const formattedValue = Number.isFinite(numeric)
-                  ? `SEK ${numeric.toLocaleString()}`
-                  : `SEK ${value ?? 0}`;
+                  ? `${currency} ${numeric.toLocaleString()}`
+                  : `${currency} ${value ?? 0}`;
                 return [formattedValue, labelMap[labelKey] ?? ""];
               }}
               labelFormatter={(label) => `Month: ${label}`}

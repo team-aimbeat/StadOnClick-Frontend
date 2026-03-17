@@ -1,3 +1,4 @@
+import { skipToken } from "@reduxjs/toolkit/query";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
@@ -23,6 +24,7 @@ import PerfectScrollbar from "react-perfect-scrollbar";
 import { Activity, Users } from "lucide-react";
 
 import { RootState } from "@/app/store";
+import { useListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
 import { cn } from "@/lib/utils";
 import type { IconType } from "react-icons";
@@ -34,6 +36,7 @@ type SidebarProps = {
 type NavChild = {
   label: string;
   to: string;
+  badge?: string;
 };
 
 type NavItem = {
@@ -43,6 +46,24 @@ type NavItem = {
   to?: string;
   badge?: string;
   children?: NavChild[];
+};
+
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : normalized;
+
+  const value = Number.parseInt(expanded, 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
 const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
@@ -68,6 +89,42 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
       return `${normalizedBasePath}/${path.replace(/^\//, "")}`;
     },
     [normalizedBasePath]
+  );
+
+  const shouldLoadAdminBookingCounts = Boolean(isAdmin && !isSupportOnly && !isModeratorOnly);
+
+  const { data: allBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts ? { page: 1, limit: 1 } : skipToken
+  );
+  const { data: upcomingBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts
+      ? { page: 1, limit: 1, statuses: "CONFIRMED,PENDING" }
+      : skipToken
+  );
+  const { data: completedBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts
+      ? { page: 1, limit: 1, statuses: "COMPLETED" }
+      : skipToken
+  );
+  const { data: refundBookingsCountResponse } = useListAdminBookingsQuery(
+    shouldLoadAdminBookingCounts
+      ? { page: 1, limit: 1, statuses: "REFUND_REQUESTED" }
+      : skipToken
+  );
+
+  const bookingNavBadges = useMemo(
+    () => ({
+      all: String(allBookingsCountResponse?.meta?.total ?? 0),
+      upcoming: String(upcomingBookingsCountResponse?.meta?.total ?? 0),
+      completed: String(completedBookingsCountResponse?.meta?.total ?? 0),
+      refunds: String(refundBookingsCountResponse?.meta?.total ?? 0),
+    }),
+    [
+      allBookingsCountResponse?.meta?.total,
+      upcomingBookingsCountResponse?.meta?.total,
+      completedBookingsCountResponse?.meta?.total,
+      refundBookingsCountResponse?.meta?.total,
+    ]
   );
 
   const navItems: NavItem[] = useMemo(() => {
@@ -136,24 +193,53 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         icon: HiHome,
         to: withBase("dashboard"),
       },
+        {
+        id: "vendor-management",
+        label: t("Vendor"),
+        icon: Users,
+        children: [
+          { label: t("Vendors"), to: withBase("vendors") },
+          { label: t("Vendor Services"), to: withBase("services") },
+          { label: t("Offerings"), to: withBase("offerings") },
+        ],
+      },
+         {
+        id: "customers-management",
+        label: t("Customers"),
+        icon: HiUserGroup,
+        children: [{ label: t("Customers"), to: withBase("customers") }],
+      },
+    
       {
-        id: "support-inbox",
-        label: t("Support Inbox"),
-        icon: HiInboxStack,
-        to: withBase("support/inbox"),
+        id: "users-management",
+        label: t("Users"),
+        icon: HiUserGroup,
+        children: [
+          { label: t("Staff Users"), to: withBase("staff") },
+          { label: t("Affiliate Users"), to: withBase("affiliates") },
+        ],
+      },
+         {
+        id: "service_master",
+        label: t("Service master"),
+        icon: HiClipboardDocumentCheck,
+        children: [
+    { label: t("Service Masters"), to: withBase("catalog/service-categories") },
+        ],
       },
       {
-        id: "support-dashboard",
-        label: t("Support Dashboard"),
-        icon: HiChartBar,
-        to: withBase("support/dashboard"),
+        id: "bookings",
+        label: t("Bookings"),
+        icon: HiClipboardDocumentCheck,
+        badge: bookingNavBadges.all,
+        children: [
+          { label: t("All Bookings"), to: withBase("bookings"), badge: bookingNavBadges.all },
+          { label: t("Upcoming"), to: withBase("bookings/upcoming"), badge: bookingNavBadges.upcoming },
+          { label: t("Completed"), to: withBase("bookings/completed"), badge: bookingNavBadges.completed },
+          { label: t("Refunds"), to: withBase("bookings/refunds"), badge: bookingNavBadges.refunds },
+        ],
       },
-      {
-        id: "support-chat",
-        label: t("Support Chat"),
-        icon: HiChatBubbleLeftRight,
-        to: withBase("chat"),
-      },
+    
       ...(isModerator
         ? [
             {
@@ -194,7 +280,23 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Coupons"), to: withBase("coupons") },
           { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
           { label: t("Sponsorship Plans"), to: withBase("finance/sponsorship-plans") },
-          { label: t("Lead Activity (Coming Soon)"), to: withBase("leads/activity") },
+        ],
+      },
+       {
+        id: "layout-studio",
+        label: t("Layout Studio"),
+        icon: HiCube,
+        children: [
+          // { label: t("Home Sections Studio"), to: withBase("layout-studio/home-sections") },
+          { label: t("Hero Section"), to: withBase("layout-studio/home-sections/hero") },
+          { label: t("Best Deals Section"), to: withBase("layout-studio/home-sections/best-deals") },
+          { label: t("Extra Deals Section"), to: withBase("layout-studio/home-sections/extra-deals") },
+          { label: t("Trending Section"), to: withBase("layout-studio/home-sections/trending") },
+          { label: t("Blogs Section"), to: withBase("layout-studio/home-sections/blogs") },
+          { label: t("Advertisment Section"), to: withBase("layout-studio/home-sections/other") },
+          { label: t("Header Section"), to: withBase("layout-studio/header-sections") },
+          { label: t("Header Dropdown"), to: withBase("layout-studio/header-dropdown") },
+          { label: t("Footer Section"), to: withBase("layout-studio/footer-sections") },
         ],
       },
       {
@@ -203,17 +305,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         icon: HiTag,
         to: withBase("coupons"),
       },
-      {
-        id: "bookings",
-        label: t("Bookings"),
-        icon: HiClipboardDocumentCheck,
-        children: [
-          { label: t("All Bookings"), to: withBase("bookings") },
-          { label: t("Upcoming"), to: withBase("bookings/upcoming") },
-          { label: t("Completed"), to: withBase("bookings/completed") },
-          { label: t("Refunds"), to: withBase("bookings/refunds") },
-        ],
-      },
+    
       {
         id: "finance",
         label: t("Finance"),
@@ -223,6 +315,24 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Platform Wallet"), to: withBase("finance/platform-wallet") },
         ],
       },
+        {
+        id: "support-inbox",
+        label: t("Support Inbox"),
+        icon: HiInboxStack,
+        to: withBase("support/inbox"),
+      },
+      {
+        id: "support-dashboard",
+        label: t("Support Dashboard"),
+        icon: HiChartBar,
+        to: withBase("support/dashboard"),
+      },
+      {
+        id: "support-chat",
+        label: t("Support Chat"),
+        icon: HiChatBubbleLeftRight,
+        to: withBase("chat"),
+      },
       {
         id: "catalog",
         label: t("Catalog"),
@@ -231,21 +341,18 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Preference Studio"), to: withBase("catalog/interests") },
         ],
       },
+     
       {
         id: "system",
         label: t("System"),
         icon: HiCog6Tooth,
         children: [
+          { label: t("Platform Settings"), to: withBase("settings") },
           { label: t("API Docs"), to: withBase("system/docs") },
           { label: t("Admin Activity"), to: withBase("system/audit") },
         ],
       },
-      {
-        id: "administration",
-        label: t("Administration"),
-        icon: Users,
-        children: [{ label: t("Staff"), to: withBase("staff") }],
-      },
+   
       {
         id: "system-health",
         label: t("System Health"),
@@ -253,7 +360,17 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         to: withBase("system/health"),
       },
     ];
-  }, [isModerator, isModeratorOnly, isSupportOnly, t, withBase]);
+  }, [
+    bookingNavBadges.all,
+    bookingNavBadges.completed,
+    bookingNavBadges.refunds,
+    bookingNavBadges.upcoming,
+    isModerator,
+    isModeratorOnly,
+    isSupportOnly,
+    t,
+    withBase,
+  ]);
 
   const accentPalette = useMemo(
     () => ["#F59E0B", "#22C55E", "#EC4899", "#A855F7", "#0EA5E9", "#F97316", "#10B981"],
@@ -262,7 +379,8 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
 
   const isPathActive = (path?: string) => {
     if (!path) return false;
-    return location.pathname.startsWith(path);
+    // Exact match for the base route, OR it's a sub-route (e.g. /admin/coupons/new)
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   const isItemActive = (item: NavItem) => {
@@ -338,12 +456,26 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                         </div>
 
                         {!isCollapsed && (
-                          <HiChevronDown
-                            className={cn(
-                              "h-5 w-5 transition-transform duration-200",
-                              isOpen && "rotate-180"
+                          <div className="ml-auto flex items-center gap-2">
+                            {item.badge && (
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-[10px] font-bold",
+                                  displayActive
+                                    ? "bg-white/20 text-white"
+                                    : "bg-slate-100 text-slate-600"
+                                )}
+                              >
+                                {item.badge}
+                              </span>
                             )}
-                          />
+                            <HiChevronDown
+                              className={cn(
+                                "h-5 w-5 transition-transform duration-200",
+                                isOpen && "rotate-180"
+                              )}
+                            />
+                          </div>
                         )}
                       </button>
 
@@ -358,37 +490,52 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                         >
                           <div className="overflow-hidden">
                             <ul className="ml-10 flex flex-col gap-0.5 px-3 pb-3 pt-1">
-                              {item.children.map((child, idx) => (
-                                <li
-                                  key={child.to}
-                                  className={cn(
-                                    "transition-opacity duration-200",
-                                    isOpen ? "opacity-100" : "opacity-0",
-                                    isOpen && `delay-[${idx * 30}ms]`
-                                  )}
-                                >
-                              <NavLink
-                                to={child.to}
-                                end={child.to === withBase("bookings")}
-                                className={({ isActive }) =>
-                                  cn(
-                                    "group flex h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors",
-                                    isActive
-                                      ? "bg-blue-50 text-[#4F7DFF] font-semibold"
-                                      : "text-slate-600 hover:bg-slate-50 hover:text-[#4F7DFF]"
-                                  )
-                                }
-                              >
-                                    <span
-                                      className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                                      style={{
-                                        backgroundColor: accentPalette[idx % accentPalette.length],
-                                      }}
-                                    />
-                                    <span className="truncate">{child.label}</span>
-                                  </NavLink>
-                                </li>
-                              ))}
+                              {item.children.map((child, idx) => {
+                                const accentColor = accentPalette[idx % accentPalette.length];
+
+                                return (
+                                  <li
+                                    key={child.to}
+                                    className={cn(
+                                      "transition-opacity duration-200",
+                                      isOpen ? "opacity-100" : "opacity-0",
+                                      isOpen && `delay-[${idx * 30}ms]`
+                                    )}
+                                  >
+                                    <NavLink
+                                      to={child.to}
+                                      end={child.to === withBase("bookings")}
+                                      className={({ isActive }) =>
+                                        cn(
+                                          "group flex h-10 items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors",
+                                          isActive
+                                            ? "bg-blue-50 text-[#4F7DFF] font-semibold"
+                                            : "text-slate-600 hover:bg-slate-50 hover:text-[#4F7DFF]"
+                                        )
+                                      }
+                                    >
+                                      <span
+                                        className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                                        style={{
+                                          backgroundColor: accentColor,
+                                        }}
+                                      />
+                                      <span className="truncate">{child.label}</span>
+                                      {child.badge && (
+                                        <span
+                                          className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold"
+                                          style={{
+                                            backgroundColor: hexToRgba(accentColor, 0.14),
+                                            color: accentColor,
+                                          }}
+                                        >
+                                          {child.badge}
+                                        </span>
+                                      )}
+                                    </NavLink>
+                                  </li>
+                                );
+                              })}
                             </ul>
                           </div>
                         </div>
@@ -398,11 +545,11 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                     /* Single link item */
                     <NavLink
                       to={item.to ?? "/"}
-                      className={({ isActive }) =>
+                      className={() =>
                         cn(
                           "flex h-12 w-full items-center rounded-lg px-4 transition-colors",
                           isCollapsed ? "justify-center" : "gap-3",
-                          isActive
+                          active
                             ? "bg-[#4F7DFF] text-white shadow-sm"
                             : "text-slate-700 hover:bg-slate-50 active:bg-slate-100"
                         )

@@ -1214,6 +1214,14 @@ const VendorAnalyticsDashboard = () => {
     () => ordersSeed.filter((order) => new Date(order.createdAt) >= getRangeStart(range)),
     [ordersSeed, range]
   );
+  const filteredPaidOrders = useMemo(
+    () => filteredOrders.filter((order) => order.status === "PAID"),
+    [filteredOrders]
+  );
+  const filteredPaidAndRefundedOrders = useMemo(
+    () => filteredOrders.filter((order) => order.status === "PAID" || order.status === "REFUNDED"),
+    [filteredOrders]
+  );
 
   const filteredBookings = useMemo(
     () =>
@@ -1326,22 +1334,19 @@ const VendorAnalyticsDashboard = () => {
 
   const ordersRevenueChart = useMemo(
     () =>
-      bucketize(filteredOrders, range, (order) => new Date(order.createdAt), {
-        revenue: (acc, order) =>
-          order.status === "PAID" ? acc + order.totalFinal : acc,
+      bucketize(filteredPaidOrders, range, (order) => new Date(order.createdAt), {
+        revenue: (acc, order) => acc + order.totalFinal,
       }),
-    [filteredOrders, range]
+    [filteredPaidOrders, range]
   );
 
   const ordersSplitChart = useMemo(
     () =>
-      bucketize(filteredOrders, range, (order) => new Date(order.createdAt), {
-        commission: (acc, order) =>
-          order.status === "PAID" ? acc + order.commissionAmount : acc,
-        payout: (acc, order) =>
-          order.status === "PAID" ? acc + order.vendorPayoutAmount : acc,
+      bucketize(filteredPaidOrders, range, (order) => new Date(order.createdAt), {
+        commission: (acc, order) => acc + order.commissionAmount,
+        payout: (acc, order) => acc + order.vendorPayoutAmount,
       }),
-    [filteredOrders, range]
+    [filteredPaidOrders, range]
   );
 
   const bookingsChart = useMemo(
@@ -1760,7 +1765,7 @@ const VendorAnalyticsDashboard = () => {
         <DataTableCard
           title="Latest Orders"
           subtitle="Paid and refunded"
-          rows={filteredOrders.slice(0, 5)}
+          rows={filteredPaidAndRefundedOrders.slice(0, 5)}
           columns={latestOrdersColumns}
           emptyLabel="No orders in this range."
         />
@@ -1900,7 +1905,7 @@ const VendorAnalyticsDashboard = () => {
       <DataTableCard
         title="Latest Paid Orders"
         subtitle="Order splits"
-        rows={filteredOrders.slice(0, 8)}
+        rows={filteredPaidOrders.slice(0, 8)}
         columns={latestOrdersColumns}
         emptyLabel="No orders in this range."
       />

@@ -57,6 +57,7 @@ export type Vendor = {
   payoutsEnabled?: boolean;
   chargesEnabled?: boolean;
   totalBookings?: number;
+  visitorCount?: number;
   totalRevenue?: string | number;
   ratingAvg?: number;
   ratingCount?: number;
@@ -68,6 +69,8 @@ export type Vendor = {
     lastName?: string | null;
     email: string;
     phone?: string | null;
+    profileImageKey?: string | null;
+    profileImageUrl?: string | null;
   };
 };
 

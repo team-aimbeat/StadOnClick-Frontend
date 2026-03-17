@@ -74,9 +74,39 @@ export const blogPosts: BlogPost[] = [
     date: "January 20, 2026",
     readingTime: "5 min read",
   },
-]
+];
 
-export default function RecentPosts() {
+const fallbackContent: BlogsContent = {
+  title: "Latest Blogs & Insights",
+  subtitle: "Follow top designers and creators to stay inspired.",
+  items: fallbackItems,
+};
+
+export default function RecentPosts({ content }: BlogsProps) {
+  const merged = useMemo<BlogsContent>(() => {
+    const rawItems = Array.isArray(content?.items) ? content.items : [];
+    const items = Array.from({ length: BLOG_CARD_COUNT }, (_, index) => {
+      const fallback = fallbackItems[index];
+      const raw = rawItems[index] ?? {};
+      return {
+        category: String(raw.category ?? "").trim() || fallback.category,
+        name: String(raw.name ?? "").trim() || fallback.name,
+        role: String(raw.role ?? "").trim() || fallback.role,
+        description: String(raw.description ?? "").trim() || fallback.description,
+        profileImage: String(raw.profileImage ?? "").trim() || fallback.profileImage,
+        coverImage: String(raw.coverImage ?? "").trim() || fallback.coverImage,
+        buttonText: String(raw.buttonText ?? "").trim() || fallback.buttonText,
+        navigationLink: String(raw.navigationLink ?? "").trim() || fallback.navigationLink,
+      };
+    });
+
+    return {
+      title: String(content?.title ?? "").trim() || fallbackContent.title,
+      subtitle: String(content?.subtitle ?? "").trim() || fallbackContent.subtitle,
+      items,
+    };
+  }, [content]);
+
   return (
     <section className="relative w-screen -mx-[calc((100vw-100%)/2)] bg-slate-50 py-20">
       <div className="relative mx-auto max-w-7xl px-4">
@@ -136,10 +166,10 @@ export default function RecentPosts() {
                   friendly visual language.
                 </p>
               </div>
-            </article>
+            </a>
           ))}
         </div>
       </div>
     </section>
-  )
+  );
 }

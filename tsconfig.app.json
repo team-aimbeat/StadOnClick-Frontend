@@ -25,5 +25,6 @@
     "outDir": "dist-ts/app",
     "sourceMap": false
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist-ts", "@"]
 }

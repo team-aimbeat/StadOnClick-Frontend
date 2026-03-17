@@ -21,6 +21,7 @@ import VendorServices from "@/pages/VendorServices";
 import VendorCategoryDetail from "@/pages/VendorCategoryDetail";
 import VendorServiceOptions from "@/pages/VendorServiceOptions";
 import VendorMedia from "@/pages/VendorMedia";
+import VendorMenu from "@/pages/VendorMenu";
 import VendorCoupons from "@/pages/VendorCoupons";
 import VendorWallet from "@/pages/VendorWallet";
 import VendorPayouts from "@/pages/VendorPayouts";
@@ -43,6 +44,8 @@ import VendorPlaceholder from "@/pages/VendorPlaceholder";
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
+import AffiliatesPage from "@/pages/Admin/Affiliates/AffiliatesPage";
+import CustomersPage from "@/pages/Admin/Customers/CustomersPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 
@@ -55,7 +58,11 @@ import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
 import AdminNotFound from "@/pages/Admin/AdminNotFound";
 import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
+import VendorProfileAdminPage from "@/pages/Admin/Vendors/VendorProfileAdminPage";
 import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
+import VendorSubscriptionsPage from "@/pages/Admin/leads/VendorSubscriptionsPage";
+import AdminServicesPage from "@/pages/Admin/Services/AdminServicesPage";
+import AdminOfferingsPage from "@/pages/Admin/Offerings/AdminOfferingsPage";
 import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
 import SubscriptionSuccessPage from "@/pages/VendorLeadSubscription/SubscriptionSuccessPage";
 import AdminStaffPage from "@/pages/Admin/staff/AdminStaffPage";
@@ -68,6 +75,18 @@ import ModeratorEscalationDetails from "@/pages/Moderator/Escalations/ModeratorE
 import ModeratorNotifications from "@/pages/Moderator/ModeratorNotifications";
 import { AuthBootstrap } from "@/AuthBootstrap";
 import PreferencesStudio from "@/pages/Admin/catalog/PreferencesStudio";
+import ServiceCatalogStudio from "@/pages/Admin/catalog/ServiceCatalogStudio";
+import HomeSectionsStudio from "@/pages/Admin/catalog/HomeSectionsStudio";
+import HomeHeroStudio from "@/pages/Admin/catalog/HomeHeroStudio";
+import HomeDealsStudio from "@/pages/Admin/catalog/HomeDealsStudio";
+import HomeBestDealsStudio from "@/pages/Admin/catalog/HomeBestDealsStudio";
+import HomeOtherSectionsStudio from "@/pages/Admin/catalog/HomeOtherSectionsStudio";
+import HomeBlogsStudio from "@/pages/Admin/catalog/HomeBlogsStudio";
+import HomeTrendingStudio from "@/pages/Admin/catalog/HomeTrendingStudio";
+import HomeExtraDealsStudio from "@/pages/Admin/catalog/HomeExtraDealsStudio";
+import FooterSectionsStudio from "@/pages/Admin/catalog/FooterSectionsStudio";
+import HeaderSectionsStudio from "@/pages/Admin/catalog/HeaderSectionsStudio";
+import HeaderDropdownStudio from "@/pages/Admin/catalog/HeaderDropdownStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
@@ -75,24 +94,25 @@ import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
 import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPage";
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
 import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
+import AdminSettings from "@/pages/Admin/AdminSettings";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
-import AffiliatePlaceholder from "@/pages/AffiliatePlaceholder";
+import AffiliateReferrals from "@/pages/AffiliateReferrals";
+import AffiliateVendorsReferred from "@/pages/AffiliateVendorsReferred";
+import AffiliateCommission from "@/pages/AffiliateCommission";
+import AffiliateWallet from "@/pages/AffiliateWallet";
+import AffiliatePayouts from "@/pages/AffiliatePayouts";
+import AffiliateStripe from "@/pages/AffiliateStripe";
+import AppLayout from "@/components/Layout/AppLayout";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AffiliateLayout from "@/components/Layout/AffiliateLayout";
-import AppLayout from "@/components/Layout/AppLayout";
-
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
   <VendorPlaceholder title={title} description={description} />
-);
-
-const affiliatePlaceholder = (title: string, description?: string) => (
-  <AffiliatePlaceholder title={title} description={description} />
 );
 
 const appRouter = createBrowserRouter([
@@ -126,6 +146,11 @@ const appRouter = createBrowserRouter([
           },
           {
             path: "/sign-up",
+            element: <Signup />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "/signup",
             element: <Signup />,
             errorElement: <ErrorPage />,
           },
@@ -169,75 +194,7 @@ const appRouter = createBrowserRouter([
             element: <AffiliateMarketing />,
           },
           {
-            path: "/affiliate",
-            element: <AffiliateLayout />,
-            children: [
-              {
-                index: true,
-                element: <Navigate to="/affiliate/overview" replace />,
-              },
-              {
-                path: "overview",
-                element: <AffiliateDashboard />,
-              },
-              {
-                path: "dashboard",
-                element: <Navigate to="/affiliate/overview" replace />,
-              },
-              {
-                path: "referrals",
-                element: affiliatePlaceholder(
-                  "Referrals",
-                  "Track users who signed up through your referral code and their status.",
-                ),
-              },
-              {
-                path: "vendors-referred",
-                element: affiliatePlaceholder(
-                  "Vendors Referred",
-                  "See vendors attributed to your referrals and their conversion progress.",
-                ),
-              },
-              {
-                path: "commission",
-                element: affiliatePlaceholder(
-                  "Commission",
-                  "Review earned, pending, and paid commission transactions.",
-                ),
-              },
-              {
-                path: "wallet",
-                element: affiliatePlaceholder(
-                  "Wallet",
-                  "View your affiliate wallet balance and transaction history.",
-                ),
-              },
-              {
-                path: "payouts",
-                element: affiliatePlaceholder(
-                  "Payouts",
-                  "Manage payout requests and track payout statuses.",
-                ),
-              },
-              {
-                path: "reports",
-                element: affiliatePlaceholder(
-                  "Reports",
-                  "Generate and export affiliate performance reports.",
-                ),
-              },
-              {
-                path: "profile-settings",
-                element: affiliatePlaceholder(
-                  "Profile Settings",
-                  "Manage your affiliate profile details and preferences.",
-                ),
-              },
-            ],
-          },
-  
-          {
-            path: "/service/:serviceId",
+            path: "/service/:serviceSlug",
             element: <ServiceDetail />,
           },
           {
@@ -297,6 +254,21 @@ const appRouter = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: "vendors/:vendorId/profile",
+            element: <VendorProfileAdminPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "affiliates",
+            element: <AffiliatesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "customers",
+            element: <CustomersPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: "support",
             element: <Navigate to="/admin/support/inbox" replace />,
           },
@@ -334,13 +306,33 @@ const appRouter = createBrowserRouter([
             errorElement: <ErrorPage />,
           },
           {
+            path: "leads/subscriptions",
+            element: <VendorSubscriptionsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: "coupons",
             element: <AdminCouponsPage />,
             errorElement: <ErrorPage />,
           },
           {
+            path: "settings",
+            element: <AdminSettings />,
+            errorElement: <ErrorPage />,
+          },
+          {
             path: "bookings",
             element: <AdminBookingsPage defaultStatusFilter="all" />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "services",
+            element: <AdminServicesPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "offerings",
+            element: <AdminOfferingsPage />,
             errorElement: <ErrorPage />,
           },
           {
@@ -413,6 +405,114 @@ const appRouter = createBrowserRouter([
           {
             path: "catalog/:tab",
             element: <PreferencesStudio />,
+          },
+          {
+            path: "catalog/service-categories",
+            element: <ServiceCatalogStudio />,
+          },
+          {
+            path: "catalog/home-page",
+            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+          },
+          {
+            path: "layout-studio",
+            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+          },
+          {
+            path: "layout-studio/home-sections",
+            element: <HomeSectionsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/hero",
+            element: <HomeHeroStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/deals",
+            element: <HomeDealsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/best-deals",
+            element: <HomeBestDealsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/extra-deals",
+            element: <HomeExtraDealsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/trending",
+            element: <HomeTrendingStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/other",
+            element: <HomeOtherSectionsStudio />,
+          },
+          {
+            path: "layout-studio/home-sections/blogs",
+            element: <HomeBlogsStudio />,
+          },
+          {
+            path: "layout-studio/footer-sections",
+            element: <FooterSectionsStudio />,
+          },
+          {
+            path: "layout-studio/header-sections",
+            element: <HeaderSectionsStudio />,
+          },
+          {
+            path: "layout-studio/header-dropdown",
+            element: <HeaderDropdownStudio />,
+          },
+          {
+            path: "catalog/home-sections",
+            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+          },
+          {
+            path: "catalog/home-sections/hero",
+            element: <Navigate to="/admin/layout-studio/home-sections/hero" replace />,
+          },
+          {
+            path: "catalog/home-sections/deals",
+            element: <Navigate to="/admin/layout-studio/home-sections/deals" replace />,
+          },
+          {
+            path: "catalog/home-sections/best-deals",
+            element: <Navigate to="/admin/layout-studio/home-sections/best-deals" replace />,
+          },
+          {
+            path: "catalog/home-sections/extra-deals",
+            element: <Navigate to="/admin/layout-studio/home-sections/extra-deals" replace />,
+          },
+          {
+            path: "catalog/home-sections/trending",
+            element: <Navigate to="/admin/layout-studio/home-sections/trending" replace />,
+          },
+          {
+            path: "catalog/home-sections/other",
+            element: <Navigate to="/admin/layout-studio/home-sections/other" replace />,
+          },
+          {
+            path: "catalog/home-sections/blogs",
+            element: <Navigate to="/admin/layout-studio/home-sections/blogs" replace />,
+          },
+          {
+            path: "catalog/footer-sections",
+            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
+          },
+          {
+            path: "catalog/header-sections",
+            element: <Navigate to="/admin/layout-studio/header-sections" replace />,
+          },
+          {
+            path: "catalog/header-dropdown",
+            element: <Navigate to="/admin/layout-studio/header-dropdown" replace />,
+          },
+          {
+            path: "catalog/footer-sections/brand",
+            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
+          },
+          {
+            path: "catalog/footer-sections/links",
+            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
           },
           {
             path: "system/health",
@@ -552,6 +652,7 @@ const appRouter = createBrowserRouter([
             element: <VendorServiceOptions />,
           },
           { path: "media", element: <VendorMedia /> },
+          { path: "menu", element: <VendorMenu /> },
           { path: "coupons", element: <VendorCoupons /> },
           { path: "wallet", element: <VendorWallet /> },
           { path: "payouts", element: <VendorPayouts /> },
@@ -573,6 +674,48 @@ const appRouter = createBrowserRouter([
       },
     ],
   },
+    {
+            path: "/affiliate",
+            element: <AffiliateLayout />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "overview",
+                element: <AffiliateDashboard />,
+              },
+              {
+                path: "dashboard",
+                element: <Navigate to="/affiliate/overview" replace />,
+              },
+              {
+                path: "referrals",
+                element: <AffiliateReferrals />,
+              },
+              {
+                path: "vendors-referred",
+                element: <AffiliateVendorsReferred />,
+              },
+              {
+                path: "commission",
+                element: <AffiliateCommission />,
+              },
+              {
+                path: "wallet",
+                element: <AffiliateWallet />,
+              },
+              {
+                path: "payouts",
+                element: <AffiliatePayouts />,
+              },
+              {
+                path: "stripe",
+                element: <AffiliateStripe />,
+              },
+            ],
+          },
 ]);
 
 export default appRouter;

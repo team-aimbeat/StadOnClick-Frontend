@@ -5,8 +5,23 @@ export interface StripeStatus {
   connected: boolean;
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
-  accountId?: string;
+  accountId: string | null;
+  onboardingRequired: boolean;
   onboardingComplete: boolean;
+  detailsSubmitted: boolean;
+  requirements: {
+    currentlyDue: string[];
+    eventuallyDue: string[];
+    pendingVerification: string[];
+    disabledReason: string | null;
+  };
+  lastOnboardedAt: string | null;
+}
+
+export interface StripeLinkPayload {
+  url: string;
+  accountId: string;
+  mode: "onboarding" | "dashboard";
 }
 
 export const vendorStripeApi = createApi({
@@ -14,7 +29,7 @@ export const vendorStripeApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ["StripeStatus"],
   endpoints: (builder) => ({
-    getStripeStatus: builder.query<{ status: string; data: StripeStatus }, void>({
+    getStripeStatus: builder.query<{ success: boolean; data: StripeStatus }, void>({
       query: () => ({
         url: "/vendor/stripe/status",
         method: "GET",
@@ -22,9 +37,15 @@ export const vendorStripeApi = createApi({
       providesTags: ["StripeStatus"],
     }),
 
-    connectStripe: builder.mutation<{ status: string; data: { url: string } }, void>({
+    connectStripe: builder.mutation<{ success: boolean; data: StripeLinkPayload }, void>({
       query: () => ({
         url: "/vendor/stripe/connect",
+        method: "POST",
+      }),
+    }),
+    createStripeDashboardLink: builder.mutation<{ success: boolean; data: StripeLinkPayload }, void>({
+      query: () => ({
+        url: "/vendor/stripe/dashboard-link",
         method: "POST",
       }),
     }),
@@ -34,4 +55,5 @@ export const vendorStripeApi = createApi({
 export const {
   useGetStripeStatusQuery,
   useConnectStripeMutation,
+  useCreateStripeDashboardLinkMutation,
 } = vendorStripeApi;

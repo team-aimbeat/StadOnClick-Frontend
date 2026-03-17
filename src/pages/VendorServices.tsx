@@ -28,6 +28,8 @@ import {
 } from "@/services/vendorOfferingsApi";
 import {
   useCreateVendorServiceMutation,
+  useCreateVendorMasterServiceMutation,
+  useCreateVendorServiceCategoryMutation,
   useUpdateVendorServiceMutation,
   useGetVendorServicesQuery,
   type VendorServiceEntity,
@@ -41,6 +43,7 @@ type StepState = "idle" | "loading" | "success" | "error";
 type OfferingFormValues = {
   name: string;
   description: string;
+  bookingUrl?: string;
   basePrice: number;
   salePrice: number;
   maxQuantity?: number;
@@ -85,8 +88,6 @@ type VendorServiceDetails = {
   title: string;
   description: string;
   terms: string;
-  latitude: string;
-  longitude: string;
 };
 
 type RefundPolicyType = "NO_REFUND" | "PARTIAL_BEFORE_WINDOW";
@@ -116,6 +117,8 @@ const VendorServices = () => {
   >(null);
   const [enableSlots, setEnableSlots] = useState(false);
   const [enableRules, setEnableRules] = useState(false);
+  const [slotTargetOfferingIndex, setSlotTargetOfferingIndex] = useState(0);
+  const [ruleTargetOfferingIndex, setRuleTargetOfferingIndex] = useState(0);
   const [slotFields, setSlotFields] = useState<SlotFields>(slotInitialState);
   const [slotStartDate, setSlotStartDate] = useState<Dayjs | null>(null);
   const [slotEndDate, setSlotEndDate] = useState<Dayjs | null>(null);
@@ -170,6 +173,8 @@ const VendorServices = () => {
     setSelectedExistingOfferingId("");
     setEnableSlots(false);
     setEnableRules(false);
+    setSlotTargetOfferingIndex(0);
+    setRuleTargetOfferingIndex(0);
     setSlotFields({ ...slotInitialState });
     setSlotStartDate(null);
     setSlotEndDate(null);
@@ -275,8 +280,6 @@ const VendorServices = () => {
       title: "",
       description: "",
       terms: "",
-      latitude: "",
-      longitude: "",
     });
   const [vendorServiceErrors, setVendorServiceErrors] = useState<
     Record<string, string>
@@ -289,6 +292,8 @@ const VendorServices = () => {
   );
 
   const [createVendorService] = useCreateVendorServiceMutation();
+  const [createVendorMasterService] = useCreateVendorMasterServiceMutation();
+  const [createVendorServiceCategory] = useCreateVendorServiceCategoryMutation();
   const [updateVendorService] = useUpdateVendorServiceMutation();
   const [createOffering] = useCreateOfferingMutation();
   const [createSlot] = useCreateSlotMutation();
@@ -298,12 +303,14 @@ const VendorServices = () => {
     data: masterServices = [],
     isLoading: isMasterLoading,
     isError: masterError,
+    refetch: refetchMasterServices,
   } = useGetMasterCategoriesQuery();
 
   const {
     data: categoryOptions = [],
     isFetching: isCategoryFetching,
     isError: categoryError,
+    refetch: refetchCategoryOptions,
   } = useGetServiceCategoriesByMasterQuery(selectedMasterForQuery, {
     skip: !selectedMasterForQuery,
   });
@@ -316,7 +323,7 @@ const VendorServices = () => {
     skip: !createdServiceId,
   });
 
-  const { register, handleSubmit, formState, reset, setValue, control } =
+  const { register, handleSubmit, formState, reset, setValue, control, watch } =
     useForm<{ offerings: OfferingFormValues[] }>({
       mode: "onBlur",
       defaultValues: {
@@ -324,6 +331,7 @@ const VendorServices = () => {
           {
             name: "",
             description: "",
+            bookingUrl: "",
             basePrice: 0,
             salePrice: 0,
             maxQuantity: undefined,
@@ -336,6 +344,21 @@ const VendorServices = () => {
     control,
     name: "offerings",
   });
+  const watchedOfferings = watch("offerings");
+
+  useEffect(() => {
+    const maxIndex = Math.max((watchedOfferings?.length ?? 1) - 1, 0);
+    if (slotTargetOfferingIndex > maxIndex) {
+      setSlotTargetOfferingIndex(maxIndex);
+    }
+    if (ruleTargetOfferingIndex > maxIndex) {
+      setRuleTargetOfferingIndex(maxIndex);
+    }
+  }, [
+    watchedOfferings?.length,
+    slotTargetOfferingIndex,
+    ruleTargetOfferingIndex,
+  ]);
 
   const { errors } = formState;
 
@@ -413,6 +436,8 @@ const VendorServices = () => {
     setSelectedExistingOfferingId("");
     setEnableSlots(false);
     setEnableRules(false);
+    setSlotTargetOfferingIndex(0);
+    setRuleTargetOfferingIndex(0);
     setSlotFields({ ...slotInitialState });
     setSlotStartDate(null);
     setSlotEndDate(null);
@@ -442,6 +467,7 @@ const VendorServices = () => {
     // Prefill the FIRST offering card
     setValue("offerings.0.name", offering.name);
     setValue("offerings.0.description", offering.description ?? "");
+    setValue("offerings.0.bookingUrl", offering.bookingUrl ?? "");
     setValue("offerings.0.basePrice", offering.basePrice);
     setValue("offerings.0.salePrice", offering.salePrice);
     setValue("offerings.0.maxQuantity", offering.maxQuantity ?? undefined);
@@ -513,6 +539,49 @@ const VendorServices = () => {
     setWizardError(null);
     goToStep(2);
   };
+
+  const handleCreateMasterService = useCallback(
+    async (input: { name: string; slug?: string }) => {
+      const payload = {
+        name: input.name.trim(),
+        slug: input.slug?.trim() || undefined,
+        createDefaultCategory: false,
+      };
+      const created = await createVendorMasterService(payload).unwrap();
+      await refetchMasterServices();
+      handleSelectMaster(created.id);
+      setWizardError(null);
+      toast.success("Master service created.");
+      return created;
+    },
+    [createVendorMasterService, handleSelectMaster, refetchMasterServices],
+  );
+
+  const handleCreateServiceCategory = useCallback(
+    async (input: { name: string; slug?: string; masterCategoryId?: string }) => {
+      const masterCategoryId = input.masterCategoryId || selectedMasterServiceId;
+      if (!masterCategoryId) {
+        throw new Error("Select a master service first.");
+      }
+      const created = await createVendorServiceCategory({
+        masterCategoryId,
+        name: input.name.trim(),
+        slug: input.slug?.trim() || undefined,
+        isActive: true,
+      }).unwrap();
+      await refetchCategoryOptions();
+      setSelectedCategoryId(created.id);
+      setWizardError(null);
+      toast.success("Service category created.");
+      return created;
+    },
+    [
+      createVendorServiceCategory,
+      refetchCategoryOptions,
+      selectedMasterServiceId,
+      setSelectedCategoryId,
+    ],
+  );
 
   const handleNextFromCategory = () => {
     if (!selectedCategoryId) {
@@ -661,17 +730,6 @@ const VendorServices = () => {
     if (!vendorServiceDetails.terms.trim()) {
       errors.terms = "Terms are required.";
     }
-    if (!vendorServiceDetails.latitude.trim()) {
-      errors.latitude = "Latitude is required.";
-    } else if (Number.isNaN(Number(vendorServiceDetails.latitude))) {
-      errors.latitude = "Enter a valid latitude.";
-    }
-    if (!vendorServiceDetails.longitude.trim()) {
-      errors.longitude = "Longitude is required.";
-    } else if (Number.isNaN(Number(vendorServiceDetails.longitude))) {
-      errors.longitude = "Enter a valid longitude.";
-    }
-
     if (!refundPolicy.type) {
       errors.refundPolicy = "Select a refund policy.";
     } else {
@@ -724,7 +782,7 @@ const VendorServices = () => {
       );
       return;
     }
-    if (!validateVendorServiceDetails()) {
+    if (!createdServiceId && !validateVendorServiceDetails()) {
       setGeneralError("Complete the vendor service details before continuing.");
       return;
     }
@@ -744,13 +802,12 @@ const VendorServices = () => {
           refundPolicy.type === "NO_REFUND"
             ? null
             : Number(refundPolicy.windowHours);
+
         const vendorServicePayload = {
           categoryId: selectedCategoryId,
           title: vendorServiceDetails.title.trim(),
           description: vendorServiceDetails.description.trim(),
           terms: vendorServiceDetails.terms.trim(),
-          latitude: Number(vendorServiceDetails.latitude),
-          longitude: Number(vendorServiceDetails.longitude),
           refundPolicy: {
             type: refundPolicy.type,
             windowHours: parsedWindowHours,
@@ -763,28 +820,85 @@ const VendorServices = () => {
         setCreatedServiceId(currentServiceId);
         setVendorServiceStep("success");
         toast.success("Vendor service created");
+      } else {
+        const updatePayload: {
+          id: string;
+          categoryId: string;
+          title?: string;
+          description?: string;
+          terms?: string;
+          refundPolicy?: { type: RefundPolicyType; windowHours?: number | null };
+        } = {
+          id: currentServiceId,
+          categoryId: selectedCategoryId,
+        };
+
+        const nextTitle = vendorServiceDetails.title.trim();
+        if (nextTitle) updatePayload.title = nextTitle;
+
+        const nextDescription = vendorServiceDetails.description.trim();
+        if (nextDescription) updatePayload.description = nextDescription;
+
+        const nextTerms = vendorServiceDetails.terms.trim();
+        if (nextTerms) updatePayload.terms = nextTerms;
+
+        const parsedWindowHours =
+          refundPolicy.type === "NO_REFUND"
+            ? null
+            : Number(refundPolicy.windowHours);
+        const validWindowHours =
+          parsedWindowHours !== null &&
+          Number.isFinite(parsedWindowHours) &&
+          parsedWindowHours > 0
+            ? parsedWindowHours
+            : null;
+        if (
+          refundPolicy.type === "NO_REFUND" ||
+          validWindowHours !== null
+        ) {
+          updatePayload.refundPolicy = {
+            type: refundPolicy.type,
+            windowHours: refundPolicy.type === "NO_REFUND" ? null : validWindowHours,
+          };
+        }
+
+        await updateVendorService({
+          ...updatePayload,
+        }).unwrap();
+        setVendorServiceStep("success");
       }
 
       // 2. Create multiple Offerings
+      const createdOfferingIds: string[] = [];
       for (const offeringVals of data.offerings) {
         const payload: CreateOfferingPayload = {
           serviceId: currentServiceId,
           name: offeringVals.name.trim(),
           description: offeringVals.description.trim(),
+          bookingUrl: offeringVals.bookingUrl?.trim() || undefined,
           basePrice: offeringVals.basePrice,
           salePrice: offeringVals.salePrice,
           maxQuantity: offeringVals.maxQuantity,
         };
         const createdOffering = await createOffering(payload).unwrap();
         setLastCreatedOfferingId(createdOffering.id);
+        createdOfferingIds.push(createdOffering.id);
+      }
 
-        if (enableSlots) {
-          await createSlotFlow(createdOffering.id);
-        }
+      if (enableSlots && createdOfferingIds.length > 0) {
+        const selectedSlotTargetId =
+          createdOfferingIds[
+            Math.min(Math.max(slotTargetOfferingIndex, 0), createdOfferingIds.length - 1)
+          ];
+        await createSlotFlow(selectedSlotTargetId);
+      }
 
-        if (enableRules) {
-          await createRuleFlow(createdOffering.id);
-        }
+      if (enableRules && createdOfferingIds.length > 0) {
+        const selectedRuleTargetId =
+          createdOfferingIds[
+            Math.min(Math.max(ruleTargetOfferingIndex, 0), createdOfferingIds.length - 1)
+          ];
+        await createRuleFlow(selectedRuleTargetId);
       }
 
       setOfferingStep("success");
@@ -804,6 +918,8 @@ const VendorServices = () => {
       setPendingPrefillOfferingId(null);
       setEnableSlots(false);
       setEnableRules(false);
+      setSlotTargetOfferingIndex(0);
+      setRuleTargetOfferingIndex(0);
       setSlotFields({ ...slotInitialState });
       setSlotStartDate(null);
       setSlotEndDate(null);
@@ -843,8 +959,6 @@ const VendorServices = () => {
       title: "",
       description: "",
       terms: "",
-      latitude: "",
-      longitude: "",
     });
     setRefundPolicy(defaultRefundPolicy);
     setCurrentStep(1);
@@ -870,8 +984,6 @@ const VendorServices = () => {
         title: service.title ?? "",
         description: service.description ?? "",
         terms: service.terms ?? "",
-        latitude: service.latitude?.toString() ?? "",
-        longitude: service.longitude?.toString() ?? "",
       });
       setRefundPolicy(
         service.refundPolicy?.type
@@ -987,6 +1099,7 @@ const VendorServices = () => {
       masterServiceOptions={masterServiceOptions}
       isMasterLoading={isMasterLoading}
       wizardError={wizardError}
+      handleCreateMasterService={handleCreateMasterService}
       handleSelectMaster={handleSelectMaster}
       handleNextFromMaster={handleNextFromMaster}
       selectedMasterService={selectedMasterService}
@@ -995,6 +1108,7 @@ const VendorServices = () => {
       categoryError={categoryError}
       selectedCategoryId={selectedCategoryId}
       setSelectedCategoryId={setSelectedCategoryId}
+      handleCreateServiceCategory={handleCreateServiceCategory}
       handleNextFromCategory={handleNextFromCategory}
       selectedCategory={selectedCategory}
       handleNextFromDetails={handleNextFromDetails}
@@ -1014,10 +1128,13 @@ const VendorServices = () => {
       fields={fields}
       append={append}
       remove={remove}
+      watchedOfferings={watchedOfferings ?? []}
       errors={errors}
       generalError={generalError}
       enableSlots={enableSlots}
       setEnableSlots={setEnableSlots}
+      slotTargetOfferingIndex={slotTargetOfferingIndex}
+      setSlotTargetOfferingIndex={setSlotTargetOfferingIndex}
       slotFields={slotFields}
       slotStartDate={slotStartDate}
       slotEndDate={slotEndDate}
@@ -1029,6 +1146,8 @@ const VendorServices = () => {
       slotValidationError={slotValidationError}
       enableRules={enableRules}
       setEnableRules={setEnableRules}
+      ruleTargetOfferingIndex={ruleTargetOfferingIndex}
+      setRuleTargetOfferingIndex={setRuleTargetOfferingIndex}
       ruleFields={ruleFields}
       handleRuleFieldUpdate={handleRuleFieldUpdate}
       ruleValidationError={ruleValidationError}

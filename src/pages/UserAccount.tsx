@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AddShippingAddressDialog } from "@/components/modals/account/AddShippingAddressDialog";
+import { ReferralProgramCard } from "@/components/referrals/ReferralProgramCard";
 import { cn } from "@/lib/utils";
 import { Eye, Lock, MapPin, Sparkles, User } from "lucide-react";
 import React from "react";
@@ -32,7 +33,10 @@ import {
   useUpdateShippingAddressMutation,
 } from "@/features/account/api/accountApi";
 import { useUploadAvatarMutation } from "@/features/auth/api/authApi";
-import type { ShippingAddressFormInput } from "@/features/account/api/accountApi";
+import type {
+  AccountProfile,
+  ShippingAddressFormInput,
+} from "@/features/account/api/accountApi";
 
 type SectionKey = "personal" | "password" | "shipping"  | "personalization";
 
@@ -252,7 +256,7 @@ const UserAccount = () => {
       const payload = {
         firstName: personalForm.firstName || undefined,
         lastName: personalForm.lastName || undefined,
-        gender: personalForm.gender || undefined,
+        gender: (personalForm.gender || undefined) as AccountProfile["gender"],
         phone: personalForm.phone || undefined,
       };
       const response = await updateProfile(payload).unwrap();
@@ -294,6 +298,7 @@ const UserAccount = () => {
               My Account
             </h1>
           </div>
+          <ReferralProgramCard />
           <div className="grid gap-8 lg:grid-cols-[260px,1fr]">
             <section className="rounded-3xl border border-slate-200 bg-white/60 p-4">
               <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">

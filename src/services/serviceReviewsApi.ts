@@ -10,6 +10,7 @@ export interface ServiceReview {
     firstName?: string | null;
     lastName?: string | null;
     nickName?: string | null;
+    profileImageUrl?: string | null;
   } | null;
 }
 
@@ -23,7 +24,7 @@ export const serviceReviewsApi = createApi({
       transformResponse: (response: any) => response.data ?? response,
       providesTags: (result, error, serviceId) => [{ type: "ServiceReview" as const, id: serviceId }],
     }),
-    createReview: builder.mutation<ServiceReview, { serviceId: string; rating: number; comment: string }>({
+    createReview: builder.mutation<ServiceReview, { userId: any; serviceId: string; rating: number; comment: string }>({
       query: (body) => ({
         url: "/vendor/reviews",
         method: "POST",

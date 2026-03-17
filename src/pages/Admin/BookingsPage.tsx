@@ -1,5 +1,6 @@
 import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarClock, Eye, Phone } from "lucide-react";
+import toast from "react-hot-toast";
 import {
   HiOutlineCheckCircle,
   HiOutlineClock,
@@ -7,6 +8,14 @@ import {
   HiOutlineSparkles,
 } from "react-icons/hi2";
 import dayjs from "dayjs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { ListingPage } from "@/components/shared/ListingPage";
 import type {
@@ -17,7 +26,10 @@ import type {
 } from "@/components/shared/DataTable";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { useLazyListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
+import {
+  useDecideBookingRefundMutation,
+  useLazyListAdminBookingsQuery,
+} from "@/features/admin/bookings/api/adminBookingsApi";
 import type {
   AdminBookingItem,
   AdminBookingStatus,
@@ -130,6 +142,8 @@ type AdminBookingsPageProps = {
   breadcrumbOverride?: string;
 };
 
+type BookingActionModalType = "view" | "email" | "approve" | "reject" | null;
+
 const buildStatusParam = (filter?: string) => {
   if (!filter || filter === "all") {
     return undefined;
@@ -163,10 +177,15 @@ export default function AdminBookingsPage({
   const [priceInputs, setPriceInputs] = useState({ min: "", max: "" });
   const [activePriceFilter, setActivePriceFilter] = useState<{ min?: string; max?: string }>({});
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [activeBooking, setActiveBooking] = useState<AdminBookingRow | null>(null);
+  const [actionModal, setActionModal] = useState<BookingActionModalType>(null);
+  const [refundDecisionReason, setRefundDecisionReason] = useState("");
   const hasPriceFilter = Boolean(activePriceFilter.min || activePriceFilter.max);
 
   const [fetchBookings, { data, isFetching, isError }] =
     useLazyListAdminBookingsQuery();
+  const [decideBookingRefund, { isLoading: isUpdatingRefund }] =
+    useDecideBookingRefundMutation();
 
   const listingTitle = titleOverride ?? "Admin bookings";
   const breadcrumbTitle = breadcrumbOverride ?? "Admin / Bookings";
@@ -417,27 +436,80 @@ export default function AdminBookingsPage({
     []
   );
 
+  const openActionModal = useCallback(
+    (type: Exclude<BookingActionModalType, null>, row: AdminBookingRow) => {
+      if ((type === "approve" || type === "reject") && row.status !== "REFUND_REQUESTED") {
+        toast.error("Only refund-requested bookings can be actioned.");
+        return;
+      }
+      setActiveBooking(row);
+      setRefundDecisionReason("");
+      setActionModal(type);
+    },
+    []
+  );
+
+  const closeActionModal = useCallback(() => {
+    setActionModal(null);
+    setActiveBooking(null);
+    setRefundDecisionReason("");
+  }, []);
+
+  const submitRefundDecision = useCallback(
+    async (action: "APPROVE" | "REJECT") => {
+      if (!activeBooking) return;
+      if (action === "REJECT" && !refundDecisionReason.trim()) {
+        toast.error("Rejection reason is required.");
+        return;
+      }
+      try {
+        await decideBookingRefund({
+          id: activeBooking.id,
+          action,
+          reason: refundDecisionReason.trim() || undefined,
+        }).unwrap();
+        toast.success(action === "APPROVE" ? "Refund approved." : "Refund request rejected.");
+        closeActionModal();
+      } catch (error) {
+        console.error(`Failed to ${action.toLowerCase()} refund`, error);
+        toast.error(`Could not ${action === "APPROVE" ? "approve" : "reject"} refund.`);
+      }
+    },
+    [activeBooking, closeActionModal, decideBookingRefund, refundDecisionReason]
+  );
+
   const actions = useMemo<ActionConfig<AdminBookingRow>[]>(() => {
     return [
       {
         title: "View booking",
         icon: Eye,
         onClick: (row) => {
-          console.log("View booking", row.orderNumber);
+          openActionModal("view", row);
         },
       },
       {
         title: "Email customer",
         icon: Phone,
         onClick: (row) => {
-          const target = row.customerEmail;
-          if (target) {
-            window.open(`mailto:${target}`);
-          }
+          openActionModal("email", row);
+        },
+      },
+      {
+        title: "Approve refund",
+        icon: HiOutlineCheckCircle,
+        onClick: (row) => {
+          openActionModal("approve", row);
+        },
+      },
+      {
+        title: "Reject refund",
+        icon: HiOutlineExclamationTriangle,
+        onClick: (row) => {
+          openActionModal("reject", row);
         },
       },
     ];
-  }, []);
+  }, [openActionModal]);
 
   const clearDateRange = useCallback(() => {
     setDateRangeLabel("");
@@ -590,86 +662,183 @@ export default function AdminBookingsPage({
   );
 
   return (
-    <ListingPage
-      title={listingTitle}
-      breadCrumbTitle={breadcrumbTitle}
-      description="Review vendor bookings, keep an eye on refunds, and drill into pending confirmations."
-      stats={[
-        {
-          title: "Confirmed",
-          value: totals.confirmed,
-          subtitle: "Scheduled & ready",
-          icon: HiOutlineCheckCircle,
-          accentColor: "blue",
-        },
-        {
-          title: "Pending",
-          value: totals.pending,
-          subtitle: "Awaiting action",
-          icon: HiOutlineClock,
-          accentColor: "yellow",
-        },
-        {
-          title: "Refund requests",
-          value: totals.refundRequests,
-          subtitle: "Needs triage",
-          icon: HiOutlineExclamationTriangle,
-          accentColor: "red",
-        },
-        {
-          title: "Completed",
-          value: totals.completed,
-          subtitle: "Closed in view",
-          icon: HiOutlineSparkles,
-          accentColor: "green",
-        },
-      ]}
-      summary={{
-        left: dateRangeLabel
-          ? `Range: ${dateRangeLabel}`
-          : "Select a quick range in the table header.",
-        right: `Selected bookings: ${selectedRows.length}`,
-      }}
-      headerSlot={headerSlot}
-      tableProps={{
-        title: "Bookings",
-        breadCrumbTitle: "Operations / Admin Bookings",
-        data: bookingRows,
-        columns,
-        filters,
-        sortOptions,
-        searchable: true,
-        searchPlaceholder: "Search bookings, customers, vendors, or orders...",
-        searchValue: searchTerm,
-        showSerialNumber: true,
-        defaultActiveFilters: initialActiveFilters,
-        rowsPerPageOptions: [10, 20, 40],
-        defaultRowsPerPage: rowsPerPage,
-        controlledPagination,
-        sortStatus,
-        onSort: (status) => {
-          setSortStatus(status);
-          setPage(1);
-        },
-        onSearch: (value) => {
-          setSearchTerm(value ?? "");
-          setPage(1);
-        },
-        onFilter: handleFilter,
-        onRowSelect: (ids) => setSelectedRows(ids),
-        onPaginationChange: ({ page: newPage, pageSize }) => {
-          setRowsPerPage(pageSize);
-          setPage(newPage);
-        },
-        onDateRangeSelect: handleDateRangeSelect,
-        actions,
-        loading: isFetching,
-        error: isError ? "Unable to load bookings right now." : null,
-        noRecordText: "No bookings match the selected filters.",
-        minHeight: 320,
-        className: "border border-slate-200",
-      }}
-    />
+    <>
+      <ListingPage
+        title={listingTitle}
+        breadCrumbTitle={breadcrumbTitle}
+        description="Review vendor bookings, keep an eye on refunds, and drill into pending confirmations."
+        stats={[
+          {
+            title: "Confirmed",
+            value: totals.confirmed,
+            subtitle: "Scheduled & ready",
+            icon: HiOutlineCheckCircle,
+            accentColor: "blue",
+          },
+          {
+            title: "Pending",
+            value: totals.pending,
+            subtitle: "Awaiting action",
+            icon: HiOutlineClock,
+            accentColor: "yellow",
+          },
+          {
+            title: "Refund requests",
+            value: totals.refundRequests,
+            subtitle: "Needs triage",
+            icon: HiOutlineExclamationTriangle,
+            accentColor: "red",
+          },
+          {
+            title: "Completed",
+            value: totals.completed,
+            subtitle: "Closed in view",
+            icon: HiOutlineSparkles,
+            accentColor: "green",
+          },
+        ]}
+        summary={{
+          left: dateRangeLabel
+            ? `Range: ${dateRangeLabel}`
+            : "Select a quick range in the table header.",
+          right: `Selected bookings: ${selectedRows.length}`,
+        }}
+        headerSlot={headerSlot}
+        tableProps={{
+          title: "Bookings",
+          breadCrumbTitle: "Operations / Admin Bookings",
+          data: bookingRows,
+          columns,
+          filters,
+          sortOptions,
+          searchable: true,
+          searchPlaceholder: "Search bookings, customers, vendors, or orders...",
+          searchValue: searchTerm,
+          showSerialNumber: true,
+          defaultActiveFilters: initialActiveFilters,
+          rowsPerPageOptions: [10, 20, 40],
+          defaultRowsPerPage: rowsPerPage,
+          controlledPagination,
+          sortStatus,
+          onSort: (status) => {
+            setSortStatus(status);
+            setPage(1);
+          },
+          onSearch: (value) => {
+            setSearchTerm(value ?? "");
+            setPage(1);
+          },
+          onFilter: handleFilter,
+          onRowSelect: (ids) => setSelectedRows(ids),
+          onPaginationChange: ({ page: newPage, pageSize }) => {
+            setRowsPerPage(pageSize);
+            setPage(newPage);
+          },
+          onDateRangeSelect: handleDateRangeSelect,
+          actions,
+          loading: isFetching || isUpdatingRefund,
+          error: isError ? "Unable to load bookings right now." : null,
+          noRecordText: "No bookings match the selected filters.",
+          minHeight: 320,
+          className: "border border-slate-200",
+        }}
+      />
+
+      <Dialog open={Boolean(actionModal && activeBooking)} onOpenChange={(open) => !open && closeActionModal()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {actionModal === "view" && "Booking Details"}
+              {actionModal === "email" && "Contact Customer"}
+              {actionModal === "approve" && "Approve Refund"}
+              {actionModal === "reject" && "Reject Refund"}
+            </DialogTitle>
+            <DialogDescription>
+              {actionModal === "view" && "Review booking summary information."}
+              {actionModal === "email" && "You can email the customer from here."}
+              {actionModal === "approve" && "Add an optional note before approving this refund."}
+              {actionModal === "reject" && "Add a reason before rejecting this refund request."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeBooking && (
+            <div className="space-y-4 text-sm">
+              {(actionModal === "view" || actionModal === "email") && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p><span className="font-semibold text-slate-800">Order:</span> {activeBooking.orderNumber}</p>
+                  <p><span className="font-semibold text-slate-800">Customer:</span> {activeBooking.customerName}</p>
+                  <p><span className="font-semibold text-slate-800">Email:</span> {activeBooking.customerEmail}</p>
+                  <p><span className="font-semibold text-slate-800">Vendor:</span> {activeBooking.vendorName}</p>
+                  <p><span className="font-semibold text-slate-800">Service:</span> {activeBooking.serviceTitle}</p>
+                </div>
+              )}
+
+              {(actionModal === "approve" || actionModal === "reject") && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700" htmlFor="refund-decision-reason">
+                    {actionModal === "approve" ? "Approval note (optional)" : "Rejection reason"}
+                  </label>
+                  <textarea
+                    id="refund-decision-reason"
+                    rows={4}
+                    value={refundDecisionReason}
+                    onChange={(event) => setRefundDecisionReason(event.target.value)}
+                    placeholder={
+                      actionModal === "approve"
+                        ? "Refund approved after policy check."
+                        : "Refund not eligible as per policy."
+                    }
+                    className="w-full rounded-lg border border-slate-300 p-3 text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={closeActionModal}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Close
+            </button>
+            {actionModal === "email" && activeBooking && (
+              <button
+                type="button"
+                onClick={() => {
+                  window.open(`mailto:${activeBooking.customerEmail}`);
+                  closeActionModal();
+                }}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+              >
+                Open Email
+              </button>
+            )}
+            {actionModal === "approve" && (
+              <button
+                type="button"
+                onClick={() => void submitRefundDecision("APPROVE")}
+                disabled={isUpdatingRefund}
+                className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+              >
+                Approve
+              </button>
+            )}
+            {actionModal === "reject" && (
+              <button
+                type="button"
+                onClick={() => void submitRefundDecision("REJECT")}
+                disabled={isUpdatingRefund}
+                className="rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50"
+              >
+                Reject
+              </button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

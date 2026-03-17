@@ -7,7 +7,7 @@ import type {
 import { clearAuth } from "@/features/auth/authSlice";
 
 const REFRESH_URL = "/auth/refresh";
-let refreshFailed = false;
+let refreshInProgress: Promise<unknown> | null = null;
 
 const getRequestUrl = (args: string | FetchArgs) =>
   typeof args === "string" ? args : args.url ?? "";
@@ -35,6 +35,30 @@ const redirectToSignIn = () => {
   }
 };
 
+const runRefresh = (
+  args: string | FetchArgs,
+  api: Parameters<BaseQueryFn>[1],
+  extraOptions: Parameters<BaseQueryFn>[2]
+) => {
+  if (!refreshInProgress) {
+    refreshInProgress = Promise.resolve(
+      baseQuery({ url: REFRESH_URL, method: "POST" }, api, extraOptions),
+    ).finally(() => {
+      refreshInProgress = null;
+    });
+  }
+  return refreshInProgress;
+};
+
+const isRefreshAuthorized = (refreshResponse: unknown) => {
+  if (!refreshResponse || typeof refreshResponse !== "object") return false;
+  const response = refreshResponse as { success?: boolean; message?: string };
+  if (Object.prototype.hasOwnProperty.call(response, "success")) {
+    return response.success === true;
+  }
+  return true;
+};
+
 export const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   credentials: "include", // REQUIRED for cookies
@@ -49,39 +73,26 @@ export const baseQueryWithReauth: BaseQueryFn<
   const requestUrl = getRequestUrl(args);
   const isRefreshRequest = requestUrl === REFRESH_URL;
 
-  if (!result.error && (requestUrl === REFRESH_URL || requestUrl === "/auth/login")) {
-    refreshFailed = false;
-  }
-
   if (result.error?.status === 401) {
     if (isRefreshRequest) {
-      refreshFailed = true;
       api.dispatch(clearAuth());
       redirectToSignIn();
       return result;
     }
 
-    if (refreshFailed) {
+    const refreshResult = await runRefresh(args, api, extraOptions);
+    const refreshError = (refreshResult as { error?: FetchBaseQueryError }).error;
+    const refreshData = (refreshResult as { data?: unknown }).data;
+
+    if (refreshError?.status === 401 || !isRefreshAuthorized(refreshData)) {
       api.dispatch(clearAuth());
       redirectToSignIn();
       return result;
     }
 
-    const refreshResult = await baseQuery(
-      { url: REFRESH_URL, method: "POST" },
-      api,
-      extraOptions
-    );
-
-    if (refreshResult.data) {
-      // retry original request after refresh
-      refreshFailed = false;
+    if (refreshResult && !refreshError) {
       result = await baseQuery(args, api, extraOptions);
-    } else {
-      // refresh failed -> hard logout
-      refreshFailed = true;
-      api.dispatch(clearAuth());
-      redirectToSignIn();
+      return result;
     }
   }
 

@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
-import menuHeader from "@/assets/images/banner1.png";
-import profile7 from "@/assets/images/profile-7.jpeg";
+import menuHeader from "@/assets/Images/banner1.png";
+import profile7 from "@/assets/Images/profile-7.jpeg";
 
 import { useLogoutMutation } from "@/features/auth/api/authApi";
 import { RootState } from "@/app/store";

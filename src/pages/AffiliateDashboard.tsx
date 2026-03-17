@@ -1,10 +1,21 @@
-import { useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useMemo } from "react";
+import { NavLink, Navigate } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  HiOutlineCalendarDays,
+  HiOutlineArrowPathRoundedSquare,
+  HiOutlineBanknotes,
+  HiOutlineChartBarSquare,
+  HiOutlineCurrencyDollar,
+  HiOutlineUserGroup,
+  HiOutlineWallet,
+} from "react-icons/hi2";
 
 import { useAppSelector } from "@/app/hooks";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import StatsCard from "@/components/shared/StatsCard";
+import { cn } from "@/lib/utils";
 import {
   useGetAffiliateCommissionsQuery,
   useGetAffiliateDashboardQuery,
@@ -15,6 +26,15 @@ const currency = (value: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "SEK", maximumFractionDigits: 2 }).format(
     value ?? 0,
   );
+
+const dashboardTabs = [
+  { label: "Overview", to: "/affiliate/overview" },
+  { label: "Referrals", to: "/affiliate/referrals" },
+  { label: "Vendors Referred", to: "/affiliate/vendors-referred" },
+  { label: "Commission", to: "/affiliate/commission" },
+  { label: "Wallet", to: "/affiliate/wallet" },
+  { label: "Payouts", to: "/affiliate/payouts" },
+];
 
 const getStatusBadgeClasses = (status: string) => {
   const normalized = status.toLowerCase();
@@ -31,7 +51,7 @@ const getStatusBadgeClasses = (status: string) => {
 };
 
 export default function AffiliateDashboard() {
-  const [page, setPage] = useState(1);
+  const page = 1;
   const limit = 10;
   const user = useAppSelector((state) => state.auth.user);
   const canViewAffiliateDashboard = Boolean(user && (user.roles ?? []).includes("AFFILIATE"));
@@ -51,18 +71,30 @@ export default function AffiliateDashboard() {
 
   const dashboard = dashboardRes?.data;
   const referrals = referralsRes?.items ?? [];
-  const pagination = referralsRes?.pagination;
+  const referredUsers = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; profileImageUrl?: string | null }>();
+    for (const row of referrals) {
+      if (!map.has(row.referredUserId)) {
+        map.set(row.referredUserId, {
+          id: row.referredUserId,
+          name: row.referredName || row.referredEmail || "User",
+          profileImageUrl: row.profileImageUrl ?? null,
+        });
+      }
+    }
+    return Array.from(map.values()).slice(0, 5);
+  }, [referrals]);
   const chartData = useMemo(
     () =>
       (dashboard?.monthlyEarnings ?? []).map((row) => ({
-        month: row.month,
+        month: new Date(`${row.month}-01`).toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }),
         earnings: row.amount,
       })),
     [dashboard?.monthlyEarnings],
   );
-  const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "/api/v1").replace(/\/$/, "");
-  const exportHref = `${apiBaseUrl}/affiliate/referrals?export=csv&page=1&limit=1000`;
-
   if (!user) {
     return <Navigate to="/sign-in" replace />;
   }
@@ -75,46 +107,104 @@ export default function AffiliateDashboard() {
     return <div className="p-8">Loading affiliate dashboard...</div>;
   }
 
+  const affiliateName = `${(user.firstName ?? "Affiliate").toUpperCase()}'S Business`;
+
   const statCards = [
     {
       label: "Total Referrals",
       value: dashboard?.summary.totalReferrals ?? 0,
-      valueClassName: "text-slate-900",
+      icon: HiOutlineUserGroup,
+      accentColor: "blue" as const,
+      subtitle: "All-time referrals",
     },
     {
       label: "Active Referrals",
       value: dashboard?.summary.activeReferrals ?? 0,
-      valueClassName: "text-slate-900",
+      icon: HiOutlineArrowPathRoundedSquare,
+      accentColor: "green" as const,
+      subtitle: "Currently active",
     },
     {
       label: "Total Commission Earned",
       value: currency(dashboard?.summary.totalCommissionEarned ?? 0),
-      valueClassName: "text-slate-900",
+      icon: HiOutlineCurrencyDollar,
+      accentColor: "purple" as const,
+      subtitle: "Approved and paid",
     },
     {
       label: "Pending Commission",
       value: currency(dashboard?.summary.pendingCommission ?? 0),
-      valueClassName: "text-amber-700",
+      icon: HiOutlineBanknotes,
+      accentColor: "yellow" as const,
+      subtitle: "Awaiting approval",
+    },
+    {
+      label: "Commission Rate",
+      value: `${dashboard?.affiliate.commissionRate ?? 0}%`,
+      icon: HiOutlineChartBarSquare,
+      accentColor: "cyan" as const,
+      subtitle: "Default affiliate rate",
+    },
+    {
+      label: "Recent Commissions",
+      value: commissionsRes?.pagination.total ?? 0,
+      icon: HiOutlineWallet,
+      accentColor: "green" as const,
+      subtitle: "Tracked commission rows",
     },
   ];
 
   return (
-    <DashboardContainer className="space-y-6 pb-6">
+    <DashboardContainer className="space-y-6 pb-8">
       <TitleBreadCrumbs title="Affiliate Dashboard" breadCrumbTitle="Affiliate / Dashboard" />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50 p-5 shadow-sm"
-          >
-            <p className="text-xs uppercase tracking-wide text-slate-500">{card.label}</p>
-            <p className={`mt-2 text-3xl font-bold ${card.valueClassName}`}>{card.value}</p>
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <p className="text-xl font-bold text-slate-900">{affiliateName}</p>
+            <p className="text-xs font-semibold text-slate-500">
+              {new Date(dashboard?.affiliate.joinedAt ?? Date.now()).toLocaleDateString()} -{" "}
+              {new Date().toLocaleDateString()}
+            </p>
           </div>
+          <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+            <HiOutlineCalendarDays className="h-4 w-4" />
+            Affiliate performance overview
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-4 border-b border-slate-200">
+          {dashboardTabs.map((tab) => (
+            <NavLink
+              key={tab.to}
+              to={tab.to}
+              className={({ isActive }) =>
+                cn(
+                  "pb-3 text-sm font-semibold text-slate-600 transition hover:text-slate-900",
+                  isActive && "border-b-2 border-blue-600 text-blue-700",
+                )
+              }
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        {statCards.map((card) => (
+          <StatsCard
+            key={card.label}
+            title={card.label}
+            value={card.value}
+            subtitle={card.subtitle}
+            icon={card.icon}
+            accentColor={card.accentColor}
+            showTrendIcon={false}
+          />
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_0.85fr_0.85fr]">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Monthly Earnings</h2>
@@ -167,85 +257,51 @@ export default function AffiliateDashboard() {
             )}
           </div>
         </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-slate-900">Referral Details</h2>
-          <a
-            href={exportHref}
-            className="inline-flex items-center rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Export CSV
-          </a>
-        </div>
-
-        <div className="overflow-x-auto rounded-xl border border-slate-100">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-3 py-3">Referral</th>
-                <th className="px-3 py-3">Booking ID</th>
-                <th className="px-3 py-3">Date</th>
-                <th className="px-3 py-3">Amount</th>
-                <th className="px-3 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {referrals.length ? (
-                referrals.map((row) => (
-                  <tr key={`${row.referralId}-${row.bookingId ?? "none"}`} className="border-b border-slate-100 hover:bg-slate-50/60">
-                    <td className="px-3 py-3">
-                      <p className="font-semibold text-slate-900">{row.referredName}</p>
-                      <p className="text-xs text-slate-500">{row.referredEmail}</p>
-                    </td>
-                    <td className="px-3 py-3 text-slate-700">{row.bookingId ?? "-"}</td>
-                    <td className="px-3 py-3 text-slate-700">{new Date(row.date).toLocaleDateString()}</td>
-                    <td className="px-3 py-3 text-slate-900">{currency(row.amount)}</td>
-                    <td className="px-3 py-3">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClasses(row.status)}`}>
-                        {row.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-3 py-10 text-center text-sm text-slate-500">
-                    No referral activity yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-xs text-slate-500">
-            Page {pagination?.page ?? 1} of {pagination?.totalPages ?? 1}
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              disabled={!pagination || pagination.page <= 1}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-lg font-semibold text-slate-900">
+                {dashboard?.summary.totalReferrals ?? 0} referred users
+              </p>
+              <p className="text-sm text-slate-500">
+                Keep engaging your newest referrals.
+              </p>
+            </div>
+            <NavLink
+              to="/affiliate/referrals"
+              className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Previous
-            </button>
-            <button
-              type="button"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => setPage((prev) => prev + 1)}
-              disabled={!pagination || pagination.page >= pagination.totalPages}
-            >
-              Next
-            </button>
+              View all
+            </NavLink>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-start gap-5">
+            {referredUsers.length ? (
+              referredUsers.map((user) => {
+                const avatarUrl =
+                  user.profileImageUrl ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=E2E8F0&color=334155&size=96`;
+                return (
+                  <div key={user.id} className="w-16 text-center">
+                    <img
+                      src={avatarUrl}
+                      alt={user.name}
+                      className="mx-auto h-12 w-12 rounded-full object-cover ring-1 ring-slate-200"
+                    />
+                    <p className="mt-2 truncate text-xs font-semibold text-slate-700">
+                      {user.name}
+                    </p>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-slate-500">No referred users yet.</p>
+            )}
           </div>
         </div>
       </div>
+
+
     </DashboardContainer>
   );
 }

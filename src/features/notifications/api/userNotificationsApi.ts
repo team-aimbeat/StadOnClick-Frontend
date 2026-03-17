@@ -52,13 +52,13 @@ export const userNotificationsApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              { type: "UserNotifications", id: "LIST" },
+              { type: "UserNotifications" as const, id: "LIST" },
               ...result.data.map((notification) => ({
-                type: "UserNotifications",
+                type: "UserNotifications" as const,
                 id: notification.id,
               })),
             ]
-          : [{ type: "UserNotifications", id: "LIST" }],
+          : [{ type: "UserNotifications" as const, id: "LIST" }],
     }),
 
     getUnreadCount: builder.query<UnreadCountResponse, void>({

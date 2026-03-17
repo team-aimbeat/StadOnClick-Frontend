@@ -21,9 +21,9 @@ import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 
 import menuHeader from "@/assets/Images/banner1.png";
-import profile7 from "@/assets/images/profile-7.jpeg";
-import profile8 from "@/assets/images/profile-8.jpeg";
-import profile9 from "@/assets/images/profile-9.jpeg";
+import profile7 from "@/assets/Images/profile-7.jpeg";
+import profile8 from "@/assets/Images/profile-8.jpeg";
+import profile9 from "@/assets/Images/profile-9.jpeg";
 
 import { RootState } from "@/app/store";
 import {
@@ -516,13 +516,13 @@ const VendorHeader = () => {
               btnClassName="group relative rounded-full border border-gray-200/80 bg-white p-0.5 shadow-sm transition hover:border-primary/40 dark:border-gray-700 dark:bg-gray-900/80"
               button={
                 <img
-                  className="h-12 w-12 rounded-full object-cover saturate-50 transition group-hover:saturate-100"
+                  className="h-12 w-12 rounded-full object-cover saturate-100"
                   src={avatar}
                   alt="User avatar"
                 />
               }
             >
-               <ul className="w-57.5 font-semibold text-dark dark:text-white-light/90">
+               <ul className="w-[280px] font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img

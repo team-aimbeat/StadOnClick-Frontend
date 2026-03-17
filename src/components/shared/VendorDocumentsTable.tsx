@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import VendorTable from "./CustomTable";
-import profile7 from "@/assets/images/profile-7.jpeg";
+import { DataTable, type ColumnConfig } from "@/components/shared/DataTable";
+import profile7 from "@/assets/Images/profile-7.jpeg";
 
 import {
   useGetVendorKycDocumentsQuery,
@@ -30,7 +30,6 @@ import {
 } from "@/services/vendorKycApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 import { useGetMeQuery } from "@/features/auth/api/authApi";
-import { constrainedMemory } from "process";
 
 export type VendorProfile = {
   name: string;
@@ -283,13 +282,12 @@ const VendorDocumentsTable = ({
     }
   };
 
-  const columns = [
+  const columns: ColumnConfig[] = [
     // { key: "id", header: "ID", width: "90px" },
     {
       key: "vendor",
-      header: "Vendor",
-      width: "",
-      render: (row: VendorDoc) => (
+      title: "Vendor",
+      render: (_value: unknown, row: VendorDoc) => (
         <div className="flex items-center gap-3">
           <img
             src={row.avatar}
@@ -302,12 +300,12 @@ const VendorDocumentsTable = ({
         </div>
       ),
     },
-    { key: "docType", header: "Doc type" },
-    { key: "category", header: "Category" },
+    { key: "docType", title: "Doc type" },
+    { key: "category", title: "Category" },
     {
       key: "status",
-      header: "Status",
-      render: (row: VendorDoc) => (
+      title: "Status",
+      render: (_value: unknown, row: VendorDoc) => (
         <span
           className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${statusStyles(
             row.status,
@@ -319,8 +317,8 @@ const VendorDocumentsTable = ({
     },
     {
       key: "submitted",
-      header: "Submitted",
-      render: (row: VendorDoc) => (
+      title: "Submitted",
+      render: (_value: unknown, row: VendorDoc) => (
         <div>
           <div className="text-gray-900 dark:text-gray-100">
             {row.submitted}
@@ -331,8 +329,8 @@ const VendorDocumentsTable = ({
     },
     {
       key: "actions",
-      header: "Actions",
-      render: (row: VendorDoc) => (
+      title: "Actions",
+      render: (_value: unknown, row: VendorDoc) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -374,7 +372,9 @@ const VendorDocumentsTable = ({
 
   const toolbarSkeleton = isFetching && vendorDocs.length === 0;
   const vendorEmail = user?.email ?? "Vendor";
-  const vendorname = user?.firstName + user.lastName;
+  const vendorname =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    resolvedVendor.name;
   const phone = user?.phone;
 
 
@@ -462,11 +462,17 @@ const VendorDocumentsTable = ({
             </div>
           )}
 
-          <VendorTable<VendorDoc>
+          <DataTable
+            title="KYC Documents"
+            breadCrumbTitle="Vendor / KYC Documents"
             columns={columns}
             data={vendorDocs}
-            className={toolbarSkeleton ? "opacity-80" : undefined}
-            showToolbar={!toolbarSkeleton}
+            loading={toolbarSkeleton}
+            searchable
+            selectable={false}
+            showSerialNumber={false}
+            noRecordText="No documents uploaded yet."
+            className="shadow-none border border-gray-200 rounded-2xl"
           />
 
           {uploadOpen && (

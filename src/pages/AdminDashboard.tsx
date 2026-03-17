@@ -217,6 +217,8 @@ const AdminDashboard: React.FC = () => {
   const bookingsTrend = trendFromValues(todayBookingsCount, yesterdayBookingsCount);
   const usersTrend = trendFromValues(newUsersToday, Math.max(0, newUsersToday - 1));
   const conversionTrend = trendFromValues(conversionRate, conversionYesterday);
+  const gmvTrend = trendFromValues(todayRevenue, yesterdayRevenue);
+  const gmvTrendDirection = gmvTrend.trend === "neutral" ? undefined : gmvTrend.trend;
 
   const platformSnapshotMetrics: SnapshotMetric[] = [
     {
@@ -412,8 +414,12 @@ const AdminDashboard: React.FC = () => {
     const rows = vendorApplicationsResponse?.data ?? [];
     return rows.slice(0, 5).map((application: any) => ({
       vendor: application.vendor?.businessName ?? "Vendor",
-      city: application.vendor?.city?.name ?? "Unknown",
+      status: application.status ?? application.vendor?.status,
       appliedAt: formatRelativeTime(application.submittedAt),
+      profileImageUrl:
+        application.vendor?.user?.profileImageUrl ??
+        application.vendor?.profileImageUrl ??
+        undefined,
     }));
   }, [vendorApplicationsResponse?.data]);
 
@@ -464,8 +470,9 @@ const AdminDashboard: React.FC = () => {
                 height={260}
                 primaryColor="#2563EB"
                 secondaryColor="#F97316"
-                primaryLabel="Current Week"
-                secondaryLabel="Last Week"
+                primaryLabel={`Current Year (${new Date().getFullYear()})`}
+                secondaryLabel={`Last Year (${new Date().getFullYear() - 1})`}
+                growthText="vs last year"
                 showLegend
                 showPeriodSelect={false}
                 className="h-full"
@@ -504,9 +511,9 @@ const AdminDashboard: React.FC = () => {
               <GmvCard
                 title="GMV today"
                 value={Math.round(todayRevenue)}
-                percentage={trendFromValues(todayRevenue, yesterdayRevenue).percentage}
+                percentage={gmvTrend.percentage}
                 periodLabel="vs yesterday"
-                trend={trendFromValues(todayRevenue, yesterdayRevenue).trend}
+                trend={gmvTrendDirection}
                 showChart
                 chartData={gmvChartData}
                 currency="SEK "

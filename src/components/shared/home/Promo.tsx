@@ -1,10 +1,10 @@
 import { useRef } from "react"
 
-import eventImage from "@/assets/images/event.jpg"
-import hotelImage from "@/assets/images/hotel1.jpg"
-import hotelAltImage from "@/assets/images/hotel2.jpg"
-import hotelPinkImage from "@/assets/images/hotel3.jpg"
-import vacationImage from "@/assets/images/vacation.jpeg"
+import eventImage from "@/assets/Images/event.jpg"
+import hotelImage from "@/assets/Images/hotel1.jpg"
+import hotelAltImage from "@/assets/Images/hotel2.jpg"
+import hotelPinkImage from "@/assets/Images/hotel3.jpg"
+import vacationImage from "@/assets/Images/vacation.jpeg"
 
 const promoTiles = [
   {

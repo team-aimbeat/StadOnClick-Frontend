@@ -47,6 +47,14 @@ export const leadsApi = createApi({
       }),
       invalidatesTags: [{ type: "VendorLeads", id: "LIST" }],
     }),
+    exportVendorLeads: builder.mutation<Blob, Omit<VendorLeadsQuery, "page" | "limit"> | void>({
+      query: (params) => ({
+        url: "/vendor/leads/export",
+        method: "GET",
+        params: params ?? {},
+        responseHandler: async (response) => response.blob(),
+      }),
+    }),
   }),
 });
 
@@ -54,4 +62,5 @@ export const {
   useSubmitLeadMutation,
   useGetVendorLeadsQuery,
   useUpdateVendorLeadStatusMutation,
+  useExportVendorLeadsMutation,
 } = leadsApi;

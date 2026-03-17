@@ -8,5 +8,11 @@ export function getPostLoginRoute(roles: string[] = []): string {
   if (roles.includes("MODERATOR")) {
     return "/admin/moderator/dashboard";
   }
-  return "/access-denied";
+  if (roles.includes("VENDOR")) {
+    return "/vendor/dashboard";
+  }
+  if (roles.includes("AFFILIATE")) {
+    return "/affiliate/dashboard";
+  }
+  return "/marketplace";
 }

@@ -11,6 +11,7 @@ import { toast } from "react-hot-toast"
 import { useForm, useFormState } from "react-hook-form"
 import { normalizeApiError } from "@/shared/utils/normalizeApiError"
 import { useNavigate } from "react-router-dom"
+import { PortalSwitcher } from "@/components/shared/auth/PortalSwitcher"
 
 type FormValues = {
   email: string
@@ -74,6 +75,8 @@ export default function SignIn() {
         subtitle="Sign in to manage your bookings, profile, and activity preferences."
         showStepper={false}
       >
+        <PortalSwitcher current="customer" />
+
         <StepLogin
           register={register}
           errors={errors}

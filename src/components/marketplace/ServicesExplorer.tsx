@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import bannerImage from "@/assets/images/bgsalon.jpg"
+import bannerImage from "@/assets/Images/bgsalon.jpg"
 import { ChevronDown } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { slugifyServiceTitle } from "@/utils/slugify"
 import { Service } from "./types"
 import ServicesSidebar from "./ServicesSidebar"
@@ -16,7 +17,7 @@ import { useGetCitiesQuery } from "@/features/auth/api/authApi"
 
 const PAGE_SIZE = 18
 const PRICE_MIN = 0
-const PRICE_MAX = 500
+const PRICE_MAX = 10000
 const DEFAULT_RATING_FILTER = 4.5
 
 const formatMoney = (amount: number, currency: string) => {
@@ -40,30 +41,44 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
       ? [service.thumbnailUrl]
       : []
 
-    return {
-      id: service.id,
-      title: service.vendorName || service.title,
-      location: service.cityName ?? "—",
-      rating: service.ratingAvg,
-      reviews: service.ratingCount,
-      image: images[0] ?? bannerImage,
-      images,
-      slug: slugifyServiceTitle(service.title),
-      categoryName: service.categoryName ?? "—",
-      categoryId: service.categoryId,
-      details: (service.offeringsPreview ?? []).map((offering) => ({
-      title: offering.name,
-      subtitle: offering.description ?? undefined,
-      duration: offering.durationLabel ?? undefined,
-      price: formatMoney(offering.salePrice ?? offering.basePrice, offering.currency ?? "INR"),
-      compareAtPrice:
-        offering.basePrice > offering.salePrice
-          ? formatMoney(offering.basePrice, offering.currency ?? "INR")
-          : undefined,
-    })),
+  const details = (service.offeringsPreview ?? []).map((offering) => ({
+    title: offering.name,
+    subtitle: offering.description ?? undefined,
+    duration: offering.durationLabel ?? undefined,
+    price: formatMoney(offering.salePrice ?? offering.basePrice, offering.currency ?? "INR"),
+    compareAtPrice:
+      offering.basePrice > offering.salePrice
+        ? formatMoney(offering.basePrice, offering.currency ?? "INR")
+        : undefined,
+  }))
+
+  const fallbackPrice =
+    service.priceMin != null ? formatMoney(service.priceMin, "SEK") : "Price on request"
+
+  return {
+    id: service.id,
+    vendorId: service.vendorId,
+    title: service.title || service.vendorName,
+    location: service.cityName ?? "-",
+    rating: service.ratingAvg,
+    reviews: service.ratingCount,
+    image: images[0] ?? bannerImage,
+    images,
+    slug: slugifyServiceTitle(service.title),
+    categoryName: service.categoryName ?? "-",
+    categoryId: service.categoryId,
+    details:
+      details.length > 0
+        ? details
+        : [
+            {
+              title: service.title || "Service details",
+              subtitle: "Offering details will be available soon",
+              price: fallbackPrice,
+            },
+          ],
   }
 }
-
 export type ServicesExplorerProps = {
   services?: Service[]
   headerTitle?: string
@@ -77,6 +92,46 @@ const defaultStats = [
   { label: "98% booked for this week", color: "bg-sky-400" },
   { label: "Avg. response under 10 min", color: "bg-amber-400" },
 ]
+
+function MarketplaceCardSkeleton({ index }: { index: number }) {
+  return (
+    <div
+      key={`marketplace-skeleton-${index}`}
+      className="flex h-155 w-81.25 flex-col overflow-hidden rounded-lg bg-white shadow-md"
+    >
+      <Skeleton className="h-50 w-full rounded-none" />
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-44" />
+            <Skeleton className="h-4 w-28" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-12" />
+        </div>
+
+        <div className="flex-1 space-y-3">
+          {Array.from({ length: 3 }).map((_, detailIndex) => (
+            <div key={`marketplace-skeleton-detail-${index}-${detailIndex}`} className="h-17 rounded-sm bg-[#F6F6F6] px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-5 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-auto flex gap-2 pt-1">
+          <Skeleton className="h-10 min-w-33.75 rounded-lg" />
+          <Skeleton className="h-10 min-w-33.75 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ServicesExplorer({
   services: providedServices,
@@ -299,6 +354,10 @@ export default function ServicesExplorer({
       : headerDescription
 
   const statRows = stats ?? defaultStats
+  const showInitialSkeleton =
+    providedServices == null && listState.isFetching && marketplaceRows.length === 0
+  const showPaginationSkeleton =
+    providedServices == null && listState.isFetching && marketplaceRows.length > 0
 
   const toggleSelected = (ids: string[], id: string) =>
     ids.includes(id) ? ids.filter((entry) => entry !== id) : [...ids, id]
@@ -334,7 +393,7 @@ export default function ServicesExplorer({
 
   return (
     <section className="min-h-screen bg-[#F9F9F9] py-8">
-      <div className="mx-auto flex max-w-370 gap-8 px-6 lg:px-8">
+      <div className="mx-auto flex items-start max-w-370 gap-8 px-6 lg:px-8">
         <ServicesSidebar
           categories={sidebarCategories}
           locations={sidebarLocations}
@@ -387,14 +446,23 @@ export default function ServicesExplorer({
             </div>
           </header>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {activeServices.map((service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onViewDetails={(item) => navigate(`/service/${item.id}`)}
-                onEnquiry={(item) => setEnquiryService(item)}
-              />
-            ))}
+            {showInitialSkeleton
+              ? Array.from({ length: 6 }).map((_, index) => (
+                  <MarketplaceCardSkeleton key={`initial-skeleton-${index}`} index={index} />
+                ))
+              : activeServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onViewDetails={(item) => navigate(`/service/${item.slug}`)}
+                    onEnquiry={(item) => setEnquiryService(item)}
+                  />
+                ))}
+            {showPaginationSkeleton
+              ? Array.from({ length: 3 }).map((_, index) => (
+                  <MarketplaceCardSkeleton key={`pagination-skeleton-${index}`} index={index + 100} />
+                ))
+              : null}
           </div>
         </div>
       </div>
@@ -404,3 +472,5 @@ export default function ServicesExplorer({
     </section>
   )
 }
+
+

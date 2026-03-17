@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 
-import banner1 from "@/assets/images/add1.jpg"
-import banner2 from "@/assets/images/add2.jpg"
-import banner3 from "@/assets/images/add3.jpg"
+import banner1 from "@/assets/Images/add1.jpg"
+import banner2 from "@/assets/Images/add2.jpg"
+import banner3 from "@/assets/Images/add3.jpg"
 
 const promoCards = [
   {

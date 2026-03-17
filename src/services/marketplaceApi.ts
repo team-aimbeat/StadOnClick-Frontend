@@ -60,9 +60,20 @@ export type ListMarketplaceServicesParams = {
   offset?: number;
 };
 
+export type VendorVisitStats = {
+  vendorId: string;
+  totalVisitors: number;
+  todayVisitors: number;
+};
+
+export type VendorVisitStatsResponse = {
+  data: VendorVisitStats;
+};
+
 export const marketplaceApi = createApi({
   reducerPath: "marketplaceApi",
   baseQuery: baseQueryWithReauth,
+  tagTypes: ["VendorVisitStats"],
   endpoints: (builder) => ({
     listMarketplaceServices: builder.query<ListMarketplaceServicesResponse, ListMarketplaceServicesParams | void>({
       query: (params) => {
@@ -82,8 +93,31 @@ export const marketplaceApi = createApi({
         };
       },
     }),
+    trackVendorStoreVisit: builder.mutation<{ message: string }, { vendorId: string }>({
+      query: ({ vendorId }) => ({
+        url: `/marketplace/vendors/${vendorId}/visit`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "VendorVisitStats", id: arg.vendorId },
+      ],
+    }),
+    getVendorStoreVisitStats: builder.query<VendorVisitStatsResponse, string>({
+      query: (vendorId) => ({
+        url: `/marketplace/vendors/${vendorId}/visit-stats`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, vendorId) => [
+        { type: "VendorVisitStats", id: vendorId },
+      ],
+    }),
   }),
 });
 
-export const { useLazyListMarketplaceServicesQuery, useListMarketplaceServicesQuery } =
+export const {
+  useLazyListMarketplaceServicesQuery,
+  useListMarketplaceServicesQuery,
+  useGetVendorStoreVisitStatsQuery,
+  useTrackVendorStoreVisitMutation,
+} =
   marketplaceApi;

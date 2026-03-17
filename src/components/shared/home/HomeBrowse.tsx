@@ -1,7 +1,7 @@
-import footballImage from "@/assets/images/football.jpg"
-import cricketImage from "@/assets/images/cricket.jpg"
-import badmintonImage from "@/assets/images/batminton.jpg"
-import tennisImage from "@/assets/images/tennis.jpg"
+import footballImage from "@/assets/Images/football.jpg"
+import cricketImage from "@/assets/Images/cricket.jpg"
+import badmintonImage from "@/assets/Images/batminton.jpg"
+import tennisImage from "@/assets/Images/tennis.jpg"
 
 const cards = [
   { title: "Massage", price: "799", image: footballImage },

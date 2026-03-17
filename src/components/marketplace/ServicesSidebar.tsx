@@ -1,6 +1,6 @@
 import { Check, Search, Star } from "lucide-react";
 import { useMemo, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
-import filterIcon from "@/assets/icons/filter.svg";
+import filterIcon from "@/assets/icons/Filter.svg";
 import mapImage from "@/assets/Images/map.png";
 import couponImage from "@/assets/Images/coupon2.png";
 import { useGetWelcomeCouponsQuery, type WelcomeCoupon } from "@/services/welcomeCouponsApi";
@@ -72,7 +72,8 @@ export default function ServicesSidebar({
   onClearAll,
 }: ServicesSidebarProps) {
   const PRICE_MIN = 0;
-  const PRICE_MAX = 500;
+  const PRICE_MAX = 10000;
+  const formatPriceBadge = (value: number) => (value >= 1000 ? `${Math.floor(value / 1000)}K` : `${value}`);
 
   const resolvedCategories = providedCategories ?? categories;
   const resolvedLocations = providedLocations ?? locations;
@@ -375,7 +376,7 @@ export default function ServicesSidebar({
                 left: `calc(${(priceRange.max / PRICE_MAX) * 100}% - 1.5rem)`,
               }}
             >
-              SDK{priceRange.max}
+              SDK {formatPriceBadge(priceRange.max)}
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton"
-import sight1 from "@/assets/images/add1.jpg"
-import sight2 from "@/assets/images/add2.jpg"
-import sight3 from "@/assets/images/add3.jpg"
+import sight1 from "@/assets/Images/add1.jpg"
+import sight2 from "@/assets/Images/add2.jpg"
+import sight3 from "@/assets/Images/add3.jpg"
 import sight4 from "@/assets/Images/sight4.svg"
 import sight5 from "@/assets/Images/sight5.svg"
 
