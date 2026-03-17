@@ -73,6 +73,7 @@ const navColumns: FooterColumn[] = [
     title: "Company",
     links: [
       { label: "About", href: "/about" },
+      { label: "Blog", href: "/blogs" },
       { label: "Careers", href: "#" },
       { label: "Press", href: "#" },
       { label: "Investor Relations", href: "#" },

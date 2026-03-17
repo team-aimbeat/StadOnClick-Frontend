@@ -13,6 +13,7 @@ const HomeCoupon = lazy(() => import("@/components/shared/home/HomeCoupon"));
 const HomeMind = lazy(() => import("@/components/shared/home/HomeMind"));
 const HomeTravel = lazy(() => import("@/components/shared/home/HomeTravel"));
 const HomeSightseeing = lazy(() => import("@/components/shared/home/HomeSightseeing"));
+const Blogs = lazy(() => import("@/components/shared/home/Blogs"));
 
 function SectionSkeleton({ height = 260 }: { height?: number }) {
   return (
@@ -81,6 +82,11 @@ export default function Home() {
         <LazySection minHeight={620}>
           <Suspense fallback={<SectionSkeleton height={620} />}>
             <HomeSightseeing />
+          </Suspense>
+        </LazySection>
+           <LazySection minHeight={620}>
+          <Suspense fallback={<SectionSkeleton height={620} />}>
+            <Blogs />
           </Suspense>
         </LazySection>
       </div>

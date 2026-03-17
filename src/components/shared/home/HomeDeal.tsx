@@ -40,7 +40,7 @@ export default function HomeHero() {
   }, [])
 
   return (
-    <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-[250px] w-screen overflow-hidden">
+    <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-62.5 w-screen overflow-hidden">
       <div className="absolute inset-0">
         <div className="relative h-full w-screen overflow-hidden">
          <div
@@ -58,7 +58,7 @@ export default function HomeHero() {
             }}
           >
             {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/20" />
+            <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/60 to-black/20" />
 
             {/* Content */}
             <div className="relative z-10 px-6 md:px-16 text-white">

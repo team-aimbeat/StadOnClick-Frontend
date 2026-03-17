@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type MouseEvent } from "react"
 import { X } from "lucide-react"
 import { useAppSelector } from "@/app/hooks"
 import { useSubmitLeadMutation } from "@/services/leadsApi"
@@ -35,8 +35,17 @@ export default function EnquiryModal({ service, onClose }: EnquiryModalProps) {
     () => !name.trim() || !email.trim() || message.trim().length < 2 || !service.categoryId,
     [name, email, message, service.categoryId],
   )
+  const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6"
+      onClick={handleBackdropClick}
+    >
       <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between">
           <div>

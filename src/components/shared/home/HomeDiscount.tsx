@@ -59,7 +59,7 @@ export default function HomeDiscount() {
   const navigate = useNavigate()
   return (
     <div className="space-y-10 text-start">
-      <section className=" max-w-387.5">
+      <section className="max-w-387.5">
 <h2 className="relative inline-block text-start text-[26px] sm:text-3xl lg:text-3xl font-semibold text-gray-900 group">
   Grab the Best Deals Today
 

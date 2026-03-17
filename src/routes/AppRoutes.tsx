@@ -13,6 +13,7 @@ import PlaceDetail from "@/pages/PlaceDetail";
 import ServiceDetail from "@/pages/ServiceDetail";
 import Kyc from "@/pages/Kyc";
 import About from "@/pages/About";
+import BlogsPage from "@/pages/Blogs";
 import BookingsPage from "@/pages/BookingsPage";
 import VendorTableShowcase from "@/pages/VendorTableShowcase";
 import VendorProfile from "@/pages/VendorProfile";
@@ -157,6 +158,11 @@ const appRouter = createBrowserRouter([
           {
             path: "/about",
             element: <About />,
+          },
+          {
+            path: "/blogs",
+            element: <BlogsPage />,
+            errorElement: <ErrorPage />,
           },
           {
             path: "/affiliate-marketing",
