@@ -113,10 +113,12 @@ import AffiliateWallet from "@/pages/AffiliateWallet";
 import AffiliatePayouts from "@/pages/AffiliatePayouts";
 import AffiliateStripe from "@/pages/AffiliateStripe";
 import UserSubscriptionsPage from "@/pages/Subscriptions/UserSubscriptionsPage";
-import AppLayout from "@/components/Layout/AppLayout";
+import CompareVendors from "@/pages/CompareVendors";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AffiliateLayout from "@/components/Layout/AffiliateLayout";
+import AppLayout from "@/components/Layout/AppLayout";
+
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
@@ -231,6 +233,10 @@ const appRouter = createBrowserRouter([
           {
             path: "/deals/:slug",
             element: <DealDetail />,
+          },
+          {
+            path: "/compare",
+            element: <CompareVendors />,
           },
         ],
       },

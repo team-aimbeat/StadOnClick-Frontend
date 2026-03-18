@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
+  ArrowLeftRight,
   Bell,
   Bookmark,
   BriefcaseBusiness,
@@ -735,6 +736,17 @@ export default function UserHeader() {
                 setProfileMenuOpen(false);
                 navigate("/wishlist");
               }}
+            />
+            <IconButton
+              icon={<ArrowLeftRight className="h-5 w-5 text-sky-600" />}
+              label="Compare"
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/compare");
+              }}
+              className="border-sky-200 bg-sky-50 text-sky-700"
             />
             <IconButton
               icon={<ShoppingBag className="h-5 w-5 text-amber-600" />}
