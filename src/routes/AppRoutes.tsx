@@ -11,7 +11,6 @@ import Home from "@/pages/Home";
 import DealsPage from "@/pages/DealsPage";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
-
 import Kyc from "@/pages/Kyc";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
@@ -40,7 +39,6 @@ import Wishlist from "@/pages/Wishlist";
 import OrdersPage from "@/pages/Orders";
 import OrderConfirmationPage from "@/pages/OrderConfirmation";
 import VendorPlaceholder from "@/pages/VendorPlaceholder";
-
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
@@ -49,16 +47,11 @@ import CustomersPage from "@/pages/Admin/Customers/CustomersPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
 import AdminOrdersPage from "@/pages/Admin/OrdersPage";
-
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import ModeratorProtectedRoute from "./ModeratorProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
-
 import ServiceDetail from "@/pages/ServiceDetail";
-
-
-
 import VendorAutoLogin from "@/pages/vendor/VendorAutoLogin";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
@@ -304,7 +297,7 @@ const appRouter = createBrowserRouter([
                 errorElement: <ErrorPage />,
               },
               {
-                path: "support-chat/:ticketId",
+                path: "support-chat",
                 element: <AdminSupportChatConsole />,
                 errorElement: <ErrorPage />,
               },
