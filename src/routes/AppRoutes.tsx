@@ -599,6 +599,14 @@ const appRouter = createBrowserRouter([
           { path: "notifications", element: <VendorNotifications /> },
           { path: "leads", element: <VendorLeads /> },
           {
+            path: "leads/subscription",
+            element: <VendorLeadSubscriptionPage />,
+          },
+          {
+            path: "leads/subscription/success",
+            element: <SubscriptionSuccessPage />,
+          },
+          {
             path: "lead-subscriptions/success",
             element: <SubscriptionSuccessPage />,
           },
