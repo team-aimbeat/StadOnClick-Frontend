@@ -1,4 +1,5 @@
 import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { CalendarClock, Eye, Phone } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -7,6 +8,7 @@ import {
   HiOutlineExclamationTriangle,
   HiOutlineSparkles,
 } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import {
   Dialog,
@@ -29,10 +31,12 @@ import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import {
   useDecideBookingRefundMutation,
   useLazyListAdminBookingsQuery,
+  useGetBookingLogsQuery,
 } from "@/features/admin/bookings/api/adminBookingsApi";
 import type {
   AdminBookingItem,
   AdminBookingStatus,
+  AdminBookingLog,
 } from "@/features/admin/bookings/types/adminBooking.types";
 import type { ActionConfig } from "@/types/Table/action";
 
@@ -187,6 +191,20 @@ export default function AdminBookingsPage({
     useLazyListAdminBookingsQuery();
   const [decideBookingRefund, { isLoading: isUpdatingRefund }] =
     useDecideBookingRefundMutation();
+  const navigate = useNavigate();
+  const bookingLogBookingId =
+    actionModal === "view" && activeBooking?.id ? activeBooking.id : skipToken;
+  const {
+    data: bookingLogs = [],
+    isFetching: isFetchingLogs,
+    isError: isLogsError,
+    error: logsError,
+  } = useGetBookingLogsQuery(bookingLogBookingId);
+  const logsStatusCode =
+    logsError && typeof logsError === "object" && "status" in logsError
+      ? (logsError as { status?: number }).status
+      : undefined;
+  const showLogsError = isLogsError && logsStatusCode !== 404;
 
   const listingTitle = titleOverride ?? "Admin bookings";
   const breadcrumbTitle = breadcrumbOverride ?? "Admin / Bookings";
@@ -500,6 +518,13 @@ export default function AdminBookingsPage({
         },
       },
       {
+        title: "View logs (page)",
+        icon: HiOutlineClock,
+        onClick: (row) => {
+          navigate(`/admin/bookings/${row.id}/logs`);
+        },
+      },
+      {
         title: "Email customer",
         icon: Phone,
         onClick: (row) => {
@@ -521,7 +546,7 @@ export default function AdminBookingsPage({
         },
       },
     ];
-  }, [openActionModal]);
+  }, [navigate, openActionModal]);
 
   const clearDateRange = useCallback(() => {
     setDateRangeLabel("");
@@ -782,6 +807,49 @@ export default function AdminBookingsPage({
                   <p><span className="font-semibold text-slate-800">Email:</span> {activeBooking.customerEmail}</p>
                   <p><span className="font-semibold text-slate-800">Vendor:</span> {activeBooking.vendorName}</p>
                   <p><span className="font-semibold text-slate-800">Service:</span> {activeBooking.serviceTitle}</p>
+                </div>
+              )}
+
+              {actionModal === "view" && (
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-800">Activity log</p>
+                    {isFetchingLogs && <span className="text-xs text-slate-500">Loading…</span>}
+                  </div>
+                  {showLogsError && (
+                    <p className="text-xs text-rose-600">Unable to load booking logs right now.</p>
+                  )}
+                  {!isFetchingLogs && (bookingLogs.length === 0 || logsStatusCode === 404) && !showLogsError && (
+                    <p className="text-xs text-slate-500">
+                      No log entries for this booking yet. (Log feed not available)
+                    </p>
+                  )}
+                  <ol className="space-y-3">
+                    {bookingLogs.map((log: AdminBookingLog) => (
+                      <li
+                        key={log.id}
+                        className="rounded-lg border border-slate-100 bg-slate-50 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+                              {log.actorType}
+                            </span>
+                            <span className="text-sm font-semibold text-slate-900">{log.action}</span>
+                          </div>
+                          <span className="text-xs text-slate-500">
+                            {dayjs(log.createdAt).format("DD MMM YYYY, HH:mm")}
+                          </span>
+                        </div>
+                        {log.description ? (
+                          <p className="mt-1 text-xs text-slate-600">{log.description}</p>
+                        ) : null}
+                        {log.actorName ? (
+                          <p className="mt-1 text-[11px] text-slate-500">By {log.actorName}</p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ol>
                 </div>
               )}
 
