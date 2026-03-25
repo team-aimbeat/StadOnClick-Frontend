@@ -32,19 +32,16 @@ const AdminBookingLogsPage = () => {
 
   return (
     <DashboardContainer className="space-y-5 pb-10">
-      <TitleBreadCrumbs
-        title="Booking Logs"
-        breadCrumbTitle="Admin / Bookings / Logs"
-        extraAction={
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-md border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Back
-          </button>
-        }
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <TitleBreadCrumbs title="Booking Logs" breadCrumbTitle="Admin / Bookings / Logs" />
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="rounded-md border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Back
+        </button>
+      </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -120,7 +117,7 @@ const AdminBookingLogsPage = () => {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-xs text-slate-700">
-                          {log.description ?? "—"}
+                          {log.description ?? "-"}
                         </td>
                       </tr>
                     ))}
