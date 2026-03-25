@@ -14,7 +14,7 @@ const VendorUserManualPage = () => {
           </p>
         </div>
 
-        <a
+        <a  
           href={pdfPath}
           download
           className="inline-flex items-center gap-2 rounded-lg bg-[#4F7DFF] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3c63d1]"
