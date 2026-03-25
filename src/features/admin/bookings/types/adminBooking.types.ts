@@ -48,6 +48,23 @@ export type AdminBookingSlot = {
   endTime?: string | null;
 };
 
+export type AdminBookingLogActor =
+  | "SYSTEM"
+  | "ADMIN"
+  | "SUPPORT"
+  | "MODERATOR"
+  | "VENDOR"
+  | "CUSTOMER";
+
+export type AdminBookingLog = {
+  id: string;
+  action: string;
+  description?: string | null;
+  actorType: AdminBookingLogActor;
+  actorName?: string | null;
+  createdAt: string;
+};
+
 export type AdminBookingOrderItem = {
   id: string;
   orderNumber: string;

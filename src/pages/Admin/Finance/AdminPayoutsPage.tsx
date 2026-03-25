@@ -201,7 +201,10 @@ const AdminPayoutsPage = () => {
   }
 
   return (
-    <DashboardContainer className="space-y-8 pb-12">
+    <DashboardContainer
+      className="space-y-8 pb-12"
+      style={{ fontFamily: "var(--font-primary)" }}
+    >
       <div className="space-y-4">
         <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="w-full" />
         <div className="flex flex-wrap items-center justify-end gap-2">
