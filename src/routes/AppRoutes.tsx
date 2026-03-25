@@ -95,6 +95,10 @@ import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPa
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
 import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
 import AdminSettings from "@/pages/Admin/AdminSettings";
+import AdminUserManualPage from "@/pages/Admin/Help/AdminUserManualPage";
+import AdminBookingLogsPage from "@/pages/Admin/Bookings/AdminBookingLogsPage";
+import AdminBookingLogsExplorerPage from "@/pages/Admin/Bookings/AdminBookingLogsExplorerPage";
+import AdminPaymentLogsPage from "@/pages/Admin/Finance/AdminPaymentLogsPage";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
@@ -111,6 +115,7 @@ import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AffiliateLayout from "@/components/Layout/AffiliateLayout";
 import AppLayout from "@/components/Layout/AppLayout";
+import VendorUserManualPage from "@/pages/vendor/VendorUserManualPage";
 
 
 
@@ -342,6 +347,16 @@ const appRouter = createBrowserRouter([
                 errorElement: <ErrorPage />,
               },
               {
+                path: "bookings/:bookingId/logs",
+                element: <AdminBookingLogsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "booking-logs",
+                element: <AdminBookingLogsExplorerPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
                 path: "subscription-plans",
                 element: <AdminSubscriptionPlansPage />,
                 errorElement: <ErrorPage />,
@@ -407,6 +422,16 @@ const appRouter = createBrowserRouter([
               {
                 path: "finance/platform-wallet",
                 element: <AdminPlatformWalletPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "finance/payment-logs",
+                element: <AdminPaymentLogsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "help/user-manual",
+                element: <AdminUserManualPage />,
                 errorElement: <ErrorPage />,
               },
               {
@@ -699,6 +724,7 @@ const appRouter = createBrowserRouter([
             element: <VendorTicketDetails />,
           },
           { path: "help", element: <VendorHelp /> },
+          { path: "help/user-manual", element: <VendorUserManualPage /> },
           { path: "insights", element: <VendorInsights /> },
         ],
       },

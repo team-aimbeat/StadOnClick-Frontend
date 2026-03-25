@@ -15,6 +15,7 @@ import {
   HiShieldCheck,
   HiBanknotes,
   HiChevronDown,
+  HiBookOpen,
   HiInboxStack,
   HiChatBubbleLeftRight,
   HiBell,
@@ -250,6 +251,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           { label: t("Upcoming"), to: withBase("bookings/upcoming"), badge: bookingNavBadges.upcoming },
           { label: t("Completed"), to: withBase("bookings/completed"), badge: bookingNavBadges.completed },
           { label: t("Refunds"), to: withBase("bookings/refunds"), badge: bookingNavBadges.refunds },
+          { label: t("Booking Logs"), to: withBase("booking-logs") },
         ],
       },
       {
@@ -338,7 +340,14 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         children: [
           { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
           { label: t("Platform Wallet"), to: withBase("finance/platform-wallet") },
+          { label: t("Payment Logs"), to: withBase("finance/payment-logs") },
         ],
+      },
+      {
+        id: "help",
+        label: t("Help & User Manual"),
+        icon: HiBookOpen,
+        to: withBase("help/user-manual"),
       },
         {
         id: "support-inbox",
