@@ -355,31 +355,36 @@ const AdminHeader = () => {
               button={
                 <img
                   className="h-9 w-9 rounded-full object-cover saturate-50 transition group-hover:saturate-100"
-                  src={profile7}
-                  alt="User avatar"
+                  src={authUser?.profileImageUrl || profile7}
+                  alt={authUser?.displayName || authUser?.email || "User avatar"}
                 />
               }
             >
-              <ul className="w-57.5 font-semibold text-dark dark:text-white-light/90">
+              <ul className="w-60 font-semibold text-dark dark:text-white-light/90">
                 <li>
                   <div className="flex items-center px-4 py-4">
                     <img
                       className="h-10 w-10 rounded-md object-cover"
-                      src={profile7}
-                      alt="User avatar"
+                      src={authUser?.profileImageUrl || profile7}
+                      alt={authUser?.displayName || "User avatar"}
                     />
                     <div className="ltr:pl-4 rtl:pr-4 truncate">
                       <h4 className="text-base">
-                        John Doe
+                        {authUser?.displayName ||
+                          [authUser?.firstName, authUser?.lastName]
+                            .filter(Boolean)
+                            .join(" ")
+                            .trim() ||
+                          "User"}
                         <span className="ltr:ml-2 rtl:ml-2 rounded bg-success-light px-1 text-xs text-success">
-                          Admin
+                          {authUser?.roles?.[0] ?? "User"}
                         </span>
                       </h4>
                       <button
                         type="button"
                         className="text-sm text-black/60 transition hover:text-primary dark:text-dark-light/60 dark:hover:text-white"
                       >
-                        johndoe@gmail.com
+                        {authUser?.email || "—"}
                       </button>
                     </div>
                   </div>

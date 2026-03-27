@@ -29,6 +29,7 @@ import VendorKyc from "@/pages/VendorKyc";
 import VendorStripe from "@/pages/VendorStripe";
 import VendorSupport from "@/pages/VendorSupport";
 import VendorTicketDetails from "@/pages/VendorTicketDetails";
+import VendorSettings from "@/pages/VendorSettings";
 import VendorHelp from "@/pages/VendorHelp";
 import VendorInsights from "@/pages/VendorInsights";
 import VendorBookingDetail from "@/pages/VendorBookingDetail";
@@ -116,6 +117,7 @@ import VendorLayout from "@/components/Layout/VendorLayout";
 import AffiliateLayout from "@/components/Layout/AffiliateLayout";
 import AppLayout from "@/components/Layout/AppLayout";
 import VendorUserManualPage from "@/pages/vendor/VendorUserManualPage";
+import AdminReportsPage from "@/pages/Admin/Reports/AdminReportsPage";
 
 
 
@@ -239,11 +241,6 @@ const appRouter = createBrowserRouter([
         ],
       },
       {
-        path: "settings",
-        element: <AdminSettings />,
-        errorElement: <ErrorPage />,
-      },
-      {
         path: "/admin/sign-in",
         element: <AdminSignIn />,
         errorElement: <ErrorPage />,
@@ -260,6 +257,21 @@ const appRouter = createBrowserRouter([
           {
             path: "",
             element: <Navigate to="/admin/dashboard" replace />,
+          },
+          {
+            path: "reports",
+            element: <AdminReportsPage />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "account-settings",
+            element: <VendorSettings />,
+            errorElement: <ErrorPage />,
+          },
+          {
+            path: "settings",
+            element: <AdminSettings />,
+            errorElement: <ErrorPage />,
           },
               {
                 path: "vendors",
@@ -726,6 +738,7 @@ const appRouter = createBrowserRouter([
           { path: "help", element: <VendorHelp /> },
           { path: "help/user-manual", element: <VendorUserManualPage /> },
           { path: "insights", element: <VendorInsights /> },
+          { path: "settings", element: <VendorSettings /> },
         ],
       },
     ],
