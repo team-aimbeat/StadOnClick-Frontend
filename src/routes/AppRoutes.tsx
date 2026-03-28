@@ -89,6 +89,7 @@ import FooterSectionsStudio from "@/pages/Admin/catalog/FooterSectionsStudio";
 import HeaderSectionsStudio from "@/pages/Admin/catalog/HeaderSectionsStudio";
 import HeaderDropdownStudio from "@/pages/Admin/catalog/HeaderDropdownStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
+import AdminActivityPage from "@/pages/Admin/System/AdminActivityPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
@@ -366,6 +367,11 @@ const appRouter = createBrowserRouter([
               {
                 path: "booking-logs",
                 element: <AdminBookingLogsExplorerPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "system/audit",
+                element: <AdminActivityPage />,
                 errorElement: <ErrorPage />,
               },
               {
