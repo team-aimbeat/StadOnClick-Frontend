@@ -16,6 +16,7 @@ import {
   HiOutlineUserGroup,
   HiOutlineTicket,
   HiOutlineBell,
+  HiOutlineCog6Tooth,
 } from "react-icons/hi2";
 import { IconType } from "react-icons";
 import { LayoutGrid } from "lucide-react";
@@ -97,6 +98,11 @@ export const getVendorNavGroups = ({
         label: "Business Profile",
         icon: HiOutlineBookmarkSquare,
         to: "/vendor/profile",
+      },
+      {
+        label: "Account Settings",
+        icon: HiOutlineCog6Tooth,
+        to: "/vendor/settings",
       },
       {
         label: "KYC Documents",
