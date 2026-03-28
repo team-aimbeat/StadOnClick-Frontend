@@ -59,7 +59,7 @@ type SnapshotMetric = {
 };
 
 const formatDateOnly = (date: Date) => date.toISOString().slice(0, 10);
-const REVERSED_BOOKING_STATUSES = new Set(["CANCELLED", "REFUNDED"]);
+const CONFIRMED_BOOKING_STATUSES = new Set(["CONFIRMED"]);
 
 const toNumberSafe = (value: unknown) => {
   if (typeof value === "number") return value;
@@ -112,8 +112,8 @@ const monthKey = (dateValue: string | Date) => {
   return `${date.getFullYear()}-${date.getMonth()}`;
 };
 
-const isActiveBooking = (booking: { status?: string | null }) =>
-  !REVERSED_BOOKING_STATUSES.has(String(booking.status ?? "").toUpperCase());
+const isConfirmedBooking = (booking: { status?: string | null }) =>
+  CONFIRMED_BOOKING_STATUSES.has(String(booking.status ?? "").toUpperCase());
 
 const categoryIconFor = (name: string) => {
   const normalized = name.toLowerCase();
@@ -186,15 +186,15 @@ const AdminDashboard: React.FC = () => {
   const { data: kycDocs = [], isLoading: kycLoading } = useGetAllVendorKycDocumentsQuery();
 
   const allBookings = useMemo(
-    () => (allBookingsResponse?.data ?? []).filter(isActiveBooking),
+    () => (allBookingsResponse?.data ?? []).filter(isConfirmedBooking),
     [allBookingsResponse?.data],
   );
   const todayBookings = useMemo(
-    () => (todayBookingsResponse?.data ?? []).filter(isActiveBooking),
+    () => (todayBookingsResponse?.data ?? []).filter(isConfirmedBooking),
     [todayBookingsResponse?.data],
   );
   const yesterdayBookings = useMemo(
-    () => (yesterdayBookingsResponse?.data ?? []).filter(isActiveBooking),
+    () => (yesterdayBookingsResponse?.data ?? []).filter(isConfirmedBooking),
     [yesterdayBookingsResponse?.data],
   );
   const vendors = (vendorsResponse?.data ?? []) as Vendor[];
