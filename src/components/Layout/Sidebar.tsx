@@ -287,12 +287,12 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         id: "compliance",
         label: t("Compliance"),
         icon: HiShieldCheck,
-        badge: pendingKycCount > 0 ? String(pendingKycCount) : undefined,
+        badge: String(pendingKycCount),
         children: [
           {
             label: t("KYC Review Queue"),
             to: withBase("compliance/kyc"),
-            badge: pendingKycCount > 0 ? String(pendingKycCount) : undefined,
+            badge: String(pendingKycCount),
           },
           { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
         ],
