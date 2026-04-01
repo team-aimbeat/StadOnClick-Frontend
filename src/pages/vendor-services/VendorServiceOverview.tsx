@@ -496,13 +496,20 @@ export function VendorServiceOverview({
     const previousBookings = serviceBookings.filter((booking) =>
       inRange(booking, previousStart, previousEnd),
     );
+    const revenueStatuses = new Set(["CONFIRMED"]);
     const successfulStatuses = new Set(["CONFIRMED", "COMPLETED", "PAID"]);
+    const currentRevenueBookings = currentBookings.filter((booking) =>
+      revenueStatuses.has(String(booking.status).toUpperCase()),
+    );
+    const previousRevenueBookings = previousBookings.filter((booking) =>
+      revenueStatuses.has(String(booking.status).toUpperCase()),
+    );
 
-    const totalRevenue = currentBookings.reduce(
+    const totalRevenue = currentRevenueBookings.reduce(
       (sum, booking) => sum + toAmount(booking.orderItem?.priceFinal),
       0,
     );
-    const previousRevenue = previousBookings.reduce(
+    const previousRevenue = previousRevenueBookings.reduce(
       (sum, booking) => sum + toAmount(booking.orderItem?.priceFinal),
       0,
     );
@@ -519,7 +526,7 @@ export function VendorServiceOverview({
       previousBookingsCount > 0 ? (successfulPrevious / previousBookingsCount) * 100 : 0;
 
     const dateBuckets = new Map<string, { totalSales: number; totalBookings: number }>();
-    for (const booking of currentBookings) {
+    for (const booking of currentRevenueBookings) {
       const dateKey = toDateKey(booking.createdAt);
       const existing = dateBuckets.get(dateKey) ?? { totalSales: 0, totalBookings: 0 };
       existing.totalSales += toAmount(booking.orderItem?.priceFinal);
@@ -560,7 +567,9 @@ export function VendorServiceOverview({
       const name = bookingOffering?.name ?? booking.vendorService?.title ?? service.title;
       const entry = offeringMap.get(key) ?? { id: key, name, booked: 0, revenue: 0 };
       entry.booked += 1;
-      entry.revenue += toAmount(booking.orderItem?.priceFinal);
+      if (revenueStatuses.has(String(booking.status).toUpperCase())) {
+        entry.revenue += toAmount(booking.orderItem?.priceFinal);
+      }
       offeringMap.set(key, entry);
     }
     const previousOfferingMap = new Map<string, number>();
@@ -829,8 +838,41 @@ export function VendorServiceOverview({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Date-wise Bookings</h2>
-        <p className="mb-4 text-sm text-slate-500">Bookings count by date</p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Date-wise Bookings</h2>
+            <p className="text-sm text-slate-500">Bookings count by date</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={rangePreset} onValueChange={(value) => setRangePreset(value as RangePreset)}>
+              <SelectTrigger className="h-9 w-[140px] rounded-xl border-slate-200 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="7d">7 Days</SelectItem>
+                <SelectItem value="30d">30 Days</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {rangePreset === "custom" && (
+          <div className="mb-4 grid gap-2 md:grid-cols-2">
+            <DatePickerField
+              value={dateFrom}
+              onChange={setDateFrom}
+              placeholder="Start date"
+            />
+            <DatePickerField
+              value={dateTo}
+              onChange={setDateTo}
+              placeholder="End date"
+            />
+          </div>
+        )}
+
         {isOverviewLoading ? (
           <Skeleton className="h-[280px] w-full rounded-xl" />
         ) : bookingAnalytics.dateSeries.length ? (
