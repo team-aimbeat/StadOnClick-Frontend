@@ -340,6 +340,15 @@ const AdminPlatformWalletPage = () => {
               ),
             },
             {
+              key: "type",
+              title: "Type",
+              render: (value: string) => (
+                <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600">
+                  {String(value || "UNKNOWN").replace(/_/g, " ")}
+                </span>
+              ),
+            },
+            {
               key: "amount",
               title: "Revenue Yield",
               align: "right",
