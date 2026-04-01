@@ -707,6 +707,16 @@ const appRouter = createBrowserRouter([
             ),
           },
           {
+            path: "bookings/cancelled",
+            element: (
+              <BookingsPage
+                defaultStatusFilter="cancelled"
+                titleOverride="Cancelled Bookings"
+                breadcrumbOverride="Vendor / Bookings / Cancelled"
+              />
+            ),
+          },
+          {
             path: "bookings/refunds",
             element: (
               <BookingsPage

@@ -59,12 +59,14 @@ export default function VendorSidebar() {
       (booking) => booking.status === "PENDING" || booking.status === "CONFIRMED"
     ).length;
     const completed = bookings.filter((booking) => booking.status === "COMPLETED").length;
+    const cancelled = bookings.filter((booking) => booking.status === "CANCELLED").length;
     const refunds = bookings.filter((booking) => booking.status === "REFUND_REQUESTED").length;
 
     return {
       all: bookings.length,
       upcoming,
       completed,
+      cancelled,
       refunds,
     };
   }, [bookings]);
@@ -93,6 +95,7 @@ export default function VendorSidebar() {
         allBookings: bookingCounts.all,
         upcomingBookings: bookingCounts.upcoming,
         completedBookings: bookingCounts.completed,
+        cancelledBookings: bookingCounts.cancelled,
         refundRequestBookings: bookingCounts.refunds,
         pendingBookings: bookingCounts.upcoming,
         kycDocumentsCount: kycDocuments.length,
