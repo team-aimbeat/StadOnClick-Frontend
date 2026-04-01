@@ -51,6 +51,10 @@ import { adminOfferingsApi } from "@/features/admin/offerings/api/adminOfferings
 import { adminSettingsApi } from "@/services/adminSettingsApi";
 import { adminServiceCategoriesApi } from "@/features/admin/service-categories/api/adminServiceCategoriesApi";
 import { adminOrdersApi } from "@/features/admin/orders/api/adminOrdersApi";
+import { adminSubscriptionPlansApi } from "@/features/admin/subscription-plans/api/adminSubscriptionPlansApi";
+import { userSubscriptionsApi } from "@/features/userSubscriptions/api/userSubscriptionsApi";
+import { vendorComparisonApi } from "@/services/vendorComparisonApi";
+import { adminReportsApi } from "@/features/admin/reports/api/adminReportsApi";
 
 export const store = configureStore({
   reducer: {
@@ -106,6 +110,10 @@ export const store = configureStore({
     [adminSettingsApi.reducerPath]: adminSettingsApi.reducer,
     [adminServiceCategoriesApi.reducerPath]: adminServiceCategoriesApi.reducer,
     [adminOrdersApi.reducerPath]: adminOrdersApi.reducer,
+    [adminSubscriptionPlansApi.reducerPath]: adminSubscriptionPlansApi.reducer,
+    [userSubscriptionsApi.reducerPath]: userSubscriptionsApi.reducer,
+    [vendorComparisonApi.reducerPath]: vendorComparisonApi.reducer,
+    [adminReportsApi.reducerPath]: adminReportsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -154,7 +162,11 @@ export const store = configureStore({
       .concat(adminOfferingsApi.middleware)
       .concat(adminSettingsApi.middleware)
       .concat(adminServiceCategoriesApi.middleware)
-      .concat(adminOrdersApi.middleware),
+      .concat(adminOrdersApi.middleware)
+      .concat(adminSubscriptionPlansApi.middleware)
+      .concat(userSubscriptionsApi.middleware)
+      .concat(vendorComparisonApi.middleware)
+      .concat(adminReportsApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
