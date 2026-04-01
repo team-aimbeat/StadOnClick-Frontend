@@ -15,12 +15,14 @@ import { getEffectivePrice, isDealActive } from "@/utils/deals"
 
 type ServiceCardProps = {
   service: Service
+  canAccessHotDeals?: boolean
   onViewDetails: (service: Service) => void
   onEnquiry: (service: Service) => void
 }
 
 export default function ServiceCard({
   service,
+  canAccessHotDeals = false,
   onViewDetails,
   onEnquiry,
 }: ServiceCardProps) {
@@ -51,29 +53,32 @@ export default function ServiceCard({
         maximumFractionDigits: 0,
       }).format(
         Number(
-          getEffectivePrice({
-            basePrice: offering.basePrice,
-            salePrice: offering.salePrice,
-            dealStartTime: offering.dealStartTime,
-            dealEndTime: offering.dealEndTime,
-            effectivePrice: offering.effectivePrice,
-            isDealActive: offering.isDealActive,
-          }),
+          canAccessHotDeals
+            ? getEffectivePrice({
+                basePrice: offering.basePrice,
+                salePrice: offering.salePrice,
+                dealStartTime: offering.dealStartTime,
+                dealEndTime: offering.dealEndTime,
+                effectivePrice: offering.effectivePrice,
+                isDealActive: offering.isDealActive,
+              })
+            : Number(offering.basePrice ?? 0),
         ),
       ),
       compareAtPrice:
-        isDealActive(offering.dealEndTime, offering.dealStartTime)
+        canAccessHotDeals && isDealActive(offering.dealEndTime, offering.dealStartTime)
           ? new Intl.NumberFormat("sv-SE", {
               style: "currency",
               currency: offering.currency || "SEK",
               maximumFractionDigits: 0,
             }).format(Number(offering.basePrice ?? 0))
           : undefined,
-      discountPercent: Number(offering.discountPercent ?? 0),
-      dealEndTime: offering.dealEndTime ?? undefined,
-      isDealActive: isDealActive(offering.dealEndTime, offering.dealStartTime),
+      discountPercent: canAccessHotDeals ? Number(offering.discountPercent ?? 0) : 0,
+      dealEndTime: canAccessHotDeals ? offering.dealEndTime ?? undefined : undefined,
+      isDealActive:
+        canAccessHotDeals && isDealActive(offering.dealEndTime, offering.dealStartTime),
     }))
-  }, [fetchedOfferings])
+  }, [canAccessHotDeals, fetchedOfferings])
 
   const vendorServiceDetails = useMemo(() => {
     const current = vendorServices.find((item) => item.id === service.id)
@@ -88,29 +93,31 @@ export default function ServiceCard({
         maximumFractionDigits: 0,
       }).format(
         Number(
-          getEffectivePrice({
-            basePrice: offering.basePrice,
-            salePrice: offering.salePrice,
-            dealStartTime: offering.dealStartTime,
-            dealEndTime: offering.dealEndTime,
-            effectivePrice: offering.effectivePrice,
-            isDealActive: offering.isDealActive,
-          }),
+          canAccessHotDeals
+            ? getEffectivePrice({
+                basePrice: offering.basePrice,
+                salePrice: offering.salePrice,
+                dealStartTime: offering.dealStartTime,
+                dealEndTime: offering.dealEndTime,
+                effectivePrice: offering.effectivePrice,
+                isDealActive: offering.isDealActive,
+              })
+            : Number(offering.basePrice ?? 0),
         ),
       ),
       compareAtPrice:
-        offering.isDealActive
+        canAccessHotDeals && offering.isDealActive
           ? new Intl.NumberFormat("sv-SE", {
               style: "currency",
               currency: offering.currency || "SEK",
               maximumFractionDigits: 0,
             }).format(Number(offering.basePrice ?? 0))
           : undefined,
-      discountPercent: Number(offering.discountPercent ?? 0),
-      dealEndTime: offering.dealEndTime ?? undefined,
-      isDealActive: Boolean(offering.isDealActive),
+      discountPercent: canAccessHotDeals ? Number(offering.discountPercent ?? 0) : 0,
+      dealEndTime: canAccessHotDeals ? offering.dealEndTime ?? undefined : undefined,
+      isDealActive: canAccessHotDeals && Boolean(offering.isDealActive),
     }))
-  }, [service.id, vendorServices])
+  }, [canAccessHotDeals, service.id, vendorServices])
 
   const displayRating = useMemo(() => {
     const current = vendorServices.find((item) => item.id === service.id)
@@ -129,6 +136,18 @@ export default function ServiceCard({
 
   const detailsToRender = useMemo(() => {
     const merged = [...liveOfferingDetails, ...vendorServiceDetails, ...service.details]
+      .map((detail) =>
+        !canAccessHotDeals && detail.isDealActive
+          ? {
+              ...detail,
+              price: detail.compareAtPrice ?? detail.price,
+              compareAtPrice: undefined,
+              discountPercent: undefined,
+              dealEndTime: undefined,
+              isDealActive: false,
+            }
+          : detail,
+      )
       .filter((item) => {
         const title = (item.title ?? "").trim().toLowerCase()
         const price = (item.price ?? "").trim().toLowerCase()
@@ -143,7 +162,7 @@ export default function ServiceCard({
 
     if (merged.length > 0) return merged.slice(0, 3)
     return service.details
-  }, [liveOfferingDetails, service.details, vendorServiceDetails])
+  }, [canAccessHotDeals, liveOfferingDetails, service.details, vendorServiceDetails])
 
   const images = useMemo(() => {
     const list =

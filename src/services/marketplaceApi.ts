@@ -49,6 +49,10 @@ export type ListMarketplaceServicesResponse = {
   offset: number;
 };
 
+export type PremiumDealsResponse = ListMarketplaceServicesResponse & {
+  isLocked: boolean;
+};
+
 export type ListMarketplaceServicesParams = {
   masterCategoryId?: string;
   categoryIds?: string[]; // sent as comma-separated list
@@ -116,6 +120,24 @@ export const marketplaceApi = createApi({
         };
       },
     }),
+    listPremiumDeals: builder.query<PremiumDealsResponse, Omit<ListMarketplaceServicesParams, "serviceId"> | void>({
+      query: (params) => {
+        const safeParams = params ?? {};
+        const normalizedParams: Record<string, unknown> = { ...safeParams };
+        if (Array.isArray(safeParams.categoryIds)) {
+          normalizedParams.categoryIds = safeParams.categoryIds.join(",");
+        }
+        if (Array.isArray(safeParams.cityIds)) {
+          normalizedParams.cityIds = safeParams.cityIds.join(",");
+        }
+
+        return {
+          url: "/marketplace/premium-deals",
+          method: "GET",
+          params: normalizedParams,
+        };
+      },
+    }),
     trackVendorStoreVisit: builder.mutation<{ message: string }, { vendorId: string }>({
       query: ({ vendorId }) => ({
         url: `/marketplace/vendors/${vendorId}/visit`,
@@ -141,6 +163,7 @@ export const {
   useLazyListMarketplaceServicesQuery,
   useListMarketplaceServicesQuery,
   useListActiveDealsQuery,
+  useListPremiumDealsQuery,
   useGetVendorStoreVisitStatsQuery,
   useTrackVendorStoreVisitMutation,
 } =

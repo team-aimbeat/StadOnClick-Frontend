@@ -3,6 +3,11 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import bannerImage from "@/assets/Images/bgsalon.jpg"
 import { ChevronDown } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAppSelector } from "@/app/hooks"
+import {
+  hasActivePaidPlan,
+  useGetMyPlanQuery,
+} from "@/features/userSubscriptions/api/userSubscriptionsApi"
 import { slugifyServiceTitle } from "@/utils/slugify"
 import { Service } from "./types"
 import ServicesSidebar from "./ServicesSidebar"
@@ -34,7 +39,10 @@ const formatMoney = (amount: number, currency: string) => {
   }
 }
 
-const toServiceCardModel = (service: MarketplaceService): Service => {
+const toServiceCardModel = (
+  service: MarketplaceService,
+  canAccessHotDeals: boolean,
+): Service => {
   const images = service.mediaUrls?.length
     ? service.mediaUrls
     : service.thumbnailUrl
@@ -45,11 +53,17 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
     title: offering.name,
     subtitle: offering.description ?? undefined,
     duration: offering.durationLabel ?? undefined,
-    price: formatMoney(offering.salePrice ?? offering.basePrice, offering.currency ?? "INR"),
+    price: formatMoney(
+      canAccessHotDeals ? offering.salePrice ?? offering.basePrice : offering.basePrice,
+      offering.currency ?? "INR",
+    ),
     compareAtPrice:
-      offering.basePrice > offering.salePrice
+      canAccessHotDeals && offering.basePrice > offering.salePrice
         ? formatMoney(offering.basePrice, offering.currency ?? "INR")
         : undefined,
+    discountPercent: canAccessHotDeals ? offering.discountPercent : undefined,
+    dealEndTime: canAccessHotDeals ? offering.dealEndTime ?? undefined : undefined,
+    isDealActive: canAccessHotDeals ? offering.isDealActive : false,
   }))
 
   const fallbackPrice =
@@ -143,6 +157,9 @@ export default function ServicesExplorer({
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [enquiryService, setEnquiryService] = useState<Service | null>(null)
+  const authUser = useAppSelector((state) => state.auth.user)
+  const { data: myPlanRes } = useGetMyPlanQuery(undefined, { skip: !authUser })
+  const canAccessHotDeals = hasActivePaidPlan(myPlanRes?.data)
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([])
@@ -269,10 +286,10 @@ export default function ServicesExplorer({
 
   const activeServices = useMemo(() => {
     if (providedServices) return providedServices
-    const mapped = marketplaceRows.map(toServiceCardModel)
+    const mapped = marketplaceRows.map((row) => toServiceCardModel(row, canAccessHotDeals))
     if (mapped.length) return mapped
     return []
-  }, [marketplaceRows, providedServices])
+  }, [canAccessHotDeals, marketplaceRows, providedServices])
 
 
   const categoryCounts = useMemo(() => {
@@ -454,6 +471,7 @@ export default function ServicesExplorer({
                   <ServiceCard
                     key={service.id}
                     service={service}
+                    canAccessHotDeals={canAccessHotDeals}
                     onViewDetails={(item) => navigate(`/service/${item.slug}`)}
                     onEnquiry={(item) => setEnquiryService(item)}
                   />

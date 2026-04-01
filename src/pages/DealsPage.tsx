@@ -2,7 +2,8 @@ import { Flame, MapPin, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { DealTimer } from "@/components/marketplace/DealTimer";
-import { useListActiveDealsQuery } from "@/services/marketplaceApi";
+import { Button } from "@/components/ui/button";
+import { useListPremiumDealsQuery } from "@/services/marketplaceApi";
 
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -12,7 +13,7 @@ const money = new Intl.NumberFormat("en-US", {
 
 export default function DealsPage() {
   const navigate = useNavigate();
-  const { data, isLoading } = useListActiveDealsQuery({
+  const { data, isLoading } = useListPremiumDealsQuery({
     limit: 24,
     offset: 0,
     sort: "NEWEST",
@@ -39,7 +40,17 @@ export default function DealsPage() {
           </p>
         </section>
 
-        {services.length === 0 ? (
+        {data?.isLocked ? (
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">
+            <p className="text-base font-semibold text-slate-900">Hot deals are locked</p>
+            <p className="mt-2">
+              Purchase a customer subscription plan to access premium discounted offers.
+            </p>
+            <Button className="mt-5 rounded-full" onClick={() => navigate("/subscriptions")}>
+              View subscription plans
+            </Button>
+          </div>
+        ) : services.length === 0 ? (
           <div className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">
             No active deals are live right now.
           </div>
