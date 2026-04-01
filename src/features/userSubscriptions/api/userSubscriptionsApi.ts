@@ -21,6 +21,16 @@ export type UserPlanResponse = {
   plan: UserSubscriptionPlan;
 };
 
+export const hasActivePaidPlan = (plan: UserPlanResponse | null | undefined) => {
+  if (!plan) return false;
+  if (String(plan.status).toUpperCase() !== "ACTIVE") return false;
+
+  const endDate = new Date(plan.endDate);
+  if (Number.isNaN(endDate.getTime()) || endDate <= new Date()) return false;
+
+  return String(plan.plan?.planName ?? "").trim().toUpperCase() !== "BASIC";
+};
+
 export const userSubscriptionsApi = createApi({
   reducerPath: "userSubscriptionsApi",
   baseQuery: baseQueryWithReauth,

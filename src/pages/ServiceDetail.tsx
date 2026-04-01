@@ -46,6 +46,10 @@ import { useGetPublicVendorCouponsQuery } from "@/services/vendoiCouponsApi";
 import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
 import { useCreateAffiliateServiceLinkMutation } from "@/features/affiliate/api/affiliateApi";
 import { useGetMyReferralSummaryQuery } from "@/features/referrals/api/referralApi";
+import {
+  hasActivePaidPlan,
+  useGetMyPlanQuery,
+} from "@/features/userSubscriptions/api/userSubscriptionsApi";
 import { Button } from "@/components/ui/button";
 import { DealTimer } from "@/components/marketplace/DealTimer";
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
@@ -182,6 +186,8 @@ export default function ServiceDetail() {
   }>();
   const authUser = useAppSelector((state) => state.auth.user);
   const userId = authUser?.id;
+  const { data: myPlanRes } = useGetMyPlanQuery(undefined, { skip: !authUser });
+  const canAccessHotDeals = hasActivePaidPlan(myPlanRes?.data);
   const isAffiliate = (authUser?.roles ?? []).includes("AFFILIATE");
   const { data: myReferralSummary } = useGetMyReferralSummaryQuery(undefined, {
     skip: !userId,
@@ -703,6 +709,23 @@ export default function ServiceDetail() {
   }, [currentServiceId, service?.offerings]);
   const effectiveOfferings =
     (offerings?.length ?? 0) > 0 ? offerings ?? [] : serviceOfferingsFallback;
+  const visibleOfferings = useMemo(
+    () =>
+      effectiveOfferings.map((offering) =>
+        !canAccessHotDeals && offering.isDealActive
+          ? {
+              ...offering,
+              salePrice: offering.basePrice,
+              discountPercent: null,
+              dealEndTime: null,
+              dealStartTime: null,
+              isDealActive: false,
+              effectivePrice: Number(offering.basePrice ?? 0),
+            }
+          : offering,
+      ),
+    [canAccessHotDeals, effectiveOfferings],
+  );
   const { data: vendorCoupons = [] } = useGetPublicVendorCouponsQuery(
     vendorId ?? "",
     { skip: !vendorId },
@@ -734,7 +757,7 @@ export default function ServiceDetail() {
 
   const descriptionRules = useMemo(() => {
     const seen = new Map<string, { label: string; value?: string | null }>();
-    for (const offering of effectiveOfferings ?? []) {
+    for (const offering of visibleOfferings ?? []) {
       for (const rule of offering.rules ?? []) {
         const key = `${rule.ruleType}:${rule.value ?? ""}`;
         if (!seen.has(key)) {
@@ -746,12 +769,24 @@ export default function ServiceDetail() {
       }
     }
     return Array.from(seen.values());
-  }, [effectiveOfferings]);
+  }, [visibleOfferings]);
   const marketplaceOfferingsPreview =
-    matchedMarketplaceService?.offeringsPreview ?? [];
+    (matchedMarketplaceService?.offeringsPreview ?? []).map((offering) =>
+      !canAccessHotDeals && offering.isDealActive
+        ? {
+            ...offering,
+            salePrice: offering.basePrice,
+            discountPercent: 0,
+            dealEndTime: null,
+            dealStartTime: null,
+            isDealActive: false,
+            effectivePrice: Number(offering.basePrice ?? 0),
+          }
+        : offering,
+    );
   const hasLiveOfferings = (effectiveOfferings?.length ?? 0) > 0;
   const packagesCount = hasLiveOfferings
-    ? effectiveOfferings?.length ?? 0
+    ? visibleOfferings?.length ?? 0
     : marketplaceOfferingsPreview.length;
 
   const handleSubmitReview = async () => {
@@ -1048,7 +1083,7 @@ export default function ServiceDetail() {
                 {activeTab === "services" ? (
                   <div className="space-y-4">
                     {hasLiveOfferings ? (
-                      effectiveOfferings?.map((offering) => {
+                      visibleOfferings?.map((offering) => {
                         const displayPrice = getEffectivePrice(offering);
                         const activeDiscountPercent =
                           Number(offering.discountPercent ?? 0) ||
