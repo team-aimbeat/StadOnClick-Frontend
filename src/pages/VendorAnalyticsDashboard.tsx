@@ -3,6 +3,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -13,6 +15,7 @@ import {
   HiOutlineCalendarDays,
   HiOutlineCheckCircle,
   HiOutlineEnvelope,
+  HiOutlineEye,
   HiOutlineMapPin,
   HiOutlinePaperAirplane,
   HiOutlinePhone,
@@ -20,12 +23,12 @@ import {
   HiOutlineUsers,
   HiOutlineWallet,
 } from "react-icons/hi2";
+import type { IconType } from "react-icons";
 import { BsWhatsapp } from "react-icons/bs";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import SectionHeader from "@/components/vendor-dashboard/SectionHeader";
-import StatsCard from "@/components/shared/StatsCard";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import ProfileScoreCard from "@/components/vendor-dashboard/ProfileScoreCard";
 import { cn } from "@/lib/utils";
@@ -55,6 +58,59 @@ type BookingStatus =
   | "REFUNDED";
 type DateRange = "7d" | "30d" | "6m" | "1y";
 type VendorStatus = "PENDING_REVIEW" | "APPROVED" | "SUSPENDED";
+
+type AnalyticsKpiCardProps = {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: IconType;
+  accentColor?: "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
+  className?: string;
+};
+
+const analyticsKpiAccent: Record<NonNullable<AnalyticsKpiCardProps["accentColor"]>, string> = {
+  blue: "bg-[#eaf2ff] text-[#3554e0]",
+  green: "bg-[#eaf8ef] text-[#1fb56a]",
+  red: "bg-[#fff0f0] text-[#e25353]",
+  yellow: "bg-[#fff7e6] text-[#e0a100]",
+  purple: "bg-[#f2efff] text-[#6f63ee]",
+  cyan: "bg-[#eaf8ff] text-[#0f7ed2]",
+};
+
+const AnalyticsKpiCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  accentColor = "blue",
+  className,
+}: AnalyticsKpiCardProps) => (
+  <div
+    className={cn(
+      "min-h-[154px] rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)]",
+      className
+    )}
+  >
+    <div className="flex h-full flex-col justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          {title}
+        </p>
+        <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-100", analyticsKpiAccent[accentColor])}>
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="text-[30px] font-bold leading-none tracking-tight text-slate-900">
+          {typeof value === "number" ? value.toLocaleString() : value}
+        </p>
+        {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
+      </div>
+    </div>
+  </div>
+);
+
+const StatsCard = AnalyticsKpiCard;
 
 type VendorLead = {
   id: string;
@@ -92,6 +148,11 @@ type Review = {
   comment: string;
   verified: boolean;
   createdAt: string;
+  user?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    nickName?: string | null;
+  } | null;
 };
 
 type VendorProfile = {
@@ -715,10 +776,10 @@ const DataTableCard = <T,>({
   columns: TableColumn<T>[];
   emptyLabel: string;
 }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-3">
-    <div className="flex items-center justify-between gap-3 pb-2">
+  <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+    <div className="flex items-center justify-between gap-3 pb-3">
       <div>
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
+        <p className="text-sm font-bold text-slate-900">{title}</p>
         {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
       </div>
     </div>
@@ -789,10 +850,10 @@ const AnalyticsBarChart = ({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-900">{title}</p>
+          <p className="text-sm font-bold text-slate-900">{title}</p>
           {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
         </div>
         <div className="flex items-center gap-3 text-xs font-semibold text-slate-600">
@@ -806,10 +867,9 @@ const AnalyticsBarChart = ({
       </div>
       <div style={{ height }} className="mt-3">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
+          <LineChart
             data={data}
             margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            barCategoryGap="22%"
           >
             <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
             <XAxis
@@ -837,15 +897,17 @@ const AnalyticsBarChart = ({
               labelFormatter={(label) => `Period: ${label}`}
             />
             {series.map((item) => (
-              <Bar
+              <Line
                 key={item.key}
                 dataKey={item.key}
-                fill={item.color}
-                radius={[6, 6, 0, 0]}
-                barSize={18}
+                type="monotone"
+                stroke={item.color}
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 5 }}
               />
             ))}
-          </BarChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
       <p className="mt-2 text-center text-xs font-semibold text-slate-500">
@@ -1056,6 +1118,13 @@ const VendorAnalyticsDashboard = () => {
               comment: review.comment ?? "",
               verified: true,
               createdAt: review.createdAt,
+              user: review.user
+                ? {
+                    firstName: review.user.firstName ?? null,
+                    lastName: review.user.lastName ?? null,
+                    nickName: review.user.nickName ?? null,
+                  }
+                : null,
             });
           });
         }
@@ -1532,163 +1601,8 @@ const VendorAnalyticsDashboard = () => {
     },
   ];
 
-  const latestOrdersColumns: TableColumn<Order>[] = [
-    {
-      key: "id",
-      header: "Order",
-      render: (order) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">{order.id}</p>
-          <p className="text-xs text-slate-500">User {order.userId}</p>
-        </div>
-      ),
-    },
-    {
-      key: "totalFinal",
-      header: "Total",
-      render: (order) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">
-            {currencyFormatter(order.totalFinal, currency)}
-          </p>
-          <p className="text-[11px] text-slate-500">
-            Discount: {currencyFormatter(order.totalDiscount, currency)}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "split",
-      header: "Split",
-      render: (order) => (
-        <div className="text-sm text-slate-800">
-          <p>Commission: {currencyFormatter(order.commissionAmount, currency)}</p>
-          <p className="text-xs text-slate-500">
-            Vendor payout: {currencyFormatter(order.vendorPayoutAmount, currency)}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (order) => (
-        <StatusPill
-          status={order.status}
-          tone={order.status === "PAID" ? "success" : order.status === "REFUNDED" ? "warning" : "neutral"}
-          size="sm"
-        />
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      render: (order) => (
-        <span className="text-sm text-slate-700">
-          {new Date(order.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-          })}
-        </span>
-      ),
-    },
-  ];
-
-  const latestReviewsColumns: TableColumn<Review>[] = [
-    {
-      key: "service",
-      header: "Service",
-      render: (review) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">{review.serviceTitle}</p>
-          <p className="text-xs text-slate-500">
-            {review.verified ? "Verified reviewer" : "Unverified"}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "rating",
-      header: "Rating",
-      render: (review) => (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-          <HiOutlineStar className="h-4 w-4" />
-          {review.rating.toFixed(1)}
-        </span>
-      ),
-    },
-    {
-      key: "comment",
-      header: "Comment",
-      render: (review) => (
-        <p className="max-w-xs truncate text-sm text-slate-800">{review.comment}</p>
-      ),
-    },
-    {
-      key: "created",
-      header: "Date",
-      render: (review) => (
-        <span className="text-sm text-slate-700">
-          {new Date(review.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-          })}
-        </span>
-      ),
-    },
-  ];
-
-  const latestBookingsColumns: TableColumn<ServiceBooking>[] = [
-    {
-      key: "service",
-      header: "Service",
-      render: (booking) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">{booking.serviceTitle}</p>
-          <p className="text-xs text-slate-500">
-            Slot:{" "}
-            {new Date(booking.startTime).toLocaleString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (booking) => (
-        <StatusPill
-          status={booking.status}
-          tone={
-            booking.status === "CONFIRMED" || booking.status === "COMPLETED"
-              ? "success"
-              : booking.status === "CANCELLED"
-              ? "danger"
-              : booking.status === "REFUND_REQUESTED" || booking.status === "REFUNDED"
-              ? "warning"
-              : "info"
-          }
-          size="sm"
-        />
-      ),
-    },
-    {
-      key: "created",
-      header: "Created",
-      render: (booking) => (
-        <span className="text-sm text-slate-700">
-          {new Date(booking.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-          })}
-        </span>
-      ),
-    },
-  ];
+  const formatShortOrderId = (orderId: string) =>
+    orderId.length > 14 ? `${orderId.slice(0, 8)}...${orderId.slice(-6)}` : orderId;
 
   const overviewKpis = [
     {
@@ -1736,50 +1650,172 @@ const VendorAnalyticsDashboard = () => {
   ];
 
   const renderOverviewTab = () => (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-[28px] font-bold tracking-tight text-slate-900">Vendor Analytics</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            {vendorProfile.businessName} • {vendorProfile.city}, {vendorProfile.state}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <DateRangeSelector value={range} onChange={setRange} />
+       
+        </div>
+      </div>
+
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-900 text-white shadow-sm">
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">Store</span>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-slate-900">{vendorProfile.businessName}</p>
+              <p className="flex items-center gap-1 text-sm font-semibold text-slate-500">
+                <HiOutlineMapPin className="h-4 w-4" />
+                {vendorProfile.city}, {vendorProfile.state}
+                <span className="mx-1">•</span>
+                {rangeLabel}
+              </p>
+            </div>
+          </div>
+   
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        {overviewKpis.map((kpi) => (
-          <StatsCard key={kpi.title} {...kpi} />
-        ))}
+        {overviewKpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div
+              key={kpi.title}
+              className="min-h-[154px] rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)]"
+            >
+              <div className="flex h-full flex-col justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    {kpi.title}
+                  </p>
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-100 bg-slate-50 text-slate-500">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[30px] font-bold leading-none tracking-tight text-slate-900">
+                    {kpi.value}
+                  </p>
+                  <p className="text-xs text-slate-500">{kpi.subtitle}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <AnalyticsBarChart
-        title="Interactions Overview"
-        subtitle="Leads vs paid orders vs bookings"
-        data={overviewChart}
-        series={[
-          { key: "leads", label: "Leads", color: "#2563EB" },
-          { key: "orders", label: "Paid Orders", color: "#22C55E" },
-          { key: "bookings", label: "Bookings", color: "#A855F7" },
-        ]}
-      />
+      <div className="grid gap-5 lg:grid-cols-[1.45fr_0.95fr]">
+        <AnalyticsBarChart
+          title="Interactions Overview"
+          subtitle="Customer journey lifecycle metrics over the last 30 days"
+          data={overviewChart}
+          series={[
+            { key: "leads", label: "Leads", color: "#2563EB" },
+            { key: "orders", label: "Orders", color: "#8B5CF6" },
+            { key: "bookings", label: "Bookings", color: "#14B8A6" },
+          ]}
+          height={320}
+        />
+        <div className="grid gap-5">
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-slate-900">Latest Leads</h3>
+              <button type="button" className="text-sm font-semibold text-[#3554e0]">View All</button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {filteredLeads.slice(0, 3).map((lead) => (
+                <div key={lead.id} className="flex items-start gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500">
+                    <HiOutlineUsers className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-900">{lead.name}</p>
+                    <p className="text-xs text-slate-500">{lead.serviceTitle}</p>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {new Date(lead.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DataTableCard
-          title="Latest Leads"
-          subtitle="Most recent enquiries"
-          rows={filteredLeads.slice(0, 5)}
-          columns={latestLeadsColumns}
-          emptyLabel="No leads in this range."
-        />
-        <DataTableCard
-          title="Latest Orders"
-          subtitle="Paid and refunded"
-          rows={filteredPaidAndRefundedOrders.slice(0, 5)}
-          columns={latestOrdersColumns}
-          emptyLabel="No orders in this range."
-        />
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-slate-900">Latest Orders</h3>
+              <button type="button" className="text-sm font-semibold text-[#3554e0]">View All</button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {filteredPaidAndRefundedOrders.slice(0, 3).map((order) => (
+                <div key={order.id} className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{order.id}</p>
+                    <p className="text-xs text-slate-500">
+                      {currencyFormatter(order.totalFinal, currency)} • Card Payment
+                    </p>
+                  </div>
+                  <StatusPill
+                    status={order.status}
+                    tone={order.status === "PAID" ? "success" : order.status === "REFUNDED" ? "warning" : "neutral"}
+                    size="sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-slate-900">Latest Reviews</h3>
+              <button type="button" className="text-sm font-semibold text-[#3554e0]">View All</button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {filteredReviews.slice(0, 3).map((review) => (
+                <div key={`${review.id}-${review.createdAt}`} className="rounded-2xl bg-slate-50 p-4">
+                  {(() => {
+                    const reviewerName =
+                      [review.user?.nickName, review.user?.firstName, review.user?.lastName]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim() || "Verified customer";
+                    return (
+                      <>
+                        <div className="flex items-center gap-1 text-amber-400">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <HiOutlineStar
+                              key={idx}
+                              className={cn(
+                                "h-4 w-4",
+                                idx < Math.round(review.rating) ? "text-amber-400" : "text-slate-300",
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-2 text-sm font-semibold text-slate-900">{reviewerName}</p>
+                        <p className="mt-1 text-sm italic leading-6 text-slate-700">"{review.comment}"</p>
+                        <p className="mt-2 text-xs font-semibold text-slate-500">
+                          - {review.verified ?  review.user?.firstName : "Customer"} 
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-      <DataTableCard
-        title="Latest Reviews"
-        subtitle="Reputation signals"
-        rows={filteredReviews.slice(0, 5)}
-        columns={latestReviewsColumns}
-        emptyLabel="No reviews in this range."
-      />
-      </div>
-    
-      );
+    </div>
+  );
 
   const renderLeadsTab = () => (
     <div className="space-y-4">
@@ -1902,13 +1938,93 @@ const VendorAnalyticsDashboard = () => {
         />
       </div>
 
-      <DataTableCard
-        title="Latest Paid Orders"
-        subtitle="Order splits"
-        rows={filteredPaidOrders.slice(0, 8)}
-        columns={latestOrdersColumns}
-        emptyLabel="No orders in this range."
-      />
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Latest Paid Orders</h3>
+            <p className="text-sm text-slate-500">Real-time update of your merchant transactions</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700"
+            >
+              Export CSV
+            </button>
+            <button
+              type="button"
+              className="rounded-xl bg-[#3554e0] px-5 py-2.5 text-sm font-semibold text-white shadow-sm"
+            >
+              View All Orders
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-y-3 text-sm">
+            <thead>
+              <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-500">
+                <th className="px-4 py-3 font-semibold">Order ID</th>
+                <th className="px-4 py-3 font-semibold">Created Date</th>
+                <th className="px-4 py-3 font-semibold">Total</th>
+                <th className="px-4 py-3 font-semibold">Commission</th>
+                <th className="px-4 py-3 font-semibold">Vendor Payout</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPaidOrders.slice(0, 8).map((order) => (
+                <tr key={order.id} className="rounded-2xl bg-slate-50/70">
+                  <td className="rounded-l-2xl px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-slate-400 shadow-sm">
+                        <HiOutlineWallet className="h-4 w-4" />
+                      </span>
+                      <p className="font-semibold text-slate-900">{formatShortOrderId(order.id)}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-slate-700">
+                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-slate-900">
+                      {currencyFormatter(order.totalFinal, currency)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-rose-500">
+                      {currencyFormatter(order.commissionAmount, currency)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-[#3554e0]">
+                      {currencyFormatter(order.vendorPayoutAmount, currency)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <StatusPill status={order.status} tone="success" size="sm" />
+                  </td>
+                  <td className="rounded-r-2xl px-4 py-4">
+                    <button
+                      type="button"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#3554e0] shadow-sm"
+                      aria-label={`View order ${order.id}`}
+                    >
+                      <HiOutlineEye className="h-5 w-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 
@@ -1966,35 +2082,138 @@ const VendorAnalyticsDashboard = () => {
           data={bookingsChart}
           series={[{ key: "bookings", label: "Bookings", color: "#2563EB" }]}
         />
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <SectionHeader title="Top services by bookings" />
-          <div className="mt-3 space-y-2">
+        <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">Top Services</h3>
+              <p className="mt-1 text-sm text-slate-500">Most booked services in the selected range</p>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-5">
             {topServicesByBookings.length ? (
-              topServicesByBookings.map((item) => (
-                <div
-                  key={item.serviceTitle}
-                  className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
-                >
-                  <p className="text-sm font-semibold text-slate-900">{item.serviceTitle}</p>
-                  <span className="text-xs font-semibold text-slate-600">
-                    {item.count} bookings
-                  </span>
-                </div>
-              ))
+              topServicesByBookings.map((item, index) => {
+                const maxCount = topServicesByBookings[0]?.count || 1;
+                const width = Math.max(18, Math.round((item.count / maxCount) * 100));
+                const colors = ["#3554e0", "#6f63ee", "#0ea5e9", "#14b8a6", "#f59e0b"];
+                const barColor = colors[index % colors.length];
+
+                return (
+                  <div key={item.serviceTitle} className="space-y-2">
+                    <div className="flex items-end justify-between gap-3">
+                      <p className="text-sm font-semibold text-slate-900">{item.serviceTitle}</p>
+                      <p className="text-sm font-semibold text-slate-500">
+                        <span className="text-[#3554e0]">{item.count}</span>{" "}
+                        <span className="text-slate-400">units</span>
+                      </p>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-slate-100">
+                      <div
+                        className="h-2.5 rounded-full"
+                        style={{ width: `${width}%`, backgroundColor: barColor }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
             ) : (
               <p className="text-sm text-slate-500">No bookings in this range.</p>
             )}
           </div>
+
+          <button
+            type="button"
+            className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#3554e0]"
+          >
+            View Detailed Category Insights
+            <span aria-hidden>→</span>
+          </button>
         </div>
       </div>
 
-      <DataTableCard
-        title="Latest Bookings"
-        subtitle="Recent service schedules"
-        rows={filteredBookings.slice(0, 8)}
-        columns={latestBookingsColumns}
-        emptyLabel="No bookings in this range."
-      />
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Latest Bookings</h3>
+            <p className="text-sm text-slate-500">Recent transaction activity across all storefronts</p>
+          </div>
+         
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-y-3 text-sm">
+            <thead>
+              <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-500">
+                <th className="px-2 py-3 font-semibold">Service</th>
+                <th className="px-2 py-3 font-semibold">Reference</th>
+                <th className="px-2 py-3 font-semibold">Created</th>
+                <th className="px-2 py-3 font-semibold">Amount</th>
+                <th className="px-2 py-3 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredBookings.slice(0, 4).map((booking) => {
+                const bookingAmount =
+                  booking.status === "CONFIRMED"
+                    ? 124
+                    : booking.status === "PENDING"
+                    ? 85
+                    : booking.status === "CANCELLED"
+                    ? 210.5
+                    : booking.status === "COMPLETED"
+                    ? 42
+                    : booking.status === "REFUND_REQUESTED"
+                    ? 65
+                    : 95;
+
+                const statusTone =
+                  booking.status === "CONFIRMED" || booking.status === "COMPLETED"
+                    ? "success"
+                    : booking.status === "CANCELLED"
+                    ? "danger"
+                    : booking.status === "REFUND_REQUESTED" || booking.status === "REFUNDED"
+                    ? "warning"
+                    : "info";
+
+                return (
+                  <tr key={booking.id} className="rounded-2xl bg-slate-50/70">
+                    <td className="rounded-l-2xl px-2 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#3554e0] shadow-sm">
+                          <HiOutlineCalendarDays className="h-5 w-5" />
+                        </span>
+                        <p className="font-semibold text-slate-900">{booking.serviceTitle}</p>
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <span className="font-semibold text-slate-700">{booking.id}</span>
+                    </td>
+                    <td className="px-2 py-4">
+                      <span className="font-semibold text-slate-700">
+                        {new Date(booking.createdAt).toLocaleString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-2 py-4">
+                      <span className="font-semibold text-slate-900">${bookingAmount.toFixed(2)}</span>
+                    </td>
+                    <td className="rounded-r-2xl px-2 py-4">
+                      <StatusPill status={booking.status} tone={statusTone} size="sm" />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+       
+      </div>
     </div>
   );
 
@@ -2055,13 +2274,88 @@ const VendorAnalyticsDashboard = () => {
         />
       </div>
 
-      <DataTableCard
-        title="Latest Reviews"
-        subtitle="Newest feedback first"
-        rows={filteredReviews.slice(0, 10)}
-        columns={latestReviewsColumns}
-        emptyLabel="No reviews in this range."
-      />
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Recent Feedbacks</h3>
+            <p className="text-sm text-slate-500">Real-time monitoring of client experiences</p>
+          </div>
+          <button type="button" className="text-sm font-semibold text-[#3554e0]">
+            View All
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-y-3 text-sm">
+            <thead>
+              <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-500">
+                <th className="px-2 py-3 font-semibold">Service Name</th>
+                <th className="px-2 py-3 font-semibold">Rating</th>
+                <th className="px-2 py-3 font-semibold">Comment</th>
+                <th className="px-2 py-3 font-semibold">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReviews.slice(0, 6).map((review) => {
+                const reviewerName =
+                  [review.user?.nickName, review.user?.firstName, review.user?.lastName]
+                    .filter(Boolean)
+                    .join(" ")
+                    .trim() || "Verified customer";
+
+                const dateLabel = new Date(review.createdAt).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                });
+
+                const timeLabel = new Date(review.createdAt).toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+
+                return (
+                  <tr key={`${review.id}-${review.createdAt}`} className="rounded-2xl bg-slate-50/70">
+                    <td className="rounded-l-2xl px-2 py-4">
+                      <div className="flex items-start gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#3554e0] shadow-sm">
+                          <HiOutlineStar className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="font-semibold text-slate-900">{review.serviceTitle}</p>
+                          <p className="text-xs text-slate-500">{reviewerName}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="flex items-center gap-0.5 text-amber-400">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <HiOutlineStar
+                            key={idx}
+                            className={cn(
+                              "h-4 w-4",
+                              idx < Math.round(review.rating) ? "text-amber-400" : "text-slate-300",
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <p className="max-w-sm truncate text-sm text-slate-700">"{review.comment}"</p>
+                    </td>
+                    <td className="rounded-r-2xl px-2 py-4">
+                      <div className="font-semibold text-slate-700">
+                        <p>{dateLabel}</p>
+                        <p className="text-xs font-medium text-slate-400">{timeLabel}</p>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 
@@ -2802,29 +3096,11 @@ const VendorAnalyticsDashboard = () => {
 
   return (
     <DashboardContainer className="space-y-4 lg:space-y-5">
-      <TitleBreadCrumbs title="Vendor Analytics" breadCrumbTitle="Vendor / Analytics" />
-
       {loading ? (
         skeletonHeader()
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="space-y-0.5">
-              <p className="text-xl font-bold text-slate-900">{vendorProfile.businessName}</p>
-              <p className="flex items-center gap-1 text-sm font-semibold text-slate-600">
-                <HiOutlineMapPin className="h-4 w-4" />
-                {vendorProfile.city}, {vendorProfile.state}
-              </p>
-              <p className="text-xs font-semibold text-slate-500">{rangeLabel}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <DateRangeSelector value={range} onChange={setRange} />
-              <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                <HiOutlineCalendarDays className="h-4 w-4" />
-                Date buckets adjust by range
-              </div>
-            </div>
-          </div>
+
           <div className="flex items-center gap-4 border-b border-slate-200">
             {tabs.map((tab) => (
               <TabButton

@@ -12,7 +12,7 @@ export default function VendorLayout() {
   const isSidebarCollapsed = !themeConfig.sidebar;
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-[#fafcff]">
       <VendorSidebar />
 
       <div
