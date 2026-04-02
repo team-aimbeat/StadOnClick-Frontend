@@ -175,7 +175,7 @@ export default function VendorSidebar() {
                             type="button"
                             className={cn(
                               "group flex w-full items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50",
-                              isOpen && "bg-blue-50 text-blue-700"
+                              isOpen && "bg-[#3554e0] text-white shadow-sm"
                             )}
                             onClick={() => toggleItem(item.label)}
                           >
@@ -188,7 +188,7 @@ export default function VendorSidebar() {
                               <span
                                 className={cn(
                                   "flex h-8 w-8 items-center justify-center rounded-md border border-slate-200",
-                                  isOpen && "border-blue-200 bg-white text-blue-700"
+                                  isOpen && "border-white/20 bg-white/15 text-white"
                                 )}
                               >
                                 <ItemIcon className="h-5 w-5" />
@@ -246,7 +246,7 @@ export default function VendorSidebar() {
                                       return cn(
                                         "flex items-center justify-between rounded-md px-2.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50",
                                         displayActive &&
-                                          "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+                                          "bg-[#3554e0] text-white shadow-sm"
                                       );
                                     }}
                                   >
@@ -267,9 +267,9 @@ export default function VendorSidebar() {
                                         <>
                                           <div className="flex items-center gap-2">
                                             <span
-                                              className={cn(
+                                            className={cn(
                                                 "h-1.5 w-1.5 rounded-full",
-                                                displayActive ? "bg-blue-600" : "bg-slate-300"
+                                                displayActive ? "bg-white" : "bg-slate-300"
                                               )}
                                             />
                                             <span>{child.label}</span>
@@ -299,7 +299,7 @@ export default function VendorSidebar() {
                           className={({ isActive }) =>
                             cn(
                               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50",
-                              isActive && "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+                              isActive && "bg-[#3554e0] text-white shadow-sm"
                             )
                           }
                         >
@@ -308,7 +308,7 @@ export default function VendorSidebar() {
                               <span
                                 className={cn(
                                   "flex h-8 w-8 items-center justify-center rounded-md border border-slate-200",
-                                  isActive && "border-blue-200 bg-white text-blue-700"
+                                  isActive && "border-white/20 bg-white/15 text-white"
                                 )}
                               >
                                 <ItemIcon className="h-5 w-5" />
