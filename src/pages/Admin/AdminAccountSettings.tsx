@@ -4,6 +4,7 @@ import { HiOutlineCheckCircle, HiOutlineGlobeAlt } from "react-icons/hi2";
 import {
   Bell,
   Camera,
+  ChevronRight,
   Eye,
   EyeOff,
   Languages,
@@ -187,6 +188,14 @@ const AdminAccountSettings = () => {
     Boolean(passwordForm.newPassword) &&
     passwordForm.newPassword === passwordForm.confirmPassword;
 
+  const profileName =
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim() ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
+    "Admin User";
+  const profileRole = user?.roles?.[0] || "Admin";
+  const trustScore = 98.4;
+  const lastActivity = "2 mins ago";
+
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -274,73 +283,124 @@ const AdminAccountSettings = () => {
         className="w-full"
       />
 
-      <div className="grid gap-6 lg:grid-cols-[260px,1fr]">
-        <aside className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur">
-          <p className="px-1 pb-3 text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-500">
-            Settings
-          </p>
-          <div className="space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.key === activeSection;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => setActiveSection(item.key)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition",
-                    isActive
-                      ? "border-blue-200 bg-blue-50 text-blue-900 shadow-[0_10px_30px_-18px_rgba(59,130,246,0.8)]"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
-                  )}
-                >
-                  <span
+      <div className="space-y-6">
+        <div className="flex flex-col gap-6 xl:flex-row">
+          <aside className="xl:w-[300px] space-y-5">
+            <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.22)]">
+              <div className="mx-auto flex max-w-[190px] flex-col items-center rounded-[24px] bg-white px-4 py-4 text-center shadow-sm">
+                <div className="relative">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <Camera className="h-7 w-7 text-slate-400" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="absolute -right-2 bottom-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#3554e0] text-white shadow-lg"
+                    onClick={() => document.getElementById("admin-avatar")?.click()}
+                    aria-label="Upload image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5h2m-1 0v14m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                  </button>
+                </div>
+                <input id="admin-avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploadingAvatar} />
+                <h2 className="mt-4 text-lg font-bold text-slate-900">{profileName}</h2>
+                <p className="text-xs text-slate-500">{profileRole} • ID: {profile?.id || "88219"}</p>
+                <div className="mt-5 w-full space-y-2">
+                  <div className="rounded-xl bg-slate-50 px-3 py-2 text-left">
+                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      <span>Plan</span>
+                      <span className="text-blue-600">Enterprise Platinum</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2 text-left">
+                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      <span>Trust Score</span>
+                      <span className="text-blue-600">{trustScore}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[28px] bg-[#3554e0] p-5 text-white shadow-[0_20px_50px_-30px_rgba(53,84,224,0.55)]">
+              <p className="text-lg font-bold">Need help with your account?</p>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                Our dedicated support team is available 24/7 for Enterprise partners.
+              </p>
+              <button className="mt-5 inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#3554e0]">
+                Support Center
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </button>
+            </div>
+          </aside>
+
+          <main className="flex-1 space-y-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 className="text-[34px] font-bold tracking-tight text-slate-900">Account Settings</h1>
+                <p className="mt-1 max-w-2xl text-sm text-slate-500">
+                  Manage your business profile, security protocols, and platform preferences.
+                </p>
+              </div>
+              <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-sm ring-1 ring-slate-200">
+                Last activity: {lastActivity}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.key === activeSection;
+                const pill =
+                  item.key === "profile" ? "Updated 12d ago" : item.key === "security" ? "High protection" : "System default";
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setActiveSection(item.key)}
                     className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-lg border",
-                      isActive
-                        ? "border-blue-300 bg-white text-blue-700"
-                        : "border-slate-200 bg-slate-50 text-slate-500",
+                      "flex w-full items-center gap-4 rounded-2xl border border-slate-100 bg-white px-5 py-4 text-left shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] transition",
+                      isActive && "ring-2 ring-[#3554e0]/10",
                     )}
                   >
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold leading-5">
-                      {item.label}
-                    </p>
-                    <p className="text-[12px] text-slate-500">
-                      {item.description}
-                    </p>
-                  </div>
-                  {isActive ? (
-                    <HiOutlineCheckCircle className="h-5 w-5 text-blue-500" />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-
-        <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-[#f8f6ee] via-white to-[#fdfbf7] shadow-[0_22px_60px_-35px_rgba(15,23,42,0.55)]">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-5">
-            <div>
-              <p className="text-sm font-semibold text-slate-600">Setting</p>
-              <h1 className="text-3xl font-semibold text-slate-900">
-                Account Settings
-              </h1>
-              <p className="text-sm text-slate-500">
-                Manage your preferences, security, and connected tools all in one
-                place.
-              </p>
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-3">
+                        <p className="text-lg font-bold text-slate-900">{item.label}</p>
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600">
+                          {pill}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-slate-300" />
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-3 rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              Profile health: Good
-            </div>
-          </div>
 
-          <div className="space-y-10 px-6 py-8 lg:px-10">
+            <div className="grid gap-5 md:grid-cols-3">
+              {[
+                { title: "Team Access", body: "4 active users with management permissions." },
+                { title: "Audit Logs", body: "Review account activity from the last 90 days." },
+                { title: "Region", body: "Operating from London (GMT+0) - Global reach." },
+              ].map((item) => (
+                <div key={item.title} className="rounded-[22px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)]">
+                  <p className="text-sm font-bold text-slate-900">{item.title}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">{item.body}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-[24px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)]">
+              <div className="space-y-10">
             {activeSection === "profile" ? (
               <>
                 <div className="flex flex-col gap-5 rounded-3xl border border-slate-100 bg-white/90 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -655,27 +715,9 @@ const AdminAccountSettings = () => {
                 </div>
               </div>
             ) : null}
+            </div>
           </div>
-        </section>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 to-blue-700 px-6 py-6 text-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-blue-100">
-              Tip
-            </p>
-            <p className="text-lg font-semibold">
-              Keep your profile updated so the team trusts your actions.
-            </p>
-          </div>
-          <Button
-            variant="secondary"
-            className="bg-white text-slate-900 hover:bg-blue-50"
-            onClick={() => setActiveSection("profile")}
-          >
-            Review profile
-          </Button>
+          </main>
         </div>
       </div>
     </DashboardContainer>

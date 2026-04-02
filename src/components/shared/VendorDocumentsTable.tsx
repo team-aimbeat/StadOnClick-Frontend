@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DataTable, type ColumnConfig } from "@/components/shared/DataTable";
 import profile7 from "@/assets/Images/profile-7.jpeg";
 
 import {
@@ -162,6 +161,15 @@ type VendorDocumentsTableProps = {
   registerUploadHandler?: (open: () => void) => void;
 };
 
+const DOCUMENT_TABLE_COLUMNS = [
+  { key: "vendor", label: "Vendor" },
+  { key: "docType", label: "Doc Type" },
+  { key: "category", label: "Category" },
+  { key: "status", label: "Status" },
+  { key: "submitted", label: "Submitted" },
+  { key: "actions", label: "Actions" },
+] as const;
+
 const VendorDocumentsTable = ({
   vendor = defaultVendor,
   registerUploadHandler,
@@ -187,6 +195,15 @@ const VendorDocumentsTable = ({
   const [selectedType, setSelectedType] = useState<VendorKycDocumentType>(
     DOCUMENT_TYPES[0].value,
   );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [visibleColumns, setVisibleColumns] = useState<Record<(typeof DOCUMENT_TABLE_COLUMNS)[number]["key"], boolean>>({
+    vendor: true,
+    docType: true,
+    category: true,
+    status: true,
+    submitted: true,
+    actions: true,
+  });
   const [uploadOpen, setUploadOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [viewDoc, setViewDoc] = useState<VendorDoc | null>(null);
@@ -211,6 +228,24 @@ const VendorDocumentsTable = ({
     () => mapKycDocuments(documents, resolvedVendor),
     [documents, resolvedVendor],
   );
+  const filteredVendorDocs = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return vendorDocs;
+    return vendorDocs.filter((doc) =>
+      [
+        doc.vendor,
+        doc.docType,
+        doc.category,
+        doc.status,
+        doc.submitted,
+        doc.submittedTime,
+        doc.id,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [searchTerm, vendorDocs]);
   const vendorStatusLabel = resolvedVendor.verified ? "Verified" : "Pending";
 
   const normalizedQueryError = useMemo(() => {
@@ -281,89 +316,6 @@ const VendorDocumentsTable = ({
       event.dataTransfer.clearData();
     }
   };
-
-  const columns: ColumnConfig[] = [
-    // { key: "id", header: "ID", width: "90px" },
-    {
-      key: "vendor",
-      title: "Vendor",
-      render: (_value: unknown, row: VendorDoc) => (
-        <div className="flex items-center gap-3">
-          <img
-            src={row.avatar}
-            alt={row.vendor}
-            className="w-8 h-8 rounded-full border border-gray-200"
-          />
-          <span className="font-medium text-gray-900 dark:text-gray-100">
-            {row.vendor}
-          </span>
-        </div>
-      ),
-    },
-    { key: "docType", title: "Doc type" },
-    { key: "category", title: "Category" },
-    {
-      key: "status",
-      title: "Status",
-      render: (_value: unknown, row: VendorDoc) => (
-        <span
-          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${statusStyles(
-            row.status,
-          )}`}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      key: "submitted",
-      title: "Submitted",
-      render: (_value: unknown, row: VendorDoc) => (
-        <div>
-          <div className="text-gray-900 dark:text-gray-100">
-            {row.submitted}
-          </div>
-          <div className="text-xs text-gray-400">{row.submittedTime}</div>
-        </div>
-      ),
-    },
-    {
-      key: "actions",
-      title: "Actions",
-      render: (_value: unknown, row: VendorDoc) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-md bg-gray-100 hover:bg-gray-200"
-            >
-              <HiEllipsisHorizontal className="h-4 w-4 text-gray-700" />
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            align="end"
-            sideOffset={6}
-            className="w-30 rounded-md p-1 bg-white shadow-md border border-gray-200"
-          >
-            <DropdownMenuItem
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
-              onSelect={() => setViewDoc(row)}
-            >
-              View
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator className="my-1" />
-
-            <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 focus:text-red-600">
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
 
   const activityLogEntries = useMemo(
     () => viewDoc?.auditTrail ?? [],
@@ -462,18 +414,183 @@ const VendorDocumentsTable = ({
             </div>
           )}
 
-          <DataTable
-            title="KYC Documents"
-            breadCrumbTitle="Vendor / KYC Documents"
-            columns={columns}
-            data={vendorDocs}
-            loading={toolbarSkeleton}
-            searchable
-            selectable={false}
-            showSerialNumber={false}
-            noRecordText="No documents uploaded yet."
-            className="shadow-none border border-gray-200 rounded-2xl"
-          />
+          <div className="overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+            <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-lg font-bold text-slate-900">Vendor KYC Documents</p>
+                <p className="text-sm text-slate-500">Document review and verification status</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="min-w-[220px] rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                  <input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search documents"
+                    className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  />
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                      Columns
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={6}
+                    className="w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+                  >
+                    {DOCUMENT_TABLE_COLUMNS.map(({ key, label }) => (
+                      <DropdownMenuItem
+                        key={key}
+                        className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-700"
+                        onSelect={(event) => {
+                          event.preventDefault();
+                          setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+                        }}
+                      >
+                        <span>{label}</span>
+                        <span className={visibleColumns[key] ? "text-emerald-600" : "text-slate-400"}>
+                          {visibleColumns[key] ? "On" : "Off"}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+             
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-y-3 px-5 pb-5">
+                <thead>
+                  <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-400">
+                    {visibleColumns.vendor && <th className="px-5 py-3 font-semibold">Vendor</th>}
+                    {visibleColumns.docType && <th className="px-5 py-3 font-semibold">Doc Type</th>}
+                    {visibleColumns.category && <th className="px-5 py-3 font-semibold">Category</th>}
+                    {visibleColumns.status && <th className="px-5 py-3 font-semibold">Status</th>}
+                    {visibleColumns.submitted && <th className="px-5 py-3 font-semibold">Submitted</th>}
+                    {visibleColumns.actions && (
+                      <th className="px-5 py-3 font-semibold text-right">Actions</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {toolbarSkeleton ? (
+                    <tr>
+                      <td
+                        colSpan={
+                          Object.values(visibleColumns).filter(Boolean).length || 1
+                        }
+                        className="px-5 py-10 text-center text-sm text-slate-500"
+                      >
+                        Loading documents...
+                      </td>
+                    </tr>
+                  ) : filteredVendorDocs.length ? (
+                    filteredVendorDocs.map((row) => (
+                      <tr key={row.id} className="rounded-2xl bg-slate-50/70">
+                        {visibleColumns.vendor && (
+                          <td className="rounded-l-2xl px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={row.avatar}
+                                alt={row.vendor}
+                                className="h-10 w-10 rounded-xl border border-slate-100 object-cover"
+                              />
+                              <div>
+                                <p className="font-semibold text-slate-900">{row.vendor}</p>
+                                <p className="text-[11px] text-slate-500">Vendor account</p>
+                              </div>
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.docType && (
+                          <td className="px-5 py-4">
+                            <div>
+                              <p className="font-semibold text-slate-900">{row.docType}</p>
+                              <p className="text-[11px] text-slate-500">{row.id}</p>
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.category && (
+                          <td className="px-5 py-4">
+                            <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-600">
+                              {row.category}
+                            </span>
+                          </td>
+                        )}
+                        {visibleColumns.status && (
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${statusStyles(
+                                row.status,
+                              )}`}
+                            >
+                              <span className={`h-2 w-2 rounded-full ${getStatusDotColor(row.status)}`} />
+                              {row.status}
+                            </span>
+                          </td>
+                        )}
+                        {visibleColumns.submitted && (
+                          <td className="px-5 py-4">
+                            <div className="font-semibold text-slate-700">{row.submitted}</div>
+                            <div className="text-xs text-slate-400">{row.submittedTime}</div>
+                          </td>
+                        )}
+                        {visibleColumns.actions && (
+                          <td className="rounded-r-2xl px-5 py-4 text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-9 w-9 rounded-full bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+                                >
+                                  <HiEllipsisHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+
+                              <DropdownMenuContent
+                                align="end"
+                                sideOffset={6}
+                                className="w-30 rounded-md border border-gray-200 bg-white p-1 shadow-md"
+                              >
+                                <DropdownMenuItem
+                                  className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700"
+                                  onSelect={() => setViewDoc(row)}
+                                >
+                                  View
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="my-1" />
+                                <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 focus:text-red-600">
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={
+                          Object.values(visibleColumns).filter(Boolean).length || 1
+                        }
+                        className="px-5 py-10 text-center text-sm text-slate-500"
+                      >
+                        No documents uploaded yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {uploadOpen && (
             <div
