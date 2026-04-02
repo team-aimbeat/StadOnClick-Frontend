@@ -2,7 +2,10 @@ import { io, type Socket } from "socket.io-client";
 
 import { store } from "@/app/store";
 import { supportApi } from "@/features/support/supportApi";
-import { setConnected, setUnreadTotal } from "@/features/support/supportRealtimeSlice";
+import {
+  setConnected,
+  setUnreadTotal,
+} from "@/features/support/supportRealtimeSlice";
 import type { TicketMessage } from "@/features/support/support.types";
 import { addNotification } from "@/features/notifications/notificationsSlice";
 import { buildNotification } from "@/components/notifications/notification.utils";
@@ -21,14 +24,19 @@ function shouldDedupNotification(key: string) {
 }
 
 function getSocketConfig() {
-  const socketUrl = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || "").trim();
+  const socketUrl = (
+    import.meta.env.VITE_SOCKET_URL ||
+    import.meta.env.VITE_API_URL ||
+    ""
+  ).trim();
   if (!socketUrl) throw new Error("Missing VITE_SOCKET_URL or VITE_API_URL");
 
   const url = new URL(socketUrl);
   const origin = `${url.protocol}//${url.host}`;
 
   const basePath = url.pathname.replace(/\/$/, "");
-  const defaultPath = basePath && basePath !== "/" ? `${basePath}/socket.io` : "/socket.io";
+  const defaultPath =
+    basePath && basePath !== "/" ? `${basePath}/socket.io` : "/socket.io";
   const rawPath = (import.meta.env.VITE_SOCKET_PATH || defaultPath).trim();
   const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
 
@@ -39,9 +47,13 @@ function setUnread(total: number) {
   store.dispatch(setUnreadTotal(total));
   try {
     store.dispatch(
-      supportApi.util.updateQueryData("adminUnreadCount", undefined, (draft) => {
-        if (draft) draft.total = total;
-      })
+      supportApi.util.updateQueryData(
+        "adminUnreadCount",
+        undefined,
+        (draft) => {
+          if (draft) draft.total  = total;
+        },
+      ),
     );
   } catch {
     /* ignore cache miss */
@@ -57,8 +69,12 @@ export function initSupportSocket() {
   if (socket) return socket;
 
   const { origin, path } = getSocketConfig();
-  const rawNamespace = (import.meta.env.VITE_SOCKET_NAMESPACE || "/support").trim();
-  const namespace = rawNamespace.startsWith("/") ? rawNamespace : `/${rawNamespace}`;
+  const rawNamespace = (
+    import.meta.env.VITE_SOCKET_NAMESPACE || "/support"
+  ).trim();
+  const namespace = rawNamespace.startsWith("/")
+    ? rawNamespace
+    : `/${rawNamespace}`;
 
   console.info("Support socket init", { origin, path, namespace });
 
@@ -74,7 +90,11 @@ export function initSupportSocket() {
   });
 
   socket.on("connect_error", (err: any) => {
-    console.warn("[support] socket connect_error", err?.message || err, err?.data);
+    console.warn(
+      "[support] socket connect_error",
+      err?.message || err,
+      err?.data,
+    );
     store.dispatch(setConnected(false));
   });
 
@@ -85,10 +105,16 @@ export function initSupportSocket() {
 
   socket.on(
     "support:message.created",
-    (payload: { ticketId: string; message: TicketMessage; lastMessagePreview?: string }) => {
+    (payload: {
+      ticketId: string;
+      message: TicketMessage;
+      lastMessagePreview?: string;
+    }) => {
       const { ticketId, message } = payload;
       const currentUserId = store.getState().auth.user?.id;
-      const isSelfMessage = Boolean(currentUserId && message?.senderUserId === currentUserId);
+      const isSelfMessage = Boolean(
+        currentUserId && message?.senderUserId === currentUserId,
+      );
       const isVendorMessage = message?.senderRoleSnapshot === "VENDOR";
 
       if (ticketId) {
@@ -97,10 +123,14 @@ export function initSupportSocket() {
 
       try {
         store.dispatch(
-          supportApi.util.updateQueryData("adminGetTicketMessages", { id: ticketId }, (draft) => {
-            if (!draft) return;
-            draft.push(message);
-          })
+          supportApi.util.updateQueryData(
+            "adminGetTicketMessages",
+            { id: ticketId },
+            (draft) => {
+              if (!draft) return;
+              draft.push(message);
+            },
+          ),
         );
       } catch {}
 
@@ -109,7 +139,7 @@ export function initSupportSocket() {
           { type: "SupportTickets", id: "LIST" },
           { type: "SupportTicket", id: ticketId },
           { type: "SupportUnread", id: "COUNT" },
-        ])
+        ]),
       );
 
       if (isVendorMessage) {
@@ -119,55 +149,73 @@ export function initSupportSocket() {
       if (!isSelfMessage) {
         const key = `MESSAGE_RECEIVED:${ticketId}:${message?.id ?? ""}`;
         if (!shouldDedupNotification(key)) {
-          store.dispatch(addNotification(buildNotification("MESSAGE_RECEIVED", payload)));
+          store.dispatch(
+            addNotification(buildNotification("MESSAGE_RECEIVED", payload)),
+          );
         }
       }
-    }
+    },
   );
 
-  socket.on("support:ticket.created", (payload: { id?: string; ticketNumber?: string; subject?: string }) => {
-    store.dispatch(
-      supportApi.util.invalidateTags([
-        { type: "SupportTickets", id: "LIST" },
-        { type: "SupportUnread", id: "COUNT" },
-      ])
-    );
+  socket.on(
+    "support:ticket.created",
+    (payload: { id?: string; ticketNumber?: string; subject?: string }) => {
+      store.dispatch(
+        supportApi.util.invalidateTags([
+          { type: "SupportTickets", id: "LIST" },
+          { type: "SupportUnread", id: "COUNT" },
+        ]),
+      );
 
-    bumpUnread();
-    const key = `TICKET_CREATED:${payload?.id ?? ""}:${payload?.ticketNumber ?? ""}`;
-    if (!shouldDedupNotification(key)) {
-      store.dispatch(addNotification(buildNotification("TICKET_CREATED", payload)));
-    }
-  });
-
-  socket.on("support:ticket.updated", (payload: { id: string; status?: string; assignedToUserId?: string | null }) => {
-    store.dispatch(
-      supportApi.util.invalidateTags([
-        { type: "SupportTickets", id: "LIST" },
-        { type: "SupportTicket", id: payload.id },
-      ])
-    );
-
-    const lastMessageAt = recentMessageByTicket.get(payload.id);
-    const suppressStatus =
-      Boolean(payload.status) &&
-      Boolean(lastMessageAt) &&
-      Date.now() - (lastMessageAt ?? 0) < NOTIFICATION_DEDUP_MS;
-
-    if (payload.assignedToUserId) {
-      const key = `TICKET_ASSIGNED:${payload.id}:${payload.assignedToUserId ?? ""}`;
+      bumpUnread();
+      const key = `TICKET_CREATED:${payload?.id ?? ""}:${payload?.ticketNumber ?? ""}`;
       if (!shouldDedupNotification(key)) {
-        store.dispatch(addNotification(buildNotification("TICKET_ASSIGNED", payload)));
+        store.dispatch(
+          addNotification(buildNotification("TICKET_CREATED", payload)),
+        );
       }
-    }
+    },
+  );
 
-    if (payload.status && !suppressStatus) {
-      const key = `STATUS_UPDATED:${payload.id}:${payload.status}`;
-      if (!shouldDedupNotification(key)) {
-        store.dispatch(addNotification(buildNotification("STATUS_UPDATED", payload)));
+  socket.on(
+    "support:ticket.updated",
+    (payload: {
+      id: string;
+      status?: string;
+      assignedToUserId?: string | null;
+    }) => {
+      store.dispatch(
+        supportApi.util.invalidateTags([
+          { type: "SupportTickets", id: "LIST" },
+          { type: "SupportTicket", id: payload.id },
+        ]),
+      );
+
+      const lastMessageAt = recentMessageByTicket.get(payload.id);
+      const suppressStatus =
+        Boolean(payload.status) &&
+        Boolean(lastMessageAt) &&
+        Date.now() - (lastMessageAt ?? 0) < NOTIFICATION_DEDUP_MS;
+
+      if (payload.assignedToUserId) {
+        const key = `TICKET_ASSIGNED:${payload.id}:${payload.assignedToUserId ?? ""}`;
+        if (!shouldDedupNotification(key)) {
+          store.dispatch(
+            addNotification(buildNotification("TICKET_ASSIGNED", payload)),
+          );
+        }
       }
-    }
-  });
+
+      if (payload.status && !suppressStatus) {
+        const key = `STATUS_UPDATED:${payload.id}:${payload.status}`;
+        if (!shouldDedupNotification(key)) {
+          store.dispatch(
+            addNotification(buildNotification("STATUS_UPDATED", payload)),
+          );
+        }
+      }
+    },
+  );
 
   socket.on("support:ticket.unread", (payload: { total: number }) => {
     setUnread(payload.total ?? 0);
