@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -12,15 +12,15 @@ import {
   HiOutlineArrowUpCircle,
   HiOutlineReceiptPercent,
   HiOutlineInformationCircle,
+  HiOutlineFunnel,
+  HiOutlineArrowDownTray,
 } from "react-icons/hi2";
-import { CalendarIcon } from "lucide-react";
 import {
   useGetWalletSummaryQuery,
   useGetWalletTransactionsQuery,
   useRequestPayoutMutation,
 } from "@/features/vendorWallet/api/walletApi";
 import { toast } from "react-hot-toast";
-import { DataTable } from "@/components/shared/DataTable";
 import dayjs from "dayjs";
 import VendorWalletSkeleton from "@/components/skeletons/VendorWalletSkeleton";
 import { Calendar } from "@/components/ui/calendar";
@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 const VendorWallet = () => {
   const dispatch = useAppDispatch();
@@ -69,6 +70,12 @@ const VendorWallet = () => {
   const transactions = transactionsData?.data || [];
   const meta = transactionsData?.meta;
   const pageOffset = (page - 1) * 12;
+
+  const formatMoney = (value?: number | string | null) =>
+    Number(value ?? 0).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   const sanitizeLedgerText = (value: string) => {
     if (!value) return value;
@@ -116,6 +123,32 @@ const VendorWallet = () => {
             : tx.sourceType || tx.type,
     };
   });
+
+  const csvExport = useMemo(() => {
+    const headers = ["Reference", "Activity", "Settlement", "Timestamp", "Status"];
+    const escapeCell = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
+    const rows = ledgerRows.map((tx: any) => [
+      tx.displayReference,
+      tx.displayDescription,
+      `${tx.direction === "CREDIT" ? "+" : "-"}${summary?.currency ?? "SEK"} ${formatMoney(tx.displayAmount)}`,
+      dayjs(tx.createdAt).format("DD MMM YYYY HH:mm"),
+      tx.status,
+    ]);
+
+    return [headers, ...rows]
+      .map((row) => row.map((cell) => escapeCell(cell)).join(","))
+      .join("\n");
+  }, [ledgerRows, summary?.currency]);
+
+  const handleExportCsv = () => {
+    const blob = new Blob([csvExport], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "treasury-ledger.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const applyDateRange = (range?: DateRange) => {
     const from = range?.from;
@@ -185,31 +218,6 @@ const VendorWallet = () => {
     }
     return <HiOutlineArrowTrendingUp className="w-5 h-5 text-indigo-500" />;
   };
-
-  const walletDateControl = (
-    <button
-      type="button"
-      onClick={() => {
-        setDraftDateRange(selectedDateRange);
-        setIsDatePickerOpen(true);
-      }}
-      className="flex h-11 min-w-[260px] items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50"
-    >
-      <span className="flex items-center gap-2">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-          <CalendarIcon className="h-4 w-4" />
-        </span>
-        <span className="text-left">
-          <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-            Date filter
-          </span>
-          <span className="block text-sm font-semibold text-slate-700">
-            {dateRangeLabel || "Select range"}
-          </span>
-        </span>
-      </span>
-    </button>
-  );
 
   if (isSummaryLoading || isTransactionsLoading) {
     return (
@@ -294,21 +302,21 @@ const VendorWallet = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="finance-card rounded-2xl p-6 relative group overflow-hidden">
-          <p className="text-sm font-semibold text-slate-500 mb-1">Liquidity Available</p>
-          <div className="flex items-baseline gap-1 mb-4">
-            <span className="text-sm font-medium text-slate-400 mr-1.5">{summary?.currency}</span>
-            <p className="text-metric text-4xl tracking-tighter">
-              {summary?.availableBalance?.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="finance-card rounded-[1.5rem] p-6">
+          <p className="text-[11px] font-semibold text-slate-500">Liquidity Available</p>
+          <div className="mt-2 space-y-1">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              {summary?.currency}
+            </p>
+            <p className="text-[2rem] font-black tracking-tight text-slate-950">
+              {formatMoney(summary?.availableBalance)}
             </p>
           </div>
           <button
             onClick={() => setIsPayoutModalOpen(true)}
             disabled={!summary?.availableBalance || summary.availableBalance <= 0}
-            className="w-full rounded-xl bg-slate-950 py-3.5 text-[10px] font-black text-white uppercase tracking-widest transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-10"
+            className="mt-6 w-full rounded-xl bg-blue-600 py-3 text-[10px] font-black uppercase tracking-[0.22em] text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-30"
           >
             Initiate Settlement
           </button>
@@ -318,37 +326,43 @@ const VendorWallet = () => {
           {
             label: "Locked Funds",
             value: summary?.lockedBalance,
-            color: "text-slate-900",
-            icon: <HiOutlineClock className="w-3 h-3" />,
-            sub: "Awaiting clearing cycle",
+            sub: "No funds currently on hold",
+            icon: <HiOutlineClock className="h-3.5 w-3.5" />,
+            accent: "text-slate-950",
           },
           {
             label: "Pending Payout",
             value: summary?.pendingPayoutBalance,
-            color: "text-slate-900",
-            icon: <HiOutlineBanknotes className="w-3 h-3" />,
-            sub: "Currently being audited",
+            sub: "Estimated settlement in 24h",
+            icon: <HiOutlineBanknotes className="h-3.5 w-3.5" />,
+            accent: "text-slate-950",
           },
           {
             label: "Historical Volume",
             value: summary?.lifetimeEarnings,
-            color: "text-emerald-600",
-            icon: <HiOutlineArrowTrendingUp className="w-3 h-3" />,
-            sub: "Total revenue yield",
+            sub: "+12.5% from last period",
+            icon: <HiOutlineArrowTrendingUp className="h-3.5 w-3.5" />,
+            accent: "text-emerald-600",
           },
         ].map((item, i) => (
-          <div key={i} className="finance-card rounded-2xl p-6">
-            <p className="text-sm font-semibold text-slate-500 mb-1 flex items-center gap-2">
-              {item.label}
-              {item.icon}
-            </p>
-            <div className="flex items-baseline gap-1 mb-2">
-              <span className="text-xs font-medium text-slate-300 mr-1">{summary?.currency}</span>
-              <p className={`${item.color} text-metric text-3xl tracking-tighter`}>
-                {item.value?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          <div key={i} className="finance-card rounded-[1.5rem] p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                {item.label}
+              </p>
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                {item.icon}
+              </span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {summary?.currency}
+              </p>
+              <p className={`${item.accent} text-[1.95rem] font-black tracking-tight`}>
+                {formatMoney(item.value)}
               </p>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium">{item.sub}</p>
+            <p className="mt-4 text-[11px] font-medium text-slate-500">{item.sub}</p>
           </div>
         ))}
       </div>
@@ -356,154 +370,177 @@ const VendorWallet = () => {
       <div className="space-y-4">
         <div className="flex flex-col gap-3 px-2 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-6 bg-slate-900 rounded-full" />
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-slate-900">
+            <div className="h-6 w-1.5 rounded-full bg-slate-900" />
+            <h2 className="text-[1.15rem] font-black tracking-tight text-slate-950">
               Transaction Ledger
             </h2>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-            {walletDateControl}
-            {dateRangeLabel && (
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Range: {dateRangeLabel}
-              </p>
-            )}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setDraftDateRange(selectedDateRange);
+                setIsDatePickerOpen(true);
+              }}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
+            >
+              <HiOutlineFunnel className="h-4 w-4 text-slate-500" />
+              Filter
+            </button>
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100"
+            >
+              <HiOutlineArrowDownTray className="h-4 w-4 text-slate-500" />
+              Export CSV
+            </button>
           </div>
         </div>
 
-        <DataTable
-          title="Transaction Ledger"
-          breadCrumbTitle="Finance / Ledger"
-          data={ledgerRows}
-          loading={isTransactionsLoading}
-          columns={[
-            {
-              key: "id",
-              title: "Reference",
-              render: (_: any, tx: any) => (
-                <span className="font-mono text-mono-finance text-[11px] text-slate-400">
-                  {tx.displayReference}
-                </span>
-              ),
-            },
-            {
-              key: "description",
-              title: "Activity",
-              render: (_: any, tx: any) => (
-                <div className="flex items-start gap-3 py-1">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm shrink-0">
-                    {getTransactionIcon(tx.type, tx.direction)}
-                  </div>
-                  <div className="min-w-0 space-y-1.5">
-                    {tx.bookingId ? (
-                      <>
-                        <Link
-                          to={`/vendor/bookings/${tx.bookingId}`}
-                          className="block max-w-[280px] truncate text-[13px] font-black tracking-tight leading-5 text-slate-900 transition-colors hover:text-indigo-600"
+        <div className="finance-card overflow-hidden rounded-[1.5rem]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] border-separate border-spacing-0">
+              <thead>
+                <tr className="bg-slate-50/80">
+                  <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Reference
+                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Activity
+                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Settlement
+                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Timestamp
+                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledgerRows.length ? (
+                  ledgerRows.map((tx: any) => (
+                    <tr key={tx.id} className="border-t border-slate-100">
+                      <td className="px-6 py-5 align-top">
+                        <span className="font-mono text-[11px] font-bold tracking-[0.2em] text-blue-500">
+                          {tx.displayReference}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 align-top">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm">
+                            {getTransactionIcon(tx.type, tx.direction)}
+                          </div>
+                          <div className="min-w-0">
+                            {tx.bookingId ? (
+                              <Link
+                                to={`/vendor/bookings/${tx.bookingId}`}
+                                className="block max-w-[320px] truncate text-[14px] font-black tracking-tight text-slate-950 transition-colors hover:text-blue-600"
+                              >
+                                {tx.displayDescription}
+                              </Link>
+                            ) : (
+                              <p className="max-w-[320px] text-[14px] font-black tracking-tight text-slate-950">
+                                {tx.displayDescription}
+                              </p>
+                            )}
+                            <p className="mt-1 text-[11px] font-medium text-slate-500">
+                              {tx.displayMeta}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 align-top">
+                        <span
+                          className={cn(
+                            "text-[15px] font-black tracking-tight",
+                            tx.direction === "CREDIT" ? "text-emerald-600" : "text-rose-600",
+                          )}
                         >
-                          {tx.displayDescription}
-                        </Link>
-                        <Link
-                          to={`/vendor/bookings/${tx.bookingId}`}
-                          className="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-500 transition-colors hover:text-indigo-700"
+                          {tx.direction === "CREDIT" ? "+" : "-"}
+                          {summary?.currency} {formatMoney(tx.displayAmount)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 align-top">
+                        <div>
+                          <p className="text-[13px] font-semibold text-slate-700">
+                            {dayjs(tx.createdAt).format("DD MMM, YYYY")}
+                          </p>
+                          <p className="mt-1 text-[11px] text-slate-400">
+                            {dayjs(tx.createdAt).format("hh:mm A")}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 align-top">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em]",
+                            tx.status === "CONFIRMED"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : tx.status === "PENDING"
+                                ? "bg-amber-50 text-amber-700"
+                                : "bg-rose-50 text-rose-700",
+                          )}
                         >
-                          View booking
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <p className="max-w-[280px] text-[13px] font-black text-slate-900 tracking-tight leading-5">
-                          {tx.displayDescription}
-                        </p>
-                        <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">
-                          {tx.displayMeta}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ),
-            },
-            {
-              key: "amount",
-              title: "Settlement",
-              render: (_: any, tx: any) => (
-                <div className="text-right font-black text-base text-mono-finance tracking-tighter">
-                  <span
-                    className={`${
-                      tx.direction === "CREDIT" ? "text-emerald-600" : "text-rose-600"
-                    }`}
-                  >
-                    {tx.direction === "CREDIT" ? "+" : "-"}
-                    <span className="text-[10px] font-medium mr-0.5 opacity-40">
-                      {summary?.currency}
-                    </span>
-                    {tx.displayAmount.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              ),
-            },
-            {
-              key: "createdAt",
-              title: "Timestamp",
-              render: (value: string) => (
-                <div>
-                  <p className="text-[10px] font-bold text-slate-600">
-                    {dayjs(value).format("DD MMM, YYYY")}
-                  </p>
-                  <p className="text-[9px] font-medium text-slate-400">
-                    {dayjs(value).format("hh:mm A")}
-                  </p>
-                </div>
-              ),
-            },
-            {
-              key: "status",
-              title: "Status",
-              align: "center",
-              cellClassName: "align-middle",
-              render: (value: string) => (
-                <div className="flex items-center justify-center">
-                  <span
-                    className={`status-indicator ${
-                      value === "CONFIRMED"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : value === "PENDING"
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-rose-50 text-rose-700"
-                    }`}
-                  >
-                    <span
-                      className={`w-1 h-1 rounded-full ${
-                        value === "CONFIRMED"
-                          ? "bg-emerald-500"
-                          : value === "PENDING"
-                            ? "bg-amber-500"
-                            : "bg-rose-500"
-                      }`}
-                    />
-                    {value}
-                  </span>
-                </div>
-              ),
-            },
-          ]}
-          controlledPagination={{
-            page,
-            pageSize: 12,
-            totalPages: meta?.totalPages || 1,
-            totalRecords: meta?.total || 0,
-          }}
-          onPaginationChange={({ page: newPage }) => setPage(newPage)}
-          selectable={false}
-          showSerialNumber={false}
-          initialHiddenColumns={[]}
-          className="finance-card rounded-2xl overflow-hidden shadow-none border-slate-100"
-          noRecordText="Zero ledger records registered"
-          showDefaultDateControl={false}
-        />
+                          <span
+                            className={cn(
+                              "h-1.5 w-1.5 rounded-full",
+                              tx.status === "CONFIRMED"
+                                ? "bg-emerald-500"
+                                : tx.status === "PENDING"
+                                  ? "bg-amber-500"
+                                  : "bg-rose-500",
+                            )}
+                          />
+                          {tx.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-16 text-center">
+                      <p className="text-sm font-semibold text-slate-500">
+                        Zero ledger records registered
+                      </p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs font-semibold text-slate-500">
+              {meta?.total ?? ledgerRows.length} entries
+              {dateRangeLabel ? ` • ${dateRangeLabel}` : ""}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Prev
+              </button>
+              <span className="rounded-full bg-slate-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                Page {page} of {meta?.totalPages || 1}
+              </span>
+              <button
+                type="button"
+                disabled={page >= (meta?.totalPages || 1)}
+                onClick={() => setPage((current) => current + 1)}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-600 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <Dialog
