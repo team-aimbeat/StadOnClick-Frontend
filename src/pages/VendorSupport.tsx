@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
@@ -58,7 +57,7 @@ const statusMeta: Record<
 const priorityMeta: Record<SupportTicketPriority, { label: string; badgeClass: string }> = {
   LOW: { label: "Low", badgeClass: "bg-slate-100 text-slate-700 border-slate-200" },
   MEDIUM: { label: "Medium", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
-  HIGH: { label: "High", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
+  HIGH: { label: "High", badgeClass: "bg-red-50 text-red-700 border-red-200" },
   URGENT: { label: "Urgent", badgeClass: "bg-rose-50 text-rose-700 border-rose-200" },
 };
 
@@ -78,8 +77,34 @@ const statusFilters: { label: string; value?: SupportTicketStatus }[] = [
   { label: "Resolved", value: "RESOLVED" },
 ];
 
-const formatDate = (date: string | Date) =>
-  new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+const formatRelativeTime = (date: string | Date) => {
+  const input = new Date(date).getTime();
+  const diffMs = input - Date.now();
+  const diffSeconds = Math.round(diffMs / 1000);
+  const absSeconds = Math.abs(diffSeconds);
+
+  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  if (absSeconds < 60) return formatter.format(diffSeconds, "second");
+
+  const diffMinutes = Math.round(diffSeconds / 60);
+  const absMinutes = Math.abs(diffMinutes);
+  if (absMinutes < 60) return formatter.format(diffMinutes, "minute");
+
+  const diffHours = Math.round(diffMinutes / 60);
+  const absHours = Math.abs(diffHours);
+  if (absHours < 24) return formatter.format(diffHours, "hour");
+
+  const diffDays = Math.round(diffHours / 24);
+  return formatter.format(diffDays, "day");
+};
+
+const getTicketUpdateCount = (ticket: SupportTicket) => {
+  const meaningfulEvents =
+    ticket.events?.filter((event) => /message|reply|update|status/i.test(event.type)) ?? [];
+  if (meaningfulEvents.length) return meaningfulEvents.length;
+  if (ticket.lastMessagePreview) return 1;
+  return 0;
+};
 
 const VendorSupport = () => {
   const dispatch = useAppDispatch();
@@ -206,9 +231,14 @@ const VendorSupport = () => {
     }
 
     return (
-      <div className="space-y-2">
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
         {tickets.map((ticket) => (
-          <TicketRow key={ticket.id} ticket={ticket} onClick={() => navigate(`/vendor/support/tickets/${ticket.id}`)} />
+          <div key={ticket.id} className="border-b border-slate-100 last:border-b-0">
+            <TicketRow
+              ticket={ticket}
+              onClick={() => navigate(`/vendor/support/tickets/${ticket.id}`)}
+            />
+          </div>
         ))}
       </div>
     );
@@ -376,48 +406,91 @@ const VendorSupport = () => {
 function TicketRow({ ticket, onClick }: { ticket: SupportTicket; onClick: () => void }) {
   const status = statusMeta[ticket.status];
   const priority = priorityMeta[ticket.priority];
+  const priorityDotClass =
+    ticket.priority === "URGENT"
+      ? "bg-rose-500"
+      : ticket.priority === "HIGH"
+        ? "bg-amber-500"
+        : ticket.priority === "MEDIUM"
+          ? "bg-blue-500"
+          : "bg-slate-400";
+  const updateCount = getTicketUpdateCount(ticket);
+  const relativeTime = formatRelativeTime(ticket.lastActivityAt || ticket.updatedAt);
+  const statusNote =
+    ticket.status === "RESOLVED"
+      ? "Closed by Support"
+      : ticket.status === "WAITING"
+        ? "SLA: 45m remaining"
+        : `SLA: ${ticket.priority === "URGENT" ? "45m remaining" : "6h remaining"}`;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left transition hover:-translate-y-[1px] hover:shadow-[0_8px_24px_-18px_rgba(15,23,42,0.35)]"
+      className="w-full text-left transition hover:bg-slate-50/80"
     >
-      <div className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-[0_1px_0_rgba(15,23,42,0.06)]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-                {ticket.ticketNumber}
-              </span>
-              <Separator orientation="vertical" className="h-4" />
-              Updated {formatDate(ticket.updatedAt)}
-            </div>
-            <p className="text-sm font-semibold text-slate-900">{ticket.subject}</p>
-            {ticket.lastMessagePreview ? (
-              <p className="text-xs text-slate-500">{ticket.lastMessagePreview}</p>
-            ) : null}
-            {status?.description ? (
-              <p className="text-xs text-slate-500">{status.description}</p>
-            ) : null}
+      <div className="flex items-center gap-4 px-5 py-4">
+        <div
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+            ticket.status === "RESOLVED"
+              ? "bg-emerald-50 text-emerald-500"
+              : ticket.status === "WAITING"
+                ? "bg-amber-50 text-amber-500"
+                : "bg-blue-50 text-blue-500"
+            )}
+          >
+            <HiOutlineChatBubbleLeftRight className="h-5 w-5" />
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className={cn("border text-[11px] font-semibold", status.badgeClass)}
-              >
-                {status.label}
-              </Badge>
-              <Badge
-                variant="outline"
-                className={cn("border text-[11px] font-semibold", priority.badgeClass)}
-              >
-                {priority.label}
-              </Badge>
-            </div>
-            <p className="text-[11px] text-slate-500">Last activity {formatDate(ticket.lastActivityAt)}</p>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              {ticket.ticketNumber}
+            </span>
+            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
+              {ticket.subject}
+            </p>
           </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-slate-400" />
+              {relativeTime}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-slate-400" />
+              {updateCount} updates
+            </span>
+            <span
+              className={cn(
+                "flex items-center gap-1.5 font-semibold uppercase tracking-[0.16em]",
+                ticket.priority === "URGENT"
+                  ? "text-rose-600"
+                  : ticket.priority === "HIGH"
+                    ? "text-amber-600"
+                  : ticket.priority === "MEDIUM"
+                    ? "text-blue-600"
+                    : "text-slate-500"
+              )}
+            >
+              <span className={cn("h-2 w-2 rounded-full", priorityDotClass)} />
+              {priority.label}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <Badge
+            variant="outline"
+            className={cn(
+              "rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
+              status.badgeClass
+            )}
+          >
+            {status.label}
+          </Badge>
+          <p className="text-[11px] font-medium text-slate-500">{statusNote}</p>
         </div>
       </div>
     </button>
