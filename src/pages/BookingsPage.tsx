@@ -44,7 +44,7 @@ const bookingAccentClass: Record<BookingStatCardProps["accent"], string> = {
 };
 
 const BookingStatCard = ({ title, value, subtitle, icon: Icon, accent }: BookingStatCardProps) => (
-  <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)]">
+  <div className="rounded-[24px] border border-slate-100 bg-white p-4">
     <div className="flex items-start justify-between gap-3">
       <div className="space-y-3">
         <span
