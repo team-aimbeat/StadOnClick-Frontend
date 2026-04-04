@@ -17,6 +17,7 @@ import IconDownload from "@/components/icons/IconDownload";
 interface Activity {
   id: string | number;
   name: string;
+  email?: string;
   category: string;
   status: string;
   price: string | number;
@@ -144,9 +145,9 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
             <thead>
               <tr>
                 <th>Customer</th>
-                <th>Category</th>
-                <th>ID</th>
-                <th>Retained</th>
+                <th>Service Category</th>
+                <th>Order ID</th>
+                <th>Time</th>
                 <th>Amount</th>
                 <th>Status</th>
               </tr>
@@ -214,9 +215,9 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
             <thead>
               <tr>
                 <th>Customer</th>
-                <th>Category</th>
-                <th>ID</th>
-                <th>Retained</th>
+                <th>Service Category</th>
+                <th>Order ID</th>
+                <th>Time</th>
                 <th>Amount</th>
                 <th>Status</th>
               </tr>
@@ -234,11 +235,11 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5",
+        "flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5",
         className
       )}
     >
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="text-base font-semibold text-slate-900">
           {title}
         </h3>
@@ -271,12 +272,13 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
         </div>
       </div>
       <AdminTable
-        className="mt-4 flex-1"
+        className="mt-2 flex-1"
         columns={[
-          { key: "customer", label: "Customer", width: "minmax(220px,1.6fr)" },
-          { key: "id", label: "ID", width: "minmax(120px,0.9fr)" },
-          { key: "retained", label: "Retained", width: "minmax(140px,0.9fr)" },
-          { key: "amount", label: "Amount", width: "minmax(120px,0.8fr)", align: "right" },
+          { key: "customer", label: "Customer", width: "minmax(150px,1.6fr)" },
+          { key: "category", label: "Service Category", width: "minmax(120px,1.05fr)" },
+        
+          { key: "retained", label: "Time", width: "minmax(70px,0.8fr)", align: "right"  },
+          { key: "amount", label: "Amount", width: "minmax(100px,0.8fr)", align: "right" },
           { key: "status", label: "Status", width: "minmax(140px,1fr)" },
         ]}
       >
@@ -295,14 +297,17 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
                       {activity.name}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {activity.category}
+                      {activity.email ?? ""}
                     </p>
                   </div>
                 </div>
               </AdminTableCell>
-              <AdminTableCell className="text-sm font-semibold text-slate-900">
-                #{activity.id}
+              <AdminTableCell>
+                <span className="inline-flex rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-600">
+                  {activity.category}
+                </span>
               </AdminTableCell>
+             
               <AdminTableCell className="text-sm text-slate-500">
                 {activity.retained}
               </AdminTableCell>
@@ -349,4 +354,3 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({
 };
 
 export default RecentActivities;
-
