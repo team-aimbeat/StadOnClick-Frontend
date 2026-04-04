@@ -37,9 +37,16 @@ type MediaItem = {
 
 const MAX_MEDIA_SLOTS = 12;
 
-const mapToMediaItem = (media: ServiceMedia, fallbackIndex: number): MediaItem => ({
+const mapToMediaItem = (
+  media: ServiceMedia,
+  fallbackIndex: number,
+): MediaItem => ({
   id: media.id,
-  title: media.title?.trim() || (media.type === "IMAGE" ? `Photo ${fallbackIndex + 1}` : `Video ${fallbackIndex + 1}`),
+  title:
+    media.title?.trim() ||
+    (media.type === "IMAGE"
+      ? `Photo ${fallbackIndex + 1}`
+      : `Video ${fallbackIndex + 1}`),
   type: media.type === "IMAGE" ? "image" : "video",
   status: media.isActive ? "enabled" : "disabled",
   order: media.sortOrder ?? fallbackIndex + 1,
@@ -54,11 +61,16 @@ const VendorMedia = () => {
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [deletingMediaId, setDeletingMediaId] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [confirmingMediaId, setConfirmingMediaId] = useState<string | null>(null);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [confirmingMediaId, setConfirmingMediaId] = useState<string | null>(
+    null,
+  );
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
+    null,
+  );
   const [isRearranging, setIsRearranging] = useState(false);
 
-  const { data: vendorProfile, isLoading: isVendorLoading } = useGetVendorProfileStatusQuery();
+  const { data: vendorProfile, isLoading: isVendorLoading } =
+    useGetVendorProfileStatusQuery();
   const vendorId = vendorProfile?.id as string | undefined;
 
   const {
@@ -77,7 +89,7 @@ const VendorMedia = () => {
   const resolvedServiceId = selectedServiceId;
   const selectedService = useMemo(
     () => vendorServices.find((service) => service.id === resolvedServiceId),
-    [resolvedServiceId, vendorServices]
+    [resolvedServiceId, vendorServices],
   );
   const selectedServiceName = selectedService?.title ?? "your service";
   const [deleteServiceMedia] = useDeleteServiceMediaMutation();
@@ -86,14 +98,19 @@ const VendorMedia = () => {
     dispatch(setPageTitle("Media & Photos"));
   }, [dispatch]);
 
-  const { data, isLoading, isError, error } = useGetServiceMediaQuery(resolvedServiceId!, {
-    skip: !resolvedServiceId,
-  });
+  const { data, isLoading, isError, error } = useGetServiceMediaQuery(
+    resolvedServiceId!,
+    {
+      skip: !resolvedServiceId,
+    },
+  );
 
   useEffect(() => {
     if (!data) return;
 
-    setItems(data.map((m: ServiceMedia, index: number) => mapToMediaItem(m, index)));
+    setItems(
+      data.map((m: ServiceMedia, index: number) => mapToMediaItem(m, index)),
+    );
   }, [data]);
 
   const slotUsed = items.length;
@@ -141,8 +158,8 @@ const VendorMedia = () => {
               ...item,
               status: item.status === "enabled" ? "disabled" : "enabled",
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -164,7 +181,9 @@ const VendorMedia = () => {
       setItems((prev) => prev.filter((item) => item.id !== id));
       setMessage("Media removed.");
     } catch (err: any) {
-      setMessage(err?.data?.message || "Failed to delete media. Please try again.");
+      setMessage(
+        err?.data?.message || "Failed to delete media. Please try again.",
+      );
     } finally {
       setDeletingMediaId(null);
     }
@@ -205,7 +224,10 @@ const VendorMedia = () => {
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, idx) => (
-            <div key={idx} className="h-[410px] animate-pulse rounded-[28px] bg-slate-100" />
+            <div
+              key={idx}
+              className="h-[410px] animate-pulse rounded-[28px] bg-slate-100"
+            />
           ))}
         </div>
       </DashboardContainer>
@@ -229,7 +251,7 @@ const VendorMedia = () => {
 
   return (
     <DashboardContainer className="space-y-6 pb-10 pt-6">
-      <div className="rounded-[32px] border border-slate-200 from-white via-slate-50 to-slate-100 p-6  sm:p-7">
+      <div className="rounded-[32px] border border-slate-100 from-white via-slate-50 to-slate-100 p-6  sm:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl space-y-3">
             <div className="flex flex-wrap items-center gap-3">
@@ -240,7 +262,9 @@ const VendorMedia = () => {
                 {slotUsed}/{MAX_MEDIA_SLOTS} slots used
               </span>
             </div>
-            <p className="text-sm text-slate-600 sm:text-[15px]">{headerSubtitle}</p>
+            <p className="text-sm text-slate-600 sm:text-[15px]">
+              {headerSubtitle}
+            </p>
 
             {vendorServices.length > 1 && (
               <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -259,7 +283,10 @@ const VendorMedia = () => {
                   ))}
                 </select>
                 <span className="text-sm text-slate-500">
-                  Currently showing media for <span className="font-semibold text-slate-700">{selectedServiceName}</span>
+                  Currently showing media for{" "}
+                  <span className="font-semibold text-slate-700">
+                    {selectedServiceName}
+                  </span>
                 </span>
               </div>
             )}
@@ -273,7 +300,7 @@ const VendorMedia = () => {
                 "inline-flex h-12 items-center gap-2 rounded-2xl border px-5 text-sm font-semibold transition",
                 isRearranging
                   ? "border-slate-300 bg-slate-900 text-white shadow-lg shadow-slate-900/10"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
               )}
             >
               <HiOutlineArrowPath className="h-4 w-4" />
@@ -317,7 +344,9 @@ const VendorMedia = () => {
           }
         }}
         description="This cannot be undone."
-        confirmLoading={confirmingMediaId !== null && deletingMediaId === confirmingMediaId}
+        confirmLoading={
+          confirmingMediaId !== null && deletingMediaId === confirmingMediaId
+        }
         onConfirm={handleConfirmDelete}
       />
 
@@ -352,11 +381,20 @@ const VendorMedia = () => {
                     className="h-full w-full object-cover transition duration-500 hover:scale-105"
                   />
                 ) : (
-                  <video src={item.url} className="h-full w-full object-cover" controls />
+                  <video
+                    src={item.url}
+                    className="h-full w-full object-cover"
+                    controls
+                  />
                 )}
 
                 <div className="absolute left-4 top-4">
-                  <span className={cn("inline-flex rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] ", accentClass)}>
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] ",
+                      accentClass,
+                    )}
+                  >
                     {mediaTypeLabel}
                   </span>
                 </div>
@@ -376,7 +414,9 @@ const VendorMedia = () => {
                         type="button"
                         className="mt-0.5 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                         aria-label={`Edit ${item.title}`}
-                        onClick={() => setMessage("Title editing is not wired yet.")}
+                        onClick={() =>
+                          setMessage("Title editing is not wired yet.")
+                        }
                       >
                         <HiOutlinePencilSquare className="h-4 w-4" />
                       </button>
@@ -388,7 +428,7 @@ const VendorMedia = () => {
                       "shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
                       item.status === "enabled"
                         ? "bg-emerald-50 text-emerald-700"
-                        : "bg-slate-100 text-slate-500"
+                        : "bg-slate-100 text-slate-500",
                     )}
                   >
                     {item.status === "enabled" ? "Active" : "Disabled"}
@@ -413,11 +453,16 @@ const VendorMedia = () => {
                     </button>
                     <button
                       onClick={() => handleDeleteButtonClick(item.id)}
-                      disabled={deletingMediaId === item.id || confirmingMediaId === item.id}
+                      disabled={
+                        deletingMediaId === item.id ||
+                        confirmingMediaId === item.id
+                      }
                       className="inline-flex h-10 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 text-rose-600 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {deletingMediaId === item.id ? (
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">Deleting</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">
+                          Deleting
+                        </span>
                       ) : (
                         <HiOutlineTrash className="h-4 w-4" />
                       )}
@@ -433,12 +478,17 @@ const VendorMedia = () => {
                     </button>
                     <button
                       onClick={() => handleDeleteButtonClick(item.id)}
-                      disabled={deletingMediaId === item.id || confirmingMediaId === item.id}
+                      disabled={
+                        deletingMediaId === item.id ||
+                        confirmingMediaId === item.id
+                      }
                       className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label={`Delete ${item.title}`}
                     >
                       {deletingMediaId === item.id ? (
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">...</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">
+                          ...
+                        </span>
                       ) : (
                         <HiOutlineTrash className="h-4 w-4" />
                       )}
@@ -459,7 +509,9 @@ const VendorMedia = () => {
             <span className="grid h-16 w-16 place-items-center rounded-full bg-slate-100 text-slate-400">
               <HiOutlinePhoto className="h-7 w-7" />
             </span>
-            <span className="mt-5 text-lg font-semibold text-slate-700">Add New Slot</span>
+            <span className="mt-5 text-lg font-semibold text-slate-700">
+              Add New Slot
+            </span>
             <span className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
               {remainingSlots} slots remaining
             </span>
