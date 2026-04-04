@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { HiCheckCircle, HiClock, HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
+import { HiClock, HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 
 import { useAppDispatch } from "@/app/hooks";
 import { DashboardContainer } from "@/components/dashboard";
@@ -248,27 +248,25 @@ const VendorSupport = () => {
     <DashboardContainer className="space-y-6 pb-12">
       <TitleBreadCrumbs title="Support" breadCrumbTitle="Vendor / Support" />
 
-      <Card className="border-blue-100 bg-gradient-to-r from-emerald-50 via-white to-blue-50 shadow-sm">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-          <div className="space-y-1">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-slate-500">
-              Status
-            </p>
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-              {systemStatus}
+      <Card className="border-blue-100 bg-gradient-to-r from-blue-50 via-white to-emerald-50 shadow-sm">
+        <CardContent className="flex items-center justify-between gap-4 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600 shadow-inner">
+              <HiOutlineChatBubbleLeftRight className="h-5 w-5" />
             </div>
-            <p className="text-xs text-slate-500">Last updated {lastUpdated}</p>
+            <div className="space-y-0.5">
+              <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-900">
+                <span>{systemStatus}</span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Standard response time for technical queries is currently under 2 hours.
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col gap-1 text-xs text-slate-600">
-            <div className="flex items-center gap-2">
-              <HiClock className="h-4 w-4 text-slate-400" />
-              Response SLA: under 2 hours
-            </div>
-            <div className="flex items-center gap-2">
-              <HiOutlineChatBubbleLeftRight className="h-4 w-4 text-slate-400" />
-              Chat opens inside a ticket when an agent joins
-            </div>
+
+          <div className="flex items-center gap-2 rounded-full border border-emerald-100 bg-white/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-600 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            Live Monitoring
           </div>
         </CardContent>
       </Card>
@@ -315,23 +313,32 @@ const VendorSupport = () => {
 
         <Card className="shadow-sm">
           <CardHeader>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Create ticket</p>
-            <CardTitle className="text-lg">Tell us what you need</CardTitle>
+            <CardTitle className="text-xl text-slate-900">Create Ticket</CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="space-y-3" onSubmit={handleCreate}>
-            <Input
-              required
-              placeholder="Subject"
-              value={formState.subject}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, subject: event.target.value }))
-              }
-              aria-invalid={Boolean(formErrors.subject)}
-            />
-            {formErrors.subject ? (
-              <p className="text-xs text-rose-600">{formErrors.subject}</p>
-            ) : null}
+            <form className="space-y-4" onSubmit={handleCreate}>
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+                  Subject
+                </p>
+                <Input
+                  required
+                  placeholder="Summary of the issue"
+                  value={formState.subject}
+                  onChange={(event) =>
+                    setFormState((prev) => ({ ...prev, subject: event.target.value }))
+                  }
+                  aria-invalid={Boolean(formErrors.subject)}
+                  className="h-12 rounded-2xl border-0 bg-slate-100 px-4 text-sm shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                />
+              </div>
+              {formErrors.subject ? (
+                <p className="text-xs text-rose-600">{formErrors.subject}</p>
+              ) : null}
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+                  Category
+                </p>
               <Select
                 value={formState.category}
                 onValueChange={(value: SupportTicketCategory) =>
@@ -339,8 +346,8 @@ const VendorSupport = () => {
                 }
                 required
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Category" />
+                <SelectTrigger className="h-12 rounded-2xl border-0 bg-slate-100 px-4 text-sm shadow-none focus:ring-2 focus:ring-blue-500/40">
+                  <SelectValue placeholder="Technical Issue" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -350,51 +357,55 @@ const VendorSupport = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Select
-                value={formState.priority}
-                onValueChange={(value: SupportTicketPriority) =>
-                  setFormState((prev) => ({ ...prev, priority: value }))
-                }
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {["LOW", "MEDIUM", "HIGH"].map((priority) => (
-                    <SelectItem key={priority} value={priority as SupportTicketPriority}>
-                      {priorityMeta[priority as SupportTicketPriority].label}
-                    </SelectItem>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+                  Urgency
+                </p>
+                <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
+                  {(["LOW", "MEDIUM", "HIGH"] as SupportTicketPriority[]).map((priority) => (
+                    <button
+                      key={priority}
+                      type="button"
+                      onClick={() => setFormState((prev) => ({ ...prev, priority }))}
+                      className={cn(
+                        "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition",
+                        formState.priority === priority
+                          ? "bg-white text-blue-700 shadow-sm ring-1 ring-blue-200"
+                          : "text-slate-500 hover:text-slate-700"
+                      )}
+                    >
+                      {priorityMeta[priority].label}
+                    </button>
                   ))}
-                </SelectContent>
-              </Select>
-            <Textarea
-              required
-              rows={4}
-              placeholder="Describe the issue with as much detail as possible"
-              value={formState.description}
-              onChange={(event) =>
-                setFormState((prev) => ({ ...prev, description: event.target.value }))
-              }
-              aria-invalid={Boolean(formErrors.description)}
-            />
-            {formErrors.description ? (
-              <p className="text-xs text-rose-600">{formErrors.description}</p>
-            ) : null}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isCreating || !formState.subject || !formState.description}
-              >
-                {isCreating ? "Submitting..." : "Submit ticket"}
-              </Button>
-              <div className="flex items-start gap-2 rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-800">
-                <HiCheckCircle className="mt-0.5 h-4 w-4" />
-                <div>
-                  <p className="font-semibold">Priority routing</p>
-                  <p>We respond fastest to booking and payout blockers.</p>
                 </div>
               </div>
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+                  Description
+                </p>
+                <Textarea
+                  required
+                  rows={5}
+                  placeholder="Detailed explanation of the problem..."
+                  value={formState.description}
+                  onChange={(event) =>
+                    setFormState((prev) => ({ ...prev, description: event.target.value }))
+                  }
+                  aria-invalid={Boolean(formErrors.description)}
+                  className="min-h-[120px] rounded-2xl border-0 bg-slate-100 px-4 py-3 text-sm shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                />
+              </div>
+              {formErrors.description ? (
+                <p className="text-xs text-rose-600">{formErrors.description}</p>
+              ) : null}
+              <Button
+                type="submit"
+                className="h-12 w-full rounded-2xl bg-blue-600 text-sm font-semibold  hover:bg-blue-700"
+                disabled={isCreating || !formState.subject || !formState.description}
+              >
+                {isCreating ? "Submitting..." : "Submit Request"}
+              </Button>
             </form>
           </CardContent>
         </Card>
