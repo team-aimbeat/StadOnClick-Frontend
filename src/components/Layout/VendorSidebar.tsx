@@ -175,7 +175,7 @@ export default function VendorSidebar() {
                             type="button"
                             className={cn(
                               "group flex w-full items-center rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50",
-                              isOpen && "bg-[#3554e0] text-white shadow-sm"
+                              isOpen && "bg-[#4F7DFF] text-white shadow-sm"
                             )}
                             onClick={() => toggleItem(item.label)}
                           >
@@ -246,7 +246,7 @@ export default function VendorSidebar() {
                                       return cn(
                                         "flex items-center justify-between rounded-md px-2.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50",
                                         displayActive &&
-                                          "bg-[#3554e0] text-white shadow-sm"
+                                          "bg-[#4F7DFF] text-white shadow-sm"
                                       );
                                     }}
                                   >
@@ -299,7 +299,7 @@ export default function VendorSidebar() {
                           className={({ isActive }) =>
                             cn(
                               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50",
-                              isActive && "bg-[#3554e0] text-white shadow-sm"
+                              isActive && "bg-[#4F7DFF]  text-white shadow-sm"
                             )
                           }
                         >
