@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useMemo, useState } from "react";
 import { IconType } from "react-icons";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/app/hooks";
 import {
   DashboardCol,
   DashboardContainer,
@@ -13,6 +14,7 @@ import RecentActivities from "@/components/AdminDashboard/RecentActivities";
 import CustomerAcquisitionCard from "@/components/AdminDashboard/CustomerAcquisitionCard";
 import VendorsOverview from "@/components/AdminDashboard/VendorsOverview";
 import AIAlertInsights from "@/components/AdminDashboard/AIAlertInsights";
+import ApprovalQueueCard from "@/components/AdminDashboard/ApprovalQueueCard";
 import PendingPayoutsCard from "@/components/AdminDashboard/finance/PendingPayoutsCard";
 import RefundRequestsCard from "@/components/AdminDashboard/finance/RefundRequestsCard";
 import KycPendingCard from "@/components/AdminDashboard/compliance/KycPendingCard";
@@ -125,6 +127,55 @@ const getInitials = (name: string) =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("") || "V";
 
+const formatAdminDisplayName = (
+  user?: { displayName?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null } | null,
+) => {
+  const displayName = user?.displayName?.trim();
+  if (displayName) return displayName;
+
+  const firstName = user?.firstName?.trim();
+  const lastName = user?.lastName?.trim();
+
+  if (firstName && lastName) {
+    return `${firstName} ${lastName.charAt(0).toUpperCase()}.`;
+  }
+
+  if (firstName) return firstName;
+  if (user?.email) return user.email.split("@")[0];
+  return "Admin";
+};
+
+const AdminWelcomeBanner = () => {
+  const user = useAppSelector((state) => state.auth.user);
+  const displayName = useMemo(() => formatAdminDisplayName(user), [user]);
+  const now = useMemo(() => new Date(), []);
+
+  const dayNumber = now.getDate();
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "long",
+  }).format(now);
+
+  return (
+    <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 px-5 py-4  sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="min-w-0">
+        <p className=" truncate text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-[-0.06em] text-slate-950">
+          Welcome Back, {displayName}. <span aria-hidden="true">👋</span>
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3 self-start sm:self-auto">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full border text-white bg-[#4F7DFF] text-[1.1rem] font-bold tracking-[-0.04em]  ">
+          {dayNumber}
+        </div>
+        <p className=" font-serif max-w-[110px] c text-sm leading-tight text-slate-900 sm:max-w-none">
+          {dateLabel}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 type SnapshotMiniAvatar = {
   label: string;
   imageUrl?: string | null;
@@ -136,12 +187,13 @@ type SnapshotCardProps = {
   subtitle?: string;
   tone?: "light" | "solid";
   icon: IconType;
+  watermarkIcon?: IconType;
   trendLabel?: string;
   trendTone?: "green" | "red" | "slate";
   watermark?: string;
   progress?: number;
   engagement?: string;
-  avatars?: SnapshotMiniAvatar[];
+  avatars?: SnapshotMiniAvatar[]; 
   footerLabel?: string;
   footerValue?: string;
 };
@@ -152,6 +204,7 @@ const SnapshotCard = ({
   subtitle,
   tone = "light",
   icon: Icon,
+  watermarkIcon: WatermarkIcon,
   trendLabel,
   trendTone = "green",
   watermark,
@@ -170,13 +223,15 @@ const SnapshotCard = ({
 
   if (tone === "solid") {
     return (
-      <div className="relative flex h-full min-h-[212px] flex-col overflow-hidden rounded-2xl bg-[#4F7DFF] p-5 text-white ">
+      <div className="relative flex h-full min-h-[212px] flex-col overflow-hidden rounded-[26px] bg-[#4F7DFF] p-5 text-white">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-medium text-white/70">{title}</p>
-            <p className="mt-1 text-4xl font-semibold tracking-[-0.04em]">{value}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/70">
+              {title}
+            </p>
+            <p className="mt-2 text-4xl font-black tracking-[-0.06em]">{value}</p>
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/12 text-white/85">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/14 text-white/90">
             <Icon className="h-5 w-5" />
           </div>
         </div>
@@ -187,45 +242,52 @@ const SnapshotCard = ({
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/65">
             {footerLabel}
           </p>
-          <p className="text-2xl font-semibold tracking-[-0.03em]">{footerValue}</p>
+          <p className="text-2xl font-black tracking-[-0.05em]">{footerValue}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative h-full overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)]">
+    <div className="relative h-full min-h-[164px] overflow-hidden rounded-[26px] border border-slate-100 bg-white p-5 shadow-[0_16px_50px_-44px_rgba(15,23,42,0.22)]">
       <div className="flex items-start justify-between gap-3">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#eef3ff] text-[#3554e0]">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#eef3ff] text-[#3554e0]">
               <Icon className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                {title}
-              </p>
-              <p className="mt-1 text-[30px] font-semibold tracking-[-0.04em] text-slate-900">
-                {value}
-                {subtitle ? <span className="ml-1 text-xs font-semibold text-[#3554e0]">{subtitle}</span> : null}
-              </p>
-            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+              {title}
+            </p>
+            <p className="mt-1 text-[32px] font-black tracking-[-0.06em] text-slate-950">
+              {value}
+              {subtitle ? <span className="ml-1 text-sm font-semibold text-[#3554e0]">{subtitle}</span> : null}
+            </p>
           </div>
         </div>
 
         {trendLabel ? (
-          <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold", trendClass)}>
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold",
+              trendClass,
+            )}
+          >
             {trendLabel}
           </span>
         ) : null}
       </div>
 
+      {WatermarkIcon ? (
+        <div className="pointer-events-none absolute -bottom-6 right-[-4px] select-none opacity-10">
+          <WatermarkIcon className="h-[140px] w-[140px] text-[#3554e0]" />
+        </div>
+      ) : null}
       {watermark ? (
-        <div className="pointer-events-none absolute -bottom-8 right-[-8px] select-none text-[110px]  leading-none text-[#4F7DFF]">
+        <div className="pointer-events-none absolute -bottom-8 right-[-8px] select-none text-[110px] leading-none text-[#4F7DFF]">
           {watermark}
         </div>
       ) : null}
-
       {progress !== undefined ? (
         <div className="mt-6">
           <div className="h-1.5 rounded-full bg-slate-100">
@@ -386,8 +448,8 @@ const AdminDashboard: React.FC = () => {
         .filter((vendor) => String(vendor.status ?? "").toUpperCase() === "ACTIVE")
         .slice(0, 3)
         .map((vendor) => ({
-          label: vendor.businessName,
-          imageUrl: vendor.profileImageUrl ?? undefined,
+          label: vendor.businessName ?? "Vendor",
+          imageUrl: vendor.user?.profileImageUrl ?? undefined,
         })),
     [vendors],
   );
@@ -560,6 +622,8 @@ const AdminDashboard: React.FC = () => {
           breadCrumbTitle="Admin / Dashboard"
         />
 
+        <AdminWelcomeBanner />
+
         <DashboardSection>
           <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <DashboardCol span={1}>
@@ -585,6 +649,7 @@ const AdminDashboard: React.FC = () => {
                 value={todayBookingsCount.toLocaleString()}
                 subtitle="units"
                 icon={HiOutlineShoppingBag}
+                watermarkIcon={HiOutlineShoppingBag}
                 progress={Math.min(100, Math.max(16, todayBookingsCount * 12))}
               />
             </DashboardCol>
@@ -593,6 +658,7 @@ const AdminDashboard: React.FC = () => {
                 title="Active Vendors"
                 value={activeVendorsCount.toLocaleString()}
                 icon={HiOutlineUserGroup}
+                watermarkIcon={HiOutlineUserGroup}
                 avatars={activeVendorAvatars}
                 engagement={`${activeVendorCoverage.toFixed(1)}% Engagement`}
               />
@@ -692,9 +758,12 @@ const AdminDashboard: React.FC = () => {
         </DashboardSection>
 
         <DashboardSection>
-          <DashboardGrid>
-            <DashboardCol span={12}>
+          <DashboardGrid columns="grid-cols-12">
+            <DashboardCol span={8} className="h-full">
               <AIAlertInsights />
+            </DashboardCol>
+            <DashboardCol span={4} className="h-full">
+              <ApprovalQueueCard />
             </DashboardCol>
           </DashboardGrid>
         </DashboardSection>

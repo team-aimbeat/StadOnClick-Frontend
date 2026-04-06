@@ -1,8 +1,9 @@
 ﻿import { useCallback, useMemo, useState } from "react";
-import { Copy, Pencil, Power, Trash2 } from "lucide-react";
+import { BadgeCheck, Copy, EyeOff, Layers3, Pencil, Power, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { ColumnConfig, DataTableSortStatus, RowData } from "@/components/shared/DataTable";
 import { ListingPage } from "@/components/shared/ListingPage";
+import PortalStatCard from "@/components/shared/PortalStatCard";
 import type { ActionConfig } from "@/types/Table/action";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
@@ -119,25 +120,29 @@ export default function LeadPlansPage() {
         title: "Total Plans",
         value: totalPlans,
         subtitle: `${inactivePlans} inactive`,
-        accentColor: "cyan" as const,
+        icon: Layers3,
+        tone: "blue" as const,
       },
       {
         title: "Active Plans",
         value: activePlans,
         subtitle: `${activePlans} published`,
-        accentColor: "green" as const,
+        icon: BadgeCheck,
+        tone: "green" as const,
       },
       {
         title: "Inactive Plans",
         value: inactivePlans,
         subtitle: `${inactivePlans} hidden`,
-        accentColor: "yellow" as const,
+        icon: EyeOff,
+        tone: "amber" as const,
       },
       {
         title: "Avg Leads/Day",
         value: avgLeadsPerDay,
         subtitle: `${totalLeadsPerDay} total`,
-        accentColor: "purple" as const,
+        icon: TrendingUp,
+        tone: "purple" as const,
       },
     ],
     [totalPlans, activePlans, inactivePlans, avgLeadsPerDay, totalLeadsPerDay]
@@ -524,8 +529,21 @@ export default function LeadPlansPage() {
         breadCrumbTitle="Leads & Monetization"
         description="Manage vendor lead subscription plans (pricing, limits, and activation)."
         headerSlot={headerSlot}
-       
-        stats={stats}
+        stats={[]}
+        statsSlot={
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {stats.map((stat) => (
+              <PortalStatCard
+                key={stat.title}
+                title={stat.title}
+                value={stat.value}
+                subtitle={stat.subtitle}
+                icon={stat.icon}
+                tone={stat.tone}
+              />
+            ))}
+          </div>
+        }
         tableProps={{
           data: processedPlans,
           columns,

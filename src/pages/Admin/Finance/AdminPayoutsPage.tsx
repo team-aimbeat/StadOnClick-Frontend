@@ -52,20 +52,24 @@ const payoutStatusBadgeClass = (status?: string) => {
 
 const summaryCardStyles = [
   {
-    shell: "border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_48%,#eef2ff_100%)]",
-    iconWrap: "bg-slate-900 text-white",
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#111827] text-white",
+    accent: "text-slate-950",
   },
   {
-    shell: "border-cyan-100 bg-[linear-gradient(135deg,#f8fdff_0%,#ecfeff_45%,#e0f2fe_100%)]",
-    iconWrap: "bg-cyan-600 text-white",
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#0891b2] text-white",
+    accent: "text-slate-950",
   },
   {
-    shell: "border-emerald-100 bg-[linear-gradient(135deg,#f7fff9_0%,#ecfdf5_46%,#dcfce7_100%)]",
-    iconWrap: "bg-emerald-600 text-white",
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#059669] text-white",
+    accent: "text-emerald-600",
   },
   {
-    shell: "border-amber-100 bg-[linear-gradient(135deg,#fffdf7_0%,#fffbeb_46%,#fef3c7_100%)]",
-    iconWrap: "bg-amber-500 text-slate-950",
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#f59e0b] text-slate-950",
+    accent: "text-amber-600",
   },
 ];
 
@@ -295,7 +299,7 @@ const AdminPayoutsPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { 
             label: "Outstanding Amount", 
@@ -331,10 +335,10 @@ const AdminPayoutsPage = () => {
         ].map((item, i) => (
           <div
             key={i}
-            className={`rounded-[24px] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${summaryCardStyles[i].shell}`}
+            className={`relative min-h-[164px] overflow-hidden rounded-[28px] border p-5 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.25)] ${summaryCardStyles[i].shell}`}
           >
             <div className="mb-4 flex items-start justify-between gap-4">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
                 {item.label}
               </span>
               <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${summaryCardStyles[i].iconWrap}`}>
@@ -342,13 +346,13 @@ const AdminPayoutsPage = () => {
               </div>
             </div>
             {item.isCount ? (
-              <p className={`mb-2 text-3xl font-black tracking-tight text-mono-finance ${item.color}`}>
+              <p className={`mb-2 text-[34px] font-black tracking-[-0.06em] ${summaryCardStyles[i].accent}`}>
                 {Number(item.value ?? 0).toLocaleString()}
               </p>
             ) : (
               <div className="mb-2 flex items-baseline gap-1.5">
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{stats?.currency}</span>
-                <p className={`text-3xl font-black tracking-tight text-mono-finance ${item.color}`}>
+                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">SEK</span>
+                <p className={`text-[34px] font-black tracking-[-0.06em] ${summaryCardStyles[i].accent}`}>
                   {Number(item.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>

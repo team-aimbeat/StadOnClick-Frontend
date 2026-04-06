@@ -854,29 +854,38 @@ export default function VendorDashboard() {
           </div>
 
           <div className="space-y-5">
-            <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4">
-              <div className="flex items-center gap-4">
+            <div className="rounded-[24px] border border-slate-100 bg-white px-5 py-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+              <p className="text-center text-[11px] font-bold uppercase tracking-[0.32em] text-slate-400">
+                Profile Strength
+              </p>
+
+              <div className="mt-5 flex flex-col items-center">
                 <div
-                  className="grid h-14 w-14 place-items-center rounded-full"
+                  className="grid h-28 w-28 place-items-center rounded-full"
                   style={{
-                    background: `conic-gradient(#4361ee 0 ${profileScore}%, #e5e7eb ${profileScore}% 100%)`,
+                    background: `conic-gradient(#3554e0 0 ${profileScore}%, #e5e7eb ${profileScore}% 100%)`,
                   }}
                 >
-                  <div className="grid h-10 w-10 place-items-center rounded-full bg-[#f3f4f6] text-sm font-bold text-slate-700">
-                    {profileScore}%
+                  <div className="grid h-22 w-22 place-items-center rounded-full bg-white shadow-sm">
+                    <div className="text-center leading-none">
+                      <p className="text-3xl font-bold text-slate-900">{profileScore}%</p>
+                      <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                        {profileScore >= 80 ? "Excellent" : profileScore >= 50 ? "Good" : "Needs work"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="min-w-0">
-                  <p className="text-lg font-bold text-slate-900">
-                    Profile Score
-                  </p>
-                  <p className="mt-1 text-sm font-medium leading-5 text-slate-500">
-                    Complete your info to
-                    <br />
-                    reach 100%
-                  </p>
-                </div>
+                <p className="mt-5 max-w-[220px] text-center text-sm leading-6 text-slate-500">
+                  Add a "Portfolio Gallery" to reach 100% and get featured status.
+                </p>
+
+                <button
+                  type="button"
+                  className="mt-5 w-full rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                >
+                  Complete Profile
+                </button>
               </div>
             </div>
 

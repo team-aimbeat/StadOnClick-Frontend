@@ -16,7 +16,7 @@ const AdminCardShell = ({
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5",
+        "flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6",
         className
       )}
     >
