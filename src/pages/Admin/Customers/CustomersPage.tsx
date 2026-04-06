@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarClock, Users } from "lucide-react";
-import { HiOutlineCheckCircle, HiOutlineClock, HiOutlineCurrencyDollar } from "react-icons/hi2";
+import { CalendarClock, Clock3, TrendingUp, UserCheck, Users, Wallet } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import type { ColumnConfig, DataTableSortStatus, FilterConfig, RowData } from "@/components/shared/DataTable";
 import { ListingPage } from "@/components/shared/ListingPage";
@@ -44,6 +44,88 @@ const money = new Intl.NumberFormat("en-SE", {
   currency: "SEK",
   maximumFractionDigits: 0,
 });
+
+const compactNumber = new Intl.NumberFormat("en-SE", {
+  maximumFractionDigits: 0,
+});
+
+type CustomerMetricTone = "blue" | "green" | "amber" | "purple";
+
+type CustomerMetricCardProps = {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: LucideIcon;
+  tone: CustomerMetricTone;
+  badge?: string;
+  badgeTone?: "green" | "red";
+  badgeDirection?: "up" | "down";
+};
+
+const customerMetricStyles: Record<
+  CustomerMetricTone,
+  { icon: string; badge: string; badgeText: string }
+> = {
+  blue: {
+    icon: "bg-[#eef5ff] text-[#3554e0]",
+    badge: "bg-emerald-50",
+    badgeText: "text-emerald-600",
+  },
+  green: {
+    icon: "bg-[#eef9f2] text-emerald-600",
+    badge: "bg-emerald-50",
+    badgeText: "text-emerald-600",
+  },
+  amber: {
+    icon: "bg-[#fff4e6] text-amber-600",
+    badge: "bg-rose-50",
+    badgeText: "text-rose-600",
+  },
+  purple: {
+    icon: "bg-[#f0eeff] text-[#5a57e8]",
+    badge: "bg-emerald-50",
+    badgeText: "text-emerald-600",
+  },
+};
+
+const CustomerMetricCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  tone,
+  badge,
+  badgeTone = "green",
+  badgeDirection = "up",
+}: CustomerMetricCardProps) => {
+  const styles = customerMetricStyles[tone];
+  const badgeTextClass = badgeTone === "red" ? "text-rose-600" : styles.badgeText;
+  const formattedValue = typeof value === "number" ? compactNumber.format(value) : value;
+
+  return (
+    <div className="min-h-[154px] rounded-[18px] border border-slate-100 bg-white p-4 ">
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${styles.icon}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        {badge ? (
+          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] ${styles.badge} ${badgeTextClass}`}>
+            <TrendingUp className={`mr-1 h-3 w-3 ${badgeDirection === "down" ? "rotate-180" : ""}`} />
+            {badge}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-4 space-y-1.5">
+        <p className="text-sm font-medium text-slate-500">{title}</p>
+        <p className="text-[30px] font-semibold tracking-[-0.06em] text-slate-950">
+          {formattedValue}
+        </p>
+        <p className="text-xs font-medium text-slate-500">{subtitle}</p>
+      </div>
+    </div>
+  );
+};
 
 const statusTone: Record<AdminCustomerStatus, { bg: string; text: string; ring: string; label: string }> = {
   ACTIVE: { bg: "bg-emerald-50", text: "text-emerald-700", ring: "ring-emerald-200", label: "Active" },
@@ -308,40 +390,55 @@ export default function CustomersPage() {
   }, [dateRangeLabel, isError, isFetching, isLoading]);
 
   return (
-    <ListingPage
+      <ListingPage
       title="Customers"
       breadCrumbTitle="Admin / Customers"
       description="View all marketplace customers, status, activity, and wallet snapshot."
-      stats={[
-        {
-          title: "Total Customers",
-          value: totals.totalCustomers,
-          subtitle: "Registered users",
-          icon: Users,
-          accentColor: "purple",
-        },
-        {
-          title: "Active",
-          value: totals.activeCustomers,
-          subtitle: "Ready to book",
-          icon: HiOutlineCheckCircle,
-          accentColor: "green",
-        },
-        {
-          title: "Pending",
-          value: totals.pendingCustomers,
-          subtitle: "Onboarding in progress",
-          icon: HiOutlineClock,
-          accentColor: "yellow",
-        },
-        {
-          title: "Wallet Total",
-          value: money.format(totals.totalWallet),
-          subtitle: "Visible page sum",
-          icon: HiOutlineCurrencyDollar,
-          accentColor: "blue",
-        },
-      ]}
+      stats={[]}
+      headerSlot={
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <CustomerMetricCard
+            title="Total Customers"
+            value={totals.totalCustomers}
+            subtitle="Registered users"
+            icon={Users}
+            tone="blue"
+            badge="+12%"
+            badgeTone="green"
+            badgeDirection="up"
+          />
+          <CustomerMetricCard
+            title="Active Users"
+            value={totals.activeCustomers}
+            subtitle="Ready to book"
+            icon={UserCheck}
+            tone="green"
+            badge="+5.2%"
+            badgeTone="green"
+            badgeDirection="up"
+          />
+          <CustomerMetricCard
+            title="Pending Users"
+            value={totals.pendingCustomers}
+            subtitle="Onboarding in progress"
+            icon={Clock3}
+            tone="amber"
+            badge="-2%"
+            badgeTone="red"
+            badgeDirection="down"
+          />
+          <CustomerMetricCard
+            title="Wallet Balance"
+            value={money.format(totals.totalWallet)}
+            subtitle="Visible page sum"
+            icon={Wallet}
+            tone="purple"
+            badge="+8.4%"
+            badgeTone="green"
+            badgeDirection="up"
+          />
+        </div>
+      }
       summary={{
         left: summaryLeft,
         right: `Selected customers: ${selectedRows.length}`,

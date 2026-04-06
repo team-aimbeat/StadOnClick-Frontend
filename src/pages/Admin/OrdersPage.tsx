@@ -11,6 +11,7 @@ import {
 
 import { useAppDispatch } from "@/app/hooks";
 import { ListingPage } from "@/components/shared/ListingPage";
+import PortalStatCard from "@/components/shared/PortalStatCard";
 import type {
   ColumnConfig,
   DataTableSortStatus,
@@ -579,36 +580,39 @@ export default function AdminOrdersPage() {
         title="Admin orders"
         breadCrumbTitle="Admin / Orders"
         description="View every order with its customer, vendor, offerings, totals, and booking-level details."
-        stats={[
-          {
-            title: "Orders",
-            value: totals.orderCount,
-            subtitle: "Records in current page",
-            icon: HiOutlineClipboardDocumentList,
-            accentColor: "blue",
-          },
-          {
-            title: "Gross value",
-            value: currencyFormatter.format(totals.totalValue),
-            subtitle: "Paid + pending totals",
-            icon: HiOutlineBanknotes,
-            accentColor: "green",
-          },
-          {
-            title: "Commission",
-            value: currencyFormatter.format(totals.totalCommission),
-            subtitle: "Platform share",
-            icon: HiOutlineCube,
-            accentColor: "yellow",
-          },
-          {
-            title: "Vendor payout",
-            value: currencyFormatter.format(totals.totalVendorPayout),
-            subtitle: "Net vendor earnings",
-            icon: HiOutlineUserGroup,
-            accentColor: "purple",
-          },
-        ]}
+        stats={[]}
+        statsSlot={
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <PortalStatCard
+              title="Orders"
+              value={totals.orderCount}
+              subtitle="Records in current page"
+              icon={HiOutlineClipboardDocumentList}
+              tone="blue"
+            />
+            <PortalStatCard
+              title="Gross value"
+              value={currencyFormatter.format(totals.totalValue)}
+              subtitle="Paid + pending totals"
+              icon={HiOutlineBanknotes}
+              tone="green"
+            />
+            <PortalStatCard
+              title="Commission"
+              value={currencyFormatter.format(totals.totalCommission)}
+              subtitle="Platform share"
+              icon={HiOutlineCube}
+              tone="amber"
+            />
+            <PortalStatCard
+              title="Vendor payout"
+              value={currencyFormatter.format(totals.totalVendorPayout)}
+              subtitle="Net vendor earnings"
+              icon={HiOutlineUserGroup}
+              tone="purple"
+            />
+          </div>
+        }
         summary={{
           left: dateRangeLabel ? `Range: ${dateRangeLabel}` : "Review order-level activity across vendors and offerings.",
           right: `Selected orders: ${selectedRows.length}`,
