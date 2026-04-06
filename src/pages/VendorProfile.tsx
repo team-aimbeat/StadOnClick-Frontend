@@ -652,25 +652,25 @@ const VendorProfile = () => {
         <div className="flex flex-col lg:flex-row gap-5 items-start">
           {/* â”€â”€ Left Sidebar â”€â”€ */}
           <aside className="w-full lg:w-80 shrink-0 space-y-5">
-            <div className="rounded-[24px] border border-slate-100 bg-[#0f172a] p-5 text-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.45)]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/60">
+            <div className="rounded-[24px] border border-slate-200  bg-white  p-5 text-black ">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-black">
                 Profile Strength
               </p>
               <div className="mt-4 flex items-end gap-2">
                 <span className="text-[38px] font-bold leading-none">
                   {profileStrength}%
                 </span>
-                <span className="pb-1 text-sm font-medium text-white/55">
+                <span className="pb-1 text-sm font-medium text-black">
                   Intermediate
                 </span>
               </div>
-              <div className="mt-4 h-2 rounded-full bg-white/10">
+              <div className="mt-4 h-2 rounded-full bg-black">
                 <div
-                  className="h-2 rounded-full bg-[#4F7DFF] "
+                  className="h-2 rounded-full border-black-200   bg-[#4F7DFF] "
                   style={{ width: `${profileStrength}%` }}
                 />
               </div>
-              <ul className="mt-5 space-y-3 text-sm text-white/80">
+              <ul className="mt-5 space-y-3 text-sm text-black">
                 {completenessItems.slice(0, 4).map((item) => (
                   <li key={item.label} className="flex items-center gap-2">
                     <span
