@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Calendar, CreditCard, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Calendar, Layers3, Plus, Pencil, ShieldCheck, Trash2, EyeOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { ListingPage } from "@/components/shared/ListingPage";
+import PortalStatCard from "@/components/shared/PortalStatCard";
 import { Button } from "@/components/ui/button";
 import type { ColumnConfig, DataTableSortStatus, RowData } from "@/components/shared/DataTable";
 import type { ActionConfig } from "@/types/Table/action";
@@ -36,17 +37,20 @@ export default function AdminSubscriptionPlansPage() {
       {
         title: "Total Plans",
         value: total,
-        accentColor: "cyan" as const,
+        icon: Layers3,
+        tone: "blue" as const,
       },
       {
         title: "Active Plans",
         value: active,
-        accentColor: "green" as const,
+        icon: BadgeCheck,
+        tone: "green" as const,
       },
       {
         title: "Inactive Plans",
         value: total - active,
-        accentColor: "yellow" as const,
+        icon: EyeOff,
+        tone: "amber" as const,
       }
     ];
   }, [plans]);
@@ -162,7 +166,20 @@ export default function AdminSubscriptionPlansPage() {
         title="Subscription Plans"
         breadCrumbTitle="Plans"
         description="Manage premium monetization plans for users."
-        stats={stats}
+        stats={[]}
+        statsSlot={
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {stats.map((stat) => (
+              <PortalStatCard
+                key={stat.title}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                tone={stat.tone}
+              />
+            ))}
+          </div>
+        }
         headerSlot={
           <Button onClick={handleOpenCreate} className="gap-2">
             <Plus className="h-4 w-4" />

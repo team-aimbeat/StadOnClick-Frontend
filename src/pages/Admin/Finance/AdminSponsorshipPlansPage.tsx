@@ -5,7 +5,7 @@ import { Shield, Gauge, Eye } from "lucide-react";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
-import StatsCard from "@/components/shared/StatsCard";
+import PortalStatCard from "@/components/shared/PortalStatCard";
 import { DataTable, type ColumnConfig } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -175,7 +175,14 @@ const AdminSponsorshipPlansPage = () => {
 
       <div className="grid gap-4 md:grid-cols-4">
         {stats.map((stat) => (
-          <StatsCard key={stat.title} {...stat} />
+          <PortalStatCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            subtitle={stat.subtitle}
+            icon={stat.icon}
+            tone={stat.accentColor === "green" ? "green" : stat.accentColor === "yellow" ? "amber" : stat.accentColor === "purple" ? "purple" : "blue"}
+          />
         ))}
       </div>
 
