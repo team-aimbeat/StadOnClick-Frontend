@@ -133,6 +133,13 @@ export default function ServicesSidebar({
     setUncontrolledPriceRange({ min: PRICE_MIN, max: PRICE_MAX });
   };
 
+  const handleResetLocations = () => {
+    if (!onToggleLocation) return;
+    for (const locationId of controlledLocationIds ?? []) {
+      onToggleLocation(locationId);
+    }
+  };
+
   const handleClearAll = () => {
     if (onClearAll) {
       onClearAll();
@@ -227,33 +234,42 @@ export default function ServicesSidebar({
         </div>
       </div>
 
-      <div className="space-y-3 p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-[16px] font-medium text-[#333333]">Category</p>
+      <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.24)]">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[16px] font-bold text-[#333333]">Category</p>
+          </div>
         </div>
 
-        <div className="relative w-full">
+        <div className="relative mt-4 w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             placeholder="Search category"
             value={categorySearch}
             onChange={(event) => setCategorySearch(event.target.value)}
-            className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-600 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none"
           />
         </div>
 
-        <div className="rounded-xl bg-[#F9F9F9] p-3">
-          <div className="flex flex-col max-h-52.5 gap-2 overflow-y-auto">
+        <div className="mt-4 max-h-56 overflow-y-auto rounded-[22px] bg-slate-50 p-3">
+          <div className="flex flex-col gap-2">
             {filteredCategories.map((category) => {
               const isSelected = selectedCategoryIds.includes(category.id);
+              const initials = category.label
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase() ?? "")
+                .join("");
+
               return (
                 <label
                   key={category.id}
-                  className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-medium text-slate-900 transition ${
+                  className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-sm font-medium text-slate-900 transition ${
                     isSelected
-                      ? "border-sky-200 bg-white shadow-sm"
-                      : "border-transparent hover:border-slate-300 bg-transparent"
+                      ? "border-blue-200 bg-white shadow-sm"
+                      : "border-slate-100 bg-white hover:border-slate-200"
                   }`}
                 >
                   <input
@@ -263,23 +279,24 @@ export default function ServicesSidebar({
                     className="sr-only"
                     aria-label={`Filter by ${category.label}`}
                   />
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`flex h-5 w-5 items-center justify-center rounded-sm border text-white transition ${
-                        isSelected
-                          ? "border-transparent bg-sky-500"
-                          : "border-slate-300 bg-white"
-                      }`}
-                    >
-                      {isSelected && <Check className="h-3 w-3 text-white" />}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[10px] font-bold text-slate-700">
+                      {initials || "C"}
                     </span>
-                    <span className="text-slate-900">
-                      {category.label}{" "}
-                      <span className="text-slate-500">
-                        ({category.count})
-                      </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-slate-900">{category.label}</span>
+                      <span className="block text-xs text-slate-500">{category.count} places</span>
                     </span>
                   </div>
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+                      isSelected
+                        ? "border-[#5b4cf0] bg-[#5b4cf0]"
+                        : "border-[#cfd6ff] bg-white"
+                    }`}
+                  >
+                    {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                  </span>
                 </label>
               );
             })}
@@ -287,34 +304,50 @@ export default function ServicesSidebar({
         </div>
       </div>
 
-      <div className="space-y-3 p-4 ">
-        <div className="flex items-center justify-between">
-          <p className="text-[16px] font-medium text-[#333333]">Location</p>
+      <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.24)]">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[16px] font-bold text-[#333333]">Location</p>
+            <p className="mt-1 text-xs text-slate-500">Select the areas you want to browse.</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleResetLocations}
+            className="text-sm font-medium text-slate-400 transition hover:text-slate-600"
+          >
+            Reset
+          </button>
         </div>
 
-
-        <div className="relative w-full">
+        <div className="relative mt-4 w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             placeholder="Search location"
             value={locationSearch}
             onChange={(event) => setLocationSearch(event.target.value)}
-            className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-600 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none"
           />
         </div>
 
-        <div className="rounded-xl bg-[#F9F9F9] p-3">
-          <div className="flex flex-col max-h-52.5 gap-2 overflow-y-auto">
+        <div className="mt-4 max-h-56 overflow-y-auto rounded-[22px] bg-slate-50 p-3">
+          <div className="flex flex-col gap-2">
             {filteredLocations.map((location) => {
               const isSelected = selectedLocationIds.includes(location.id);
+              const initials = location.label
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase() ?? "")
+                .join("");
+
               return (
                 <label
                   key={location.id}
-                  className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-medium text-slate-900 transition ${
+                  className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-sm font-medium text-slate-900 transition ${
                     isSelected
-                      ? "border-sky-200 bg-white shadow-sm"
-                      : "border-transparent hover:border-slate-300 bg-transparent"
+                      ? "border-blue-200 bg-white shadow-sm"
+                      : "border-slate-100 bg-white hover:border-slate-200"
                   }`}
                 >
                   <input
@@ -324,23 +357,24 @@ export default function ServicesSidebar({
                     className="sr-only"
                     aria-label={`Filter by ${location.label}`}
                   />
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`flex h-5 w-5 items-center justify-center rounded-sm border text-white transition ${
-                        isSelected
-                          ? "border-transparent bg-sky-500"
-                          : "border-slate-300 bg-white"
-                      }`}
-                    >
-                      {isSelected && <Check className="h-3 w-3 text-white" />}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[10px] font-bold text-slate-700">
+                      {initials || "L"}
                     </span>
-                    <span className="text-slate-900">
-                      {location.label}{" "}
-                      <span className="text-slate-500">
-                        ({location.count})
-                      </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-slate-900">{location.label}</span>
+                      <span className="block text-xs text-slate-500">{location.count} places</span>
                     </span>
                   </div>
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+                      isSelected
+                        ? "border-[#5b4cf0] bg-[#5b4cf0]"
+                        : "border-[#cfd6ff] bg-white"
+                    }`}
+                  >
+                    {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                  </span>
                 </label>
               );
             })}
@@ -348,20 +382,44 @@ export default function ServicesSidebar({
         </div>
       </div>
 
-      <div className="space-y-4 p-4 ">
-        <div className="flex items-center justify-between">
-          <p className="text-[16px] font-medium text-[#333333]">Price range</p>
+      <div className="rounded-[24px] border border-slate-100 bg-white p-4 ">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[16px] font-bold text-[#333333]">Price range</p>
+            <p className="mt-1 text-xs text-slate-500">
+              The average price is SDK {formatPriceBadge(Math.round((priceRange.min + priceRange.max) / 2))}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleResetPrice}
+            className="text-sm font-medium text-slate-400 transition hover:text-slate-600"
+          >
+            Reset
+          </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="mt-5 space-y-5">
           <div className="relative h-2">
             <div className="absolute inset-0 h-2 rounded-full bg-slate-200" />
             <div
-              className="absolute left-0 top-0 h-2 rounded-full bg-[#1D76FF]"
+              className="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-[#2d6bff] to-[#6f7cff]"
               style={{
                 width: `${(priceRange.max / PRICE_MAX) * 100}%`,
               }}
             />
+            <div
+              className="absolute -top-10 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[#2d6bff] text-center text-[11px] font-bold leading-none text-white"
+              style={{
+                left: `calc(${(priceRange.max / PRICE_MAX) * 100}% - 1.5rem)`,
+              }}
+            >
+              <span className="block">
+                SDK
+                <br />
+                {formatPriceBadge(priceRange.max)}
+              </span>
+            </div>
             <input
               type="range"
               min={PRICE_MIN}
@@ -370,19 +428,11 @@ export default function ServicesSidebar({
               onChange={handleRangeInput("max")}
               className="absolute inset-0 h-full w-full appearance-none bg-transparent"
             />
-            <div
-              className="pointer-events-none absolute -top-8 rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white shadow-lg"
-              style={{
-                left: `calc(${(priceRange.max / PRICE_MAX) * 100}% - 1.5rem)`,
-              }}
-            >
-              SDK {formatPriceBadge(priceRange.max)}
-            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-              <span className="text-xs font-semibold uppercase text-slate-400">
+          <div className="flex items-center gap-3">
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <span className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 SDK
               </span>
               <input
@@ -391,12 +441,12 @@ export default function ServicesSidebar({
                 max={priceRange.max}
                 value={priceRange.min}
                 onChange={handleRangeInput("min")}
-                className="w-full border-none p-0 text-sm font-semibold text-slate-900 focus:outline-none"
+                className="w-full border-none bg-transparent p-0 text-[15px] font-semibold text-slate-900 focus:outline-none"
               />
             </div>
-            <span className="text-sm text-slate-400">-</span>
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-              <span className="text-xs font-semibold uppercase text-slate-400">
+            <span className="text-slate-400">-</span>
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <span className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                 SDK
               </span>
               <input
@@ -405,27 +455,18 @@ export default function ServicesSidebar({
                 max={PRICE_MAX}
                 value={priceRange.max}
                 onChange={handleRangeInput("max")}
-                className="w-full border-none p-0 text-sm font-semibold text-slate-900 focus:outline-none"
+                className="w-full border-none bg-transparent p-0 text-[15px] font-semibold text-slate-900 focus:outline-none"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={onApplyPrice}
-              className="w-full rounded-xl  h-9 bg-[#1D76FF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
-            >
-              Apply
-            </button>
-            <button
-              type="button"
-              className="w-full rounded-xl  h-9 border border-slate-300 px-4 py-2 text-sm font-semibold text-[#1D76FF] transition hover:bg-slate-100"
-              onClick={handleResetPrice}
-            >
-              Reset
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onApplyPrice}
+            className="w-full rounded-2xl bg-[#1D76FF] px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+          >
+            Apply price filter
+          </button>
         </div>
       </div>
     </aside>

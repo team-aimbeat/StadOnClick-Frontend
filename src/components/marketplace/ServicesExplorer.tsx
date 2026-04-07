@@ -429,37 +429,50 @@ export default function ServicesExplorer({
 
         <div className="flex-1 space-y-6">
           <header
-            className="space-y-4 rounded-lg px-6 py-15 text-white shadow-lg min-h-25"
+            className="relative overflow-hidden rounded-[28px] px-6 py-6 text-white shadow-[0_18px_40px_-24px_rgba(29,118,255,0.65)]"
             style={{
               backgroundImage: `url(${headerBanner})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
-            <div className="flex items-end justify-between">
-              <div>
-                <h1 className="text-[28px] font-bold text-black">{headerTitle}</h1>
-              </div>
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-300"
-              >
-                Sort: Popular
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-[16px] text-black">{effectiveHeaderDescription}</p>
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(62,87,222,0.9)_0%,rgba(74,105,242,0.82)_42%,rgba(84,118,255,0.56)_100%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(16,24,40,0.12))]" />
 
-            <div className="flex flex-wrap gap-4 text-sm text-black">
-              {statRows.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex items-center gap-2 rounded-2xl bg-white/40 px-4 py-2"
-                >
-                  <span className={`h-2 w-2 rounded-full ${stat.color}`} />
-                  {stat.label}
+            <div className="relative flex max-w-2xl flex-col gap-5 py-3">
+              <div className="space-y-4">
+                <span className="inline-flex rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">
+                  Limited Offer
+                </span>
+                <div className="space-y-2">
+                  <h1 className="max-w-xl text-[32px] font-bold leading-tight text-white sm:text-[36px]">
+                    {headerTitle}
+                  </h1>
+                  <p className="max-w-xl text-[14px] leading-6 text-white/75 sm:text-[15px]">
+                    Book premium home services with verified experts.
+                  </p>
                 </div>
-              ))}
+                <div className="flex flex-wrap items-center gap-4">
+                  <button
+                    type="button"
+                    className="rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-[#415ee6] shadow-[0_16px_30px_-18px_rgba(15,23,42,0.5)] transition hover:translate-y-[-1px] hover:bg-slate-50"
+                  >
+                    Book Now
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 text-sm text-white/85">
+                {statRows.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 backdrop-blur-sm"
+                  >
+                    <span className={`h-2 w-2 rounded-full ${stat.color}`} />
+                    {stat.label}
+                  </div>
+                ))}
+              </div>
             </div>
           </header>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
