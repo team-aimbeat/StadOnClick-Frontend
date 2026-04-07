@@ -9,15 +9,27 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipProps,
 } from "recharts";
 
 import { DashboardContainer } from "@/components/dashboard";
+import InsightStatCard from "@/components/shared/InsightStatCard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { useListCustomersQuery } from "@/features/admin/customers/api/customersApi";
 import { useListAllVendorsQuery } from "@/features/admin/vendors/api/vendorsApi";
 import { useListAdminOrdersQuery } from "@/features/admin/orders/api/adminOrdersApi";
 import { useListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
 import { useListVendorSubscriptionsQuery } from "@/features/adminLeads/api/adminLeadPlans.api";
+import { useGetSummaryQuery } from "@/features/admin/reports/api/adminReportsApi";
+import {
+  HiMiniArrowDown,
+  HiMiniArrowUp,
+  HiOutlineBanknotes,
+  HiOutlineBuildingStorefront,
+  HiOutlineArrowDownTray,
+  HiOutlineShoppingBag,
+  HiOutlineUserGroup,
+} from "react-icons/hi2";
 
 const metricTabs = [
   { key: "orders", label: "Orders" },
@@ -27,6 +39,26 @@ const metricTabs = [
 ] as const;
 
 type MetricKey = (typeof metricTabs)[number]["key"];
+
+const orderStatusTone = (status?: string) => {
+  switch ((status ?? "").toUpperCase()) {
+    case "PAID":
+    case "COMPLETED":
+    case "SUCCESS":
+      return "bg-emerald-100 text-emerald-700";
+    case "REFUNDED":
+    case "REFUND_REQUESTED":
+      return "bg-rose-100 text-rose-700";
+    case "PENDING":
+    case "PROCESSING":
+      return "bg-amber-100 text-amber-700";
+    case "CANCELLED":
+    case "FAILED":
+      return "bg-slate-100 text-slate-600";
+    default:
+      return "bg-slate-100 text-slate-600";
+  }
+};
 
 const AdminReportsPage = () => {
   const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
@@ -38,6 +70,14 @@ const AdminReportsPage = () => {
     const start = end.subtract(map[range] - 1, "day").startOf("day");
     return { start, end };
   }, [range]);
+
+  const previousRange = useMemo(() => {
+    const map: Record<typeof range, number> = { "7d": 7, "30d": 30, "90d": 90 };
+    const days = map[range];
+    const end = dateRange.start.subtract(1, "day").endOf("day");
+    const start = end.subtract(days - 1, "day").startOf("day");
+    return { start, end };
+  }, [dateRange.start, range]);
 
   const { data: customers, isFetching: loadingCustomers } = useListCustomersQuery({ page: 1, limit: 500 });
   const { data: vendors, isFetching: loadingVendors } = useListAllVendorsQuery({ page: 1, limit: 500 });
@@ -57,6 +97,14 @@ const AdminReportsPage = () => {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
+  const { data: summary, isFetching: loadingSummary } = useGetSummaryQuery({
+    from: dateRange.start.toISOString(),
+    to: dateRange.end.endOf("day").toISOString(),
+  });
+  const { data: previousSummary, isFetching: loadingPreviousSummary } = useGetSummaryQuery({
+    from: previousRange.start.toISOString(),
+    to: previousRange.end.toISOString(),
+  });
   useListVendorSubscriptionsQuery({ page: 1, limit: 200 }); // warm cache for leads API
 
   const totalRevenue = useMemo(() => {
@@ -67,15 +115,81 @@ const AdminReportsPage = () => {
     }, 0);
   }, [ordersResult?.data]);
 
-  const summaryCards = useMemo(
+  const compareGrowth = (current?: number, previous?: number) => {
+    if (!Number.isFinite(current ?? NaN)) {
+      return { text: "—", tone: "slate" as const, icon: HiMiniArrowUp };
+    }
+
+    if (!Number.isFinite(previous ?? NaN) || (previous ?? 0) <= 0) {
+      return current && current > 0
+        ? { text: "+100%", tone: "green" as const, icon: HiMiniArrowUp }
+        : { text: "0%", tone: "slate" as const, icon: HiMiniArrowUp };
+    }
+
+    const delta = (((current ?? 0) - (previous ?? 0)) / (previous ?? 0)) * 100;
+    const rounded = Math.abs(delta) >= 10 ? Math.round(Math.abs(delta)) : Math.round(Math.abs(delta) * 10) / 10;
+
+    return {
+      text: `${delta >= 0 ? "+" : "-"}${rounded}%`,
+      tone: delta > 0 ? ("green" as const) : delta < 0 ? ("red" as const) : ("slate" as const),
+      icon: delta >= 0 ? HiMiniArrowUp : HiMiniArrowDown,
+    };
+  };
+
+  const reportCards = useMemo(
     () => [
-      { label: "Total Customers", value: customers?.meta?.total ?? "—" },
-      { label: "Total Vendors", value: vendors?.meta?.total ?? "—" },
-      { label: "Total Orders", value: ordersResult?.meta?.total ?? ordersResult?.data?.length ?? "—" },
-      { label: "Total Revenue", value: ordersResult && !loadingOrders ? `$ ${totalRevenue.toLocaleString()}` : "—" },
-      { label: "Total Bookings", value: bookingsResult?.meta?.total ?? bookingsResult?.data?.length ?? "—" },
+      {
+        title: "Total Customers",
+        value: summary?.totalCustomers ?? customers?.meta?.total ?? "—",
+        subtitle: "Registered users",
+        icon: HiOutlineUserGroup,
+        iconTone: "blue" as const,
+        trend: compareGrowth(summary?.totalCustomers, previousSummary?.totalCustomers),
+      },
+      {
+        title: "Total Vendors",
+        value: summary?.totalVendors ?? vendors?.meta?.total ?? "—",
+        subtitle: "Active marketplace vendors",
+        icon: HiOutlineBuildingStorefront,
+        iconTone: "green" as const,
+        trend: compareGrowth(summary?.totalVendors, previousSummary?.totalVendors),
+      },
+      {
+        title: "Total Orders",
+        value: summary?.totalOrders ?? ordersResult?.meta?.total ?? ordersResult?.data?.length ?? "—",
+        subtitle: "Orders in the selected period",
+        icon: HiOutlineShoppingBag,
+        iconTone: "amber" as const,
+        trend: compareGrowth(summary?.totalOrders, previousSummary?.totalOrders),
+      },
+      {
+        title: "Total Revenue",
+        value: summary && !loadingSummary
+          ? `${Math.round(summary.totalRevenue).toLocaleString()} kr`
+          : ordersResult && !loadingOrders
+            ? `${Math.round(totalRevenue).toLocaleString()} kr`
+            : "—",
+        subtitle: "Gross value for the selected period",
+        icon: HiOutlineBanknotes,
+        iconTone: "violet" as const,
+        trend: compareGrowth(summary?.totalRevenue, previousSummary?.totalRevenue),
+      },
     ],
-    [customers?.meta?.total, vendors?.meta?.total, ordersResult?.meta?.total, ordersResult?.data?.length, loadingOrders, totalRevenue, bookingsResult?.meta?.total, bookingsResult?.data?.length],
+    [
+      customers?.meta?.total,
+      loadingOrders,
+      loadingPreviousSummary,
+      loadingSummary,
+      ordersResult?.data?.length,
+      ordersResult?.meta?.total,
+      previousSummary?.totalCustomers,
+      previousSummary?.totalOrders,
+      previousSummary?.totalRevenue,
+      previousSummary?.totalVendors,
+      summary,
+      totalRevenue,
+      vendors?.meta?.total,
+    ],
   );
 
   const downloadCsv = (rows: any[], filename: string) => {
@@ -110,23 +224,25 @@ const AdminReportsPage = () => {
       <html>
         <head>
           <style>
-            table { width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 12px; }
-            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-            th { background: #f5f5f5; }
+            body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; }
+            h3 { margin: 0 0 16px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; }
+            th { background: #f8fafc; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; }
           </style>
         </head>
         <body>
           <h3>${filename}</h3>
           <table>
             <thead>
-              <tr>${headers.map((c) => `<th>${c}</th>`).join("")}</tr>
+              <tr>${headers.map((col) => `<th>${col}</th>`).join("")}</tr>
             </thead>
             <tbody>
               ${rows
                 .map(
-                  (r) => `<tr>
+                  (row) => `<tr>
                     ${headers
-                      .map((h) => `<td>${(r as any)[h] ?? (r as any)[h.toLowerCase()] ?? ""}</td>`)
+                      .map((key) => `<td>${(row as any)[key] ?? (row as any)[key.toLowerCase()] ?? ""}</td>`)
                       .join("")}
                   </tr>`,
                 )
@@ -135,12 +251,13 @@ const AdminReportsPage = () => {
           </table>
         </body>
       </html>`;
-    const w = window.open("", "_blank", "width=900,height=700");
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    w.print();
+
+    const printWindow = window.open("", "_blank", "width=900,height=700");
+    if (!printWindow) return;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   const orders = ordersResult?.data ?? [];
@@ -209,14 +326,23 @@ const AdminReportsPage = () => {
     <DashboardContainer className="space-y-6">
       <TitleBreadCrumbs title="Reports" breadCrumbTitle="Admin / Reports" className="w-full" />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {summaryCards.map((card) => (
-          <div key={card.label} className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{card.label}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">
-              {loadingCustomers || loadingVendors || loadingOrders || loadingBookings ? "…" : card.value}
-            </p>
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {reportCards.map((card) => (
+          <InsightStatCard
+            key={card.title}
+            title={card.title}
+            value={
+              loadingCustomers || loadingVendors || loadingOrders || loadingBookings || loadingSummary
+                ? "…"
+                : card.value
+            }
+            subtitle={card.subtitle}
+            icon={card.icon}
+            iconTone={card.iconTone}
+            badgeText={card.trend.text}
+            badgeTone={card.trend.tone}
+            badgeIcon={card.trend.icon}
+          />
         ))}
       </div>
 
@@ -305,12 +431,13 @@ const AdminReportsPage = () => {
                 />
                 <Tooltip
                   cursor={{ stroke: "#CBD5E1", strokeWidth: 1 }}
-                  formatter={(value: number, key) => {
-                    if (key === "revenue") return [`$${value.toLocaleString()}`, "Revenue"];
-                    if (key === "orders") return [value, "Orders"];
-                    if (key === "customers") return [value, "Customers"];
-                    if (key === "vendors") return [value, "Vendors"];
-                    if (key === "bookings") return [value, "Bookings"];
+                  formatter={(value: number | string | undefined, key: string | undefined) => {
+                    const numericValue = Number(value ?? 0);
+                    if (key === "revenue") return [`$${numericValue.toLocaleString()}`, "Revenue"];
+                    if (key === "orders") return [numericValue, "Orders"];
+                    if (key === "customers") return [numericValue, "Customers"];
+                    if (key === "vendors") return [numericValue, "Vendors"];
+                    if (key === "bookings") return [numericValue, "Bookings"];
                     return [value, key];
                   }}
                 />
@@ -336,70 +463,93 @@ const AdminReportsPage = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
+      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white">
+        <div className="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-slate-900">Reports Table</p>
-            <p className="text-xs text-slate-500">Latest orders for the selected period.</p>
+            <p className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Recent Reports</p>
+            <p className="mt-1 text-sm text-slate-500">Latest orders for the selected period.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-[#3554e0] transition hover:bg-[#edf2ff]"
               onClick={() => downloadCsv(orders, "orders-report")}
             >
-              Orders CSV
+              Export CSV
+              <HiOutlineArrowDownTray className="h-4 w-4" />
             </button>
             <button
               type="button"
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-300"
-              onClick={() => downloadPdf(orders, "orders-report", ["id", "status", "totalFinal", "createdAt"])}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+              onClick={() =>
+                downloadPdf(orders, "orders-report", ["orderNumber", "vendor", "status", "totalFinal", "createdAt"])
+              }
             >
-              Orders PDF
+              Export PDF
+              <HiOutlineArrowDownTray className="h-4 w-4" />
             </button>
           </div>
         </div>
-        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-0 text-sm">
+            <thead className="bg-[#f5f6f8] text-left text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
               <tr>
-                {["Order", "Vendor", "Status", "Total", "Created"].map((col) => (
-                  <th key={col} className="px-4 py-3">
-                    {col}
-                  </th>
-                ))}
+                <th className="px-6 py-4">Order ID</th>
+                <th className="px-6 py-4">Vendor</th>
+                <th className="px-6 py-4">Total Amount</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {loadingOrders && (
+            <tbody>
+              {loadingOrders ? (
                 <tr>
-                  <td className="px-4 py-6 text-slate-500" colSpan={5}>
-                    Loading report…
+                  <td className="px-6 py-8 text-slate-500" colSpan={5}>
+                    Loading report...
+                  </td>
+                </tr>
+              ) : orders.length ? (
+                orders.map((row: any, index: number) => {
+                  const created = row?.createdAt ? dayjs(row.createdAt).format("MMM DD, YYYY hh:mm A") : "—";
+                  const total = parseFloat(row?.totalFinal ?? row?.total ?? "0");
+                  const orderId = row?.orderNumber ?? row?.id ?? "—";
+                  const vendorName = row?.vendor?.businessName ?? row?.vendorName ?? "—";
+
+                  return (
+                    <tr
+                      key={row?.id ?? row?.orderNumber ?? index}
+                      className="border-b border-slate-100 last:border-b-0 transition hover:bg-slate-50/70"
+                    >
+                      <td className="px-6 py-5">
+                        <span className="font-semibold text-[#3554e0]">{orderId}</span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="font-semibold text-slate-800">{vendorName}</span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900">
+                          {Number.isFinite(total) ? `$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${orderStatusTone(row?.status)}`}
+                        >
+                          {row?.status ?? "—"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-slate-500">{created}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td className="px-6 py-8 text-slate-500" colSpan={5}>
+                    No rows yet. Try adjusting the filters.
                   </td>
                 </tr>
               )}
-              {!loadingOrders &&
-                (orders.length ? (
-                  orders.map((row: any) => {
-                    const created = row?.createdAt ? dayjs(row.createdAt).format("DD MMM YYYY, HH:mm") : "—";
-                    const total = parseFloat(row?.totalFinal ?? row?.total ?? "0");
-                    return (
-                      <tr key={row?.id ?? row?.orderNumber}>
-                        <td className="px-4 py-3 text-slate-700">{row?.orderNumber ?? row?.id ?? "—"}</td>
-                        <td className="px-4 py-3 text-slate-700">{row?.vendor?.businessName ?? "—"}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-700">{row?.status ?? "—"}</td>
-                        <td className="px-4 py-3 text-slate-700">{Number.isFinite(total) ? `$${total.toLocaleString()}` : "—"}</td>
-                        <td className="px-4 py-3 text-slate-500">{created}</td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td className="px-4 py-6 text-slate-500" colSpan={5}>
-                      No rows yet. Try adjusting the filters.
-                    </td>
-                  </tr>
-                ))}
             </tbody>
           </table>
         </div>

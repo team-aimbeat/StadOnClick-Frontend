@@ -4,6 +4,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { Activity, Clock3, Shield, UserCheck } from "lucide-react";
 
 import { DashboardContainer } from "@/components/dashboard";
+import InsightStatCard from "@/components/shared/InsightStatCard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { useGetAdminStaffQuery } from "@/features/admin/staff/adminStaffApi";
 import type { StaffUser, StaffUserRole } from "@/features/admin/staff/adminStaff.types";
@@ -82,73 +83,50 @@ export default function AdminActivityPage() {
   }, [staff]);
 
   const latestLogin = sortedStaff.find((member) => member.lastLoginAt);
+  const activeRate = summary.total > 0 ? Math.round((summary.active / summary.total) * 100) : 0;
+  const recentRate = summary.total > 0 ? Math.round((summary.recentLogins / summary.total) * 100) : 0;
 
   return (
     <DashboardContainer className="space-y-6 pb-10">
       <TitleBreadCrumbs title="Admin Activity" breadCrumbTitle="Admin / System / Activity" />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-slate-900/5 p-2 text-slate-700">
-              <Shield className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Staff Accounts
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-slate-900">{summary.total}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-100 p-2 text-emerald-700">
-              <UserCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Active Access
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-slate-900">{summary.active}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-sky-100 p-2 text-sky-700">
-              <Activity className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Recent Logins
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-slate-900">{summary.recentLogins}</p>
-              <p className="text-xs text-slate-500">Within the last 7 days</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-amber-100 p-2 text-amber-700">
-              <Clock3 className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                Latest Login
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">
-                {latestLogin ? getFullName(latestLogin) : "No logins yet"}
-              </p>
-              <p className="text-xs text-slate-500">
-                {latestLogin?.lastLoginAt ? dayjs(latestLogin.lastLoginAt).fromNow() : "No activity"}
-              </p>
-            </div>
-          </div>
-        </div>
+        <InsightStatCard
+          title="Staff Accounts"
+          value={summary.total}
+          subtitle="Admin-side users"
+          icon={Shield}
+          iconTone="blue"
+          badgeText="Roster"
+          badgeTone="slate"
+        />
+        <InsightStatCard
+          title="Active Access"
+          value={summary.active}
+          subtitle="Currently enabled accounts"
+          icon={UserCheck}
+          iconTone="green"
+          badgeText={`${activeRate}%`}
+          badgeTone="green"
+        />
+        <InsightStatCard
+          title="Recent Logins"
+          value={summary.recentLogins}
+          subtitle="Within the last 7 days"
+          icon={Activity}
+          iconTone="amber"
+          badgeText={`${recentRate}%`}
+          badgeTone="amber"
+        />
+        <InsightStatCard
+          title="Never Logged In"
+          value={summary.neverLoggedIn}
+          subtitle="Accounts needing a first login"
+          icon={Clock3}
+          iconTone="rose"
+          badgeText={latestLogin ? "Latest seen" : "Attention"}
+          badgeTone={latestLogin ? "blue" : "red"}
+        />
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
