@@ -1,4 +1,4 @@
-import { Check, Search, Star } from "lucide-react";
+import { BriefcaseBusiness, CarFront, Check, HeartPulse, MapPin, Search, Star, Utensils, Zap } from "lucide-react";
 import { useMemo, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
 import filterIcon from "@/assets/icons/Filter.svg";
 import mapImage from "@/assets/Images/map.png";
@@ -25,6 +25,28 @@ const locations = [
   { id: "Kalmar", label: "Kalmar", count: 12 },
   { id: "Uppsala", label: "Uppsala", count: 9 },
 ];
+
+const categoryCardMeta: Record<
+  string,
+  { subtitle: string; icon: typeof BriefcaseBusiness }
+> = {
+  "service test": { subtitle: "42 Services available", icon: BriefcaseBusiness },
+  "driving classes": { subtitle: "Top rated instructors", icon: CarFront },
+  "eateries & hotspots": { subtitle: "Local culinary gems", icon: Utensils },
+  "health & wellness": { subtitle: "Professional care", icon: HeartPulse },
+  "home utilities": { subtitle: "Maintenance & repair", icon: Zap },
+};
+
+const locationCardMeta: Record<
+  string,
+  { subtitle: string; icon: typeof MapPin }
+> = {
+  stockholms: { subtitle: "Popular city center venues", icon: MapPin },
+  gothenburg: { subtitle: "Coastal service providers", icon: MapPin },
+  malmo: { subtitle: "Fast-growing local options", icon: MapPin },
+  kalmar: { subtitle: "Trusted neighborhood picks", icon: MapPin },
+  uppsala: { subtitle: "Top-rated nearby services", icon: MapPin },
+};
 
 export type ServicesSidebarFilterItem = {
   id: string;
@@ -74,6 +96,7 @@ export default function ServicesSidebar({
   const PRICE_MIN = 0;
   const PRICE_MAX = 10000;
   const formatPriceBadge = (value: number) => (value >= 1000 ? `${Math.floor(value / 1000)}K` : `${value}`);
+  const formatPricePill = (value: number) => `$${value}`;
 
   const resolvedCategories = providedCategories ?? categories;
   const resolvedLocations = providedLocations ?? locations;
@@ -256,20 +279,19 @@ export default function ServicesSidebar({
           <div className="flex flex-col gap-2">
             {filteredCategories.map((category) => {
               const isSelected = selectedCategoryIds.includes(category.id);
-              const initials = category.label
-                .split(/\s+/)
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((part) => part[0]?.toUpperCase() ?? "")
-                .join("");
+              const categoryKey = category.label.trim().toLowerCase();
+              const meta = categoryCardMeta[categoryKey];
+              const Icon = meta?.icon ?? BriefcaseBusiness;
+              const subtitle =
+                meta?.subtitle ?? `${category.count} services available`;
 
               return (
                 <label
                   key={category.id}
-                  className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-sm font-medium text-slate-900 transition ${
+                  className={`flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3.5 text-sm transition ${
                     isSelected
-                      ? "border-blue-200 bg-white shadow-sm"
-                      : "border-slate-100 bg-white hover:border-slate-200"
+                      ? "border-[#9db2ff] bg-[#f7f9ff] "
+                      : "border-transparent bg-[#f6f7ff] hover:border-[#dde3ff]"
                   }`}
                 >
                   <input
@@ -280,19 +302,25 @@ export default function ServicesSidebar({
                     aria-label={`Filter by ${category.label}`}
                   />
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[10px] font-bold text-slate-700">
-                      {initials || "C"}
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        isSelected ? "bg-[#4F7DFF]  text-white" : "bg-[#e7e9f7] text-slate-700"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-slate-900">{category.label}</span>
-                      <span className="block text-xs text-slate-500">{category.count} places</span>
+                      <span className="block truncate text-[15px] font-semibold text-slate-900">
+                        {category.label}
+                      </span>
+                      <span className="block text-xs text-slate-500">{subtitle}</span>
                     </span>
                   </div>
                   <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
                       isSelected
-                        ? "border-[#5b4cf0] bg-[#5b4cf0]"
-                        : "border-[#cfd6ff] bg-white"
+                        ? "border-[#4F7DFF]  bg-[#4F7DFF] "
+                        : "border-[#cfd6ff] bg-transparent"
                     }`}
                   >
                     {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
@@ -304,7 +332,7 @@ export default function ServicesSidebar({
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.24)]">
+      <div className="rounded-[24px] border border-slate-100 bg-white p-4 ">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[16px] font-bold text-[#333333]">Location</p>
@@ -334,20 +362,19 @@ export default function ServicesSidebar({
           <div className="flex flex-col gap-2">
             {filteredLocations.map((location) => {
               const isSelected = selectedLocationIds.includes(location.id);
-              const initials = location.label
-                .split(/\s+/)
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((part) => part[0]?.toUpperCase() ?? "")
-                .join("");
+              const locationKey = location.label.trim().toLowerCase();
+              const meta = locationCardMeta[locationKey];
+              const Icon = meta?.icon ?? MapPin;
+              const subtitle =
+                meta?.subtitle ?? `${location.count} services available`;
 
               return (
                 <label
                   key={location.id}
-                  className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 text-sm font-medium text-slate-900 transition ${
+                  className={`flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3.5 text-sm transition ${
                     isSelected
-                      ? "border-blue-200 bg-white shadow-sm"
-                      : "border-slate-100 bg-white hover:border-slate-200"
+                      ? "border-[#4F7DFF]  bg-[#f7f9ff] "
+                      : "border-transparent bg-[#f6f7ff] hover:border-[#dde3ff]"
                   }`}
                 >
                   <input
@@ -358,19 +385,25 @@ export default function ServicesSidebar({
                     aria-label={`Filter by ${location.label}`}
                   />
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[10px] font-bold text-slate-700">
-                      {initials || "L"}
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        isSelected ? "bg-[#4F7DFF]  text-white" : "bg-[#e7e9f7] text-slate-700"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-slate-900">{location.label}</span>
-                      <span className="block text-xs text-slate-500">{location.count} places</span>
+                      <span className="block truncate text-[15px] font-semibold text-slate-900">
+                        {location.label}
+                      </span>
+                      <span className="block text-xs text-slate-500">{subtitle}</span>
                     </span>
                   </div>
                   <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
                       isSelected
-                        ? "border-[#5b4cf0] bg-[#5b4cf0]"
-                        : "border-[#cfd6ff] bg-white"
+                        ? "border-[#4F7DFF]  bg-[#4F7DFF] "
+                        : "border-[#cfd6ff] bg-transparent"
                     }`}
                   >
                     {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
@@ -387,7 +420,7 @@ export default function ServicesSidebar({
           <div>
             <p className="text-[16px] font-bold text-[#333333]">Price range</p>
             <p className="mt-1 text-xs text-slate-500">
-              The average price is SDK {formatPriceBadge(Math.round((priceRange.min + priceRange.max) / 2))}
+              The average price is ${Math.round((priceRange.min + priceRange.max) / 2)}
             </p>
           </div>
           <button
@@ -400,33 +433,67 @@ export default function ServicesSidebar({
         </div>
 
         <div className="mt-5 space-y-5">
-          <div className="relative h-2">
-            <div className="absolute inset-0 h-2 rounded-full bg-slate-200" />
+          <div className="relative overflow-hidden rounded-[22px] bg-[#f7f5ff] px-3 pb-5 pt-4">
+            <svg viewBox="0 0 260 92" className="pointer-events-none absolute inset-x-3 bottom-8 h-20 w-[calc(100%-1.5rem)]" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="price-hill-gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+                  <stop offset="0%" stopColor="#b7abff" stopOpacity="0.95" />
+                  <stop offset="100%" stopColor="#b7abff" stopOpacity="0.18" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0 76 L15 72 L30 78 L45 61 L60 68 L75 48 L90 58 L105 26 L120 44 L135 18 L150 55 L165 35 L180 65 L195 49 L210 72 L225 63 L240 76 L260 76 L260 92 L0 92 Z"
+                fill="url(#price-hill-gradient)"
+              />
+            </svg>
+
             <div
-              className="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-[#2d6bff] to-[#6f7cff]"
-              style={{
-                width: `${(priceRange.max / PRICE_MAX) * 100}%`,
-              }}
-            />
-            <div
-              className="absolute -top-10 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[#2d6bff] text-center text-[11px] font-bold leading-none text-white"
-              style={{
-                left: `calc(${(priceRange.max / PRICE_MAX) * 100}% - 1.5rem)`,
-              }}
+              className="absolute bottom-[4.3rem] z-10 -translate-x-1/2 rounded-full bg-[#171717] px-3 py-1 text-xs font-semibold text-white shadow-lg"
+              style={{ left: `${12 + (priceRange.min / PRICE_MAX) * 236}px` }}
             >
-              <span className="block">
-                SDK
-                <br />
-                {formatPriceBadge(priceRange.max)}
-              </span>
+              {formatPricePill(priceRange.min)}
             </div>
+            <div
+              className="absolute bottom-[4.3rem] z-10 -translate-x-1/2 rounded-full bg-[#171717] px-3 py-1 text-xs font-semibold text-white shadow-lg"
+              style={{ left: `${12 + (priceRange.max / PRICE_MAX) * 236}px` }}
+            >
+              {formatPricePill(priceRange.max)}
+            </div>
+
+            <div className="relative mt-16 h-2">
+              <div className="absolute inset-0 h-2 rounded-full bg-white shadow-[inset_0_0_0_1px_rgba(226,232,240,0.9)]" />
+              <div
+                className="absolute top-0 h-2 rounded-full bg-gradient-to-r from-[#8c79ff] to-[#6f5cff]"
+                style={{
+                  left: `${(priceRange.min / PRICE_MAX) * 100}%`,
+                  width: `${((priceRange.max - priceRange.min) / PRICE_MAX) * 100}%`,
+                }}
+              />
+              <div
+                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#705cff] bg-white"
+                style={{ left: `${(priceRange.min / PRICE_MAX) * 100}%` }}
+              />
+              <div
+                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#705cff] bg-white"
+                style={{ left: `${(priceRange.max / PRICE_MAX) * 100}%` }}
+              />
+            </div>
+
             <input
               type="range"
               min={PRICE_MIN}
+              max={priceRange.max}
+              value={priceRange.min}
+              onChange={handleRangeInput("min")}
+              className="absolute bottom-5 left-3 h-2 w-[calc(100%-1.5rem)] appearance-none bg-transparent opacity-0"
+            />
+            <input
+              type="range"
+              min={priceRange.min}
               max={PRICE_MAX}
               value={priceRange.max}
               onChange={handleRangeInput("max")}
-              className="absolute inset-0 h-full w-full appearance-none bg-transparent"
+              className="absolute bottom-5 left-3 h-2 w-[calc(100%-1.5rem)] appearance-none bg-transparent opacity-0"
             />
           </div>
 
