@@ -47,6 +47,7 @@ export default function ServiceCard({
     const fallback = Number(service.rating ?? 0)
     return Number.isFinite(fallback) ? fallback : 0
   }, [fetchedReviews, service.rating])
+  const reviewCount = fetchedReviews.length > 0 ? fetchedReviews.length : Number(service.reviews ?? 0)
 
   const priceLabel = useMemo(() => {
     const liveOfferings = fetchedOfferings
@@ -174,17 +175,28 @@ export default function ServiceCard({
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col p-5 border border-slate-50">
+      <div className="flex flex-1 flex-col p-5 border-2 border-slate-100">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="truncate text-[22px] font-semibold leading-tight text-slate-900">
               {service.title}
             </h3>
           </div>
-          <div className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-[#F4B400]">
-            <Star className="h-4 w-4 fill-[#F4B400] text-[#F4B400]" />
-            {rating.toFixed(1)}
-          </div>
+        </div>
+
+        <div className="mt-2 flex items-center gap-1.5 text-[13px]">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Star
+              key={`rating-star-${service.id}-${index}`}
+              className={`h-3.5 w-3.5 ${
+                index < Math.round(rating)
+                  ? "fill-[#F5A623] text-[#F5A623]"
+                  : "fill-[#E7EAF3] text-[#E7EAF3]"
+              }`}
+            />
+          ))}
+          <span className="ml-1 font-semibold text-slate-900">{rating.toFixed(1)}</span>
+          <span className="text-slate-500">({reviewCount.toLocaleString()})</span>
         </div>
 
         <div className="mt-3 flex items-center gap-2 text-[13px] text-slate-500">
@@ -197,7 +209,7 @@ export default function ServiceCard({
             Starts from
           </p>
           <div className="flex items-end gap-2">
-            <span className="text-[20px] font-semibold leading-none text-slate-900">
+            <span className="text-[20px] font-semibold leading-none text-[#1E9E5A]">
               {priceLabel}
             </span>
             {primaryDetail?.duration ? (

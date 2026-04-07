@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, CarFront, Check, HeartPulse, MapPin, Search, Star, Utensils, Zap } from "lucide-react";
+import { BriefcaseBusiness, CarFront, Check, HeartPulse, MapPin, Navigation, Percent, Search, Star, Utensils, Zap } from "lucide-react";
 import { useMemo, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
 import filterIcon from "@/assets/icons/Filter.svg";
 import mapImage from "@/assets/Images/map.png";
@@ -7,8 +7,8 @@ import { useGetWelcomeCouponsQuery, type WelcomeCoupon } from "@/services/welcom
 
 const highlightFilters = [
   { label: "4.5", icon: <Star className="h-3 w-3 text-amber-500" /> },
-  { label: "Offer" },
-  { label: "Nearby" },
+  { label: "Offer", icon: <Percent className="h-3 w-3" /> },
+  { label: "Nearby", icon: <Navigation className="h-3 w-3" /> },
 ];
 const categories = [
   { id: "Hair & salon", label: "Hair & salon", count: 23 },
@@ -208,19 +208,52 @@ export default function ServicesSidebar({
       </div>
 
       <div className="space-y-3">
-        <div className="overflow-hidden border border-slate-200 bg-slate-100">
+        <div className="relative overflow-hidden h-45 rounded-[20px] border border-slate-200 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.55)]">
           <img
             src={mapImage}
             alt="Map preview"
-            className="h-33.25 w-80 object-cover"
+            className="h-32 w-full object-cover"
           />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(34,58,39,0.88)_0%,rgba(52,84,55,0.62)_48%,rgba(108,146,96,0.34)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(15,23,42,0.08))]" />
+
+          <div className="absolute inset-0 h-25 flex items-center justify-between px-4">
+            <div className="max-w-[11rem] text-white">
+              
+              <p className="text-[20px] font-semibold leading-tight">Explore on Map</p>
+              <p className="mt-1 text-xs text-white/75">Find services in your neighborhood</p>
+            </div>
+
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 text-[#4f67ff] shadow-[0_14px_30px_-20px_rgba(15,23,42,0.6)] backdrop-blur-sm"
+              aria-label="Use map"
+            >
+              <MapPin className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="absolute bottom-3 left-4 right-4">
+            <button
+              type="button"
+              className="w-full rounded-full bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4f67ff] shadow-[0_12px_24px_-20px_rgba(15,23,42,0.8)]"
+            >
+              Explore on Map
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-5">
+        <div className="mt-5 grid grid-cols-3 gap-2">
           {highlightFilters.map((filter) => (
             <span
               key={filter.label}
-              className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-1 text-xs font-semibold text-slate-600 shadow-sm"
+              className={`flex items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[11px] font-semibold shadow-sm transition ${
+                filter.label === "4.5"
+                  ? ratingMin === 4.5
+                    ? "border-[#3457f6] bg-[#3457f6] text-white shadow-[0_10px_24px_-18px_rgba(52,87,246,0.85)]"
+                    : "border-[#d8defd] bg-white text-[#3457f6]"
+                  : "border-[#d9e0ee] bg-white text-[#6f7f99] shadow-[0_8px_18px_-18px_rgba(15,23,42,0.3)]"
+              }`}
               onClick={
                 filter.label === "4.5" && onToggleRatingMin ? () => onToggleRatingMin() : undefined
               }
@@ -228,34 +261,13 @@ export default function ServicesSidebar({
               aria-pressed={filter.label === "4.5" ? ratingMin === 4.5 : undefined}
             >
               {filter.icon}
-              {filter.label}
+              {filter.label === "4.5" ? "4.5+ Rating" : filter.label === "Offer" ? "% Offer" : "Nearby"}
             </span>
           ))}
         </div>
       </div>
 
-      <div
-        className="relative px-4 py-3 bg-cover bg-center w-67.25 h-24.25"
-        style={{ backgroundImage: `url(${couponImage})` }}
-      >
-        <div className="mt-3 flex items-center gap-5">
-          <div className="flex flex-col text-xs text-slate-500">
-            <span>Use code</span>
-            <span className="font-semibold text-sky-500">{couponCode}</span>
-          </div>
-          <div className="flex flex-col gap-2 ml-4">
-            <div className="text-[13px] font-semibold text-nowrap text-slate-900">
-              {couponLabel}
-            </div>
-            <button
-              type="button"
-              className="rounded-full bg-blue-500 px-5 py-1 text-sm font-semibold text-white transition hover:bg-blue-600 w-21 h-8"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
-      </div>
+
 
       <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.24)]">
         <div className="flex items-center justify-between gap-3">
