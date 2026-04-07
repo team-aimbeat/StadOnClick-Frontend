@@ -354,7 +354,7 @@ const AdminAccountSettings = () => {
               </div>
             </div>
 
-            <div className="rounded-[28px] bg-[#4F7DFF]  p-5 text-white shadow-[0_20px_50px_-30px_rgba(53,84,224,0.55)]">
+            <div className="rounded-[28px] bg-[#4F7DFF]  p-5 text-white">
               <p className="text-lg font-bold">Need help with your account?</p>
               <p className="mt-3 text-sm leading-6 text-white/70">
                 Our dedicated support team is available 24/7 for Enterprise
