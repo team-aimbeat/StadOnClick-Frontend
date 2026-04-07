@@ -1,12 +1,19 @@
-import {
+﻿import {
+  ArrowRight,
   BadgeCheck,
+  CarFront,
   Check,
   ChevronLeft,
   Eye,
   Heart,
+  Lock,
   MapPinIcon,
+  Snowflake,
   Share2,
   Star,
+  TicketPercent,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
@@ -151,6 +158,35 @@ const resolveReviewerImageUrl = (review: {
   const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
   if (!apiBaseUrl) return candidate;
   return `${apiBaseUrl}/${candidate.replace(/^\/+/, "")}`;
+};
+
+const formatRelativeReviewTime = (dateValue?: string | null) => {
+  if (!dateValue) return "";
+  const reviewDate = new Date(dateValue);
+  if (Number.isNaN(reviewDate.getTime())) return "";
+
+  const diffMs = reviewDate.getTime() - Date.now();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  if (Math.abs(diffDays) >= 1) {
+    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+      diffDays,
+      "day",
+    );
+  }
+
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  if (Math.abs(diffHours) >= 1) {
+    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+      diffHours,
+      "hour",
+    );
+  }
+
+  const diffMinutes = Math.round(diffMs / (1000 * 60));
+  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+    diffMinutes,
+    "minute",
+  );
 };
 
 type CartItem = {
@@ -307,8 +343,8 @@ export default function ServiceDetail() {
   );
   const totalVisitors = vendorVisitStatsResponse?.data?.totalVisitors ?? 0;
   const todayVisitors = vendorVisitStatsResponse?.data?.todayVisitors ?? 0;
-  const serviceCity = matchedMarketplaceService?.cityName ?? "—";
-  const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
+  const serviceCity = matchedMarketplaceService?.cityName ?? "â€”";
+  const rules = matchedMarketplaceService?.offeringsPreview ?? "â€”";
   console.log(rules);
 
   useEffect(() => {
@@ -439,8 +475,9 @@ export default function ServiceDetail() {
     (sum, item) => sum + getEffectivePrice(item.offering) * item.quantity,
     0,
   );
+  const serviceFee = 0;
   const cartDiscount = couponDiscount;
-  const cartTotal = Math.max(cartSubtotal - cartDiscount, 0);
+  const cartTotal = Math.max(cartSubtotal + serviceFee - cartDiscount, 0);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -616,7 +653,7 @@ export default function ServiceDetail() {
       setPromoCode("");
       resetCoupon();
 
-      toast.success("Redirecting you to Stripe checkout…");
+      toast.success("Redirecting you to Stripe checkoutâ€¦");
       const redirectUrl = response.data?.sessionUrl;
       if (redirectUrl && typeof window !== "undefined") {
         window.location.assign(redirectUrl);
@@ -736,20 +773,21 @@ export default function ServiceDetail() {
       skip: !currentServiceId,
     });
 
+  const averageReviewRating = useMemo(() => {
+    const list = reviews ?? [];
+    if (list.length === 0) return 0;
+    return list.reduce((acc, review) => acc + review.rating, 0) / list.length;
+  }, [reviews]);
+
   const starBreakdown = useMemo(() => {
     const list = reviews ?? [];
     const total = list.length;
-    if (total === 0) {
-      return [5, 4, 3, 2, 1].map((rating) => ({
-        label: `${rating} ⭐`,
-        percent: 0,
-      }));
-    }
     return [5, 4, 3, 2, 1].map((rating) => {
       const count = list.filter((review) => review.rating === rating).length;
-      const percent = Math.round((count / total) * 100);
+      const percent = total > 0 ? Math.round((count / total) * 100) : 0;
       return {
-        label: `${rating} ⭐`,
+        rating,
+        count,
         percent,
       };
     });
@@ -863,7 +901,7 @@ export default function ServiceDetail() {
   ];
   const serviceDescription =
     service.description ||
-    "Our team curates a premium experience for every guest—scroll through the service options to choose what fits your visit.";
+    "Our team curates a premium experience for every guestâ€”scroll through the service options to choose what fits your visit.";
 
   const statusStyles: Record<string, string> = {
     DRAFT: "bg-yellow-100 text-yellow-700",
@@ -1134,23 +1172,56 @@ export default function ServiceDetail() {
                         return (
                           <div
                             key={offering.id}
-                            className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                            className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 "
                           >
-                            <div>
-                              <p className="text-base font-semibold text-slate-900">
-                                {offering.name}
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <span
+                                  className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
+                                    isSlotUnavailable
+                                      ? "bg-slate-100 text-slate-500"
+                                      : "bg-[#eef2ff] text-[#4f67ff]"
+                                  }`}
+                                >
+                                  {isSlotUnavailable ? "Limited" : "Available now"}
+                                </span>
+                                <p className="mt-4 text-[22px] font-semibold leading-tight text-slate-900">
+                                  {offering.name}
+                                </p>
+                                <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                                  <MapPinIcon className="h-3.5 w-3.5" />
+                                  <span>{serviceCity}</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[28px] font-bold leading-none text-[#4f67ff]">
+                                  {formatCurrency(displayPrice)}
+                                </p>
+                                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                                  {offering.usesSlots || (offering.slots?.length ?? 0) > 0
+                                    ? "PER SLOT"
+                                    : offering.maxQuantity
+                                      ? "PER UNIT"
+                                      : "PER BOOKING"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <p className="text-sm text-slate-600">
+                                {offering.description ??
+                                  "Exclusive access with a streamlined booking experience and flexible scheduling."}
                               </p>
-                              <p className="text-xs font-semibold text-slate-400">
-                                Created : {new Date(offering.createdAt).toLocaleString()}
-                              </p>
-                              <p className="text-xs font-semibold text-slate-400">
-                                Qty: {offering.maxQuantity || "N/A"}
-                              </p>
-                              <p className="text-xs font-semibold text-slate-400">
-                                Remaining: {offering.remainingQuantity ?? "N/A"}
-                              </p>
+                              <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-500">
+                                <span>Created {new Date(offering.createdAt).toLocaleDateString()}</span>
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f8] px-3 py-1 text-[#6b6ef9]">
+                                  <Users className="h-3.5 w-3.5" />
+                                  Up to {offering.maxQuantity || "N/A"}
+                                </span>
+                                <span>Remaining {offering.remainingQuantity ?? "N/A"}</span>
+                              </div>
                               {hasInventory && remainingPercent !== null ? (
-                                <div className="mt-2 max-w-[220px]">
+                                <div className="max-w-[220px]">
                                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                                     <div
                                       className={`h-full rounded-full ${inventoryBarClass}`}
@@ -1159,37 +1230,36 @@ export default function ServiceDetail() {
                                   </div>
                                 </div>
                               ) : null}
+                              {offering.isDealActive ? (
+                                <div className="flex flex-wrap items-center gap-3 text-xs">
+                                  <p className="font-semibold text-slate-400 line-through">
+                                    {formatCurrency(offering.basePrice)}
+                                  </p>
+                                  <p className="font-black text-orange-600">
+                                    {activeDiscountPercent}% OFF
+                                  </p>
+                                  <DealTimer
+                                    endTime={offering.dealEndTime}
+                                    className="font-semibold text-slate-500"
+                                  />
+                                </div>
+                              ) : null}
                             </div>
-                            <div className="flex flex-col items-end gap-3">
-                              <div className="rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-right">
-                                <p className="text-xl font-bold text-slate-900">
-                                  {formatCurrency(displayPrice)}
-                                </p>
-                                {offering.isDealActive ? (
-                                  <>
-                                    <p className="text-xs font-semibold text-slate-400 line-through">
-                                      {formatCurrency(offering.basePrice)}
-                                    </p>
-                                    <p className="text-xs font-black text-orange-600">
-                                      🔥 {activeDiscountPercent}% OFF
-                                    </p>
-                                    <DealTimer
-                                      endTime={offering.dealEndTime}
-                                      className="text-[11px] font-semibold text-slate-500"
-                                    />
-                                  </>
-                                ) : null}
-                              </div>
+
+                            <div className="flex justify-end">
                               <button
-                                className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
+                                type="button"
+                                className={`min-w-[132px] rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                                   isSlotUnavailable
-                                    ? "bg-slate-300 cursor-not-allowed opacity-60"
-                                    : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
+                                    ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+                                    : requiresSlot || isMovieBookingOffering
+                                      ? "bg-[#4f67ff] text-white hover:bg-[#3f59ff]"
+                                      : "border border-[#cfd8ff] bg-white text-[#4f67ff] shadow-[0_10px_24px_-18px_rgba(79,103,255,0.35)] hover:border-[#4f67ff]"
                                 }`}
                                 disabled={isSlotUnavailable}
                                 onClick={() => handleBookClick(offering)}
                               >
-                                {buttonLabel}
+                                {requiresSlot || isMovieBookingOffering ? "Book" : "Add to cart"}
                               </button>
                             </div>
                           </div>
@@ -1199,47 +1269,60 @@ export default function ServiceDetail() {
                       marketplaceOfferingsPreview.map((offering) => (
                         <div
                           key={offering.id}
-                          className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                          className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)]"
                         >
-                          <div>
-                            <p className="text-base font-semibold text-slate-900">
-                              {offering.name}
-                            </p>
-                            {offering.description ? (
-                              <p className="text-xs text-slate-500">
-                                {offering.description}
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <span className="inline-flex rounded-full bg-[#eef2ff] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#4f67ff]">
+                                Preview
+                              </span>
+                              <p className="mt-4 text-[22px] font-semibold leading-tight text-slate-900">
+                                {offering.name}
                               </p>
-                            ) : null}
-                            {offering.durationLabel ? (
-                              <p className="text-xs font-semibold text-slate-400">
-                                Duration: {offering.durationLabel}
-                              </p>
-                            ) : null}
-                          </div>
-                          <div className="flex flex-col items-end gap-3">
-                            <div className="rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-right">
-                              <p className="text-sm font-bold text-slate-900">
+                              <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                                <MapPinIcon className="h-3.5 w-3.5" />
+                                <span>{serviceCity}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[28px] font-bold leading-none text-[#4f67ff]">
                                 {formatCurrency(
                                   Number(offering.effectivePrice ?? offering.salePrice ?? offering.basePrice ?? 0),
                                 )}
                               </p>
-                              {offering.isDealActive ? (
-                                <>
-                                  <p className="text-[11px] font-semibold text-slate-400 line-through">
-                                    {formatCurrency(Number(offering.basePrice ?? 0))}
-                                  </p>
-                                  <p className="text-[11px] font-black text-orange-600">
-                                    🔥 {Number(offering.discountPercent ?? 0)}% OFF
-                                  </p>
-                                  <DealTimer
-                                    endTime={offering.dealEndTime}
-                                    className="text-[11px] font-semibold text-slate-500"
-                                  />
-                                </>
-                              ) : null}
+                              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                                {offering.durationLabel?.toUpperCase() ?? "PER BOOKING"}
+                              </p>
                             </div>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-sm text-slate-600">
+                              {offering.description ??
+                                "Exclusive access with curated service details available at launch."}
+                            </p>
+                            {offering.durationLabel ? (
+                              <p className="text-xs font-medium text-slate-500">
+                                Duration: {offering.durationLabel}
+                              </p>
+                            ) : null}
+                            {offering.isDealActive ? (
+                              <div className="flex flex-wrap items-center gap-3 text-xs">
+                                <p className="font-semibold text-slate-400 line-through">
+                                  {formatCurrency(Number(offering.basePrice ?? 0))}
+                                </p>
+                                <p className="font-black text-orange-600">
+                                  {Number(offering.discountPercent ?? 0)}% OFF
+                                </p>
+                                <DealTimer
+                                  endTime={offering.dealEndTime}
+                                  className="font-semibold text-slate-500"
+                                />
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="flex justify-end">
                             <button
-                              className="min-w-[30px] cursor-not-allowed rounded-lg border border-slate-200 bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-500 opacity-80"
+                              className="min-w-[132px] rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
                               disabled
                               type="button"
                             >
@@ -1258,7 +1341,7 @@ export default function ServiceDetail() {
                   <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
                     <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription}
                     </p>
-                    <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updated—check the services tab to explore current offerings.`}
+                    <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updatedâ€”check the services tab to explore current offerings.`}
                     </p>
                     {descriptionRules.length > 0 && (
                       <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
@@ -1280,7 +1363,7 @@ export default function ServiceDetail() {
                                 {rule.label}
                               </span>
                               {rule.value ? (
-                                <span className="text-slate-400">—</span>
+                                <span className="text-slate-400">â€”</span>
                               ) : null}
                               {rule.value ? <span>{rule.value}</span> : null}
                             </div>
@@ -1347,7 +1430,7 @@ export default function ServiceDetail() {
                               updateCartQuantity(item.offering.id, -1)
                             }
                           >
-                            −
+                            âˆ’
                           </button>
                           <span className="text-sm font-semibold text-slate-900">
                             {item.quantity}
@@ -1367,32 +1450,84 @@ export default function ServiceDetail() {
                   ))}
                 </div>
               )}
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Wallet, promo & referral
-                </h4>
-                <p className="text-xs text-slate-500">
-                  Apply promo and user referral codes before checkout.
-                </p>
+              <div className="space-y-5 rounded-[28px] border border-slate-200 bg-[#f5f7fb] p-5 ">
+                <div className="flex items-center gap-2 text-slate-900">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf1ff] text-[#4f67ff]">
+                    <Wallet className="h-4 w-4" />
+                  </div>
+                  <h4 className="text-lg font-semibold">Wallet & Rewards</h4>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                    Apply promo code
+                  </p>
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="Enter promo code"
-                    className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                    placeholder="ENTER CODE"
+                    className="h-11 flex-1 rounded-xl border border-white bg-white px-4 text-sm font-semibold uppercase tracking-wide text-slate-700 placeholder:text-slate-400 focus:border-[#4f67ff] focus:outline-none"
                   />
                   <Button
                     variant={"default"}
                     onClick={handleApplyPromo}
                     disabled={!promoCode.trim() || isApplyingCoupon}
-                    className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
+                    className="h-11 rounded-xl bg-[#4f67ff] px-5 text-sm font-semibold uppercase tracking-wide text-white hover:bg-[#3f59ff]"
                   >
                     {isApplyingCoupon ? "Checking..." : "Apply"}
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                    Available coupons
+                  </p>
+                  <div className="space-y-2.5">
+                    {vendorCoupons.slice(0, 2).map((coupon, index) => {
+                      const locked = index === 1;
+
+                      return (
+                        <button
+                          key={coupon.code}
+                          type="button"
+                          disabled={locked}
+                          onClick={() => {
+                            if (locked) return;
+                            setPromoCode(coupon.code);
+                            setCouponError(null);
+                          }}
+                          className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+                            locked
+                              ? "border-slate-200 bg-white/70 text-slate-400"
+                              : "border-[#d9e4ff] bg-white text-slate-900 hover:border-[#4f67ff]"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg ${locked ? "bg-slate-100 text-slate-400" : "bg-[#edf1ff] text-[#4f67ff]"}`}>
+                              <TicketPercent className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className={`text-sm font-bold ${locked ? "text-slate-400" : "text-[#4f67ff]"}`}>
+                                {coupon.code}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {coupon.title}
+                              </p>
+                            </div>
+                          </div>
+                          {locked ? (
+                            <Lock className="h-4 w-4 shrink-0" />
+                          ) : (
+                            <ArrowRight className="h-4 w-4 shrink-0 text-[#4f67ff]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
                     User referral code
                   </p>
                   <div className="flex items-center gap-2">
@@ -1403,24 +1538,21 @@ export default function ServiceDetail() {
                         setReferralCodeInput(e.target.value);
                         setReferralCodeFeedback(null);
                       }}
-                      placeholder="Enter referral code"
-                      className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none"
+                      placeholder="ENTER REFERRAL CODE"
+                      className="h-11 flex-1 rounded-xl border border-white bg-white px-4 text-sm font-semibold uppercase tracking-wide text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none"
                     />
                     <Button
                       variant={"default"}
                       onClick={handleApplyReferralCode}
                       disabled={!referralCodeInput.trim()}
-                      className="min-w-[30px] rounded-lg border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+                      className="h-11 rounded-xl border border-emerald-200 bg-emerald-50 px-5 text-sm font-semibold uppercase tracking-wide text-emerald-700 hover:bg-emerald-100"
                     >
                       Apply
                     </Button>
                   </div>
                   {appliedReferralCode ? (
-                    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-                      <span>
-                        {referralCodeFeedback ??
-                          `Referral code ${appliedReferralCode} applied`}
-                      </span>
+                    <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700">
+                      {referralCodeFeedback ?? `Referral code ${appliedReferralCode} applied`}
                       <button
                         type="button"
                         onClick={() => {
@@ -1428,66 +1560,76 @@ export default function ServiceDetail() {
                           setReferralCodeInput("");
                           setReferralCodeFeedback(null);
                         }}
-                        className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                        className="ml-2 underline"
                       >
                         Remove
                       </button>
                     </div>
                   ) : null}
                 </div>
-                {couponError && (
-                  <p className="text-xs font-semibold text-red-600">
-                    {couponError}
-                  </p>
-                )}
-                {appliedCoupon && (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-                    <span>
-                      Coupon {appliedCoupon.code} applied (
-                      {appliedCoupon.discountType === "FLAT"
-                        ? formatCurrency(appliedCoupon.value)
-                        : `${appliedCoupon.value}%`}
-                      )
-                    </span>
+                {couponError ? (
+                  <p className="text-xs font-semibold text-red-600">{couponError}</p>
+                ) : null}
+                {appliedCoupon ? (
+                  <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700">
+                    Coupon {appliedCoupon.code} applied (
+                    {appliedCoupon.discountType === "FLAT"
+                      ? formatCurrency(appliedCoupon.value)
+                      : `${appliedCoupon.value}%`}
+                    )
                     <button
                       type="button"
                       onClick={() => {
                         resetCoupon();
                         setPromoCode("");
                       }}
-                      className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                      className="ml-2 underline"
                     >
                       Remove
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
 
-              <div className="border-t border-dashed border-slate-200 pt-4">
-                <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Subtotal</span>
-                  <span className="text-slate-900">
-                    {formatCurrency(cartSubtotal)}
+              <div className="space-y-5 rounded-[28px] border border-slate-200 bg-white p-6 ">
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span>Subtotal</span>
+                    <span className="font-semibold text-slate-900">
+                      {formatCurrency(cartSubtotal)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span>Service Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      {formatCurrency(serviceFee)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[#6b6ef9]">
+                    <span className="font-semibold">Discount (Promo)</span>
+                    <span className="font-semibold">
+                      -{formatCurrency(cartDiscount)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-end justify-between border-t border-slate-100 pt-4">
+                  <span className="text-[28px] font-semibold text-slate-900">Total</span>
+                  <span className="text-[34px] font-bold leading-none text-[#4f67ff]">
+                    {formatCurrency(cartTotal)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Discount</span>
-                  <span className="text-emerald-600">
-                    −{formatCurrency(cartDiscount)}
+                <Button
+                  onClick={handleCheckoutCart}
+                  className="h-14 w-full rounded-2xl bg-[#4f67ff] text-base font-semibold text-white hover:bg-[#3f59ff]"
+                  disabled={cartItems.length === 0 || isCreatingSession}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    {isCreatingSession ? "Processing..." : "Confirm booking"}
+                    <Lock className="h-4 w-4" />
                   </span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
-                  <span>Total</span>
-                  <span>{formatCurrency(cartTotal)}</span>
-                </div>
+                </Button>
+          
               </div>
-              <Button
-                onClick={handleCheckoutCart}
-                className="w-full"
-                disabled={cartItems.length === 0 || isCreatingSession}
-              >
-                {isCreatingSession ? "Processing..." : "Confirm booking"}
-              </Button>
             </div>
           </div>
         </div>
@@ -1619,23 +1761,59 @@ export default function ServiceDetail() {
         <div className="max-w-[800px]">
           {/* Highlights & Amenities Section */}
           <div className="space-y-6 rounded-3xl bg-white p-8">
-            <h2 className="text-2xl font-bold text-slate-900">
-              Highlights & Amenities
-            </h2>
-            <div className="flex flex-wrap gap-4">
-              {["AC Rooms", "Parking Available", "Family Friendly"].map(
-                (amenity) => (
-                  <div
-                    key={amenity}
-                    className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4"
-                  >
-                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <span className="text-[15px] font-medium text-slate-700">
-                      {amenity}
-                    </span>
-                  </div>
-                ),
-              )}
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold text-slate-900">
+                Highlights & Amenities
+              </h2>
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#4f67ff]">
+                <span className="h-2 w-2 rounded-full bg-[#4f67ff]" />
+                All Inclusive
+              </span>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {[
+                {
+                  title: "Climate Controlled",
+                  description:
+                    "High-performance AC rooms designed for data-intensive sessions and executive comfort.",
+                  icon: Snowflake,
+                  iconTone: "bg-[#ece9ff] text-[#5b57e6]",
+                },
+                {
+                  title: "Executive Parking",
+                  description:
+                    "Dedicated secure parking area with valet services available for all institutional guests.",
+                  icon: CarFront,
+                  iconTone: "bg-[#efeaff] text-[#6a5bff]",
+                  iconLabel: "P",
+                },
+                {
+                  title: "Family Friendly",
+                  description:
+                    "Professional lounge and waiting areas optimized for companions and private family discussions.",
+                  icon: Users,
+                  iconTone: "bg-[#e9f4ff] text-[#2f7ddf]",
+                },
+              ].map(({ title, description, icon: Icon, iconTone, iconLabel }) => (
+                <div
+                  key={title}
+                  className="rounded-[28px] border border-slate-100 bg-white p-6 "
+                >
+                  <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconTone}`}>
+                    {iconLabel ? (
+                      <span className="text-[28px] font-bold leading-none">{iconLabel}</span>
+                    ) : (
+                      <Icon className="h-7 w-7" />
+                    )}
+                  </span>
+                  <h3 className="mt-6 text-[18px] font-semibold leading-tight text-slate-900">
+                    {title}
+                  </h3>
+                  <p className="mt-3 text-[15px] leading-7 text-slate-500">
+                    {description}
+                  </p>
+                </div>
+              ))}
             </div>
 
             {/* Menu Preview Section */}
@@ -1790,100 +1968,110 @@ export default function ServiceDetail() {
               );
               const showReviewerImage =
                 !!reviewerImageUrl && !failedReviewerImages[review.id];
+              const reviewTimeLabel = formatRelativeReviewTime(review.createdAt);
 
               return (
                 <article
                   key={review.id}
-                  className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                  className="rounded-[24px] border border-slate-100 bg-white p-6 "
                 >
-                  <div className="flex gap-4">
-                    {showReviewerImage ? (
-                      <img
-                        src={reviewerImageUrl}
-                        alt={reviewerName}
-                        className="h-12 w-12 shrink-0 rounded-full object-cover"
-                        onError={() =>
-                          setFailedReviewerImages((prev) => ({
-                            ...prev,
-                            [review.id]: true,
-                          }))
-                        }
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
-                        {reviewerInitial}
-                      </div>
-                    )}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[15px] font-bold text-slate-900">
-                          {reviewerName}
-                        </p>
-                        <Badge
-                          variant="outline"
-                          className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
-                        >
-                          <Check className="h-3 w-3 stroke-[3px]" />
-                          Verified
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className={`h-3 w-3 ${
-                              s <= review.rating
-                                ? "fill-orange-400 text-orange-400"
-                                : "text-slate-200"
-                            }`}
-                          />
-                        ))}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 items-start gap-4">
+                      {showReviewerImage ? (
+                        <img
+                          src={reviewerImageUrl}
+                          alt={reviewerName}
+                          className="h-12 w-12 shrink-0 rounded-full object-cover"
+                          onError={() =>
+                            setFailedReviewerImages((prev) => ({
+                              ...prev,
+                              [review.id]: true,
+                            }))
+                          }
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-lg font-bold text-indigo-600">
+                          {reviewerInitial}
+                        </div>
+                      )}
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-[15px] font-bold text-slate-900">
+                            {reviewerName}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
+                          >
+                            <Check className="h-3 w-3 stroke-[3px]" />
+                            Verified
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`h-5 w-5 ${
+                                s <= review.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "fill-slate-200 text-slate-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
+                    <div className="shrink-0 text-sm font-medium text-slate-500">
+                      {reviewTimeLabel || new Date(review.createdAt).toLocaleDateString()}
+                    </div>
                   </div>
-                  <p className="text-[15px] leading-relaxed text-slate-600">
+                  <p className="mt-4 text-[15px] leading-8 text-slate-600">
                     {review.comment}
                   </p>
-                  <div className="text-[13px] font-medium text-slate-400">
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </div>
                 </article>
               );
             })}
           </div>
           <div className="grid gap-4 lg:grid-cols-[1.0fr_0.9fr]">
-            <div className="space-y-3 rounded-2xl border border-slate-100 p-5">
-              <p className="text-lg font-semibold text-slate-900">
-                Customer reviews
-              </p>
-              <div className="flex items-center gap-3">
-                <p className="text-4xl font-bold text-slate-900">
-                  {reviews && reviews.length > 0
-                    ? (
-                        reviews.reduce((acc, r) => acc + r.rating, 0) /
-                        reviews.length
-                      ).toFixed(1)
-                    : "0.0"}
-                </p>
-                <div className="flex flex-col text-sm text-slate-500">
-                  <span>Based on {reviews?.length || 0} reviews</span>
-                  <span>Let us know what stood out</span>
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 ">
+              <div className="flex items-start justify-between gap-6">
+                <div className="space-y-1">
+                  <p className="text-[46px] font-bold leading-none text-yellow-400">
+                    {averageReviewRating.toFixed(1)}
+                  </p>
+                  <p className="text-sm font-semibold text-slate-600">
+                    Based on {reviews?.length || 0} reviews
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 pt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-5 w-5 ${
+                        star <= Math.round(averageReviewRating)
+                          ? "fill-amber-400 text-amber-400"
+                          : "fill-slate-200 text-slate-200"
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
-              <div className="space-y-2">
+
+              <div className="mt-6 space-y-3">
                 {starBreakdown.map((row) => (
                   <div
-                    key={row.label}
-                    className="flex items-center gap-3 text-xs font-semibold text-slate-500"
+                    key={row.rating}
+                    className="grid grid-cols-[14px_1fr] items-center gap-x-4 gap-y-1"
                   >
-                    <span className="w-12">{row.label}</span>
-                    <div className="flex-1 rounded-full bg-slate-100">
+                    <span className="text-sm font-semibold text-slate-700">
+                      {row.rating}
+                    </span>
+                    <div className="h-2 rounded-full bg-slate-100">
                       <div
-                        className="h-2 rounded-full bg-amber-500"
+                        className="h-2 rounded-full bg-blue-600 transition-all"
                         style={{ width: `${row.percent}%` }}
                       />
                     </div>
-                    <span>{row.percent}%</span>
                   </div>
                 ))}
               </div>
@@ -1949,7 +2137,7 @@ export default function ServiceDetail() {
             className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-xl font-semibold text-white backdrop-blur hover:bg-white/30"
             onClick={() => setSelectedMenuImage(null)}
           >
-            ×
+            Ã—
           </button>
           <img
             src={selectedMenuImage}
@@ -1982,5 +2170,6 @@ export default function ServiceDetail() {
     </section>
   );
 }
+
 
 
