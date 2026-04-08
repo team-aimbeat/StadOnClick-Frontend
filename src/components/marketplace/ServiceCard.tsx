@@ -140,7 +140,7 @@ export default function ServiceCard({
   }, [fetchedOfferings, service.details])
 
   return (
-    <article className="group flex min-h-full flex-col overflow-hidden bg-white  transition hover:-translate-y-0.5 hover">
+    <article className="group flex min-h-full flex-col overflow-hidden  border border-[#DCE6F5] bg-[#FFFFFF] transition hover:-translate-y-0.5">
       <div className="relative h-55 overflow-hidden">
         <img
           src={image}
@@ -148,16 +148,16 @@ export default function ServiceCard({
           className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/22 via-transparent to-transparent" />
-        <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#3765ff] ">
+        <span className="absolute left-4 top-4 rounded-full border border-[#DCE6F5] bg-[#FFFFFF] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0F2A44] ">
           {service.categoryName || "Service"}
         </span>
         <button
           type="button"
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className={`absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 shadow-[0_10px_24px_-16px_rgba(15,23,42,0.45)] backdrop-blur-sm transition ${
+          className={`absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 shadow-[0_10px_24px_-16px_rgba(15,42,68,0.18)] backdrop-blur-sm transition ${
             wishlisted
               ? "text-rose-500"
-              : "text-slate-400 hover:text-slate-500"
+              : "text-black hover:text-[#0F2A44]"
           }`}
           onClick={async () => {
             if (!user) {  
@@ -175,10 +175,10 @@ export default function ServiceCard({
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col p-5 border-2 border-slate-100">
+      <div className="flex flex-1 flex-col border-t border-[#DCE6F5] p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 text-[22px] font-semibold leading-tight text-slate-900">
+            <h3 className="line-clamp-2 text-[22px] font-semibold leading-tight text-[#0F2A44]">
               {service.title}
             </h3>
           </div>
@@ -188,31 +188,31 @@ export default function ServiceCard({
                 key={`rating-star-${service.id}-${index}`}
                 className={`h-3.5 w-3.5 ${
                   index < Math.round(rating)
-                    ? "fill-[#F5A623] text-[#F5A623]"
-                    : "fill-[#E7EAF3] text-[#E7EAF3]"
+                    ? "fill-[#60A5FA] text-[#60A5FA]"
+                    : "fill-[#DCE6F5] text-[#DCE6F5]"
                 }`}
               />
             ))}
-            <span className="ml-1 font-semibold text-slate-900">{rating.toFixed(1)}</span>
-            <span className="text-slate-500">({reviewCount.toLocaleString()})</span>
+            <span className="ml-1 font-semibold text-[#0F2A44]">{rating.toFixed(1)}</span>
+            <span className="text-[#5F7390]">({reviewCount.toLocaleString()})</span>
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-2 text-[13px] text-slate-500">
-          <MapPin className="h-4 w-4 shrink-0 text-black font-semibold" />
+        <div className="mt-3 flex items-center gap-2 text-[13px] text-[#5F7390]">
+          <MapPin className="h-4 w-4 shrink-0 text-[#0F2A44]" />
           <span className="truncate">{service.location}</span>
         </div>
 
         <div className="mt-5 space-y-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-black">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5F7390]">
             Starts from
           </p>
           <div className="flex items-end gap-2">
-            <span className="text-[20px] font-bold text-[#1E9E5A]">
+            <span className="text-[20px] font-bold text-[#2563EB]">
               {priceLabel}
             </span>
             {primaryDetail?.duration ? (
-              <span className="pb-0.5 text-xs font-medium text-slate-500">
+              <span className="pb-0.5 text-xs font-medium text-[#5F7390]">
                 / {primaryDetail.duration}
               </span>
             ) : null}
@@ -223,14 +223,14 @@ export default function ServiceCard({
           <button
             type="button"
             onClick={() => onViewDetails(service)}
-            className="w-full  bg-[#4F7DFF] px-4 py-3 text-sm font-semibold text-white  transition hover:bg-[#3f59ff]"
+            className="w-full bg-[#4b76d5] px-4 py-3 text-sm font-semibold text-[#F3F7FF] transition hover:bg-[#3B82F6] active:bg-[#1D4ED8]"
           >
             View Details
           </button>
           <button
             type="button"
             onClick={() => onEnquiry(service)}
-            className="w-full  border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="w-full border border-[#DCE6F5] bg-[#FFFFFF] px-4 py-3 text-sm font-semibold text-[#0F2A44] transition hover:bg-[#EAF1FF]"
           >
             Send Enquiry
           </button>

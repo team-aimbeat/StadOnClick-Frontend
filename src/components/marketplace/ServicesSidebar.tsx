@@ -6,7 +6,7 @@ import couponImage from "@/assets/Images/coupon2.png";
 import { useGetWelcomeCouponsQuery, type WelcomeCoupon } from "@/services/welcomeCouponsApi";
 
 const highlightFilters = [
-  { label: "4.5", icon: <Star className="h-3 w-3 text-amber-500" /> },
+  { label: "4.5", icon: <Star className="h-3 w-3 text-[#60A5FA]" /> },
   { label: "Offer", icon: <Percent className="h-3 w-3" /> },
   { label: "Nearby", icon: <Navigation className="h-3 w-3" /> },
 ];
@@ -192,15 +192,15 @@ export default function ServicesSidebar({
   const couponLabel = welcomeCoupon ? formatWelcomeCouponLabel(welcomeCoupon) : "₹1000 off first booking";
 
   return (
-    <aside className="hidden w-84 flex-col gap-6 rounded-lg bg-white p-5 shadow-lg shadow-slate-900/5 backdrop-blur lg:flex">
+    <aside className="hidden w-84 flex-col gap-6 rounded-[24px] border border-[#DCE6F5] bg-[#FFFFFF] p-5 shadow-[0_20px_40px_-34px_rgba(15,42,68,0.08)] backdrop-blur lg:flex">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src={filterIcon} alt="Filters" className="h-5 w-5" />
-          <p className="text-[18px] font-semibold text-[#0F172A]">Filters</p>
+          <p className="text-[18px] font-semibold text-[#0F2A44]">Filters</p>
         </div>
         <button
           type="button"
-          className="text-[12px] font-medium tracking-wide text-[#3289FF]"
+          className="text-[12px] font-medium tracking-wide text-[#5F7390] hover:text-[#0F2A44]"
           onClick={handleClearAll}
         >
           Clear all
@@ -208,14 +208,14 @@ export default function ServicesSidebar({
       </div>
 
       <div className="space-y-3">
-        <div className="relative overflow-hidden h-45 rounded-[20px] border border-slate-200 shadow-[0_16px_32px_-24px_rgba(15,23,42,0.55)]">
+        <div className="relative overflow-hidden h-45 rounded-[20px] border border-[#DCE6F5] shadow-[0_16px_32px_-24px_rgba(15,42,68,0.12)]">
           <img
             src={mapImage}
             alt="Map preview"
             className="h-32 w-full object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(34,58,39,0.88)_0%,rgba(52,84,55,0.62)_48%,rgba(108,146,96,0.34)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(15,23,42,0.08))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(37,99,235,0.88)_0%,rgba(29,78,216,0.68)_48%,rgba(96,165,250,0.34)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(37,99,235,0.14))]" />
 
           <div className="absolute inset-0 h-25 flex items-center justify-between px-4">
             <div className="max-w-[11rem] text-white">
@@ -226,17 +226,17 @@ export default function ServicesSidebar({
 
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 text-[#4f67ff] shadow-[0_14px_30px_-20px_rgba(15,23,42,0.6)] backdrop-blur-sm"
+              className="flex h-10 w-10 items-center justify-center text-[#2563EB] backdrop-blur-sm"
               aria-label="Use map"
             >
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-5 w-5 text-white" />
             </button>
           </div>
 
           <div className="absolute bottom-3 left-4 right-4">
             <button
               type="button"
-              className="w-full rounded-full bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4f67ff] shadow-[0_12px_24px_-20px_rgba(15,23,42,0.8)]"
+              className="w-full bg-[#FFFFFF] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2563EB] shadow-[0_12px_24px_-20px_rgba(37,99,235,0.18)]"
             >
               Explore on Map
             </button>
@@ -250,9 +250,9 @@ export default function ServicesSidebar({
               className={`flex items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[11px] font-semibold shadow-sm transition ${
                 filter.label === "4.5"
                   ? ratingMin === 4.5
-                    ? "border-[#3457f6] bg-[#3457f6] text-white shadow-[0_10px_24px_-18px_rgba(52,87,246,0.85)]"
-                    : "border-[#d8defd] bg-white text-[#3457f6]"
-                  : "border-[#d9e0ee] bg-white text-[#6f7f99] shadow-[0_8px_18px_-18px_rgba(15,23,42,0.3)]"
+                  ? "border-[#2563EB] bg-[#2563EB] text-[#F3F7FF] shadow-[0_10px_24px_-18px_rgba(37,99,235,0.34)]"
+                    : "border-[#DCE6F5] bg-[#FFFFFF] text-[#0F2A44]"
+                  : "border-[#DCE6F5] bg-[#FFFFFF] text-[#5F7390] shadow-[0_8px_18px_-18px_rgba(15,42,68,0.08)]"
               }`}
               onClick={
                 filter.label === "4.5" && onToggleRatingMin ? () => onToggleRatingMin() : undefined
@@ -269,25 +269,25 @@ export default function ServicesSidebar({
 
 
 
-      <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.24)]">
+      <div className="rounded-[24px] border border-[#DCE6F5] bg-[#FFFFFF] p-4 shadow-[0_18px_40px_-34px_rgba(15,42,68,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[16px] font-bold text-[#333333]">Category</p>
+            <p className="text-[16px] font-bold text-[#0F2A44]">Category</p>
           </div>
         </div>
 
         <div className="relative mt-4 w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5F7390]" />
           <input
             type="search"
             placeholder="Search category"
             value={categorySearch}
             onChange={(event) => setCategorySearch(event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-600 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none"
+            className="w-full rounded-2xl border border-[#DCE6F5] bg-[#FFFFFF] py-3 pl-10 pr-3 text-sm text-[#0F2A44] placeholder:text-[#5F7390] shadow-sm focus:border-[#2563EB] focus:outline-none"
           />
         </div>
 
-        <div className="mt-4 max-h-56 overflow-y-auto rounded-[22px] bg-slate-50 p-3">
+        <div className="mt-4 max-h-56 overflow-y-auto rounded-[22px] bg-[#EAF1FF] p-3">
           <div className="flex flex-col gap-2">
             {filteredCategories.map((category) => {
               const isSelected = selectedCategoryIds.includes(category.id);
@@ -302,8 +302,8 @@ export default function ServicesSidebar({
                   key={category.id}
                   className={`flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3.5 text-sm transition ${
                     isSelected
-                      ? "border-[#9db2ff] bg-[#f7f9ff] "
-                      : "border-transparent bg-[#f6f7ff] hover:border-[#dde3ff]"
+                      ? "border-[#60A5FA] bg-[#EAF1FF] "
+                      : "border-transparent bg-[#FFFFFF] hover:border-[#DCE6F5]"
                   }`}
                 >
                   <input
@@ -316,23 +316,23 @@ export default function ServicesSidebar({
                   <div className="flex min-w-0 items-center gap-3">
                     <span
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                        isSelected ? "bg-[#4F7DFF]  text-white" : "bg-[#e7e9f7] text-slate-700"
+                        isSelected ? "bg-[#2563EB] text-[#F3F7FF]" : "bg-[#EAF1FF] text-[#0F2A44]"
                       }`}
                     >
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-[15px] font-semibold text-slate-900">
+                      <span className="block truncate text-[15px] font-semibold text-[#0F2A44]">
                         {category.label}
                       </span>
-                      <span className="block text-xs text-slate-500">{subtitle}</span>
+                      <span className="block text-xs text-[#5F7390]">{subtitle}</span>
                     </span>
                   </div>
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
                       isSelected
-                        ? "border-[#4F7DFF]  bg-[#4F7DFF] "
-                        : "border-[#cfd6ff] bg-transparent"
+                        ? "border-[#2563EB] bg-[#2563EB] "
+                        : "border-[#DCE6F5] bg-transparent"
                     }`}
                   >
                     {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
@@ -344,33 +344,33 @@ export default function ServicesSidebar({
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-slate-100 bg-white p-4 ">
+      <div className="rounded-[24px] border border-[#DCE6F5] bg-[#FFFFFF] p-4 ">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[16px] font-bold text-[#333333]">Location</p>
-            <p className="mt-1 text-xs text-slate-500">Select the areas you want to browse.</p>
+            <p className="text-[16px] font-bold text-[#0F2A44]">Location</p>
+            <p className="mt-1 text-xs text-[#5F7390]">Select the areas you want to browse.</p>
           </div>
           <button
             type="button"
             onClick={handleResetLocations}
-            className="text-sm font-medium text-slate-400 transition hover:text-slate-600"
+            className="text-sm font-medium text-[#5F7390] transition hover:text-[#0F2A44]"
           >
             Reset
           </button>
         </div>
 
         <div className="relative mt-4 w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5F7390]" />
           <input
             type="search"
             placeholder="Search location"
             value={locationSearch}
             onChange={(event) => setLocationSearch(event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-600 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none"
+            className="w-full rounded-2xl border border-[#DCE6F5] bg-[#FFFFFF] py-3 pl-10 pr-3 text-sm text-[#0F2A44] placeholder:text-[#5F7390] shadow-sm focus:border-[#2563EB] focus:outline-none"
           />
         </div>
 
-        <div className="mt-4 max-h-56 overflow-y-auto rounded-[22px] bg-slate-50 p-3">
+        <div className="mt-4 max-h-56 overflow-y-auto rounded-[22px] bg-[#EAF1FF] p-3">
           <div className="flex flex-col gap-2">
             {filteredLocations.map((location) => {
               const isSelected = selectedLocationIds.includes(location.id);
@@ -385,8 +385,8 @@ export default function ServicesSidebar({
                   key={location.id}
                   className={`flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3.5 text-sm transition ${
                     isSelected
-                      ? "border-[#4F7DFF]  bg-[#f7f9ff] "
-                      : "border-transparent bg-[#f6f7ff] hover:border-[#dde3ff]"
+                      ? "border-[#60A5FA] bg-[#EAF1FF] "
+                      : "border-transparent bg-[#FFFFFF] hover:border-[#DCE6F5]"
                   }`}
                 >
                   <input
@@ -399,23 +399,23 @@ export default function ServicesSidebar({
                   <div className="flex min-w-0 items-center gap-3">
                     <span
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                        isSelected ? "bg-[#4F7DFF]  text-white" : "bg-[#e7e9f7] text-slate-700"
+                        isSelected ? "bg-[#2563EB] text-[#F3F7FF]" : "bg-[#EAF1FF] text-[#0F2A44]"
                       }`}
                     >
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-[15px] font-semibold text-slate-900">
+                      <span className="block truncate text-[15px] font-semibold text-[#0F2A44]">
                         {location.label}
                       </span>
-                      <span className="block text-xs text-slate-500">{subtitle}</span>
+                      <span className="block text-xs text-[#5F7390]">{subtitle}</span>
                     </span>
                   </div>
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
                       isSelected
-                        ? "border-[#4F7DFF]  bg-[#4F7DFF] "
-                        : "border-[#cfd6ff] bg-transparent"
+                        ? "border-[#2563EB] bg-[#2563EB] "
+                        : "border-[#DCE6F5] bg-transparent"
                     }`}
                   >
                     {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
@@ -427,30 +427,30 @@ export default function ServicesSidebar({
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-slate-100 bg-white p-4 ">
+      <div className="rounded-[24px] border border-[#DCE6F5] bg-[#FFFFFF] p-4 ">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[16px] font-bold text-[#333333]">Price range</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="text-[16px] font-bold text-[#0F2A44]">Price range</p>
+            <p className="mt-1 text-xs text-[#5F7390]">
               The average price is ${Math.round((priceRange.min + priceRange.max) / 2)}
             </p>
           </div>
           <button
             type="button"
             onClick={handleResetPrice}
-            className="text-sm font-medium text-slate-400 transition hover:text-slate-600"
+            className="text-sm font-medium text-[#5F7390] transition hover:text-[#0F2A44]"
           >
             Reset
           </button>
         </div>
 
         <div className="mt-5 space-y-5">
-          <div className="relative overflow-hidden rounded-[22px] bg-[#f7f5ff] px-3 pb-5 pt-4">
+          <div className="relative overflow-hidden rounded-[22px] bg-[#EAF1FF] px-3 pb-5 pt-4">
             <svg viewBox="0 0 260 92" className="pointer-events-none absolute inset-x-3 bottom-8 h-20 w-[calc(100%-1.5rem)]" preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <linearGradient id="price-hill-gradient" x1="0%" x2="0%" y1="0%" y2="100%">
-                  <stop offset="0%" stopColor="#b7abff" stopOpacity="0.95" />
-                  <stop offset="100%" stopColor="#b7abff" stopOpacity="0.18" />
+                  <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.16" />
                 </linearGradient>
               </defs>
               <path
@@ -473,20 +473,20 @@ export default function ServicesSidebar({
             </div>
 
             <div className="relative mt-16 h-2">
-              <div className="absolute inset-0 h-2 rounded-full bg-white shadow-[inset_0_0_0_1px_rgba(226,232,240,0.9)]" />
+              <div className="absolute inset-0 h-2 rounded-full bg-[#FFFFFF] shadow-[inset_0_0_0_1px_rgba(220,230,245,0.95)]" />
               <div
-                className="absolute top-0 h-2 rounded-full bg-gradient-to-r from-[#8c79ff] to-[#6f5cff]"
+                className="absolute top-0 h-2 rounded-full bg-[#60A5FA]"
                 style={{
                   left: `${(priceRange.min / PRICE_MAX) * 100}%`,
                   width: `${((priceRange.max - priceRange.min) / PRICE_MAX) * 100}%`,
                 }}
               />
               <div
-                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#705cff] bg-white"
+                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#2563EB] bg-[#FFFFFF]"
                 style={{ left: `${(priceRange.min / PRICE_MAX) * 100}%` }}
               />
               <div
-                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#705cff] bg-white"
+                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#2563EB] bg-[#FFFFFF]"
                 style={{ left: `${(priceRange.max / PRICE_MAX) * 100}%` }}
               />
             </div>
@@ -510,8 +510,8 @@ export default function ServicesSidebar({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <span className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[#DCE6F5] bg-[#FFFFFF] px-4 py-3 shadow-sm">
+              <span className="text-sm font-semibold uppercase tracking-wide text-[#5F7390]">
                 SDK
               </span>
               <input
@@ -520,12 +520,12 @@ export default function ServicesSidebar({
                 max={priceRange.max}
                 value={priceRange.min}
                 onChange={handleRangeInput("min")}
-                className="w-full border-none bg-transparent p-0 text-[15px] font-semibold text-slate-900 focus:outline-none"
+                className="w-full border-none bg-transparent p-0 text-[15px] font-semibold text-[#0F2A44] focus:outline-none"
               />
             </div>
-            <span className="text-slate-400">-</span>
-            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <span className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            <span className="text-[#5F7390]">-</span>
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[#DCE6F5] bg-[#FFFFFF] px-4 py-3 shadow-sm">
+              <span className="text-sm font-semibold uppercase tracking-wide text-[#5F7390]">
                 SDK
               </span>
               <input
@@ -534,7 +534,7 @@ export default function ServicesSidebar({
                 max={PRICE_MAX}
                 value={priceRange.max}
                 onChange={handleRangeInput("max")}
-                className="w-full border-none bg-transparent p-0 text-[15px] font-semibold text-slate-900 focus:outline-none"
+                className="w-full border-none bg-transparent p-0 text-[15px] font-semibold text-[#0F2A44] focus:outline-none"
               />
             </div>
           </div>
@@ -542,7 +542,7 @@ export default function ServicesSidebar({
           <button
             type="button"
             onClick={onApplyPrice}
-            className="w-full  bg-white border  border-slate-200 px-4 py-3 text-sm font-semibold text-black transition hover:bg-blue-600"
+            className="w-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#3B82F6] active:bg-[#1D4ED8]"
           >
             Apply price filter
           </button>

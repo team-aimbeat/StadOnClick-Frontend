@@ -103,16 +103,16 @@ export type ServicesExplorerProps = {
 }
 
 const defaultStats = [
-  { label: "24 stylists online now", color: "bg-sky-400" },
-  { label: "98% booked for this week", color: "bg-sky-400" },
-  { label: "Avg. response under 10 min", color: "bg-sky-400" },
+  { label: "24 stylists online now", color: "bg-[#60A5FA]" },
+  { label: "98% booked for this week", color: "bg-[#60A5FA]" },
+  { label: "Avg. response under 10 min", color: "bg-[#60A5FA]" },
 ]
 
 function MarketplaceCardSkeleton({ index }: { index: number }) {
   return (
     <div
       key={`marketplace-skeleton-${index}`}
-      className="flex h-155 w-81.25 flex-col overflow-hidden rounded-lg bg-white shadow-md"
+      className="flex h-155 w-81.25 flex-col overflow-hidden rounded-[24px] border border-[#DCE6F5] bg-[#FFFFFF] shadow-[0_18px_32px_-28px_rgba(15,42,68,0.08)]"
     >
       <Skeleton className="h-50 w-full rounded-none" />
       <div className="flex flex-1 flex-col gap-3 p-5">
@@ -130,7 +130,7 @@ function MarketplaceCardSkeleton({ index }: { index: number }) {
 
         <div className="flex-1 space-y-3">
           {Array.from({ length: 3 }).map((_, detailIndex) => (
-            <div key={`marketplace-skeleton-detail-${index}-${detailIndex}`} className="h-17 rounded-sm bg-[#F6F6F6] px-4 py-3">
+            <div key={`marketplace-skeleton-detail-${index}-${detailIndex}`} className="h-17 rounded-[16px] bg-[#EAF1FF] px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-5 w-16" />
@@ -410,7 +410,7 @@ export default function ServicesExplorer({
   }
 
   return (
-    <section className="min-h-screen bg-[#F8F6F0] py-8">
+    <section className="min-h-screen bg-[#F3F7FF] py-8 text-[#0F2A44]">
       <div className="mx-auto flex items-start max-w-370 gap-8 px-6 lg:px-8">
         <ServicesSidebar
           categories={sidebarCategories}
@@ -430,7 +430,7 @@ export default function ServicesExplorer({
 
         <div className="flex-1 space-y-6">
           <header
-            className="relative overflow-hidden  px-6 py-6 text-white "
+            className="relative overflow-hidden  border border-[#DCE6F5] px-6 py-6 text-white shadow-[0_20px_40px_-32px_rgba(15,42,68,0.14)]"
             style={{
               backgroundImage: `url(${headerBanner})`,
               backgroundSize: "cover",
@@ -442,7 +442,7 @@ export default function ServicesExplorer({
 
             <div className="relative flex max-w-2xl flex-col gap-5">
               <div className="space-y-4">
-                <span className="inline-flex rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">
+                <span className="inline-flex rounded-full border border-white/10 bg-[#60A5FA]/88 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#0F2A44]">
                   Limited Offer
                 </span>
                 <div className="space-y-2">
@@ -460,7 +460,7 @@ export default function ServicesExplorer({
                 {statRows.map((stat) => (
                   <div
                     key={stat.label}
-                    className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 backdrop-blur-sm"
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm"
                   >
                     <span className={`h-2 w-2 rounded-full ${stat.color}`} />
                     {stat.label}
