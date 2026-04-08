@@ -242,9 +242,6 @@ export default function ServiceDetail() {
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
-  const [activeTab, setActiveTab] = useState<"services" | "description">(
-    "services",
-  );
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     () => new Date(),
   );
@@ -895,13 +892,9 @@ export default function ServiceDetail() {
     menuMedia
       ?.filter((m) => m.type === "IMAGE")
       .map((m) => m.signedUrl) || [];
-  const tabs: { id: "services" | "description"; label: string }[] = [
-    { id: "services", label: "Services" },
-    { id: "description", label: "Description" },
-  ];
   const serviceDescription =
     service.description ||
-    "Our team curates a premium experience for every guestâ€”scroll through the service options to choose what fits your visit.";
+    "Our team curates a premium experience for every guest - scroll through the service options to choose what fits your visit.";
 
   const statusStyles: Record<string, string> = {
     DRAFT: "bg-yellow-100 text-yellow-700",
@@ -910,7 +903,7 @@ export default function ServiceDetail() {
   };
 
   return (
-    <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
+    <section className="min-h-screen bg-[#FAF9F6] py-10 text-slate-700 ">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 ">
         <button
           type="button"
@@ -928,13 +921,15 @@ export default function ServiceDetail() {
                   <h1 className="text-3xl font-semibold text-slate-900">
                     {service.title}
                   </h1>
-                  <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-black">
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-black">
                     <div className="flex">
                       <MapPinIcon className="h-5 w-5 " />
                       <div className="ml-2 font-semibold">{serviceCity}</div>
                     </div>
-                    <div className="flex items-center gap-1 rounded-full px-3 py-1 font-bold ">
-                      <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
+                    <div className="inline-flex items-center gap-1.5  px-2.5 py-1 text-xs font-bold text-black">
+                      <span className="inline-flex h-4.5 w-4.5 items-center justify-center  bg-[#f5f5f5] text-[#F4C542]">
+                        <Star className="h-4 w-4 fill-current text-current" />
+                      </span>
                       {reviews && reviews.length > 0
                         ? (
                             reviews.reduce((acc, r) => acc + r.rating, 0) /
@@ -945,14 +940,14 @@ export default function ServiceDetail() {
                     <span className="text-xs text-black">
                       ({reviews?.length || 0}+ verified guest reviews)
                     </span>
-                    <span className="inline-flex ml-5  items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-extrabold tracking-wide text-blue-700 shadow-sm">
+                    <span className="inline-flex ml-4 items-center gap-1.5 rounded-full border border-[#9BC2FF] bg-white px-3 py-1 text-xs font-extrabold tracking-wide text-[#3765FF] shadow-sm">
                       <Eye className="h-3.5 w-3.5" />
                       {totalVisitors} visitors
                     </span>
-                   <span className="inline-flex items-center rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">
-                       {todayVisitors} today
-                    </span>
-                  </div>
+                   <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-sm">
+                        {todayVisitors} today
+                     </span>
+                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                       {myReferralSummary?.referralCode ? (
@@ -992,6 +987,26 @@ export default function ServiceDetail() {
               <ServiceGallery
                 galleryImages={galleryImages}
                 serviceName={service.title}
+                categoryLabel={
+                  matchedMarketplaceService?.categoryName ??
+                  service.category?.name ??
+                  "Service"
+                }
+                ratingLabel={
+                  reviews && reviews.length > 0
+                    ? (
+                        reviews.reduce((acc, r) => acc + r.rating, 0) /
+                        reviews.length
+                      ).toFixed(1)
+                    : "0.0"
+                }
+                reviewText={`Over ${(reviews?.length || 0).toLocaleString()} verified reviews`}
+                ctaLabel="Reserve Your Spot"
+                onCtaClick={() =>
+                  document
+                    .getElementById("service-offerings")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
               />
               <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 {service.status && (
@@ -1086,195 +1101,111 @@ export default function ServiceDetail() {
         </div>
 
         <div className="grid gap-6 grid-cols-5">
-          <div className="col-span-3 min-w-0">
-            <div className="space-y-5 rounded-3xl bg-white p-8 ">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">
-                    Services
+            <div id="service-offerings" className="col-span-3 min-w-0 space-y-6">
+              <div className="rounded-[30px] border border-slate-200 bg-white p-7 ">
+                <div className="max-w-3xl">
+ 
+                  <h2 className="mt-3 text-[28px] font-semibold leading-tight text-[#3758d7]">
+                    About {service.title}
                   </h2>
-                  <p className="text-sm text-slate-500">
-                    Choose a ritual that suits your mood
+                  <p className="mt-4 text-[15px] font-medium leading-8 text-slate-600">
+                    {serviceDescription}
                   </p>
                 </div>
-                <span className="text-sm font-semibold text-slate-500">
-                  {packagesCount} packages
-                </span>
-              </div>
-              <div className="mt-4 flex gap-3">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      activeTab === tab.id
-                        ? "border-blue-500 bg-blue-50 text-blue-600"
-                        : "border-slate-200 bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-5">
-                {activeTab === "services" ? (
-                  <div className="space-y-4">
-                    {hasLiveOfferings ? (
-                      visibleOfferings?.map((offering) => {
-                        const displayPrice = getEffectivePrice(offering);
-                        const activeDiscountPercent =
-                          Number(offering.discountPercent ?? 0) ||
-                          calculateDiscountPercent(offering.basePrice, offering.salePrice);
-                        const isMovieBookingOffering = isMovieBookingService;
-                        const slotCount = offering.slots?.length ?? 0;
-                        const requiresSlot = offering.usesSlots || slotCount > 0;
-                        const outOfStock =
-                          !requiresSlot &&
-                          offering.remainingQuantity !== null &&
-                          offering.remainingQuantity <= 0;
-                        const missingBookingUrl =
-                          isMovieBookingOffering && !offering.bookingUrl?.trim();
-                        const buttonLabel = isMovieBookingOffering
-                          ? missingBookingUrl
-                            ? "Booking unavailable"
-                            : "Book now"
-                          : requiresSlot
-                            ? slotCount > 0
-                              ? "Book"
-                              : "Slots unavailable"
-                            : outOfStock
-                              ? "Out of stock"
-                              : "Add to cart";
-                        const isSlotUnavailable =
-                          missingBookingUrl ||
-                          ((requiresSlot && slotCount === 0) || outOfStock);
-                        const maxQty = offering.maxQuantity ?? null;
-                        const remainingQty =
-                          offering.remainingQuantity ?? offering.maxQuantity ?? null;
-                        const hasInventory =
-                          maxQty !== null &&
-                          Number.isFinite(maxQty) &&
-                          remainingQty !== null &&
-                          Number.isFinite(remainingQty);
-                        const remainingPercent = hasInventory
-                          ? Math.max(
-                              0,
-                              Math.min(100, (Number(remainingQty) / Number(maxQty)) * 100),
-                            )
-                          : null;
-                        const inventoryBarClass = outOfStock
-                          ? "bg-rose-500"
-                          : hasInventory &&
-                              Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
-                            ? "bg-amber-500"
-                            : "bg-emerald-500";
-                        return (
-                          <div
-                            key={offering.id}
-                            className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 "
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <span
-                                  className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
-                                    isSlotUnavailable
-                                      ? "bg-slate-100 text-slate-500"
-                                      : "bg-[#eef2ff] text-[#4f67ff]"
-                                  }`}
-                                >
-                                  {isSlotUnavailable ? "Limited" : "Available now"}
-                                </span>
-                                <p className="mt-4 text-[22px] font-semibold leading-tight text-slate-900">
-                                  {offering.name}
-                                </p>
-                                <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                                  <MapPinIcon className="h-3.5 w-3.5" />
-                                  <span>{serviceCity}</span>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[28px] font-bold leading-none text-[#4f67ff]">
-                                  {formatCurrency(displayPrice)}
-                                </p>
-                                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
-                                  {offering.usesSlots || (offering.slots?.length ?? 0) > 0
-                                    ? "PER SLOT"
-                                    : offering.maxQuantity
-                                      ? "PER UNIT"
-                                      : "PER BOOKING"}
-                                </p>
-                              </div>
-                            </div>
 
-                            <div className="space-y-2">
-                              <p className="text-sm text-slate-600">
-                                {offering.description ??
-                                  "Exclusive access with a streamlined booking experience and flexible scheduling."}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-500">
-                                <span>Created {new Date(offering.createdAt).toLocaleDateString()}</span>
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f8] px-3 py-1 text-[#6b6ef9]">
-                                  <Users className="h-3.5 w-3.5" />
-                                  Up to {offering.maxQuantity || "N/A"}
-                                </span>
-                                <span>Remaining {offering.remainingQuantity ?? "N/A"}</span>
-                              </div>
-                              {hasInventory && remainingPercent !== null ? (
-                                <div className="max-w-[220px]">
-                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                                    <div
-                                      className={`h-full rounded-full ${inventoryBarClass}`}
-                                      style={{ width: `${remainingPercent}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              ) : null}
-                              {offering.isDealActive ? (
-                                <div className="flex flex-wrap items-center gap-3 text-xs">
-                                  <p className="font-semibold text-slate-400 line-through">
-                                    {formatCurrency(offering.basePrice)}
-                                  </p>
-                                  <p className="font-black text-orange-600">
-                                    {activeDiscountPercent}% OFF
-                                  </p>
-                                  <DealTimer
-                                    endTime={offering.dealEndTime}
-                                    className="font-semibold text-slate-500"
-                                  />
-                                </div>
-                              ) : null}
-                            </div>
+                {descriptionRules.length > 0 ? (
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    {descriptionRules.map((rule, index) => {
+                      const tones = [
+                        "bg-[#eef2ff] text-[#5a67f2]",
+                        "bg-[#f4edff] text-[#7a58d1]",
+                        "bg-[#e9f7ff] text-[#2878c8]",
+                        "bg-[#ffeceb] text-[#d45a45]",
+                      ];
+                      const tone = tones[index % tones.length];
 
-                            <div className="flex justify-end">
-                              <button
-                                type="button"
-                                className={`min-w-[132px] rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-                                  isSlotUnavailable
-                                    ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
-                                    : requiresSlot || isMovieBookingOffering
-                                      ? "bg-[#4f67ff] text-white hover:bg-[#3f59ff]"
-                                      : "border border-[#cfd8ff] bg-white text-[#4f67ff] shadow-[0_10px_24px_-18px_rgba(79,103,255,0.35)] hover:border-[#4f67ff]"
-                                }`}
-                                disabled={isSlotUnavailable}
-                                onClick={() => handleBookClick(offering)}
-                              >
-                                {requiresSlot || isMovieBookingOffering ? "Book" : "Add to cart"}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : marketplaceOfferingsPreview.length > 0 ? (
-                      marketplaceOfferingsPreview.map((offering) => (
+                      return (
+                        <span
+                          key={`${rule.label}-${rule.value}`}
+                          className={`inline-flex rounded-xl px-4 py-2 text-[13px] font-semibold ${tone}`}
+                        >
+                          {rule.label}
+                          {rule.value ? `: ${rule.value}` : ""}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="space-y-5 rounded-3xl bg-white p-8 ">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      Services
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                      Choose a ritual that suits your mood
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-500">
+                    {packagesCount} packages
+                  </span>
+                </div>
+                <div className="mt-5 space-y-4">
+                  {hasLiveOfferings ? (
+                    visibleOfferings?.map((offering) => {
+                      const displayPrice = getEffectivePrice(offering);
+                      const activeDiscountPercent =
+                        Number(offering.discountPercent ?? 0) ||
+                        calculateDiscountPercent(offering.basePrice, offering.salePrice);
+                      const isMovieBookingOffering = isMovieBookingService;
+                      const slotCount = offering.slots?.length ?? 0;
+                      const requiresSlot = offering.usesSlots || slotCount > 0;
+                      const outOfStock =
+                        !requiresSlot &&
+                        offering.remainingQuantity !== null &&
+                        offering.remainingQuantity <= 0;
+                      const missingBookingUrl =
+                        isMovieBookingOffering && !offering.bookingUrl?.trim();
+                      const isSlotUnavailable =
+                        missingBookingUrl ||
+                        ((requiresSlot && slotCount === 0) || outOfStock);
+                      const maxQty = offering.maxQuantity ?? null;
+                      const remainingQty =
+                        offering.remainingQuantity ?? offering.maxQuantity ?? null;
+                      const hasInventory =
+                        maxQty !== null &&
+                        Number.isFinite(maxQty) &&
+                        remainingQty !== null &&
+                        Number.isFinite(remainingQty);
+                      const remainingPercent = hasInventory
+                        ? Math.max(
+                            0,
+                            Math.min(100, (Number(remainingQty) / Number(maxQty)) * 100),
+                          )
+                        : null;
+                      const inventoryBarClass = outOfStock
+                        ? "bg-rose-500"
+                        : hasInventory &&
+                            Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
+                          ? "bg-amber-500"
+                          : "bg-emerald-500";
+                      return (
                         <div
                           key={offering.id}
-                          className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)]"
+                          className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 "
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <span className="inline-flex rounded-full bg-[#eef2ff] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#4f67ff]">
-                                Preview
+                              <span
+                                className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
+                                  isSlotUnavailable
+                                    ? "bg-slate-100 text-slate-500"
+                                    : "bg-[#eef2ff] text-[#4f67ff]"
+                                }`}
+                              >
+                                {isSlotUnavailable ? "Limited" : "Available now"}
                               </span>
                               <p className="mt-4 text-[22px] font-semibold leading-tight text-slate-900">
                                 {offering.name}
@@ -1286,32 +1217,48 @@ export default function ServiceDetail() {
                             </div>
                             <div className="text-right">
                               <p className="text-[28px] font-bold leading-none text-[#4f67ff]">
-                                {formatCurrency(
-                                  Number(offering.effectivePrice ?? offering.salePrice ?? offering.basePrice ?? 0),
-                                )}
+                                {formatCurrency(displayPrice)}
                               </p>
                               <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
-                                {offering.durationLabel?.toUpperCase() ?? "PER BOOKING"}
+                                {offering.usesSlots || (offering.slots?.length ?? 0) > 0
+                                  ? "PER SLOT"
+                                  : offering.maxQuantity
+                                    ? "PER UNIT"
+                                    : "PER BOOKING"}
                               </p>
                             </div>
                           </div>
+
                           <div className="space-y-2">
                             <p className="text-sm text-slate-600">
                               {offering.description ??
-                                "Exclusive access with curated service details available at launch."}
+                                "Exclusive access with a streamlined booking experience and flexible scheduling."}
                             </p>
-                            {offering.durationLabel ? (
-                              <p className="text-xs font-medium text-slate-500">
-                                Duration: {offering.durationLabel}
-                              </p>
+                            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-500">
+                              <span>Created {new Date(offering.createdAt).toLocaleDateString()}</span>
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f8] px-3 py-1 text-[#6b6ef9]">
+                                <Users className="h-3.5 w-3.5" />
+                                Up to {offering.maxQuantity || "N/A"}
+                              </span>
+                              <span>Remaining {offering.remainingQuantity ?? "N/A"}</span>
+                            </div>
+                            {hasInventory && remainingPercent !== null ? (
+                              <div className="max-w-[220px]">
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                  <div
+                                    className={`h-full rounded-full ${inventoryBarClass}`}
+                                    style={{ width: `${remainingPercent}%` }}
+                                  />
+                                </div>
+                              </div>
                             ) : null}
                             {offering.isDealActive ? (
                               <div className="flex flex-wrap items-center gap-3 text-xs">
                                 <p className="font-semibold text-slate-400 line-through">
-                                  {formatCurrency(Number(offering.basePrice ?? 0))}
+                                  {formatCurrency(offering.basePrice)}
                                 </p>
                                 <p className="font-black text-orange-600">
-                                  {Number(offering.discountPercent ?? 0)}% OFF
+                                  {activeDiscountPercent}% OFF
                                 </p>
                                 <DealTimer
                                   endTime={offering.dealEndTime}
@@ -1320,62 +1267,100 @@ export default function ServiceDetail() {
                               </div>
                             ) : null}
                           </div>
+
                           <div className="flex justify-end">
                             <button
-                              className="min-w-[132px] rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
-                              disabled
                               type="button"
+                              className={`min-w-[132px] rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                                isSlotUnavailable
+                                  ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+                                  : requiresSlot || isMovieBookingOffering
+                                    ? "bg-[#4f67ff] text-white hover:bg-[#3f59ff]"
+                                    : "border border-[#cfd8ff] bg-white text-[#4f67ff] shadow-[0_10px_24px_-18px_rgba(79,103,255,0.35)] hover:border-[#4f67ff]"
+                              }`}
+                              disabled={isSlotUnavailable}
+                              onClick={() => handleBookClick(offering)}
                             >
-                              Available soon
+                              {requiresSlot || isMovieBookingOffering ? "Book" : "Add to cart"}
                             </button>
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
-                        No service packages are available yet for this listing.
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
-                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription}
-                    </p>
-                    <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updatedâ€”check the services tab to explore current offerings.`}
-                    </p>
-                    {descriptionRules.length > 0 && (
-                      <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-semibold text-slate-900">
-                            Service rules
-                          </p>
-                          <span className="text-xs font-medium text-slate-400">
-                            {descriptionRules.length} total
-                          </span>
-                        </div>
-                        <div className="space-y-1">
-                          {descriptionRules.map((rule) => (
-                            <div
-                              key={`${rule.label}-${rule.value}`}
-                              className="flex flex-wrap items-center gap-1 text-[13px] font-medium text-slate-500"
-                            >
-                              <span className="text-slate-700">
-                                {rule.label}
-                              </span>
-                              {rule.value ? (
-                                <span className="text-slate-400">â€”</span>
-                              ) : null}
-                              {rule.value ? <span>{rule.value}</span> : null}
+                      );
+                    })
+                  ) : marketplaceOfferingsPreview.length > 0 ? (
+                    marketplaceOfferingsPreview.map((offering) => (
+                      <div
+                        key={offering.id}
+                        className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)]"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <span className="inline-flex rounded-full bg-[#eef2ff] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#4f67ff]">
+                              Preview
+                            </span>
+                            <p className="mt-4 text-[22px] font-semibold leading-tight text-slate-900">
+                              {offering.name}
+                            </p>
+                            <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                              <MapPinIcon className="h-3.5 w-3.5" />
+                              <span>{serviceCity}</span>
                             </div>
-                          ))}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[28px] font-bold leading-none text-[#4f67ff]">
+                              {formatCurrency(
+                                Number(offering.effectivePrice ?? offering.salePrice ?? offering.basePrice ?? 0),
+                              )}
+                            </p>
+                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                              {offering.durationLabel?.toUpperCase() ?? "PER BOOKING"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm text-slate-600">
+                            {offering.description ??
+                              "Exclusive access with curated service details available at launch."}
+                          </p>
+                          {offering.durationLabel ? (
+                            <p className="text-xs font-medium text-slate-500">
+                              Duration: {offering.durationLabel}
+                            </p>
+                          ) : null}
+                          {offering.isDealActive ? (
+                            <div className="flex flex-wrap items-center gap-3 text-xs">
+                              <p className="font-semibold text-slate-400 line-through">
+                                {formatCurrency(Number(offering.basePrice ?? 0))}
+                              </p>
+                              <p className="font-black text-orange-600">
+                                {Number(offering.discountPercent ?? 0)}% OFF
+                              </p>
+                              <DealTimer
+                                endTime={offering.dealEndTime}
+                                className="font-semibold text-slate-500"
+                              />
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            className="min-w-[132px] rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                            disabled
+                            type="button"
+                          >
+                            Available soon
+                          </button>
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
+                      No service packages are available yet for this listing.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
           <div className="col-span-2">
             <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
