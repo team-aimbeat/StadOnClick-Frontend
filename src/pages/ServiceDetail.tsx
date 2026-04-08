@@ -1415,7 +1415,7 @@ export default function ServiceDetail() {
                               updateCartQuantity(item.offering.id, -1)
                             }
                           >
-                            âˆ’
+                           -
                           </button>
                           <span className="text-sm font-semibold text-[#0F2A44]">
                             {item.quantity}
