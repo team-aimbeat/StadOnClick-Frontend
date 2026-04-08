@@ -124,8 +124,8 @@ export default function CompareVendors() {
   };
 
   return (
-    <div className="min-h-[80vh] bg-slate-50 ">
-      <div className="relative mx-auto max-w-6xl px-4 py-10 space-y-8">
+    <div className="min-h-[80vh] bg-[#F3F7FF]">
+      <div className="relative mx-auto max-w-5xl space-y-8 px-4 py-10">
         <button
           type="button"
           onClick={handleBack}
@@ -136,48 +136,37 @@ export default function CompareVendors() {
         </button>
 
         <div className="pointer-events-none absolute inset-x-10 -top-10 h-48 rounded-[40px] blur-3xl" />
-        <div className="relative overflow-hidden rounded-3xl border border-slate-100 bg-white ">
-          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full  blur-3xl" />
-          <div className="absolute -left-20 -bottom-32 h-64 w-64 rounded-full blur-3xl" />
+        <div className="relative overflow-hidden rounded-[32px] border border-[#DCE6F5] bg-white ">
+          <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full" />
+          <div className="absolute -left-20 -bottom-32 h-64 w-64 rounded-full " />
           <div className="relative grid gap-6 px-8 py-10 md:grid-cols-[1.2fr,0.8fr] md:items-center">
             <div className="space-y-3">
-              <p className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-[#2563EB]">
                 <Sparkles className="h-3 w-3" /> Compare
               </p>
-              <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">Vendor Service Comparison</h1>
-              <p className="max-w-xl text-sm text-slate-600">
+              <h1 className="text-3xl font-bold text-[#0F2A44] md:text-4xl">Compare Vendors</h1>
+              <p className="max-w-xl text-sm text-[#5F7390]">
                 Line up to four vendors from the same category, stack their performance, and spot the strongest fit for
                 your next launch.
               </p>
-              <div className="flex flex-wrap gap-3 text-xs font-semibold text-slate-600">
-                <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> Live traffic & conversions
+              <div className="flex flex-wrap gap-3 text-xs font-semibold text-[#5F7390]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#F3F7FF] px-3 py-2">
+                  <span className="h-2 w-2 rounded-full bg-[#2563EB]" /> Live traffic & conversions
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2">
-                  <span className="h-2 w-2 rounded-full bg-sky-500" /> Ratings + repeat visitors
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#F3F7FF] px-3 py-2">
+                  <span className="h-2 w-2 rounded-full bg-[#60A5FA]" /> Ratings + repeat visitors
                 </span>
               </div>
             </div>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-5 py-4 text-sm text-emerald-900 shadow-inner">
-              <p className="mb-2 flex items-center gap-2 font-semibold">
-                Quick Tip
-                <Sparkles className="h-4 w-4 text-amber-500" />
-              </p>
-              <p className="text-sm leading-relaxed">
-                Keep all vendors from the same category for the clearest read. You can search by name, category, or ID
-                and mix manual IDs with dropdown picks.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white/80 p-5 shadow-lg shadow-emerald-50/80 backdrop-blur">
+          
+          
+        <div className="relative overflow-hidden rounded-[28px] border border-[#DCE6F5] bg-white/90 p-5  backdrop-blur">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-slate-900">Pick your vendors</p>
-              <p className="text-xs text-slate-500">Search by name/category or paste the vendor ID. Max 4 vendors.</p>
+              <p className="text-sm font-semibold text-[#0F2A44]">Search and add vendors</p>
+              <p className="text-xs text-[#5F7390]">Search by name/category or paste the vendor ID. Max 4 vendors.</p>
             </div>
-            <div className="hidden items-center gap-2 text-xs font-semibold text-emerald-700 md:flex">
+            <div className="hidden items-center gap-2 text-xs font-semibold text-[#2563EB] md:flex">
               <Sparkles className="h-4 w-4" />
               Smart suggestions refresh as you type
             </div>
@@ -185,8 +174,8 @@ export default function CompareVendors() {
 
           <div className="flex flex-col gap-3 md:flex-row md:items-start">
             <div className="relative flex w-full flex-col gap-2 md:max-w-xl" ref={dropdownRef}>
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 focus-within:border-emerald-500 focus-within:bg-white">
-                <Search className="h-4 w-4 text-slate-400" />
+              <div className="flex items-center gap-2 rounded-xl border border-[#DCE6F5] bg-[#F3F7FF] px-3 py-2 focus-within:border-[#2563EB] focus-within:bg-white">
+                <Search className="h-4 w-4 text-[#5F7390]" />
                 <input
                   value={inputId}
                   onChange={(e) => {
@@ -199,12 +188,12 @@ export default function CompareVendors() {
                     setDropdownOpen(true);
                     if (!search) setSearch("");
                   }}
-                  placeholder="Search vendor name, category, or paste vendor ID"
-                  className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                  placeholder="Search and add vendors..."
+                  className="w-full bg-transparent text-sm text-[#0F2A44] placeholder:text-[#5F7390] focus:outline-none"
                 />
               </div>
               {dropdownOpen && vendorOptions.length > 0 && (
-                <div className="absolute top-full z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                <div className="absolute top-full z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-[#DCE6F5] bg-white shadow-xl">
                   {vendorOptions.map((v) => (
                     <button
                       key={v.id}
@@ -214,12 +203,12 @@ export default function CompareVendors() {
                         selectVendor(v.id, v.name);
                       }}
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-sm font-semibold text-emerald-700">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#DBEAFE] text-sm font-semibold text-[#2563EB]">
                         {v.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-slate-900">{v.name}</span>
-                        <span className="text-xs text-slate-500">{v.category}</span>
+                        <span className="text-sm font-semibold text-[#0F2A44]">{v.name}</span>
+                        <span className="text-xs text-[#5F7390]">{v.category}</span>
                       </div>
                     </button>
                   ))}
@@ -231,44 +220,29 @@ export default function CompareVendors() {
               type="button"
               onClick={addId}
               disabled={!inputId.trim() || ids.length >= 4}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-lgdisabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#3B82F6] disabled:cursor-not-allowed disabled:bg-[#DCE6F5] disabled:text-[#5F7390]"
             >
               <Plus className="h-4 w-4" />
               Add vendor (max 4)
             </button>
           </div>
 
-          {quickPicks.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-              <span className="font-semibold text-slate-600">Quick picks:</span>
-              {quickPicks.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => selectVendor(v.id, v.name)}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
-                  type="button"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  {v.name}
-                </button>
-              ))}
-            </div>
-          )}
+   
 
           {ids.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
-              {ids.map((id) => (
-                <span
-                  key={id}
-                  className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-800"
-                >
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[#0F2A44]">
+                {ids.map((id) => (
+                  <span
+                    key={id}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#DCE6F5] bg-[#DBEAFE] px-3 py-1.5 text-[#2563EB]"
+                  >
                   {(() => {
                     const fromResult = vendors.find((v) => v.vendorId === id)?.vendorName;
                     const fromList = vendorList.data?.data?.find((v) => v.id === id)?.name;
                     return fromResult ?? fromList ?? "Selected vendor";
                   })()}
                   <button
-                    className="rounded-full p-1 text-emerald-700 transition hover:bg-emerald-100"
+                    className="rounded-full p-1 text-[#2563EB] transition hover:bg-[#BFDBFE]"
                     onClick={() => removeId(id)}
                     aria-label={`Remove ${id}`}
                     type="button"
@@ -281,9 +255,13 @@ export default function CompareVendors() {
           )}
         </div>
 
+          </div>
+        </div>
+
+
         {isLoading && (
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-            <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#5F7390]">
+            <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
             Loading vendors...
           </div>
         )}
@@ -294,12 +272,12 @@ export default function CompareVendors() {
           </div>
         )}
         {!ids.length && (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-white/60 px-4 py-5 text-sm text-slate-500">
+          <div className="rounded-xl border border-dashed border-[#DCE6F5] bg-white/60 px-4 py-5 text-sm text-[#5F7390]">
             Add vendors to compare by entering vendor IDs above.
           </div>
         )}
         {!isLoading && vendors.length > 0 && (
-          <div className="rounded-3xl border border-slate-100 bg-white/80 p-4 shadow-xl shadow-emerald-50/60">
+          <div className="rounded-[28px] border border-[#DCE6F5] bg-white/90 p-4 ">
             <VendorComparisonTable vendors={vendors} />
           </div>
         )}
