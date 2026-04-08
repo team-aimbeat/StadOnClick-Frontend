@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Eye, ImageIcon, Plus, Trash2, Upload } from "lucide-react";
+import { ImageIcon, Lock, Plus, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -13,7 +13,6 @@ type HeroDraft = {
   popularChips: Array<{ label: string; slug: string }>;
 };
 
-const HOME_PREVIEW_PATH = "/?homePreview=1";
 const HERO_BANNER_COUNT = 7;
 
 const defaultDraft: HeroDraft = {
@@ -62,9 +61,6 @@ function toHeroDraftFromPayload(payload: unknown): Partial<HeroDraft> | null {
 export default function HomeHeroStudio() {
   const [draft, setDraft] = useState<HeroDraft>(defaultDraft);
   const [fullPayload, setFullPayload] = useState<Record<string, unknown>>({});
-  const [bannerUrl, setBannerUrl] = useState("");
-  const [popularLabel, setPopularLabel] = useState("");
-  const [popularSlug, setPopularSlug] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const previewTabRef = useRef<Window | null>(null);
   const previewChannelRef = useRef<BroadcastChannel | null>(null);
@@ -131,8 +127,6 @@ export default function HomeHeroStudio() {
     }),
     [draft, fullPayload],
   );
-  const filledBanners = useMemo(() => draft.banners.filter((item) => item.trim()).length, [draft.banners]);
-
   const pushPreview = (target: Window | null) => {
     if (!target) return;
     (target as any).__HOME_CONTENT_PREVIEW__ = previewPayload;
@@ -174,245 +168,234 @@ export default function HomeHeroStudio() {
     }
   };
 
-  const openPreview = () => {
-    const previewWindow = window.open(HOME_PREVIEW_PATH, "_blank");
-    previewTabRef.current = previewWindow;
-    if (!previewWindow) return;
-    window.setTimeout(() => pushPreview(previewWindow), 120);
-    window.setTimeout(() => pushPreview(previewWindow), 420);
+  const discardChanges = () => {
+    const hero = toHeroDraftFromPayload(fullPayload);
+    if (hero) {
+      setDraft((prev) => ({
+        ...defaultDraft,
+        ...hero,
+        banners: normalizeHeroBanners(hero.banners),
+      }));
+    } else {
+      setDraft(defaultDraft);
+    }
+    setBannerUrl("");
+    setPopularLabel("");
+    setPopularSlug("");
+    toast.success("Changes discarded");
   };
 
   return (
-    <div className="space-y-6">
-      <TitleBreadCrumbs title="Home Hero Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections / Hero" />
+    <div className=" ">
+      <div className="w-full">
+        <TitleBreadCrumbs title="Home Hero Studio" breadCrumbTitle="Admin / Layout Studio / Home Sections / Hero" />
 
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Hero Content</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          <input
-            value={draft.heading}
-            onChange={(event) => setDraft((prev) => ({ ...prev, heading: event.target.value }))}
-            className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm"
-            placeholder="Hero heading"
-          />
-          <input
-            value={draft.subheading}
-            onChange={(event) => setDraft((prev) => ({ ...prev, subheading: event.target.value }))}
-            className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm"
-            placeholder="Hero subheading"
-          />
-        </div>
-      </section>
-
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Background Images</h2>
-            <p className="text-xs text-slate-500">Manage hero visuals in a compact card grid.</p>
+           
           </div>
-          <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-            {filledBanners}/{HERO_BANNER_COUNT} filled
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
-          <input
-            value={bannerUrl}
-            onChange={(event) => setBannerUrl(event.target.value)}
-            className="h-10 min-w-[260px] flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm"
-            placeholder="Paste banner image URL"
-          />
-          <Button
-            variant="outline"
-            onClick={() => {
-              const url = bannerUrl.trim();
-              if (!url) return;
-              setDraft((prev) => {
-                const emptyIndex = prev.banners.findIndex((item) => !item.trim());
-                if (emptyIndex < 0) {
-                  toast.error(`All ${HERO_BANNER_COUNT} banner slots are filled`);
-                  return prev;
-                }
-                const next = [...prev.banners];
-                next[emptyIndex] = url;
-                return { ...prev, banners: next };
-              });
-              setBannerUrl("");
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add URL
-          </Button>
-          <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-400 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
-            <Upload className="mr-2 h-4 w-4" />
-            Upload image
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = () => {
-                  if (typeof reader.result !== "string") return;
-                  setDraft((prev) => {
-                    const emptyIndex = prev.banners.findIndex((item) => !item.trim());
-                    if (emptyIndex < 0) {
-                      toast.error(`All ${HERO_BANNER_COUNT} banner slots are filled`);
-                      return prev;
-                    }
-                    const next = [...prev.banners];
-                    next[emptyIndex] = reader.result as string;
-                    return { ...prev, banners: next };
-                  });
-                };
-                reader.readAsDataURL(file);
-                event.currentTarget.value = "";
-              }}
-            />
-          </label>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-7 lg:grid-cols-5 xl:grid-cols-7">
-          {draft.banners.map((banner, index) => (
-            <div
-              key={`hero-banner-${index}`}
-              className="group rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          <div className="flex flex-wrap gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 rounded-full border-[#DCE6F5] bg-white px-7 text-sm font-semibold text-[#0F2A44] hover:bg-[#F3F7FF]"
+              onClick={discardChanges}
             >
-              <div className="relative mb-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                {banner ? (
-                  <img src={banner} alt={`banner-${index + 1}`} className="aspect-square w-full object-cover" />
-                ) : (
-                  <div className="flex aspect-square w-full items-center justify-center gap-1 text-slate-400">
-                    <ImageIcon className="h-3.5 w-3.5" />
-                    <span className="text-[11px] font-medium">No image</span>
-                  </div>
-                )}
-                <p className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[11px] font-semibold text-slate-600">
-                  Banner {index + 1}/7
-                </p>
-              </div>
-              <input
-                value={banner}
-                onChange={(event) =>
-                  setDraft((prev) => {
-                    const next = [...prev.banners];
-                    next[index] = event.target.value;
-                    return { ...prev, banners: next };
-                  })
-                }
-                className="mb-2 h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-[11px]"
-                placeholder="Paste image URL or base64 value"
-              />
-              <div className="flex items-center gap-2">
-                <label className="inline-flex h-7 flex-1 cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-slate-50 px-2 text-[11px] font-medium text-slate-700 transition hover:border-slate-500 hover:bg-slate-100">
-                  Replace
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        if (typeof reader.result !== "string") return;
-                        setDraft((prev) => {
-                          const next = [...prev.banners];
-                          next[index] = reader.result as string;
-                          return { ...prev, banners: next };
-                        });
-                      };
-                      reader.readAsDataURL(file);
-                      event.currentTarget.value = "";
-                    }}
-                  />
-                </label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-1.5 text-slate-600 hover:bg-red-50 hover:text-red-600"
-                  onClick={() =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      banners: prev.banners.map((item, i) => (i === index ? "" : item)),
-                    }))
-                  }
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Popular Chips</h2>
-        <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto]">
-          <input
-            value={popularLabel}
-            onChange={(event) => setPopularLabel(event.target.value)}
-            className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm"
-            placeholder="Chip label"
-          />
-          <input
-            value={popularSlug}
-            onChange={(event) => setPopularSlug(event.target.value)}
-            className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm"
-            placeholder="Chip slug"
-          />
-          <Button
-            variant="outline"
-            onClick={() => {
-              const label = popularLabel.trim();
-              const slug = popularSlug.trim();
-              if (!label || !slug) return;
-              setDraft((prev) => ({ ...prev, popularChips: [...prev.popularChips, { label, slug }] }));
-              setPopularLabel("");
-              setPopularSlug("");
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add chip
-          </Button>
-        </div>
-      </section>
-
-      <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
-          <p className="text-xs text-slate-500">Auto-refreshes as you edit fields</p>
-        </div>
-        <div className="max-h-[680px] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2">
-          <div className="pointer-events-none overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <HomeHero
-              heading={draft.heading}
-              subheading={draft.subheading}
-              banners={draft.banners}
-              popularChips={draft.popularChips}
-            />
+              Discard
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                await saveDraft();
+                pushPreview(window);
+                pushPreview(previewTabRef.current);
+                broadcastPreview();
+              }}
+              className="h-12 rounded-full bg-[#2563EB] px-7 text-sm font-semibold text-white hover:bg-[#3B82F6] active:bg-[#1D4ED8]"
+            >
+              Publish Changes
+            </Button>
           </div>
         </div>
-      </section>
 
-      <section className="flex flex-wrap items-center gap-2">
-        <Button onClick={saveDraft} disabled={isSaving}>{isSaving ? "Saving..." : "Save changes"}</Button>
-        <Button
-          onClick={() => {
-            pushPreview(window);
-            pushPreview(previewTabRef.current);
-            broadcastPreview();
-            toast.success("Preview applied");
-          }}
-        >
-          Apply preview
-        </Button>
-        <Button variant="outline" onClick={openPreview}>
-          <Eye className="mr-2 h-4 w-4" />
-          Open home preview
-        </Button>
-      </section>
+        <div className="mt-8 grid gap-6 xl:grid-cols-[0.72fr_1.28fr]">
+          <div className="space-y-6">
+            <section className=" border border-[#DCE6F5] bg-white p-8 ">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DBEAFE] text-[#2563EB]">
+                  <ImageIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0F2A44]">Hero Content</h2>
+                  <p className="text-sm text-[#5F7390]">Shape the title and subheading shown in the hero banner.</p>
+                </div>
+              </div>
+
+              <div className="mt-8 space-y-5">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#0F2A44]">Main Headline</label>
+                  <input
+                    value={draft.heading}
+                    onChange={(event) => setDraft((prev) => ({ ...prev, heading: event.target.value }))}
+                    className="h-14 w-full rounded-full border border-[#DCE6F5] bg-[#F3F7FF] px-5 text-base text-[#0F2A44] placeholder:text-[#5F7390]"
+                    placeholder="Hero heading"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-[#0F2A44]">
+                    Sub-Text / Trending Categories
+                  </label>
+                  <input
+                    value={draft.subheading}
+                    onChange={(event) => setDraft((prev) => ({ ...prev, subheading: event.target.value }))}
+                    className="h-14 w-full rounded-full border border-[#DCE6F5] bg-[#F3F7FF] px-5 text-base text-[#0F2A44] placeholder:text-[#5F7390]"
+                    placeholder="Hero subheading"
+                  />
+                </div>
+
+                <div className="rounded-[28px] border border-[#DCE6F5] bg-[#F3F7FF] p-4">
+                  <div className="flex flex-wrap gap-3">
+                    {draft.popularChips.map((chip) => (
+                      <span
+                        key={`${chip.label}-${chip.slug}`}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#6EE7B7] px-4 py-2 text-sm font-semibold text-[#0F2A44]"
+                      >
+                        {chip.label}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              popularChips: prev.popularChips.filter((item) => item.slug !== chip.slug),
+                            }))
+                          }
+                          className="rounded-full p-0.5 text-[#0F2A44] hover:bg-white/40"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-full border border-dashed border-[#A5B4FC] px-4 py-2 text-sm font-semibold text-[#7C83D8] transition hover:bg-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Tag
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className=" border border-[#DCE6F5] bg-white p-8 ">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DBEAFE] text-[#2563EB]">
+                    <Upload className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#0F2A44]">Background Banners</h2>
+                    <p className="text-sm text-[#5F7390]">Upload and arrange the hero background images.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-11 rounded-full border-[#DCE6F5] bg-white px-5 text-sm font-semibold text-[#0F2A44] hover:bg-[#F3F7FF]"
+                  >
+                    Add URL
+                  </Button>
+                  <label className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#3B82F6]">
+                    Upload Image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          if (typeof reader.result !== "string") return;
+                          setDraft((prev) => {
+                            const emptyIndex = prev.banners.findIndex((item) => !item.trim());
+                            if (emptyIndex < 0) {
+                              toast.error(`All ${HERO_BANNER_COUNT} banner slots are filled`);
+                              return prev;
+                            }
+                            const next = [...prev.banners];
+                            next[emptyIndex] = reader.result as string;
+                            return { ...prev, banners: next };
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {draft.banners.map((banner, index) => {
+                  const isLocked = index === HERO_BANNER_COUNT - 1;
+                  return (
+                    <div
+                      key={`hero-banner-${index}`}
+                      className="group relative rounded-[22px] border border-[#DCE6F5] bg-[#F7F6FF] p-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="relative overflow-hidden rounded-[18px] border border-dashed border-[#C9D4F2] bg-[#EEECFF]">
+                        {banner ? (
+                          <img
+                            src={banner}
+                            alt={`banner-${index + 1}`}
+                            className="aspect-square w-full object-cover"
+                          />
+                        ) : isLocked ? (
+                          <div className="flex aspect-square w-full items-center justify-center text-[#C7C9E8]">
+                            <Lock className="h-6 w-6" />
+                          </div>
+                        ) : (
+                          <div className="flex aspect-square w-full items-center justify-center text-[#A5B4FC]">
+                            <ImageIcon className="h-6 w-6" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center py-2">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#7C83D8]">
+                          Slot {index + 1}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          <aside className="xl:sticky xl:top-8 xl:w-full">
+            <section className="w-full border border-[#DCE6F5] bg-white p-5 ">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm font-semibold text-[#0F2A44]">Live preview</p>
+                <p className="text-xs text-[#5F7390]">Real-time live preview</p>
+              </div>
+
+              <div className=" w-full overflow-hidden  border-[6px] border-[#2A2E63] bg-black ">
+                
+                <div className="pointer-events-none h-[500px] overflow-hidden">
+                  <HomeHero
+                    heading={draft.heading}
+                    subheading={draft.subheading}
+                    banners={draft.banners}
+                    popularChips={draft.popularChips}
+                  />
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
     </div>
   );
 }
-
