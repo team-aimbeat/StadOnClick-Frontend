@@ -944,7 +944,7 @@ export default function ServiceDetail() {
                       <Eye className="h-3.5 w-3.5" />
                       {totalVisitors} visitors
                     </span>
-                    <span className="inline-flex items-center rounded-full bg-[#1D4ED8] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-sm">
+                    <span className="inline-flex items-center rounded-full bg-[#4b76d5] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-sm">
                         {todayVisitors} today
                      </span>
                    </div>
@@ -1202,7 +1202,7 @@ export default function ServiceDetail() {
                                 className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
                                   isSlotUnavailable
                                     ? "bg-[#EAF1FF] text-[#5F7390]"
-                                    : "bg-[#EAF1FF] text-[#2563EB]"
+                                    : "bg-[#EAF1FF] text-[#4b76d5]"
                                 }`}
                               >
                                 {isSlotUnavailable ? "Limited" : "Available now"}
@@ -1216,7 +1216,7 @@ export default function ServiceDetail() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-[28px] font-bold leading-none text-[#2563EB]">
+                              <p className="text-[28px] font-bold leading-none text-[#4b76d5]">
                                 {formatCurrency(displayPrice)}
                               </p>
                               <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
@@ -1236,7 +1236,7 @@ export default function ServiceDetail() {
                             </p>
                             <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-[#5F7390]">
                               <span>Created {new Date(offering.createdAt).toLocaleDateString()}</span>
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f8] px-3 py-1 text-[#6b6ef9]">
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f8] px-3 py-1 text-[#4b76d5]">
                                 <Users className="h-3.5 w-3.5" />
                                 Up to {offering.maxQuantity || "N/A"}
                               </span>
@@ -1276,7 +1276,7 @@ export default function ServiceDetail() {
                                   ? "cursor-not-allowed border border-[#DCE6F5] bg-[#EAF1FF] text-[#5F7390]"
                                   : requiresSlot || isMovieBookingOffering
                                     ? "bg-[#DBEAFE] text-[#0F2A44] hover:bg-[#BFDBFE] active:bg-[#93C5FD]"
-                                    : "border border-[#DCE6F5] bg-white text-[#2563EB] shadow-[0_10px_24px_-18px_rgba(37,99,235,0.2)] hover:border-[#2563EB]"
+                                    : "border border-[#DCE6F5] bg-[#4b76d5] text-white"
                               }`}
                               disabled={isSlotUnavailable}
                               onClick={() => handleBookClick(offering)}
@@ -1590,7 +1590,7 @@ export default function ServiceDetail() {
                       {formatCurrency(serviceFee)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[#6b6ef9]">
+                  <div className="flex items-center justify-between text-[#4b76d5]">
                     <span className="font-semibold">Discount (Promo)</span>
                     <span className="font-semibold">
                       -{formatCurrency(cartDiscount)}
@@ -2098,13 +2098,13 @@ export default function ServiceDetail() {
                 value={userComment}
                 onChange={(evt) => setUserComment(evt.target.value)}
                 placeholder="Tell fellow guests what made your visit special"
-                className="min-h-35 w-full rounded-2xl border border-[#DCE6F5] bg-white px-4 py-3 text-sm text-[#0F2A44] focus:border-[#2563EB] focus:outline-none"
+                className="min-h-35 w-full rounded-2xl border border-[#DCE6F5] bg-white px-4 py-3 text-sm text-[#0F2A44] focus:border-[#4b76d5]focus:outline-none"
               />
 
               <Button
                 onClick={handleSubmitReview}
                 disabled={isSubmitting}
-                className=""
+                className=" font-semibold bg-[#4b76d5]"
               >
                 {isSubmitting ? "Submitting..." : "Submit Review"}
               </Button>
