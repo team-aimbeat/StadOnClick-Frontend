@@ -865,18 +865,18 @@ export default function ServiceDetail() {
   if (!service) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F1F3F7] px-4">
-        <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
+      <div className="w-full max-w-xl rounded-3xl border border-[#DCE6F5] bg-white p-8 text-center shadow-sm">
+          <h2 className="text-3xl font-semibold tracking-tight text-[#0F2A44]">
             Sign in to view services
           </h2>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-[#5F7390]">
             We need to know who you are before showing your bookings and
             purchases.
           </p>
           <Button
             type="button"
             onClick={() => navigate("/sign-in")}
-            className="mt-6 h-11 w-full rounded-full bg-blue-600 text-base font-semibold text-white hover:bg-blue-700"
+            className="mt-6 h-11 w-full rounded-full bg-[#DBEAFE] text-base font-semibold text-[#0F2A44] hover:bg-[#BFDBFE]"
           >
             Go to sign in
           </Button>
@@ -897,18 +897,18 @@ export default function ServiceDetail() {
     "Our team curates a premium experience for every guest - scroll through the service options to choose what fits your visit.";
 
   const statusStyles: Record<string, string> = {
-    DRAFT: "bg-yellow-100 text-yellow-700",
-    PAUSED: "bg-red-100 text-red-700",
-    LIVE: "bg-green-100 text-green-700",
+    DRAFT: "bg-[#EAF1FF] text-[#2563EB]",
+    PAUSED: "bg-[#EAF1FF] text-[#5F7390]",
+    LIVE: "bg-[#EAF1FF] text-[#1D4ED8]",
   };
 
   return (
-    <section className="min-h-screen bg-[#FAF9F6] py-10 text-slate-700 ">
+    <section className="min-h-screen bg-[#F3F7FF] py-10 text-[#0F2A44] ">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 ">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#5F7390] transition hover:text-[#0F2A44]"
         >
           <ChevronLeft className="h-4 w-4 mt-4" />
           Back to services
@@ -918,16 +918,16 @@ export default function ServiceDetail() {
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <h1 className="text-3xl font-semibold text-slate-900">
+                  <h1 className="text-3xl font-semibold text-[#0F2A44]">
                     {service.title}
                   </h1>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-black">
+                   <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#0F2A44]">
                     <div className="flex">
                       <MapPinIcon className="h-5 w-5 " />
                       <div className="ml-2 font-semibold">{serviceCity}</div>
                     </div>
-                    <div className="inline-flex items-center gap-1.5  px-2.5 py-1 text-xs font-bold text-black">
-                      <span className="inline-flex h-4.5 w-4.5 items-center justify-center  bg-[#f5f5f5] text-[#F4C542]">
+                    <div className="inline-flex items-center gap-1.5  px-2.5 py-1 text-xs font-bold text-[#D4AF37]">
+                      <span className="inline-flex h-4.5 w-4.5 items-center justify-center  bg-[#FEF3C7] text-[#F5A623]">
                         <Star className="h-4 w-4 fill-current text-current" />
                       </span>
                       {reviews && reviews.length > 0
@@ -937,22 +937,22 @@ export default function ServiceDetail() {
                           ).toFixed(1)
                         : "0.0"}
                     </div>
-                    <span className="text-xs text-black">
+                    <span className="text-xs text-[#5F7390]">
                       ({reviews?.length || 0}+ verified guest reviews)
                     </span>
-                    <span className="inline-flex ml-4 items-center gap-1.5 rounded-full border border-[#9BC2FF] bg-white px-3 py-1 text-xs font-extrabold tracking-wide text-[#3765FF] shadow-sm">
+                    <span className="inline-flex ml-4 items-center gap-1.5 rounded-full border border-[#DCE6F5] bg-white px-3 py-1 text-xs font-extrabold tracking-wide text-[#2563EB] shadow-sm">
                       <Eye className="h-3.5 w-3.5" />
                       {totalVisitors} visitors
                     </span>
-                   <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-sm">
+                    <span className="inline-flex items-center rounded-full bg-[#1D4ED8] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-sm">
                         {todayVisitors} today
                      </span>
                    </div>
                 </div>
                 <div className="flex items-center gap-3">
                       {myReferralSummary?.referralCode ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">
-                      <span className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">
+                     <div className="inline-flex items-center gap-2 rounded-full border border-[#DCE6F5] bg-[#EAF1FF] px-2.5 py-1">
+                       <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#2563EB]">
                         {myReferralSummary.referralCode}
                       </span>
                       <button
@@ -963,7 +963,7 @@ export default function ServiceDetail() {
                           );
                           toast.success("Referral code copied");
                         }}
-                        className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-emerald-700"
+                         className="rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0F2A44] hover:bg-[#BFDBFE]"
                       >
                         Copy
                       </button>
@@ -971,13 +971,13 @@ export default function ServiceDetail() {
                   ) : null}   
                   <button
                     type="button"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE6F5] bg-white text-[#5F7390] shadow-sm transition hover:border-[#2563EB] hover:text-[#2563EB]"
                   >
                     <Share2 className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE6F5] bg-white text-[#5F7390] shadow-sm transition hover:border-[#2563EB] hover:text-[#2563EB]"
                   >
                     <Heart className="h-4 w-4" />
                   </button>
@@ -1008,10 +1008,10 @@ export default function ServiceDetail() {
                     ?.scrollIntoView({ behavior: "smooth", block: "start" })
                 }
               />
-              <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#5F7390]">
                 {service.status && (
                   <span
-                    className={`rounded-full border border-slate-200 px-3 py-1 text-sm font-semibold ${statusStyles[service.status] ?? "border-slate-200 text-slate-700"}`}
+                    className={`rounded-full border border-[#DCE6F5] px-3 py-1 text-sm font-semibold ${statusStyles[service.status] ?? "border-[#DCE6F5] text-[#5F7390]"}`}
                   >
                     {service.status}
                   </span>
@@ -1019,9 +1019,9 @@ export default function ServiceDetail() {
               </div>
 
               {isAffiliate && (
-                <div className="w-full max-w-[520px] rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <div className="w-full max-w-[520px] rounded-2xl border border-[#DCE6F5] bg-[#EAF1FF] p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-blue-900">
+                    <p className="text-sm font-semibold text-[#0F2A44]">
                       Affiliate link for this service
                     </p>
                     <Button
@@ -1050,12 +1050,12 @@ export default function ServiceDetail() {
 
                   {affiliateLinkRes?.data?.url ? (
                     <div className="mt-3 space-y-2">
-                      <p className="text-xs text-blue-800">Referral code</p>
-                      <p className="text-sm font-semibold text-blue-900">
+                      <p className="text-xs text-[#5F7390]">Referral code</p>
+                      <p className="text-sm font-semibold text-[#0F2A44]">
                         {affiliateLinkRes.data.code}
                       </p>
-                      <p className="text-xs text-blue-800">Shareable link</p>
-                      <div className="rounded-lg border border-blue-200 bg-white p-2 text-xs font-mono break-all text-slate-700">
+                      <p className="text-xs text-[#5F7390]">Shareable link</p>
+                      <div className="rounded-lg border border-[#DCE6F5] bg-white p-2 text-xs font-mono break-all text-[#0F2A44]">
                         {affiliateLinkRes.data.url}
                       </div>
                       <Button
@@ -1102,13 +1102,13 @@ export default function ServiceDetail() {
 
         <div className="grid gap-6 grid-cols-5">
             <div id="service-offerings" className="col-span-3 min-w-0 space-y-6">
-              <div className="rounded-[30px] border border-slate-200 bg-white p-7 ">
+              <div className="rounded-[30px] border border-[#DCE6F5] bg-white p-7">
                 <div className="max-w-3xl">
  
-                  <h2 className="mt-3 text-[28px] font-semibold leading-tight text-[#3758d7]">
+                  <h2 className="mt-3 text-[28px] font-semibold leading-tight text-[#0F2A44]">
                     About {service.title}
                   </h2>
-                  <p className="mt-4 text-[15px] font-medium leading-8 text-slate-600">
+                  <p className="mt-4 text-[15px] font-medium leading-8 text-[#5F7390]">
                     {serviceDescription}
                   </p>
                 </div>
@@ -1117,10 +1117,10 @@ export default function ServiceDetail() {
                   <div className="mt-6 flex flex-wrap gap-3">
                     {descriptionRules.map((rule, index) => {
                       const tones = [
-                        "bg-[#eef2ff] text-[#5a67f2]",
-                        "bg-[#f4edff] text-[#7a58d1]",
-                        "bg-[#e9f7ff] text-[#2878c8]",
-                        "bg-[#ffeceb] text-[#d45a45]",
+                        "bg-[#EAF1FF] text-[#2563EB]",
+                        "bg-[#F3F7FF] text-[#1D4ED8]",
+                        "bg-[#EAF1FF] text-[#60A5FA]",
+                        "bg-[#FFFFFF] text-[#2563EB]",
                       ];
                       const tone = tones[index % tones.length];
 
@@ -1138,17 +1138,17 @@ export default function ServiceDetail() {
                 ) : null}
               </div>
 
-              <div className="space-y-5 rounded-3xl bg-white p-8 ">
+              <div className="space-y-5 rounded-3xl border border-[#DCE6F5] bg-white p-8 ">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-900">
+                    <h2 className="text-xl font-semibold text-[#0F2A44]">
                       Services
                     </h2>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-[#5F7390]">
                       Choose a ritual that suits your mood
                     </p>
                   </div>
-                  <span className="text-sm font-semibold text-slate-500">
+                  <span className="text-sm font-semibold text-[#5F7390]">
                     {packagesCount} packages
                   </span>
                 </div>
@@ -1189,37 +1189,37 @@ export default function ServiceDetail() {
                         ? "bg-rose-500"
                         : hasInventory &&
                             Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
-                          ? "bg-amber-500"
-                          : "bg-emerald-500";
+                          ? "bg-[#60A5FA]"
+                          : "bg-[#DBEAFE]";
                       return (
                         <div
                           key={offering.id}
-                          className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 "
+                          className="space-y-4 rounded-[26px] border border-[#DCE6F5] bg-white p-5 "
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div>
                               <span
                                 className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
                                   isSlotUnavailable
-                                    ? "bg-slate-100 text-slate-500"
-                                    : "bg-[#eef2ff] text-[#4f67ff]"
+                                    ? "bg-[#EAF1FF] text-[#5F7390]"
+                                    : "bg-[#EAF1FF] text-[#2563EB]"
                                 }`}
                               >
                                 {isSlotUnavailable ? "Limited" : "Available now"}
                               </span>
-                              <p className="mt-4 text-[22px] font-semibold leading-tight text-slate-900">
+                              <p className="mt-4 text-[22px] font-semibold leading-tight text-[#0F2A44]">
                                 {offering.name}
                               </p>
-                              <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                              <div className="mt-2 flex items-center gap-2 text-xs text-[#5F7390]">
                                 <MapPinIcon className="h-3.5 w-3.5" />
                                 <span>{serviceCity}</span>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-[28px] font-bold leading-none text-[#4f67ff]">
+                              <p className="text-[28px] font-bold leading-none text-[#2563EB]">
                                 {formatCurrency(displayPrice)}
                               </p>
-                              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
                                 {offering.usesSlots || (offering.slots?.length ?? 0) > 0
                                   ? "PER SLOT"
                                   : offering.maxQuantity
@@ -1230,11 +1230,11 @@ export default function ServiceDetail() {
                           </div>
 
                           <div className="space-y-2">
-                            <p className="text-sm text-slate-600">
+                            <p className="text-sm text-[#5F7390]">
                               {offering.description ??
                                 "Exclusive access with a streamlined booking experience and flexible scheduling."}
                             </p>
-                            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-500">
+                            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-[#5F7390]">
                               <span>Created {new Date(offering.createdAt).toLocaleDateString()}</span>
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f8] px-3 py-1 text-[#6b6ef9]">
                                 <Users className="h-3.5 w-3.5" />
@@ -1244,7 +1244,7 @@ export default function ServiceDetail() {
                             </div>
                             {hasInventory && remainingPercent !== null ? (
                               <div className="max-w-[220px]">
-                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EAF1FF]">
                                   <div
                                     className={`h-full rounded-full ${inventoryBarClass}`}
                                     style={{ width: `${remainingPercent}%` }}
@@ -1254,15 +1254,15 @@ export default function ServiceDetail() {
                             ) : null}
                             {offering.isDealActive ? (
                               <div className="flex flex-wrap items-center gap-3 text-xs">
-                                <p className="font-semibold text-slate-400 line-through">
+                                <p className="font-semibold text-[#5F7390] line-through">
                                   {formatCurrency(offering.basePrice)}
                                 </p>
-                                <p className="font-black text-orange-600">
+                                <p className="font-black text-[#2563EB]">
                                   {activeDiscountPercent}% OFF
                                 </p>
                                 <DealTimer
                                   endTime={offering.dealEndTime}
-                                  className="font-semibold text-slate-500"
+                                  className="font-semibold text-[#5F7390]"
                                 />
                               </div>
                             ) : null}
@@ -1273,10 +1273,10 @@ export default function ServiceDetail() {
                               type="button"
                               className={`min-w-[132px] rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                                 isSlotUnavailable
-                                  ? "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+                                  ? "cursor-not-allowed border border-[#DCE6F5] bg-[#EAF1FF] text-[#5F7390]"
                                   : requiresSlot || isMovieBookingOffering
-                                    ? "bg-[#4f67ff] text-white hover:bg-[#3f59ff]"
-                                    : "border border-[#cfd8ff] bg-white text-[#4f67ff] shadow-[0_10px_24px_-18px_rgba(79,103,255,0.35)] hover:border-[#4f67ff]"
+                                    ? "bg-[#DBEAFE] text-[#0F2A44] hover:bg-[#BFDBFE] active:bg-[#93C5FD]"
+                                    : "border border-[#DCE6F5] bg-white text-[#2563EB] shadow-[0_10px_24px_-18px_rgba(37,99,235,0.2)] hover:border-[#2563EB]"
                               }`}
                               disabled={isSlotUnavailable}
                               onClick={() => handleBookClick(offering)}
@@ -1291,60 +1291,60 @@ export default function ServiceDetail() {
                     marketplaceOfferingsPreview.map((offering) => (
                       <div
                         key={offering.id}
-                        className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.22)]"
+                        className="space-y-4 rounded-[26px] border border-[#DCE6F5] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(15,42,68,0.14)]"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <span className="inline-flex rounded-full bg-[#eef2ff] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#4f67ff]">
+                            <span className="inline-flex rounded-full bg-[#EAF1FF] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">
                               Preview
                             </span>
-                            <p className="mt-4 text-[22px] font-semibold leading-tight text-slate-900">
+                            <p className="mt-4 text-[22px] font-semibold leading-tight text-[#0F2A44]">
                               {offering.name}
                             </p>
-                            <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                            <div className="mt-2 flex items-center gap-2 text-xs text-[#5F7390]">
                               <MapPinIcon className="h-3.5 w-3.5" />
                               <span>{serviceCity}</span>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-[28px] font-bold leading-none text-[#4f67ff]">
+                            <p className="text-[28px] font-bold leading-none text-[#2563EB]">
                               {formatCurrency(
                                 Number(offering.effectivePrice ?? offering.salePrice ?? offering.basePrice ?? 0),
                               )}
                             </p>
-                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
                               {offering.durationLabel?.toUpperCase() ?? "PER BOOKING"}
                             </p>
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <p className="text-sm text-slate-600">
+                          <p className="text-sm text-[#5F7390]">
                             {offering.description ??
                               "Exclusive access with curated service details available at launch."}
                           </p>
                           {offering.durationLabel ? (
-                            <p className="text-xs font-medium text-slate-500">
+                            <p className="text-xs font-medium text-[#5F7390]">
                               Duration: {offering.durationLabel}
                             </p>
                           ) : null}
                           {offering.isDealActive ? (
                             <div className="flex flex-wrap items-center gap-3 text-xs">
-                              <p className="font-semibold text-slate-400 line-through">
+                              <p className="font-semibold text-[#5F7390] line-through">
                                 {formatCurrency(Number(offering.basePrice ?? 0))}
                               </p>
-                              <p className="font-black text-orange-600">
+                              <p className="font-black text-[#2563EB]">
                                 {Number(offering.discountPercent ?? 0)}% OFF
                               </p>
                               <DealTimer
                                 endTime={offering.dealEndTime}
-                                className="font-semibold text-slate-500"
+                                className="font-semibold text-[#5F7390]"
                               />
                             </div>
                           ) : null}
                         </div>
                         <div className="flex justify-end">
                           <button
-                            className="min-w-[132px] rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+                            className="min-w-[132px] rounded-xl border border-[#DCE6F5] bg-[#EAF1FF] px-4 py-2.5 text-sm font-semibold text-[#5F7390]"
                             disabled
                             type="button"
                           >
@@ -1354,7 +1354,7 @@ export default function ServiceDetail() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
+                    <div className="rounded-2xl border border-[#DCE6F5] bg-[#EAF1FF] p-4 text-sm text-[#5F7390]">
                       No service packages are available yet for this listing.
                     </div>
                   )}
@@ -1363,22 +1363,22 @@ export default function ServiceDetail() {
             </div>
 
           <div className="col-span-2">
-            <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="space-y-5 rounded-3xl border border-[#DCE6F5] bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-[#0F2A44]">
                     Your order
                   </h3>
 
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="text-xs text-slate-400">
+                    <span className="text-xs text-[#5F7390]">
                     {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
                   </span>
                 </div>
               </div>
               {cartItems.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#5F7390]">
                   Choose a service from the list to start your booking.
                 </p>
               ) : (
@@ -1389,40 +1389,40 @@ export default function ServiceDetail() {
                       className="flex items-start justify-between gap-4 overflow-hidden"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="max-w-full break-words text-sm font-semibold text-slate-900">
+                        <p className="max-w-full break-words text-sm font-semibold text-[#0F2A44]">
                           {item.offering.name}
                         </p>
-                        <p className="max-w-full overflow-hidden break-all text-xs text-slate-500">
+                        <p className="max-w-full overflow-hidden break-all text-xs text-[#5F7390]">
                           {item.offering.description ?? "Premium experience"}
                         </p>
                         <button
                           type="button"
                           onClick={() => handleRemoveCartItem(item.offering.id)}
-                          className="mt-2 text-xs font-semibold text-blue-600"
+                          className="mt-2 text-xs font-semibold text-[#2563EB]"
                         >
                           Remove
                         </button>
                       </div>
                       <div className="w-[136px] shrink-0 text-right">
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-[#0F2A44]">
                           {formatCurrency(getEffectivePrice(item.offering))} per person
                         </p>
                         <div className="mt-2 flex items-center justify-end gap-2 rounded-full px-2 py-1">
                           <button
                             type="button"
-                            className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                            className="h-7 w-7 rounded-full bg-[#EAF1FF] text-sm font-semibold text-[#0F2A44] shadow-sm"
                             onClick={() =>
                               updateCartQuantity(item.offering.id, -1)
                             }
                           >
                             âˆ’
                           </button>
-                          <span className="text-sm font-semibold text-slate-900">
+                          <span className="text-sm font-semibold text-[#0F2A44]">
                             {item.quantity}
                           </span>
                           <button
                             type="button"
-                            className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                            className="h-7 w-7 rounded-full bg-[#EAF1FF] text-sm font-semibold text-[#0F2A44] shadow-sm"
                             onClick={() =>
                               updateCartQuantity(item.offering.id, 1)
                             }
@@ -1435,15 +1435,15 @@ export default function ServiceDetail() {
                   ))}
                 </div>
               )}
-              <div className="space-y-5 rounded-[28px] border border-slate-200 bg-[#f5f7fb] p-5 ">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf1ff] text-[#4f67ff]">
+              <div className="space-y-5 rounded-[28px] border border-[#DCE6F5] bg-[#EAF1FF] p-5 ">
+                <div className="flex items-center gap-2 text-[#0F2A44]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF1FF] text-[#2563EB]">
                     <Wallet className="h-4 w-4" />
                   </div>
                   <h4 className="text-lg font-semibold">Wallet & Rewards</h4>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
                     Apply promo code
                   </p>
                 </div>
@@ -1453,19 +1453,19 @@ export default function ServiceDetail() {
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
                     placeholder="ENTER CODE"
-                    className="h-11 flex-1 rounded-xl border border-white bg-white px-4 text-sm font-semibold uppercase tracking-wide text-slate-700 placeholder:text-slate-400 focus:border-[#4f67ff] focus:outline-none"
+                    className="h-11 flex-1 rounded-xl border border-[#DCE6F5] bg-white px-4 text-sm font-semibold uppercase tracking-wide text-[#0F2A44] placeholder:text-[#5F7390] focus:border-[#2563EB] focus:outline-none"
                   />
                   <Button
                     variant={"default"}
                     onClick={handleApplyPromo}
                     disabled={!promoCode.trim() || isApplyingCoupon}
-                    className="h-11 rounded-xl bg-[#4f67ff] px-5 text-sm font-semibold uppercase tracking-wide text-white hover:bg-[#3f59ff]"
+                    className="h-11 rounded-xl bg-[#DBEAFE] px-5 text-sm font-semibold uppercase tracking-wide text-[#0F2A44] hover:bg-[#BFDBFE] active:bg-[#93C5FD]"
                   >
                     {isApplyingCoupon ? "Checking..." : "Apply"}
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
                     Available coupons
                   </p>
                   <div className="space-y-2.5">
@@ -1484,19 +1484,19 @@ export default function ServiceDetail() {
                           }}
                           className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
                             locked
-                              ? "border-slate-200 bg-white/70 text-slate-400"
-                              : "border-[#d9e4ff] bg-white text-slate-900 hover:border-[#4f67ff]"
+                              ? "border-[#DCE6F5] bg-white/70 text-[#5F7390]"
+                              : "border-[#DCE6F5] bg-white text-[#0F2A44] hover:border-[#2563EB]"
                           }`}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg ${locked ? "bg-slate-100 text-slate-400" : "bg-[#edf1ff] text-[#4f67ff]"}`}>
+                            <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg ${locked ? "bg-[#EAF1FF] text-[#5F7390]" : "bg-[#EAF1FF] text-[#2563EB]"}`}>
                               <TicketPercent className="h-4 w-4" />
                             </div>
                             <div>
-                              <p className={`text-sm font-bold ${locked ? "text-slate-400" : "text-[#4f67ff]"}`}>
+                              <p className={`text-sm font-bold ${locked ? "text-[#5F7390]" : "text-[#2563EB]"}`}>
                                 {coupon.code}
                               </p>
-                              <p className="mt-1 text-xs text-slate-500">
+                              <p className="mt-1 text-xs text-[#5F7390]">
                                 {coupon.title}
                               </p>
                             </div>
@@ -1504,7 +1504,7 @@ export default function ServiceDetail() {
                           {locked ? (
                             <Lock className="h-4 w-4 shrink-0" />
                           ) : (
-                            <ArrowRight className="h-4 w-4 shrink-0 text-[#4f67ff]" />
+                            <ArrowRight className="h-4 w-4 shrink-0 text-[#2563EB]" />
                           )}
                         </button>
                       );
@@ -1512,7 +1512,7 @@ export default function ServiceDetail() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
                     User referral code
                   </p>
                   <div className="flex items-center gap-2">
@@ -1524,19 +1524,19 @@ export default function ServiceDetail() {
                         setReferralCodeFeedback(null);
                       }}
                       placeholder="ENTER REFERRAL CODE"
-                      className="h-11 flex-1 rounded-xl border border-white bg-white px-4 text-sm font-semibold uppercase tracking-wide text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none"
+                      className="h-11 flex-1 rounded-xl border border-[#DCE6F5] bg-white px-4 text-sm font-semibold uppercase tracking-wide text-[#0F2A44] placeholder:text-[#5F7390] focus:border-[#2563EB] focus:outline-none"
                     />
                     <Button
                       variant={"default"}
                       onClick={handleApplyReferralCode}
                       disabled={!referralCodeInput.trim()}
-                      className="h-11 rounded-xl border border-emerald-200 bg-emerald-50 px-5 text-sm font-semibold uppercase tracking-wide text-emerald-700 hover:bg-emerald-100"
+                      className="h-11 rounded-xl border border-[#DCE6F5] bg-[#EAF1FF] px-5 text-sm font-semibold uppercase tracking-wide text-[#2563EB] hover:bg-[#F3F7FF]"
                     >
                       Apply
                     </Button>
                   </div>
                   {appliedReferralCode ? (
-                    <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700">
+                    <div className="rounded-2xl bg-[#EAF1FF] px-4 py-3 text-xs font-semibold text-[#2563EB]">
                       {referralCodeFeedback ?? `Referral code ${appliedReferralCode} applied`}
                       <button
                         type="button"
@@ -1556,7 +1556,7 @@ export default function ServiceDetail() {
                   <p className="text-xs font-semibold text-red-600">{couponError}</p>
                 ) : null}
                 {appliedCoupon ? (
-                  <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700">
+                  <div className="rounded-2xl bg-[#EAF1FF] px-4 py-3 text-xs font-semibold text-[#2563EB]">
                     Coupon {appliedCoupon.code} applied (
                     {appliedCoupon.discountType === "FLAT"
                       ? formatCurrency(appliedCoupon.value)
@@ -1576,17 +1576,17 @@ export default function ServiceDetail() {
                 ) : null}
               </div>
 
-              <div className="space-y-5 rounded-[28px] border border-slate-200 bg-white p-6 ">
+              <div className="space-y-5 rounded-[28px] border border-[#DCE6F5] bg-white p-6 ">
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-[#5F7390]">
                     <span>Subtotal</span>
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-[#0F2A44]">
                       {formatCurrency(cartSubtotal)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-500">
+                  <div className="flex items-center justify-between text-[#5F7390]">
                     <span>Service Fee</span>
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-[#0F2A44]">
                       {formatCurrency(serviceFee)}
                     </span>
                   </div>
@@ -1597,15 +1597,15 @@ export default function ServiceDetail() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-end justify-between border-t border-slate-100 pt-4">
-                  <span className="text-[28px] font-semibold text-slate-900">Total</span>
-                  <span className="text-[34px] font-bold leading-none text-[#4f67ff]">
+                <div className="flex items-end justify-between border-t border-[#DCE6F5] pt-4">
+                  <span className="text-[28px] font-semibold text-[#0F2A44]">Total</span>
+                  <span className="text-[34px] font-bold leading-none text-[#2563EB]">
                     {formatCurrency(cartTotal)}
                   </span>
                 </div>
                 <Button
                   onClick={handleCheckoutCart}
-                  className="h-14 w-full rounded-2xl bg-[#4f67ff] text-base font-semibold text-white hover:bg-[#3f59ff]"
+                  className="h-14 w-full rounded-2xl bg-[#DBEAFE] text-base font-semibold text-[#0F2A44] hover:bg-[#BFDBFE] active:bg-[#93C5FD]"
                   disabled={cartItems.length === 0 || isCreatingSession}
                 >
                   <span className="inline-flex items-center gap-2">
@@ -1621,9 +1621,9 @@ export default function ServiceDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* ================= LEFT SIDE - LOCATION ================= */}
-          <div className="lg:col-span-3 space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
+          <div className="lg:col-span-3 space-y-5 rounded-3xl border border-[#DCE6F5] bg-white max-w-[800px] max-h-[380px] p-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-[#0F2A44]">
                 {service.title}'s Location
               </h2>
 
@@ -1631,7 +1631,7 @@ export default function ServiceDetail() {
                 href={`https://www.google.com/maps?q=${resolvedLatitude},${resolvedLongitude}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-600 hover:underline"
+                className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-[#2563EB] hover:underline"
               >
                 <img src={map} className="h-5 w-5" />
                 <span>Google Maps</span>
@@ -1647,8 +1647,8 @@ export default function ServiceDetail() {
 
           {/* ================= RIGHT SIDE - COUPONS ================= */}
           {vendorCoupons.length > 0 && (
-            <div className="lg:col-span-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h4 className="text-sm font-semibold text-slate-900">Coupons</h4>
+            <div className="lg:col-span-2 space-y-3 rounded-2xl border border-[#DCE6F5] bg-[#EAF1FF] p-4">
+              <h4 className="text-sm font-semibold text-[#0F2A44]">Coupons</h4>
 
               <div className="space-y-3">
                 {vendorCoupons.slice(0, 4).map((coupon, index) => {
@@ -1664,33 +1664,33 @@ export default function ServiceDetail() {
                         <div
                           className={`relative px-3 py-4 text-center ${theme.leftPanel}`}
                         >
-                          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-700">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#0F2A44]">
                             Shopping Coupon
                           </p>
 
-                          <p className="mt-2 text-[30px] font-black leading-none text-slate-900">
+                          <p className="mt-2 text-[30px] font-black leading-none text-[#0F2A44]">
                             {coupon.discountType === "FLAT"
                               ? `${formatCurrency(coupon.discount)}`
                               : `${coupon.discount}%`}
                           </p>
 
-                          <p className="text-[28px] font-black leading-none text-slate-900">
+                          <p className="text-[28px] font-black leading-none text-[#0F2A44]">
                             OFF
                           </p>
 
-                          <div className="mt-3 space-y-1 text-[11px] text-slate-600">
+                          <div className="mt-3 space-y-1 text-[11px] text-[#5F7390]">
                             <p>Min order {formatCurrency(coupon.minOrder)}</p>
                             <p>Max uses {coupon.maxUses}</p>
                           </div>
 
-                          <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                          <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#F3F7FF]" />
                         </div>
 
                         {/* RIGHT PANEL */}
                         <div
                           className={`relative px-4 py-4 text-white ${theme.rightPanel}`}
                         >
-                          <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                          <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#F3F7FF]" />
 
                           <div className="pl-3">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
@@ -1723,7 +1723,7 @@ export default function ServiceDetail() {
                               <Button
                                 type="button"
                                 variant="secondary"
-                                className="h-8 shrink-0 rounded-md border border-white/40 bg-white/20 px-3 text-xs font-semibold text-white hover:bg-white/30"
+                                className="h-8 shrink-0 rounded-md border border-[#DCE6F5] bg-[#DBEAFE]/20 px-3 text-xs font-semibold text-white hover:bg-[#DBEAFE]/30"
                                 onClick={() => {
                                   setPromoCode(coupon.code);
                                   setCouponError(null);
@@ -1745,13 +1745,13 @@ export default function ServiceDetail() {
 
         <div className="max-w-[800px]">
           {/* Highlights & Amenities Section */}
-          <div className="space-y-6 rounded-3xl bg-white p-8">
+          <div className="space-y-6 rounded-3xl border border-[#DCE6F5] bg-white p-8">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="text-2xl font-bold text-slate-900">
+                  <h2 className="text-2xl font-bold text-[#0F2A44]">
                 Highlights & Amenities
               </h2>
-              <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#4f67ff]">
-                <span className="h-2 w-2 rounded-full bg-[#4f67ff]" />
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#2563EB]">
+                <span className="h-2 w-2 rounded-full bg-[#60A5FA]" />
                 All Inclusive
               </span>
             </div>
@@ -1782,7 +1782,7 @@ export default function ServiceDetail() {
               ].map(({ title, description, icon: Icon, iconTone, iconLabel }) => (
                 <div
                   key={title}
-                  className="rounded-[28px] border border-slate-100 bg-white p-6 "
+                  className="rounded-[28px] border border-[#DCE6F5] bg-white p-6 "
                 >
                   <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconTone}`}>
                     {iconLabel ? (
@@ -1791,10 +1791,10 @@ export default function ServiceDetail() {
                       <Icon className="h-7 w-7" />
                     )}
                   </span>
-                  <h3 className="mt-6 text-[18px] font-semibold leading-tight text-slate-900">
+                  <h3 className="mt-6 text-[18px] font-semibold leading-tight text-[#0F2A44]">
                     {title}
                   </h3>
-                  <p className="mt-3 text-[15px] leading-7 text-slate-500">
+                  <p className="mt-3 text-[15px] leading-7 text-[#5F7390]">
                     {description}
                   </p>
                 </div>
@@ -1802,9 +1802,9 @@ export default function ServiceDetail() {
             </div>
 
             {/* Menu Preview Section */}
-            <div className="space-y-4 rounded-3xl bg-white p-8">
-              <h3 className="text-xl font-bold text-slate-900">Menu Preview</h3>
-              <p className="text-sm text-slate-500">
+            <div className="space-y-4 rounded-3xl border border-[#DCE6F5] bg-white p-8">
+              <h3 className="text-xl font-bold text-[#0F2A44]">Menu Preview</h3>
+              <p className="text-sm text-[#5F7390]">
                 View uploaded menu photos from the restaurant
               </p>
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
@@ -1813,7 +1813,7 @@ export default function ServiceDetail() {
                     <button
                       key={`${imageUrl}-${index}`}
                       type="button"
-                      className="min-w-[100px] shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      className="min-w-[100px] shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                       onClick={() => setSelectedMenuImage(imageUrl)}
                     >
                       <img
@@ -1824,7 +1824,7 @@ export default function ServiceDetail() {
                     </button>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-500">No menu images uploaded yet.</p>
+                  <p className="text-sm text-[#5F7390]">No menu images uploaded yet.</p>
                 )}
               </div>
             </div>
@@ -1833,18 +1833,18 @@ export default function ServiceDetail() {
 
         <div className="max-w-[800px]">
           {/* Trust/Feature Banner */}
-          <div className="rounded-3xl bg-white p-8">
+          <div className="rounded-3xl border border-[#DCE6F5] bg-white p-8">
             <div className="grid grid-cols-4 gap-8">
               {[
                 {
-                  icon: <BadgeCheck className="h-6 w-6 text-emerald-500" />,
+                  icon: <BadgeCheck className="h-6 w-6 text-[#34D399]" />,
                   title: "Verified Providers",
                   desc: "Trusted & quality-checked",
                 },
                 {
                   icon: (
                     <svg
-                      className="h-6 w-6 text-blue-500"
+                      className="h-6 w-6 text-[#60A5FA]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1863,7 +1863,7 @@ export default function ServiceDetail() {
                 {
                   icon: (
                     <svg
-                      className="h-6 w-6 text-purple-500"
+                      className="h-6 w-6 text-[#C084FC]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1882,7 +1882,7 @@ export default function ServiceDetail() {
                 {
                   icon: (
                     <svg
-                      className="h-6 w-6 text-orange-500"
+                      className="h-6 w-6 text-[#FB923C]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1906,26 +1906,26 @@ export default function ServiceDetail() {
                   <div className="mb-3 flex h-12 w-12 items-center justify-center">
                     {item.icon}
                   </div>
-                  <h4 className="text-sm font-bold text-slate-900">
+                  <h4 className="text-sm font-bold text-[#0F2A44]">
                     {item.title}
                   </h4>
-                  <p className="text-[12px] text-slate-500">{item.desc}</p>
+                  <p className="text-[12px] text-[#5F7390]">{item.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="space-y-5 rounded-3xl bg-white p-8 ">
+        <div className="space-y-5 rounded-3xl border border-[#DCE6F5] bg-white p-8 ">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Reviews</h2>
-              <p className="text-sm text-slate-500">
+              <h2 className="text-xl font-semibold text-[#0F2A44]">Reviews</h2>
+              <p className="text-sm text-[#5F7390]">
                 Guests recap their experience in the studio lounge and treatment
                 rooms.
               </p>
             </div>
-            <button className="text-sm font-semibold text-blue-600">
+            <button className="text-sm font-semibold text-[#2563EB]">
               View all {reviews?.length || 0} reviews
             </button>
           </div>
@@ -1958,7 +1958,7 @@ export default function ServiceDetail() {
               return (
                 <article
                   key={review.id}
-                  className="rounded-[24px] border border-slate-100 bg-white p-6 "
+                  className="rounded-[24px] border border-[#DCE6F5] bg-white p-6 "
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-start gap-4">
@@ -1975,18 +1975,18 @@ export default function ServiceDetail() {
                           }
                         />
                       ) : (
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-lg font-bold text-indigo-600">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#EAF1FF] text-lg font-bold text-[#2563EB]">
                           {reviewerInitial}
                         </div>
                       )}
                       <div className="min-w-0 space-y-2">
                         <div className="flex items-center gap-2">
-                          <p className="truncate text-[15px] font-bold text-slate-900">
+                          <p className="truncate text-[15px] font-bold text-[#0F2A44]">
                             {reviewerName}
                           </p>
                           <Badge
                             variant="outline"
-                            className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
+                            className="flex items-center gap-1 border border-[#DCE6F5] bg-[#EAF1FF] px-2 py-0.5 text-[10px] font-bold text-[#2563EB] hover:bg-[#EAF1FF]"
                           >
                             <Check className="h-3 w-3 stroke-[3px]" />
                             Verified
@@ -1998,19 +1998,19 @@ export default function ServiceDetail() {
                               key={s}
                               className={`h-5 w-5 ${
                                 s <= review.rating
-                                  ? "fill-amber-400 text-amber-400"
-                                  : "fill-slate-200 text-slate-200"
+                                  ? "fill-[#F5A623] text-[#F5A623]"
+                                  : "fill-[#DCE6F5] text-[#DCE6F5]"
                               }`}
                             />
                           ))}
                         </div>
                       </div>
                     </div>
-                    <div className="shrink-0 text-sm font-medium text-slate-500">
+                    <div className="shrink-0 text-sm font-medium text-[#5F7390]">
                       {reviewTimeLabel || new Date(review.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                  <p className="mt-4 text-[15px] leading-8 text-slate-600">
+                  <p className="mt-4 text-[15px] leading-8 text-[#5F7390]">
                     {review.comment}
                   </p>
                 </article>
@@ -2018,13 +2018,13 @@ export default function ServiceDetail() {
             })}
           </div>
           <div className="grid gap-4 lg:grid-cols-[1.0fr_0.9fr]">
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 ">
+            <div className="rounded-[28px] border border-[#DCE6F5] bg-white p-6 ">
               <div className="flex items-start justify-between gap-6">
                 <div className="space-y-1">
-                  <p className="text-[46px] font-bold leading-none text-yellow-400">
+                  <p className="text-[46px] font-bold leading-none text-[#2563EB]">
                     {averageReviewRating.toFixed(1)}
                   </p>
-                  <p className="text-sm font-semibold text-slate-600">
+                   <p className="text-sm font-semibold text-[#5F7390]">
                     Based on {reviews?.length || 0} reviews
                   </p>
                 </div>
@@ -2034,13 +2034,15 @@ export default function ServiceDetail() {
                       key={star}
                       className={`h-5 w-5 ${
                         star <= Math.round(averageReviewRating)
-                          ? "fill-amber-400 text-amber-400"
-                          : "fill-slate-200 text-slate-200"
+                            ? "fill-[#F5A623] text-[#F5A623]"
+                          : "fill-[#DCE6F5] text-[#DCE6F5]"
                       }`}
                     />
                   ))}
                 </div>
               </div>
+
+              <div className="mt-5 h-px w-full bg-[#DCE6F5]" />
 
               <div className="mt-6 space-y-3">
                 {starBreakdown.map((row) => (
@@ -2048,12 +2050,12 @@ export default function ServiceDetail() {
                     key={row.rating}
                     className="grid grid-cols-[14px_1fr] items-center gap-x-4 gap-y-1"
                   >
-                    <span className="text-sm font-semibold text-slate-700">
+                    <span className="text-sm font-semibold text-[#0F2A44]">
                       {row.rating}
                     </span>
-                    <div className="h-2 rounded-full bg-slate-100">
+                    <div className="h-2 rounded-full bg-[#EAF1FF]">
                       <div
-                        className="h-2 rounded-full bg-blue-600 transition-all"
+                        className="h-2 rounded-full bg-[#F5A623] transition-all"
                         style={{ width: `${row.percent}%` }}
                       />
                     </div>
@@ -2061,12 +2063,12 @@ export default function ServiceDetail() {
                 ))}
               </div>
             </div>
-            <div className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-8">
+            <div className="space-y-6 rounded-[32px] border border-[#DCE6F5] bg-white p-8">
               <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-900">
+                <h3 className="text-xl font-bold text-[#0F2A44]">
                   Write a Review
                 </h3>
-                <p className="text-sm font-medium text-slate-500">
+                <p className="text-sm font-medium text-[#5F7390]">
                   Your rating
                 </p>
               </div>
@@ -2084,8 +2086,8 @@ export default function ServiceDetail() {
                     <Star
                       className={`h-8 w-8 transition-colors ${
                         star <= (hoverRating || userRating)
-                          ? "fill-orange-400 text-orange-400"
-                          : "text-orange-400"
+                          ? "fill-[#F5A623] text-[#F5A623]"
+                          : "text-[#F5A623]"
                       }`}
                     />
                   </button>
@@ -2096,7 +2098,7 @@ export default function ServiceDetail() {
                 value={userComment}
                 onChange={(evt) => setUserComment(evt.target.value)}
                 placeholder="Tell fellow guests what made your visit special"
-                className="min-h-35 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 focus:border-blue-400 focus:outline-none"
+                className="min-h-35 w-full rounded-2xl border border-[#DCE6F5] bg-white px-4 py-3 text-sm text-[#0F2A44] focus:border-[#2563EB] focus:outline-none"
               />
 
               <Button
