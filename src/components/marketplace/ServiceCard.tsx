@@ -140,7 +140,7 @@ export default function ServiceCard({
   }, [fetchedOfferings, service.details])
 
   return (
-    <article className="group flex min-h-full flex-col overflow-hidden rounded-[24px] bg-white  transition hover:-translate-y-0.5 hover">
+    <article className="group flex min-h-full flex-col overflow-hidden bg-white  transition hover:-translate-y-0.5 hover">
       <div className="relative h-55 overflow-hidden">
         <img
           src={image}
@@ -177,26 +177,25 @@ export default function ServiceCard({
 
       <div className="flex flex-1 flex-col p-5 border-2 border-slate-100">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="truncate text-[22px] font-semibold leading-tight text-slate-900">
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 text-[22px] font-semibold leading-tight text-slate-900">
               {service.title}
             </h3>
           </div>
-        </div>
-
-        <div className="mt-2 flex items-center gap-1.5 text-[13px]">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Star
-              key={`rating-star-${service.id}-${index}`}
-              className={`h-3.5 w-3.5 ${
-                index < Math.round(rating)
-                  ? "fill-[#F5A623] text-[#F5A623]"
-                  : "fill-[#E7EAF3] text-[#E7EAF3]"
-              }`}
-            />
-          ))}
-          <span className="ml-1 font-semibold text-slate-900">{rating.toFixed(1)}</span>
-          <span className="text-slate-500">({reviewCount.toLocaleString()})</span>
+          <div className="flex shrink-0 items-center gap-1.5 text-[13px]">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Star
+                key={`rating-star-${service.id}-${index}`}
+                className={`h-3.5 w-3.5 ${
+                  index < Math.round(rating)
+                    ? "fill-[#F5A623] text-[#F5A623]"
+                    : "fill-[#E7EAF3] text-[#E7EAF3]"
+                }`}
+              />
+            ))}
+            <span className="ml-1 font-semibold text-slate-900">{rating.toFixed(1)}</span>
+            <span className="text-slate-500">({reviewCount.toLocaleString()})</span>
+          </div>
         </div>
 
         <div className="mt-3 flex items-center gap-2 text-[13px] text-slate-500">
@@ -205,11 +204,11 @@ export default function ServiceCard({
         </div>
 
         <div className="mt-5 space-y-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-black">
             Starts from
           </p>
           <div className="flex items-end gap-2">
-            <span className="text-[20px] font-semibold leading-none text-[#1E9E5A]">
+            <span className="text-[20px] font-bold text-[#1E9E5A]">
               {priceLabel}
             </span>
             {primaryDetail?.duration ? (
@@ -224,14 +223,14 @@ export default function ServiceCard({
           <button
             type="button"
             onClick={() => onViewDetails(service)}
-            className="w-full rounded-xl bg-[#4F7DFF] px-4 py-3 text-sm font-semibold text-white  transition hover:bg-[#3f59ff]"
+            className="w-full  bg-[#4F7DFF] px-4 py-3 text-sm font-semibold text-white  transition hover:bg-[#3f59ff]"
           >
             View Details
           </button>
           <button
             type="button"
             onClick={() => onEnquiry(service)}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="w-full  border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
           >
             Send Enquiry
           </button>

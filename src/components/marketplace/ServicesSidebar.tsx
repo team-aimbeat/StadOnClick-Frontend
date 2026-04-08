@@ -542,7 +542,7 @@ export default function ServicesSidebar({
           <button
             type="button"
             onClick={onApplyPrice}
-            className="w-full rounded-2xl bg-[#1D76FF] px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="w-full  bg-white border  border-slate-200 px-4 py-3 text-sm font-semibold text-black transition hover:bg-blue-600"
           >
             Apply price filter
           </button>

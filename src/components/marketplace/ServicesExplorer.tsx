@@ -103,9 +103,9 @@ export type ServicesExplorerProps = {
 }
 
 const defaultStats = [
-  { label: "24 stylists online now", color: "bg-emerald-400" },
+  { label: "24 stylists online now", color: "bg-sky-400" },
   { label: "98% booked for this week", color: "bg-sky-400" },
-  { label: "Avg. response under 10 min", color: "bg-amber-400" },
+  { label: "Avg. response under 10 min", color: "bg-sky-400" },
 ]
 
 function MarketplaceCardSkeleton({ index }: { index: number }) {
@@ -410,7 +410,7 @@ export default function ServicesExplorer({
   }
 
   return (
-    <section className="min-h-screen bg-[#fffafa] py-8">
+    <section className="min-h-screen bg-[#F8F6F0] py-8">
       <div className="mx-auto flex items-start max-w-370 gap-8 px-6 lg:px-8">
         <ServicesSidebar
           categories={sidebarCategories}
@@ -430,15 +430,15 @@ export default function ServicesExplorer({
 
         <div className="flex-1 space-y-6">
           <header
-            className="relative overflow-hidden rounded-[28px] px-6 py-6 text-white "
+            className="relative overflow-hidden  px-6 py-6 text-white "
             style={{
               backgroundImage: `url(${headerBanner})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(62,87,222,0.9)_0%,rgba(74,105,242,0.62)_42%,rgba(84,118,255,0.16)_100%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_8%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(16,24,40,0.12))]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.82)_0%,rgba(0,0,0,0.58)_42%,rgba(0,0,0,0.26)_100%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_10%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.28))]" />
 
             <div className="relative flex max-w-2xl flex-col gap-5">
               <div className="space-y-4">
