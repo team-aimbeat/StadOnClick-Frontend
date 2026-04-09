@@ -495,17 +495,19 @@ export default function Home() {
           </Suspense>
         </LazySection>
 
-        <LazySection minHeight={520}>
-          <Suspense fallback={<SectionSkeleton height={520} />}>
-            <Addvertise content={advertiseContent} />
-          </Suspense>
-        </LazySection>
-
+     
         <LazySection minHeight={560}>
           <Suspense fallback={<SectionSkeleton height={560} />}>
             <HomeTrending content={trendingContent} />
           </Suspense>
         </LazySection>
+
+   <LazySection minHeight={750}>
+          <Suspense fallback={<SectionSkeleton height={520} />}>
+            <Addvertise content={advertiseContent} />
+          </Suspense>
+        </LazySection>
+
 
         <LazySection minHeight={180}>
           <Suspense fallback={<SectionSkeleton height={180} />}>
