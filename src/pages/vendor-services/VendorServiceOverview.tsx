@@ -857,7 +857,12 @@ export function VendorServiceOverview({
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: number, name: string) => [`${value} bookings`, name]} />
+                    <Tooltip
+                      formatter={(value: number | string | undefined, name: string | undefined) => [
+                        `${Number(value ?? 0)} bookings`,
+                        name,
+                      ]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
 

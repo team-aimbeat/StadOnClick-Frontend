@@ -2,8 +2,8 @@ import { useEffect, useMemo } from "react";
 import { HiBolt, HiChatBubbleLeftRight, HiClock, HiInboxStack } from "react-icons/hi2";
 
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import InsightStatCard from "@/components/shared/InsightStatCard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
-import StatsCard from "@/components/shared/StatsCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,41 +81,41 @@ export default function SupportAdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatsCard
+        <InsightStatCard
           title="Open tickets"
           value={stats.open}
           subtitle="Actively handled now"
-          trend="neutral"
           icon={HiInboxStack}
-          accentColor="blue"
-          className="shadow-sm"
+          iconTone="blue"
+          badgeText="Queue"
+          badgeTone="blue"
         />
-        <StatsCard
+        <InsightStatCard
           title="Waiting on vendor"
           value={stats.waiting}
           subtitle="Follow up pending"
-          trend="neutral"
           icon={HiChatBubbleLeftRight}
-          accentColor="yellow"
-          className="shadow-sm"
+          iconTone="amber"
+          badgeText="Pending"
+          badgeTone="amber"
         />
-        <StatsCard
+        <InsightStatCard
           title="Unassigned"
           value={stats.unassigned}
           subtitle="Needs owner"
-          trend="down"
-          changeValue={stats.unassigned}
           icon={HiBolt}
-          accentColor="purple"
-          className="shadow-sm"
+          iconTone="violet"
+          badgeText={stats.unassigned > 0 ? "Needs triage" : "Clear"}
+          badgeTone={stats.unassigned > 0 ? "red" : "green"}
         />
-        <StatsCard
+        <InsightStatCard
           title="Avg response time"
           value="-"
           subtitle="Based on last 50 tickets"
           icon={HiClock}
-          accentColor="green"
-          className="shadow-sm"
+          iconTone="green"
+          badgeText={connected ? "Live" : "Offline"}
+          badgeTone={connected ? "green" : "red"}
         />
       </div>
 

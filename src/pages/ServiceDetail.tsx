@@ -2021,7 +2021,7 @@ export default function ServiceDetail() {
             <div className="rounded-[28px] border border-[#DCE6F5] bg-white p-6 ">
               <div className="flex items-start justify-between gap-6">
                 <div className="space-y-1">
-                  <p className="text-[46px] font-bold leading-none text-[#2563EB]">
+                  <p className="text-[46px] font-bold leading-none text-[#4b76d5]">
                     {averageReviewRating.toFixed(1)}
                   </p>
                    <p className="text-sm font-semibold text-[#5F7390]">
