@@ -26,7 +26,7 @@ export default function HomeMind() {
   const navigate = useNavigate()
 
   return (
-    <section className="px-3 sm:px-4">
+    <section className="px-3 sm:px-4 ">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[34px]  px-5 py-8  sm:px-8 sm:py-10 lg:px-10 lg:py-12">
         <div className="absolute inset-0">
           <ImageWithSkeleton

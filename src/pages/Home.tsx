@@ -534,9 +534,9 @@ export default function Home() {
         </LazySection>
 
 
-        <LazySection minHeight={620}>
+        <LazySection minHeight={620} >
           <Suspense fallback={<SectionSkeleton height={620} />}>
-            <HomeSightseeing />
+            <HomeSightseeing/>
           </Suspense>
         </LazySection>
       </div>
