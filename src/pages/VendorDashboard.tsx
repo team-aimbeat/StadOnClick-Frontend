@@ -515,7 +515,7 @@ export default function VendorDashboard() {
   return (
     <DashboardContainer className="space-y-6 pb-10">
      
-      <div className="rounded-[30px] bg-[#fafcff] p-4 sm:p-6">
+      <div className="rounded-[30px] bg-[#F3F7FF] p-4 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="font-[family:'proxima-condensed-bold',sans-serif] text-[32px] font-bold tracking-tight text-slate-900">
@@ -861,12 +861,12 @@ export default function VendorDashboard() {
 
               <div className="mt-5 flex flex-col items-center">
                 <div
-                  className="grid h-28 w-28 place-items-center rounded-full"
+                  className="grid h-38 w-38 place-items-center rounded-full"
                   style={{
                     background: `conic-gradient(#3554e0 0 ${profileScore}%, #e5e7eb ${profileScore}% 100%)`,
                   }}
                 >
-                  <div className="grid h-22 w-22 place-items-center rounded-full bg-white shadow-sm">
+                  <div className="grid h-30 w-30 place-items-center rounded-full bg-white shadow-sm">
                     <div className="text-center leading-none">
                       <p className="text-3xl font-bold text-slate-900">{profileScore}%</p>
                       <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
