@@ -218,7 +218,7 @@ export default function HomeHeroStudio() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 xl:grid-cols-[0.72fr_1.28fr]">
+        <div className="mt-8 grid gap-6 xl:grid-cols-[0.58fr_1.42fr]">
           <div className="space-y-6">
             <section className=" border border-[#DCE6F5] bg-white p-8 ">
               <div className="flex items-center gap-4">
@@ -381,9 +381,9 @@ export default function HomeHeroStudio() {
                 <p className="text-xs text-[#5F7390]">Real-time live preview</p>
               </div>
 
-              <div className=" w-full overflow-hidden  border-[6px] border-[#2A2E63] bg-black ">
+              <div className="w-full overflow-hidden rounded-[14px] border-[4px] border-[#2A2E63] bg-black">
                 
-                <div className="pointer-events-none h-[500px] overflow-hidden">
+                <div className="pointer-events-none h-[620px] overflow-hidden">
                   <HomeHero
                     heading={draft.heading}
                     subheading={draft.subheading}
