@@ -532,67 +532,7 @@ export default function VendorDashboard() {
           </div>
         </div>
 
-        {alerts.length > 0 ? (
-          <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {alerts.slice(0, 2).map((alert) => {
-              const isDanger = alert.tone === "danger";
-              const isStripeAlert = alert.to === "/vendor/stripe";
-              const title = isStripeAlert
-                ? "Critical Action Required"
-                : "Lead plan expired";
-              const description = isStripeAlert
-                ? "Connect Stripe to receive payouts for your recent bookings."
-                : "Your current lead generation quota has ended. Refill to continue.";
-              const ctaLabel = isStripeAlert ? "Fix Now" : "Upgrade";
-              return (
-                <div
-                  key={alert.text}
-                  className={`flex items-center justify-between gap-4 rounded-[18px] border px-4 py-3.5 ${
-                    isDanger
-                      ? "border-rose-200 bg-rose-50/90 text-rose-900"
-                      : "border-amber-200 bg-amber-50/90 text-amber-900"
-                  }`}
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <div
-                      className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${
-                        isDanger
-                          ? "bg-rose-100 text-rose-600"
-                          : "bg-amber-100 text-amber-600"
-                      }`}
-                    >
-                      <HiOutlineExclamationTriangle className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p
-                        className={`text-[15px] font-bold leading-5 ${
-                          isDanger ? "text-rose-800" : "text-amber-800"
-                        }`}
-                      >
-                        {title}
-                      </p>
-                      <p
-                        className={`mt-0.5 text-sm leading-5 ${
-                          isDanger ? "text-rose-700/80" : "text-amber-700/80"
-                        }`}
-                      >
-                        {description}
-                      </p>
-                    </div>
-                  </div>
-                  <NavLink
-                    to={alert.to}
-                    className={`shrink-0 text-[11px] font-bold uppercase tracking-[0.12em] ${
-                      isDanger ? "text-rose-600" : "text-amber-700"
-                    }`}
-                  >
-                    {ctaLabel}
-                  </NavLink>
-                </div>
-              );
-            })}
-          </div>
-        ) : null}
+ 
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_320px]">
           <div className="space-y-5">
@@ -625,6 +565,148 @@ export default function VendorDashboard() {
                 iconClassName="bg-emerald-50 text-emerald-600"
               />
             </div>
+
+        
+
+        <div className="mt-5 rounded-[24px] border w-170 border-slate-100 bg-white p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-600 text-white">
+                <Store className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                  Manage Your Store
+                </p>
+                <h2 className="text-lg font-bold tracking-tight text-slate-900">
+                  Analyze the Store
+                </h2>
+              </div>
+            </div>
+            <NavLink
+              to="/vendor/services"
+              className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+            >
+              View store
+            </NavLink>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-[18px] border border-slate-100 bg-slate-50 px-4 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                Bookings
+              </p>
+              <p className="mt-3 text-[28px] font-bold leading-none tracking-tight text-blue-600">
+                {bookings.length.toLocaleString()}
+              </p>
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                {upcomingToday} upcoming today
+              </p>
+            </div>
+            <div className="rounded-[18px] border border-slate-100 bg-slate-50 px-4 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                Offerings
+              </p>
+              <p className="mt-3 text-[28px] font-bold leading-none tracking-tight text-blue-600">
+                {vendorProfile.activeServices.toLocaleString()}
+              </p>
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                Live services in your catalog
+              </p>
+            </div>
+            <div className="rounded-[18px] border border-slate-100 bg-slate-50 px-4 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                Reviews
+              </p>
+              <p className="mt-3 text-[28px] font-bold leading-none tracking-tight text-blue-600">
+                {vendorProfile.ratingCount.toLocaleString()}
+              </p>
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                Average {vendorProfile.ratingAvg.toFixed(1)} / 5
+              </p>
+            </div>
+          </div>
+
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <NavLink
+              to="/vendor/services"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              Go to Store
+            </NavLink>
+            <NavLink
+              to="/vendor/profile"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              Quick Edit
+            </NavLink>
+          </div>
+        </div>
+ 
+    {alerts.length > 0 ? (
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {alerts.slice(0, 2).map((alert) => {
+                const isDanger = alert.tone === "danger";
+                const isStripeAlert = alert.to === "/vendor/stripe";
+                const title = isStripeAlert
+                  ? "Critical Action Required"
+                  : "Lead plan expired";
+                const description = isStripeAlert
+                  ? "Connect Stripe to receive payouts for your recent bookings."
+                  : "Your current lead generation quota has ended. Refill to continue.";
+                const ctaLabel = isStripeAlert ? "Fix Now" : "Upgrade";
+                return (
+                  <div
+                    key={alert.text}
+                    className={`flex items-center justify-between gap-4 rounded-[18px] border px-4 py-3.5 ${
+                      isDanger
+                        ? "border-rose-200 bg-rose-50/90 text-rose-900"
+                        : "border-amber-200 bg-amber-50/90 text-amber-900"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div
+                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${
+                          isDanger
+                            ? "bg-rose-100 text-rose-600"
+                            : "bg-amber-100 text-amber-600"
+                        }`}
+                      >
+                        <HiOutlineExclamationTriangle className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p
+                          className={`text-[15px] font-bold leading-5 ${
+                            isDanger ? "text-rose-800" : "text-amber-800"
+                          }`}
+                        >
+                          {title}
+                        </p>
+                        <p
+                          className={`mt-0.5 text-sm leading-5 ${
+                            isDanger ? "text-rose-700/80" : "text-amber-700/80"
+                          }`}
+                        >
+                          {description}
+                        </p>
+                      </div>
+                    </div>
+                    <NavLink
+                      to={alert.to}
+                      className={`shrink-0 text-[11px] font-bold uppercase tracking-[0.12em] ${
+                        isDanger ? "text-rose-600" : "text-amber-700"
+                      }`}
+                    >
+                      {ctaLabel}
+                    </NavLink>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
 
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
               <div className="rounded-[30px] border border-slate-200 bg-white p-5 ">
