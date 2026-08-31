@@ -3,6 +3,7 @@ import { baseQueryWithReauth } from "@/app/services/baseApi";
 import type {
   AdminBookingListRequest,
   AdminBookingListResponse,
+  AdminBookingLog,
 } from "@/features/admin/bookings/types/adminBooking.types";
 
 export const adminBookingsApi = createApi({
@@ -35,6 +36,21 @@ export const adminBookingsApi = createApi({
       }),
       invalidatesTags: ["AdminBookings"],
     }),
+    getBookingLogs: builder.query<AdminBookingLog[], string>({
+      query: (bookingId) => ({
+        url: `/admin/bookings/${bookingId}/logs`,
+        method: "GET",
+      }),
+      transformResponse: (response: { success: boolean; data: AdminBookingLog[] }) => response.data,
+    }),
+    getServiceBookingLogs: builder.query<AdminBookingLog[], string>({
+      query: (serviceId) => ({
+        url: `/admin/bookings/logs`,
+        method: "GET",
+        params: { serviceId },
+      }),
+      transformResponse: (response: { success: boolean; data: AdminBookingLog[] }) => response.data,
+    }),
   }),
 });
 
@@ -42,4 +58,6 @@ export const {
   useDecideBookingRefundMutation,
   useListAdminBookingsQuery,
   useLazyListAdminBookingsQuery,
+  useGetBookingLogsQuery,
+  useGetServiceBookingLogsQuery,
 } = adminBookingsApi;

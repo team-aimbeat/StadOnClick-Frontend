@@ -1,15 +1,24 @@
 import * as React from "react";
-import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Star, X } from "lucide-react";
 
 interface ServiceGalleryProps {
   galleryImages: string[];
   serviceName: string;
+  categoryLabel?: string;
+  ratingLabel?: string;
+  reviewText?: string;
+  ctaLabel?: string;
+  onCtaClick?: () => void;
 }
 
 export const ServiceGallery: React.FC<ServiceGalleryProps> = ({
   galleryImages,
   serviceName,
+  categoryLabel,
+  ratingLabel,
+  reviewText,
+  ctaLabel,
+  onCtaClick,
 }) => {
   const [showAll, setShowAll] = React.useState(false);
 
@@ -24,12 +33,57 @@ export const ServiceGallery: React.FC<ServiceGalleryProps> = ({
       {/* Gallery Grid */}
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         {/* Left: Main Image */}
-        <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-100 shadow-sm transition hover:shadow-md">
+        <div className="group relative aspect-[4/3] w-full overflow-hidden rounded-[28px] bg-slate-100 shadow-sm transition hover:shadow-md">
           <img
             src={mainImages[0]}
             alt={`${serviceName} main`}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02)_0%,rgba(15,23,42,0.14)_38%,rgba(15,23,42,0.84)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.18)_0%,rgba(15,23,42,0.04)_38%,rgba(15,23,42,0.12)_100%)]" />
+          {(categoryLabel || ratingLabel || reviewText || ctaLabel) && (
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-6">
+              <div className="min-w-0 space-y-2">
+                {categoryLabel ? (
+                  <span className="inline-flex rounded-full bg-[#3f66ff] px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.18em] text-white shadow-[0_8px_20px_rgba(63,102,255,0.35)]">
+                    {categoryLabel}
+                  </span>
+                ) : null}
+                <h2 className="max-w-[24rem] truncate text-[28px] font-bold leading-none mb-5 tracking-[-0.03em] text-white sm:text-[40px]">
+                  {serviceName}
+                </h2>
+                {(ratingLabel || reviewText) && (
+                  <div className="flex flex-wrap items-center gap-2.5 text-white/85">
+                    {ratingLabel ? (
+                      <div className="inline-flex items-center gap-1.5 rounded-xl bg-white/12 px-2.5 py-1 backdrop-blur-sm">
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full  text-[#f6ca5c]">
+                          <Star className="h-5 w-5 fill-current" />
+                        </span>
+                        <span className="text-5px font-bold">
+                          {ratingLabel}
+                        </span>
+                      </div>
+                    ) : null}
+                    {reviewText ? (
+                      <span className="text-5px font-semibold text-white/75">
+                        {reviewText}
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+
+              {ctaLabel ? (
+                <button
+                  type="button"
+                  onClick={onCtaClick}
+                  className="shrink-0 rounded-xl bg-[#4F7DFF] px-4 py-3 text-xs font-semibold text-white shadow-[0_16px_36px_rgba(79,125,255,0.38)] transition hover:bg-[#3f59ff]"
+                >
+                  {ctaLabel}
+                </button>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {/* Right: Stacked Images */}
@@ -37,7 +91,7 @@ export const ServiceGallery: React.FC<ServiceGalleryProps> = ({
           {mainImages.slice(1, 3).map((image, idx) => (
             <div
               key={idx}
-              className="group relative h-[275px] w-full overflow-hidden rounded-xl bg-slate-100 shadow-sm transition hover:shadow-md"
+              className="group relative h-[275px] w-full overflow-hidden rounded-[24px] bg-slate-100 shadow-sm transition hover:shadow-md"
             >
               <img
                 src={image}
@@ -67,7 +121,9 @@ export const ServiceGallery: React.FC<ServiceGalleryProps> = ({
             <div className="flex items-center justify-between border-b border-slate-100 px-8 py-6">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">All Photos</h3>
-                <p className="text-sm text-slate-500">{galleryImages.length} photos found</p>
+                <p className="text-sm text-slate-500">
+                  {galleryImages.length} photos found
+                </p>
               </div>
               <button
                 onClick={() => setShowAll(false)}

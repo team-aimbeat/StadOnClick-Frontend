@@ -8,9 +8,9 @@ import VendorLeads from "@/pages/VendorLeads";
 import ErrorPage from "@/pages/ErrorPage";
 import Marketplace from "@/pages/Marketplace";
 import Home from "@/pages/Home";
+import DealsPage from "@/pages/DealsPage";
 import DealDetail from "@/pages/DealDetail";
 import PlaceDetail from "@/pages/PlaceDetail";
-import ServiceDetail from "@/pages/ServiceDetail";
 import Kyc from "@/pages/Kyc";
 import About from "@/pages/About";
 import BookingsPage from "@/pages/BookingsPage";
@@ -29,6 +29,7 @@ import VendorKyc from "@/pages/VendorKyc";
 import VendorStripe from "@/pages/VendorStripe";
 import VendorSupport from "@/pages/VendorSupport";
 import VendorTicketDetails from "@/pages/VendorTicketDetails";
+import VendorSettings from "@/pages/VendorSettings";
 import VendorHelp from "@/pages/VendorHelp";
 import VendorInsights from "@/pages/VendorInsights";
 import VendorBookingDetail from "@/pages/VendorBookingDetail";
@@ -39,7 +40,6 @@ import Wishlist from "@/pages/Wishlist";
 import OrdersPage from "@/pages/Orders";
 import OrderConfirmationPage from "@/pages/OrderConfirmation";
 import VendorPlaceholder from "@/pages/VendorPlaceholder";
-
 import VendorAnalyticsDashboard from "@/pages/VendorAnalyticsDashboard";
 import VendorNotifications from "@/pages/VendorNotifications";
 import VendorsPage from "@/pages/Admin/Vendors/VendorsPage";
@@ -47,11 +47,13 @@ import AffiliatesPage from "@/pages/Admin/Affiliates/AffiliatesPage";
 import CustomersPage from "@/pages/Admin/Customers/CustomersPage";
 import VendorApplicationsPage from "@/pages/Admin/Vendors/VendorApplicationsPage";
 import AdminBookingsPage from "@/pages/Admin/BookingsPage";
-
+import AdminBookingDetailsPage from "@/pages/Admin/Bookings/AdminBookingDetailsPage";
+import AdminOrdersPage from "@/pages/Admin/OrdersPage";
 import AdminSignIn from "@/pages/Admin/AdminSignIn";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import ModeratorProtectedRoute from "./ModeratorProtectedRoute";
 import VendorSignIn from "@/pages/vendor/VendorSignIn";
+import ServiceDetail from "@/pages/ServiceDetail";
 import VendorAutoLogin from "@/pages/vendor/VendorAutoLogin";
 import VendorProtectedRoute from "./VendorProtectedRoute";
 import AccessDenied from "@/components/shared/AccessDenied";
@@ -60,6 +62,7 @@ import VendorNotFound from "@/pages/Admin/Vendors/VendorNotFound";
 import VendorProfileAdminPage from "@/pages/Admin/Vendors/VendorProfileAdminPage";
 import LeadPlansPage from "@/pages/Admin/leads/LeadPlansPage";
 import VendorSubscriptionsPage from "@/pages/Admin/leads/VendorSubscriptionsPage";
+import AdminSubscriptionPlansPage from "@/pages/Admin/subscription-plans/AdminSubscriptionPlansPage";
 import AdminServicesPage from "@/pages/Admin/Services/AdminServicesPage";
 import AdminOfferingsPage from "@/pages/Admin/Offerings/AdminOfferingsPage";
 import VendorLeadSubscriptionPage from "@/pages/VendorLeadSubscription/VendorLeadSubscriptionPage";
@@ -87,6 +90,7 @@ import FooterSectionsStudio from "@/pages/Admin/catalog/FooterSectionsStudio";
 import HeaderSectionsStudio from "@/pages/Admin/catalog/HeaderSectionsStudio";
 import HeaderDropdownStudio from "@/pages/Admin/catalog/HeaderDropdownStudio";
 import SystemHealthPage from "@/pages/Admin/SystemHealth/SystemHealthPage";
+import AdminActivityPage from "@/pages/Admin/System/AdminActivityPage";
 import AdminKycDocumentsPage from "@/pages/Admin/kyc/AdminKycDocuments";
 import AdminKycAuditLogsPage from "@/pages/Admin/kyc/AdminKycAuditLogsPage";
 import AdminPayoutsPage from "@/pages/Admin/Finance/AdminPayoutsPage";
@@ -94,6 +98,10 @@ import AdminPlatformWalletPage from "@/pages/Admin/Finance/AdminPlatformWalletPa
 import AdminSponsorshipPlansPage from "@/pages/Admin/Finance/AdminSponsorshipPlansPage";
 import AdminCouponsPage from "@/pages/Admin/Coupons/AdminCouponsPage";
 import AdminSettings from "@/pages/Admin/AdminSettings";
+import AdminUserManualPage from "@/pages/Admin/Help/AdminUserManualPage";
+import AdminBookingLogsPage from "@/pages/Admin/Bookings/AdminBookingLogsPage";
+import AdminBookingLogsExplorerPage from "@/pages/Admin/Bookings/AdminBookingLogsExplorerPage";
+import AdminPaymentLogsPage from "@/pages/Admin/Finance/AdminPaymentLogsPage";
 import RestaurantMarketplace from "@/pages/RestaurantMarketplace";
 import RestaurantServiceDetail from "@/pages/RestaurantServiceDetail";
 import AffiliateMarketing from "@/pages/AffiliateMarketing";
@@ -104,10 +112,15 @@ import AffiliateCommission from "@/pages/AffiliateCommission";
 import AffiliateWallet from "@/pages/AffiliateWallet";
 import AffiliatePayouts from "@/pages/AffiliatePayouts";
 import AffiliateStripe from "@/pages/AffiliateStripe";
-import AppLayout from "@/components/Layout/AppLayout";
+import UserSubscriptionsPage from "@/pages/Subscriptions/UserSubscriptionsPage";
+import CompareVendors from "@/pages/CompareVendors";
 import AdminLayout from "@/components/Layout/AdminLayout";
 import VendorLayout from "@/components/Layout/VendorLayout";
 import AffiliateLayout from "@/components/Layout/AffiliateLayout";
+import AppLayout from "@/components/Layout/AppLayout";
+import VendorUserManualPage from "@/pages/vendor/VendorUserManualPage";
+import AdminReportsPage from "@/pages/Admin/Reports/AdminReportsPage";
+
 
 
 const vendorPlaceholder = (title: string, description?: string) => (
@@ -142,6 +155,14 @@ const appRouter = createBrowserRouter([
           {
             path: "/orders/confirmation",
             element: <OrderConfirmationPage />,
+          },
+          {
+            path: "/subscriptions",
+            element: <UserSubscriptionsPage />,
+          },
+          {
+            path: "/subscriptions",
+            element: <UserSubscriptionsPage />,
           },
           {
             path: "/sign-up",
@@ -208,16 +229,16 @@ const appRouter = createBrowserRouter([
             element: <Support />,
           },
           {
+            path: "/deals",
+            element: <DealsPage />,
+          },
+          {
             path: "/deals/:slug",
             element: <DealDetail />,
           },
           {
-            path: "/place/:slug",
-            element: <PlaceDetail />,
-          },
-          {
-            path: "/access-denied",
-            element: <AccessDenied />,
+            path: "/compare",
+            element: <CompareVendors />,
           },
         ],
       },
@@ -227,12 +248,6 @@ const appRouter = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: "/admin/access-denied",
-        element: <AccessDenied />,
-        errorElement: <ErrorPage />,
-      },
-
-      {
         path: "/admin",
         element: (
           <AdminProtectedRoute>
@@ -240,73 +255,19 @@ const appRouter = createBrowserRouter([
           </AdminProtectedRoute>
         ),
         errorElement: <ErrorPage />,
-
         children: [
           {
-            path: "vendors",
-            element: <VendorsPage />,
+            path: "",
+            element: <Navigate to="/admin/dashboard" replace />,
+          },
+          {
+            path: "reports",
+            element: <AdminReportsPage />,
             errorElement: <ErrorPage />,
           },
           {
-            path: "vendors/:vendorId/profile",
-            element: <VendorProfileAdminPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "affiliates",
-            element: <AffiliatesPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "customers",
-            element: <CustomersPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "support",
-            element: <Navigate to="/admin/support/inbox" replace />,
-          },
-           {
-            path: "compliance/kyc",
-            element: <AdminKycDocumentsPage />,
-          },
-             {
-            path: "compliance/kyc/audit",
-            element: <AdminKycAuditLogsPage />,
-          },
-          {
-            path: "support/dashboard",
-            element: <SupportAdminDashboard />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "support/inbox",
-            element: <AdminSupportInbox />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "chat",
-            element: <AdminSupportChatConsole />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "staff",
-            element: <AdminStaffPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "leads/plans",
-            element: <LeadPlansPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "leads/subscriptions",
-            element: <VendorSubscriptionsPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "coupons",
-            element: <AdminCouponsPage />,
+            path: "account-settings",
+            element: <VendorSettings />,
             errorElement: <ErrorPage />,
           },
           {
@@ -314,236 +275,356 @@ const appRouter = createBrowserRouter([
             element: <AdminSettings />,
             errorElement: <ErrorPage />,
           },
-          {
-            path: "bookings",
-            element: <AdminBookingsPage defaultStatusFilter="all" />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "services",
-            element: <AdminServicesPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "offerings",
-            element: <AdminOfferingsPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "bookings/upcoming",
-            element: (
-              <AdminBookingsPage
-                defaultStatusFilter="upcoming"
-                titleOverride="Upcoming Bookings"
-                breadcrumbOverride="Admin / Bookings / Upcoming"
-              />
-            ),
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "bookings/completed",
-            element: (
-              <AdminBookingsPage
-                defaultStatusFilter="completed"
-                titleOverride="Completed Bookings"
-                breadcrumbOverride="Admin / Bookings / Completed"
-              />
-            ),
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "bookings/refunds",
-            element: (
-              <AdminBookingsPage
-                defaultStatusFilter="refund_requested"
-                titleOverride="Refund Requests"
-                breadcrumbOverride="Admin / Bookings / Refunds"
-              />
-            ),
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "finance/payouts",
-            element: <AdminPayoutsPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "finance/sponsorship-plans",
-            element: <AdminSponsorshipPlansPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "finance/platform-wallet",
-            element: <AdminPlatformWalletPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "*",
-            element: <AdminNotFound />,
-          },
-          {
-            path: "vendors/applications",
-            element: <VendorApplicationsPage />,
-            errorElement: <ErrorPage />,
-          },
-          {
-            path: "dashboard",
-            element: <AdminDashboard />,
-            errorElement: <ErrorPage />,
-          },
-         
-          {
-            path: "catalog",
-            element: <Navigate to="/admin/catalog/interests" replace />,
-          },
-          {
-            path: "catalog/:tab",
-            element: <PreferencesStudio />,
-          },
-          {
-            path: "catalog/service-categories",
-            element: <ServiceCatalogStudio />,
-          },
-          {
-            path: "catalog/home-page",
-            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
-          },
-          {
-            path: "layout-studio",
-            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
-          },
-          {
-            path: "layout-studio/home-sections",
-            element: <HomeSectionsStudio />,
-          },
-          {
-            path: "layout-studio/home-sections/hero",
-            element: <HomeHeroStudio />,
-          },
-          {
-            path: "layout-studio/home-sections/deals",
-            element: <HomeDealsStudio />,
-          },
-          {
-            path: "layout-studio/home-sections/best-deals",
-            element: <HomeBestDealsStudio />,
-          },
-          {
-            path: "layout-studio/home-sections/extra-deals",
-            element: <HomeExtraDealsStudio />,
-          },
-          {
-            path: "layout-studio/home-sections/trending",
-            element: <HomeTrendingStudio />,
-          },
-          {
-            path: "layout-studio/home-sections/other",
-            element: <HomeOtherSectionsStudio />,
-          },
-          {
-            path: "layout-studio/home-sections/blogs",
-            element: <HomeBlogsStudio />,
-          },
-          {
-            path: "layout-studio/footer-sections",
-            element: <FooterSectionsStudio />,
-          },
-          {
-            path: "layout-studio/header-sections",
-            element: <HeaderSectionsStudio />,
-          },
-          {
-            path: "layout-studio/header-dropdown",
-            element: <HeaderDropdownStudio />,
-          },
-          {
-            path: "catalog/home-sections",
-            element: <Navigate to="/admin/layout-studio/home-sections" replace />,
-          },
-          {
-            path: "catalog/home-sections/hero",
-            element: <Navigate to="/admin/layout-studio/home-sections/hero" replace />,
-          },
-          {
-            path: "catalog/home-sections/deals",
-            element: <Navigate to="/admin/layout-studio/home-sections/deals" replace />,
-          },
-          {
-            path: "catalog/home-sections/best-deals",
-            element: <Navigate to="/admin/layout-studio/home-sections/best-deals" replace />,
-          },
-          {
-            path: "catalog/home-sections/extra-deals",
-            element: <Navigate to="/admin/layout-studio/home-sections/extra-deals" replace />,
-          },
-          {
-            path: "catalog/home-sections/trending",
-            element: <Navigate to="/admin/layout-studio/home-sections/trending" replace />,
-          },
-          {
-            path: "catalog/home-sections/other",
-            element: <Navigate to="/admin/layout-studio/home-sections/other" replace />,
-          },
-          {
-            path: "catalog/home-sections/blogs",
-            element: <Navigate to="/admin/layout-studio/home-sections/blogs" replace />,
-          },
-          {
-            path: "catalog/footer-sections",
-            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
-          },
-          {
-            path: "catalog/header-sections",
-            element: <Navigate to="/admin/layout-studio/header-sections" replace />,
-          },
-          {
-            path: "catalog/header-dropdown",
-            element: <Navigate to="/admin/layout-studio/header-dropdown" replace />,
-          },
-          {
-            path: "catalog/footer-sections/brand",
-            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
-          },
-          {
-            path: "catalog/footer-sections/links",
-            element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
-          },
-          {
-            path: "system/health",
-            element: <SystemHealthPage />,
-          },
-          {
-            path: "moderator",
-            element: (
-              <ModeratorProtectedRoute>
-                <Outlet />
-              </ModeratorProtectedRoute>
-            ),
-            children: [
               {
-                path: "",
-                element: <Navigate to="/admin/moderator/dashboard" replace />,
+                path: "vendors",
+                element: <VendorsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "vendors/:vendorId",
+                element: <VendorProfileAdminPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "affiliates",
+                element: <AffiliatesPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "customers",
+                element: <CustomersPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "leads/plans",
+                element: <LeadPlansPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "leads/subscriptions",
+                element: <VendorSubscriptionsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "staff",
+                element: <AdminStaffPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "support-inbox",
+                element: <AdminSupportInbox />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "support-chat",
+                element: <AdminSupportChatConsole />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "support-dashboard",
+                element: <SupportAdminDashboard />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "kyc/documents",
+                element: <AdminKycDocumentsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "kyc/audit-logs",
+                element: <AdminKycAuditLogsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "compliance/kyc",
+                element: <AdminKycDocumentsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "compliance/kyc/audit",
+                element: <AdminKycAuditLogsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "coupons",
+                element: <AdminCouponsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "settings",
+                element: <AdminSettings />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "bookings",
+                element: <AdminBookingsPage defaultStatusFilter="all" />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "bookings/:bookingId",
+                element: <AdminBookingDetailsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "bookings/:bookingId/logs",
+                element: <AdminBookingLogsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "booking-logs",
+                element: <AdminBookingLogsExplorerPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "system/audit",
+                element: <AdminActivityPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "subscription-plans",
+                element: <AdminSubscriptionPlansPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "services",
+                element: <AdminServicesPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "offerings",
+                element: <AdminOfferingsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "bookings/upcoming",
+                element: (
+                  <AdminBookingsPage
+                    defaultStatusFilter="upcoming"
+                    titleOverride="Upcoming Bookings"
+                    breadcrumbOverride="Admin / Bookings / Upcoming"
+                  />
+                ),
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "bookings/completed",
+                element: (
+                  <AdminBookingsPage
+                    defaultStatusFilter="completed"
+                    titleOverride="Completed Bookings"
+                    breadcrumbOverride="Admin / Bookings / Completed"
+                  />
+                ),
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "bookings/refunds",
+                element: (
+                  <AdminBookingsPage
+                    defaultStatusFilter="refund_requested"
+                    titleOverride="Refund Requests"
+                    breadcrumbOverride="Admin / Bookings / Refunds"
+                  />
+                ),
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "orders",
+                element: <AdminOrdersPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "finance/payouts",
+                element: <AdminPayoutsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "finance/sponsorship-plans",
+                element: <AdminSponsorshipPlansPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "finance/platform-wallet",
+                element: <AdminPlatformWalletPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "finance/payment-logs",
+                element: <AdminPaymentLogsPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "help/user-manual",
+                element: <AdminUserManualPage />,
+                errorElement: <ErrorPage />,
+              },
+              {
+                path: "*",
+                element: <AdminNotFound />,
+              },
+              {
+                path: "vendors/applications",
+                element: <VendorApplicationsPage />,
+                errorElement: <ErrorPage />,
               },
               {
                 path: "dashboard",
-                element: <ModeratorDashboard />,
+                element: <AdminDashboard />,
+                errorElement: <ErrorPage />,
+              },
+            
+              {
+                path: "catalog",
+                element: <Navigate to="/admin/catalog/interests" replace />,
               },
               {
-                path: "escalations",
-                element: <ModeratorEscalationsInbox />,
+                path: "catalog/:tab",
+                element: <PreferencesStudio />,
               },
               {
-                path: "escalations/:id",
-                element: <ModeratorEscalationDetails />,
+                path: "catalog/service-categories",
+                element: <ServiceCatalogStudio />,
               },
               {
-                path: "notifications",
-                element: <ModeratorNotifications />,
+                path: "catalog/home-page",
+                element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+              },
+              {
+                path: "layout-studio",
+                element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+              },
+              {
+                path: "layout-studio/home-sections",
+                element: <HomeSectionsStudio />,
+              },
+              {
+                path: "layout-studio/home-sections/hero",
+                element: <HomeHeroStudio />,
+              },
+              {
+                path: "layout-studio/home-sections/deals",
+                element: <HomeDealsStudio />,
+              },
+              {
+                path: "layout-studio/home-sections/best-deals",
+                element: <HomeBestDealsStudio />,
+              },
+              {
+                path: "layout-studio/home-sections/extra-deals",
+                element: <HomeExtraDealsStudio />,
+              },
+              {
+                path: "layout-studio/home-sections/trending",
+                element: <HomeTrendingStudio />,
+              },
+              {
+                path: "layout-studio/home-sections/other",
+                element: <HomeOtherSectionsStudio />,
+              },
+              {
+                path: "layout-studio/home-sections/blogs",
+                element: <HomeBlogsStudio />,
+              },
+              {
+                path: "layout-studio/footer-sections",
+                element: <FooterSectionsStudio />,
+              },
+              {
+                path: "layout-studio/header-sections",
+                element: <HeaderSectionsStudio />,
+              },
+              {
+                path: "layout-studio/header-dropdown",
+                element: <HeaderDropdownStudio />,
+              },
+              {
+                path: "catalog/home-sections",
+                element: <Navigate to="/admin/layout-studio/home-sections" replace />,
+              },
+              {
+                path: "catalog/home-sections/hero",
+                element: <Navigate to="/admin/layout-studio/home-sections/hero" replace />,
+              },
+              {
+                path: "catalog/home-sections/deals",
+                element: <Navigate to="/admin/layout-studio/home-sections/deals" replace />,
+              },
+              {
+                path: "catalog/home-sections/best-deals",
+                element: <Navigate to="/admin/layout-studio/home-sections/best-deals" replace />,
+              },
+              {
+                path: "catalog/home-sections/extra-deals",
+                element: <Navigate to="/admin/layout-studio/home-sections/extra-deals" replace />,
+              },
+              {
+                path: "catalog/home-sections/trending",
+                element: <Navigate to="/admin/layout-studio/home-sections/trending" replace />,
+              },
+              {
+                path: "catalog/home-sections/other",
+                element: <Navigate to="/admin/layout-studio/home-sections/other" replace />,
+              },
+              {
+                path: "catalog/home-sections/blogs",
+                element: <Navigate to="/admin/layout-studio/home-sections/blogs" replace />,
+              },
+              {
+                path: "catalog/footer-sections",
+                element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
+              },
+              {
+                path: "catalog/header-sections",
+                element: <Navigate to="/admin/layout-studio/header-sections" replace />,
+              },
+              {
+                path: "catalog/header-dropdown",
+                element: <Navigate to="/admin/layout-studio/header-dropdown" replace />,
+              },
+              {
+                path: "catalog/footer-sections/brand",
+                element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
+              },
+              {
+                path: "catalog/footer-sections/links",
+                element: <Navigate to="/admin/layout-studio/footer-sections" replace />,
+              },
+              {
+                path: "system/health",
+                element: <SystemHealthPage />,
+              },
+              {
+                path: "moderator",
+                element: (
+                  <ModeratorProtectedRoute>
+                    <Outlet />
+                  </ModeratorProtectedRoute>
+                ),
+                children: [
+                  {
+                    path: "",
+                    element: <Navigate to="/admin/moderator/dashboard" replace />,
+                  },
+                  {
+                    path: "dashboard",
+                    element: <ModeratorDashboard />,
+                  },
+                  {
+                    path: "escalations",
+                    element: <ModeratorEscalationsInbox />,
+                  },
+                  {
+                    path: "escalations/:id",
+                    element: <ModeratorEscalationDetails />,
+                  },
+                  {
+                    path: "notifications",
+                    element: <ModeratorNotifications />,
+                  },
+                ],
               },
             ],
           },
-        ],
-      },
       {
         path: "/vendor/sign-in",
         element: <VendorSignIn />,
@@ -569,6 +650,10 @@ const appRouter = createBrowserRouter([
           {
             path: "leads/subscription",
             element: <VendorLeadSubscriptionPage />,
+          },
+          {
+            path: "leads/subscription/success",
+            element: <SubscriptionSuccessPage />,
           },
           {
             path: "lead-subscriptions/success",
@@ -628,6 +713,16 @@ const appRouter = createBrowserRouter([
             ),
           },
           {
+            path: "bookings/cancelled",
+            element: (
+              <BookingsPage
+                defaultStatusFilter="cancelled"
+                titleOverride="Cancelled Bookings"
+                breadcrumbOverride="Vendor / Bookings / Cancelled"
+              />
+            ),
+          },
+          {
             path: "bookings/refunds",
             element: (
               <BookingsPage
@@ -663,15 +758,17 @@ const appRouter = createBrowserRouter([
             element: <VendorTicketDetails />,
           },
           { path: "help", element: <VendorHelp /> },
+          { path: "help/user-manual", element: <VendorUserManualPage /> },
           { path: "insights", element: <VendorInsights /> },
+          { path: "settings", element: <VendorSettings /> },
         ],
       },
     ],
   },
-    {
-            path: "/affiliate",
-            element: <AffiliateLayout />,
-            children: [
+  {
+    path: "/affiliate",
+    element: <AffiliateLayout />,
+    children: [
               {
                 index: true,
                 element: <Navigate to="/affiliate/overview" replace />,

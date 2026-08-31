@@ -3,6 +3,8 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -13,6 +15,7 @@ import {
   HiOutlineCalendarDays,
   HiOutlineCheckCircle,
   HiOutlineEnvelope,
+  HiOutlineEye,
   HiOutlineMapPin,
   HiOutlinePaperAirplane,
   HiOutlinePhone,
@@ -20,22 +23,28 @@ import {
   HiOutlineUsers,
   HiOutlineWallet,
 } from "react-icons/hi2";
+import type { IconType } from "react-icons";
 import { BsWhatsapp } from "react-icons/bs";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import SectionHeader from "@/components/vendor-dashboard/SectionHeader";
-import StatsCard from "@/components/shared/StatsCard";
 import StatusPill from "@/components/vendor-dashboard/StatusPill";
 import ProfileScoreCard from "@/components/vendor-dashboard/ProfileScoreCard";
 import { cn } from "@/lib/utils";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { useGetVendorLeadsQuery, useUpdateVendorLeadStatusMutation } from "@/features/leads/api/leadsApi";
+import {
+  useGetVendorLeadsQuery,
+  useUpdateVendorLeadStatusMutation,
+} from "@/features/leads/api/leadsApi";
 import { useGetVendorProfileQuery } from "@/features/vendorProfile/api/vendorProfileApi";
 import { useGetBookingsQuery } from "@/services/bookingsApi";
 import { useGetVendorServicesQuery } from "@/services/vendorServicesApi";
-import { useLazyGetServiceOfferingsQuery, useLazyGetOfferingSlotsQuery } from "@/services/vendorOfferingsApi";
+import {
+  useLazyGetServiceOfferingsQuery,
+  useLazyGetOfferingSlotsQuery,
+} from "@/services/vendorOfferingsApi";
 import { useLazyGetServiceMediaQuery } from "@/services/serviceMediaApi";
 import { useLazyGetServiceReviewsQuery } from "@/services/serviceReviewsApi";
 import { useGetVendorOrdersQuery } from "@/services/ordersApi";
@@ -55,6 +64,67 @@ type BookingStatus =
   | "REFUNDED";
 type DateRange = "7d" | "30d" | "6m" | "1y";
 type VendorStatus = "PENDING_REVIEW" | "APPROVED" | "SUSPENDED";
+
+type AnalyticsKpiCardProps = {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: IconType;
+  accentColor?: "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
+  className?: string;
+};
+
+const analyticsKpiAccent: Record<
+  NonNullable<AnalyticsKpiCardProps["accentColor"]>,
+  string
+> = {
+  blue: "bg-[#eaf2ff] text-[#3554e0]",
+  green: "bg-[#eaf8ef] text-[#1fb56a]",
+  red: "bg-[#fff0f0] text-[#e25353]",
+  yellow: "bg-[#fff7e6] text-[#e0a100]",
+  purple: "bg-[#f2efff] text-[#6f63ee]",
+  cyan: "bg-[#eaf8ff] text-[#0f7ed2]",
+};
+
+const AnalyticsKpiCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  accentColor = "blue",
+  className,
+}: AnalyticsKpiCardProps) => (
+  <div
+    className={cn(
+      "min-h-[154px] rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)]",
+      className,
+    )}
+  >
+    <div className="flex h-full flex-col justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          {title}
+        </p>
+        <div
+          className={cn(
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-100",
+            analyticsKpiAccent[accentColor],
+          )}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="text-[30px] font-bold leading-none tracking-tight text-slate-900">
+          {typeof value === "number" ? value.toLocaleString() : value}
+        </p>
+        {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
+      </div>
+    </div>
+  </div>
+);
+
+const StatsCard = AnalyticsKpiCard;
 
 type VendorLead = {
   id: string;
@@ -92,6 +162,11 @@ type Review = {
   comment: string;
   verified: boolean;
   createdAt: string;
+  user?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    nickName?: string | null;
+  } | null;
 };
 
 type VendorProfile = {
@@ -131,9 +206,19 @@ type VendorProfile = {
 };
 
 type VendorService = { id: string; title: string; status: "LIVE" | "PAUSED" };
-type ServiceOffering = { id: string; serviceId: string; title: string; isActive: boolean };
+type ServiceOffering = {
+  id: string;
+  serviceId: string;
+  title: string;
+  isActive: boolean;
+};
 type OfferingSlot = { id: string; offeringId: string; startTime: string };
-type ServiceMedia = { id: string; serviceId: string; type: "IMAGE" | "VIDEO"; url: string };
+type ServiceMedia = {
+  id: string;
+  serviceId: string;
+  type: "IMAGE" | "VIDEO";
+  url: string;
+};
 
 type VendorGalleryItem = {
   id: string;
@@ -172,8 +257,10 @@ type TableColumn<T> = {
 
 const now = new Date();
 
-const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+const startOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const startOfMonth = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), 1);
 
 const startOfWeek = (date: Date) => {
   const day = date.getDay() === 0 ? 6 : date.getDay() - 1; // Monday as start
@@ -208,7 +295,8 @@ const numberFormatter = (value: number) =>
 const getWeekNumber = (date: Date) => {
   const firstJan = new Date(date.getFullYear(), 0, 1);
   const days =
-    (startOfDay(date).getTime() - startOfDay(firstJan).getTime()) / (1000 * 60 * 60 * 24);
+    (startOfDay(date).getTime() - startOfDay(firstJan).getTime()) /
+    (1000 * 60 * 60 * 24);
   return Math.floor((days + firstJan.getDay()) / 7) + 1;
 };
 
@@ -264,7 +352,7 @@ const bucketize = <T,>(
   items: T[],
   range: DateRange,
   getDate: (item: T) => Date,
-  reducers: Record<string, (acc: number, item: T) => number>
+  reducers: Record<string, (acc: number, item: T) => number>,
 ): ChartDatum[] => {
   const start = getRangeStart(range);
   const buckets = new Map<number, ChartDatum>();
@@ -282,14 +370,17 @@ const bucketize = <T,>(
       } as ChartDatum);
 
     Object.entries(reducers).forEach(([field, reducer]) => {
-      const previousValue = typeof existing[field] === "number" ? existing[field] : 0;
+      const previousValue =
+        typeof existing[field] === "number" ? existing[field] : 0;
       existing[field] = reducer(previousValue as number, item);
     });
 
     buckets.set(key, existing);
   });
 
-  return Array.from(buckets.values()).sort((a, b) => a.bucketStart - b.bucketStart);
+  return Array.from(buckets.values()).sort(
+    (a, b) => a.bucketStart - b.bucketStart,
+  );
 };
 
 const rangeOptions: { value: DateRange; label: string; helper: string }[] = [
@@ -327,7 +418,12 @@ const offeringSlots: OfferingSlot[] = [
 const serviceMedia: ServiceMedia[] = [
   { id: "media-1", serviceId: "svc-1", type: "IMAGE", url: "/media/ac-1.jpg" },
   { id: "media-2", serviceId: "svc-1", type: "IMAGE", url: "/media/ac-2.jpg" },
-  { id: "media-3", serviceId: "svc-2", type: "IMAGE", url: "/media/clean-1.jpg" },
+  {
+    id: "media-3",
+    serviceId: "svc-2",
+    type: "IMAGE",
+    url: "/media/clean-1.jpg",
+  },
 ];
 
 const leadsSeed: VendorLead[] = [
@@ -630,7 +726,12 @@ const vendorProfile: VendorProfile = {
   contactEmail: "founder@aimbeat.in",
   contactPhone: "+91 98200 11111",
   cityId: "mumbai",
-  cityRelation: { id: "mumbai", name: "Mumbai", state: "Maharashtra", country: "IN" },
+  cityRelation: {
+    id: "mumbai",
+    name: "Mumbai",
+    state: "Maharashtra",
+    country: "IN",
+  },
   status: "PENDING_REVIEW",
   kycStatus: "PENDING",
   payoutsEnabled: false,
@@ -638,7 +739,8 @@ const vendorProfile: VendorProfile = {
   stripeAccountId: "acct_1NcDemoStripe",
   stripeOnboardedAt: monthsAgo(6),
   seoTitle: "Aimbeat | Home services partner",
-  seoDescription: "Booking-ready profile with AC repair and deep cleaning services.",
+  seoDescription:
+    "Booking-ready profile with AC repair and deep cleaning services.",
   seoKeywords: ["ac repair", "deep cleaning", "mumbai services"],
   seoImageKey: "aimbeat-cover.png",
   isIndexable: true,
@@ -650,7 +752,9 @@ const vendorProfile: VendorProfile = {
     reviewsSeed.length === 0
       ? 0
       : Math.round(
-          (reviewsSeed.reduce((sum, review) => sum + review.rating, 0) / reviewsSeed.length) * 10
+          (reviewsSeed.reduce((sum, review) => sum + review.rating, 0) /
+            reviewsSeed.length) *
+            10,
         ) / 10,
   ratingCount: reviewsSeed.length,
   createdAt: monthsAgo(11),
@@ -699,7 +803,10 @@ const vendorGallery: VendorGalleryItem[] = [
 ];
 
 const legendDot = (color: string) => (
-  <span className="inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+  <span
+    className="inline-flex h-2 w-2 rounded-full"
+    style={{ backgroundColor: color }}
+  />
 );
 
 const DataTableCard = <T,>({
@@ -715,10 +822,10 @@ const DataTableCard = <T,>({
   columns: TableColumn<T>[];
   emptyLabel: string;
 }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-3">
-    <div className="flex items-center justify-between gap-3 pb-2">
+  <div className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+    <div className="flex items-center justify-between gap-3 pb-3">
       <div>
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
+        <p className="text-sm font-bold text-slate-900">{title}</p>
         {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
       </div>
     </div>
@@ -727,7 +834,10 @@ const DataTableCard = <T,>({
         <thead>
           <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-500">
             {columns.map((column) => (
-              <th key={column.key} className={cn("px-2 py-2 font-semibold", column.className)}>
+              <th
+                key={column.key}
+                className={cn("px-2 py-2 font-semibold", column.className)}
+              >
                 {column.header}
               </th>
             ))}
@@ -738,7 +848,10 @@ const DataTableCard = <T,>({
             rows.map((row, idx) => (
               <tr key={idx} className="text-sm text-slate-800">
                 {columns.map((column) => (
-                  <td key={column.key} className={cn("px-2 py-2", column.className)}>
+                  <td
+                    key={column.key}
+                    className={cn("px-2 py-2", column.className)}
+                  >
                     {column.render(row)}
                   </td>
                 ))}
@@ -775,7 +888,10 @@ const AnalyticsBarChart = ({
   height?: number;
   currency?: string;
 }) => {
-  const tooltipFormatter = (value: number | string | undefined, name?: string) => {
+  const tooltipFormatter = (
+    value: number | string | undefined,
+    name?: string,
+  ) => {
     const meta = name ? series.find((s) => s.key === name) : undefined;
     const numeric = typeof value === "number" ? value : Number(value ?? 0);
     if (!meta) return [numeric, name ?? ""];
@@ -789,11 +905,13 @@ const AnalyticsBarChart = ({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-900">{title}</p>
-          {subtitle ? <p className="text-xs text-slate-500">{subtitle}</p> : null}
+          <p className="text-sm font-bold text-slate-900">{title}</p>
+          {subtitle ? (
+            <p className="text-xs text-slate-500">{subtitle}</p>
+          ) : null}
         </div>
         <div className="flex items-center gap-3 text-xs font-semibold text-slate-600">
           {series.map((item) => (
@@ -806,12 +924,15 @@ const AnalyticsBarChart = ({
       </div>
       <div style={{ height }} className="mt-3">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
+          <LineChart
             data={data}
             margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            barCategoryGap="22%"
           >
-            <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
+            <CartesianGrid
+              stroke="#E5E7EB"
+              strokeDasharray="4 4"
+              vertical={false}
+            />
             <XAxis
               dataKey="bucket"
               tickLine={false}
@@ -823,7 +944,9 @@ const AnalyticsBarChart = ({
               axisLine={false}
               tick={{ fontSize: 11, fill: "#6B7280" }}
               tickFormatter={(value: number) =>
-                Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`
+                Math.abs(value) >= 1000
+                  ? `${(value / 1000).toFixed(0)}k`
+                  : `${value}`
               }
             />
             <Tooltip
@@ -837,15 +960,17 @@ const AnalyticsBarChart = ({
               labelFormatter={(label) => `Period: ${label}`}
             />
             {series.map((item) => (
-              <Bar
+              <Line
                 key={item.key}
                 dataKey={item.key}
-                fill={item.color}
-                radius={[6, 6, 0, 0]}
-                barSize={18}
+                type="monotone"
+                stroke={item.color}
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 5 }}
               />
             ))}
-          </BarChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
       <p className="mt-2 text-center text-xs font-semibold text-slate-500">
@@ -875,13 +1000,15 @@ const DateRangeSelector = ({
             "flex min-w-[120px] flex-col items-start rounded-md border px-3 py-2 text-left transition-colors",
             isActive
               ? "border-blue-500 bg-white text-blue-700"
-              : "border-transparent bg-transparent text-slate-700 hover:border-slate-200"
+              : "border-transparent bg-transparent text-slate-700 hover:border-slate-200",
           )}
         >
           <span className="text-[10px] font-semibold tracking-[0.06em] text-slate-500">
             {option.helper}
           </span>
-          <span className="text-sm font-semibold leading-tight">{option.label}</span>
+          <span className="text-sm font-semibold leading-tight">
+            {option.label}
+          </span>
         </button>
       );
     })}
@@ -904,7 +1031,7 @@ const TabButton = ({
       "px-3 py-2 text-sm font-semibold transition border-b-2",
       active
         ? "border-blue-600 text-blue-700"
-        : "border-transparent text-slate-600 hover:text-slate-900"
+        : "border-transparent text-slate-600 hover:text-slate-900",
     )}
   >
     {label}
@@ -916,23 +1043,31 @@ const conversionRate = (numerator: number, denominator: number) =>
 
 const VendorAnalyticsDashboard = () => {
   const dispatch = useAppDispatch();
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["key"]>("overview");
+  const [activeTab, setActiveTab] =
+    useState<(typeof tabs)[number]["key"]>("overview");
   const [range, setRange] = useState<DateRange>("1y");
   const [leads, setLeads] = useState<VendorLead[]>([]);
-  const [derivedOfferings, setDerivedOfferings] = useState<ServiceOffering[]>([]);
+  const [derivedOfferings, setDerivedOfferings] = useState<ServiceOffering[]>(
+    [],
+  );
   const [derivedSlots, setDerivedSlots] = useState<OfferingSlot[]>([]);
   const [derivedMedia, setDerivedMedia] = useState<ServiceMedia[]>([]);
   const [derivedReviews, setDerivedReviews] = useState<Review[]>([]);
   const [serviceInsightsLoading, setServiceInsightsLoading] = useState(false);
 
-  const { data: vendorProfileResponse, isFetching: isProfileFetching } = useGetVendorProfileQuery();
-  const { data: vendorLeadsResponse, isFetching: isLeadsFetching } = useGetVendorLeadsQuery({
-    page: 1,
-    limit: 100,
-  });
-  const { data: bookingsResponse, isFetching: isBookingsFetching } = useGetBookingsQuery();
-  const { data: vendorOrdersResponse, isFetching: isOrdersFetching } = useGetVendorOrdersQuery();
-  const { data: vendorServicesResponse, isFetching: isServicesFetching } = useGetVendorServicesQuery();
+  const { data: vendorProfileResponse, isFetching: isProfileFetching } =
+    useGetVendorProfileQuery();
+  const { data: vendorLeadsResponse, isFetching: isLeadsFetching } =
+    useGetVendorLeadsQuery({
+      page: 1,
+      limit: 100,
+    });
+  const { data: bookingsResponse, isFetching: isBookingsFetching } =
+    useGetBookingsQuery();
+  const { data: vendorOrdersResponse, isFetching: isOrdersFetching } =
+    useGetVendorOrdersQuery();
+  const { data: vendorServicesResponse, isFetching: isServicesFetching } =
+    useGetVendorServicesQuery();
   const [updateVendorLeadStatus] = useUpdateVendorLeadStatusMutation();
 
   const [fetchServiceOfferings] = useLazyGetServiceOfferingsQuery();
@@ -947,13 +1082,15 @@ const VendorAnalyticsDashboard = () => {
         title: service.title,
         status: service.status === "LIVE" ? "LIVE" : "PAUSED",
       })),
-    [vendorServicesResponse]
+    [vendorServicesResponse],
   );
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
     (vendorServicesResponse ?? []).forEach((service) => {
-      const category = service.category as { id?: string; name?: string } | undefined;
+      const category = service.category as
+        | { id?: string; name?: string }
+        | undefined;
       if (category?.id && category.name) {
         map.set(category.id, category.name);
       }
@@ -973,10 +1110,11 @@ const VendorAnalyticsDashboard = () => {
         name: item.lead.name,
         email: item.lead.email ?? undefined,
         phone: item.lead.phone ?? undefined,
-        serviceTitle: categoryNameById.get(item.lead.categoryId) ?? "Service enquiry",
+        serviceTitle:
+          categoryNameById.get(item.lead.categoryId) ?? "Service enquiry",
         status: item.status,
         createdAt: item.createdAt,
-      }))
+      })),
     );
   }, [vendorLeadsResponse, categoryNameById]);
 
@@ -1001,11 +1139,12 @@ const VendorAnalyticsDashboard = () => {
       const reviewsOut: Review[] = [];
 
       for (const service of services) {
-        const [offeringsResult, mediaResult, reviewsResult] = await Promise.allSettled([
-          fetchServiceOfferings(service.id).unwrap(),
-          fetchServiceMedia(service.id).unwrap(),
-          fetchServiceReviews(service.id).unwrap(),
-        ]);
+        const [offeringsResult, mediaResult, reviewsResult] =
+          await Promise.allSettled([
+            fetchServiceOfferings(service.id).unwrap(),
+            fetchServiceMedia(service.id).unwrap(),
+            fetchServiceReviews(service.id).unwrap(),
+          ]);
 
         if (offeringsResult.status === "fulfilled") {
           const offerings = offeringsResult.value;
@@ -1019,7 +1158,9 @@ const VendorAnalyticsDashboard = () => {
           });
 
           const slotResults = await Promise.allSettled(
-            offerings.map((offering) => fetchOfferingSlots({ offeringId: offering.id }).unwrap())
+            offerings.map((offering) =>
+              fetchOfferingSlots({ offeringId: offering.id }).unwrap(),
+            ),
           );
 
           slotResults.forEach((slotResult, idx) => {
@@ -1056,6 +1197,13 @@ const VendorAnalyticsDashboard = () => {
               comment: review.comment ?? "",
               verified: true,
               createdAt: review.createdAt,
+              user: review.user
+                ? {
+                    firstName: review.user.firstName ?? null,
+                    lastName: review.user.lastName ?? null,
+                    nickName: review.user.nickName ?? null,
+                  }
+                : null,
             });
           });
         }
@@ -1079,7 +1227,13 @@ const VendorAnalyticsDashboard = () => {
     return () => {
       cancelled = true;
     };
-  }, [services, fetchServiceMedia, fetchServiceOfferings, fetchServiceReviews, fetchOfferingSlots]);
+  }, [
+    services,
+    fetchServiceMedia,
+    fetchServiceOfferings,
+    fetchServiceReviews,
+    fetchOfferingSlots,
+  ]);
 
   const bookingsSeed = useMemo<ServiceBooking[]>(
     () =>
@@ -1090,7 +1244,7 @@ const VendorAnalyticsDashboard = () => {
         startTime: booking.startTime,
         createdAt: booking.startTime,
       })),
-    [bookingsResponse]
+    [bookingsResponse],
   );
 
   const ordersSeed = useMemo<Order[]>(
@@ -1107,7 +1261,7 @@ const VendorAnalyticsDashboard = () => {
           createdAt: order.createdAt,
         };
       }),
-    [vendorOrdersResponse]
+    [vendorOrdersResponse],
   );
 
   const serviceOfferings = derivedOfferings;
@@ -1122,15 +1276,15 @@ const VendorAnalyticsDashboard = () => {
       profile?.status === "SUSPENDED"
         ? "SUSPENDED"
         : profile?.status === "APPROVED" || profile?.status === "ACTIVE"
-        ? "APPROVED"
-        : "PENDING_REVIEW";
+          ? "APPROVED"
+          : "PENDING_REVIEW";
 
     const kycStatus =
       profile?.kycStatus === "VERIFIED"
         ? "VERIFIED"
         : profile?.kycStatus === "PENDING"
-        ? "PENDING"
-        : "NOT_SUBMITTED";
+          ? "PENDING"
+          : "NOT_SUBMITTED";
 
     return {
       id: profile?.id ?? "",
@@ -1150,7 +1304,8 @@ const VendorAnalyticsDashboard = () => {
         ? {
             id: profile.city.id,
             name: profile.city.name,
-            state: profile.city.county ?? profile.city.municipality ?? undefined,
+            state:
+              profile.city.county ?? profile.city.municipality ?? undefined,
             country: profile.city.countryCode,
           }
         : undefined,
@@ -1183,14 +1338,16 @@ const VendorAnalyticsDashboard = () => {
         vendorId: vendorProfile.id,
         type: item.type,
         fileKey: item.url,
-        title: services.find((service) => service.id === item.serviceId)?.title ?? "Service media",
+        title:
+          services.find((service) => service.id === item.serviceId)?.title ??
+          "Service media",
         description: undefined,
         sortOrder: idx,
         status: "ACTIVE",
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
       })),
-    [serviceMedia, services, vendorProfile.id]
+    [serviceMedia, services, vendorProfile.id],
   );
 
   const loading =
@@ -1206,32 +1363,44 @@ const VendorAnalyticsDashboard = () => {
   const rangeLabel = formatRangeLabel(rangeStart, now);
 
   const filteredLeads = useMemo(
-    () => leads.filter((lead) => new Date(lead.createdAt) >= getRangeStart(range)),
-    [leads, range]
+    () =>
+      leads.filter((lead) => new Date(lead.createdAt) >= getRangeStart(range)),
+    [leads, range],
   );
 
   const filteredOrders = useMemo(
-    () => ordersSeed.filter((order) => new Date(order.createdAt) >= getRangeStart(range)),
-    [ordersSeed, range]
+    () =>
+      ordersSeed.filter(
+        (order) => new Date(order.createdAt) >= getRangeStart(range),
+      ),
+    [ordersSeed, range],
   );
   const filteredPaidOrders = useMemo(
     () => filteredOrders.filter((order) => order.status === "PAID"),
-    [filteredOrders]
+    [filteredOrders],
   );
   const filteredPaidAndRefundedOrders = useMemo(
-    () => filteredOrders.filter((order) => order.status === "PAID" || order.status === "REFUNDED"),
-    [filteredOrders]
+    () =>
+      filteredOrders.filter(
+        (order) => order.status === "PAID" || order.status === "REFUNDED",
+      ),
+    [filteredOrders],
   );
 
   const filteredBookings = useMemo(
     () =>
-      bookingsSeed.filter((booking) => new Date(booking.createdAt) >= getRangeStart(range)),
-    [bookingsSeed, range]
+      bookingsSeed.filter(
+        (booking) => new Date(booking.createdAt) >= getRangeStart(range),
+      ),
+    [bookingsSeed, range],
   );
 
   const filteredReviews = useMemo(
-    () => reviewsSeed.filter((review) => new Date(review.createdAt) >= getRangeStart(range)),
-    [reviewsSeed, range]
+    () =>
+      reviewsSeed.filter(
+        (review) => new Date(review.createdAt) >= getRangeStart(range),
+      ),
+    [reviewsSeed, range],
   );
 
   const leadCounts = useMemo(() => {
@@ -1241,21 +1410,34 @@ const VendorAnalyticsDashboard = () => {
         acc[lead.status] += 1;
         return acc;
       },
-      { NEW: 0, CONTACTED: 0, CONVERTED: 0, LOST: 0 }
+      { NEW: 0, CONTACTED: 0, CONVERTED: 0, LOST: 0 },
     );
     const conversion = conversionRate(pipeline.CONVERTED, total);
     return { total, pipeline, conversion };
   }, [filteredLeads]);
 
   const orderMetrics = useMemo(() => {
-    const paidOrders = filteredOrders.filter((order) => order.status === "PAID");
-    const refundedOrders = filteredOrders.filter((order) => order.status === "REFUNDED");
-    const grossRevenue = paidOrders.reduce((sum, order) => sum + order.totalFinal, 0);
-    const totalDiscount = paidOrders.reduce((sum, order) => sum + order.totalDiscount, 0);
-    const commission = paidOrders.reduce((sum, order) => sum + order.commissionAmount, 0);
+    const paidOrders = filteredOrders.filter(
+      (order) => order.status === "PAID",
+    );
+    const refundedOrders = filteredOrders.filter(
+      (order) => order.status === "REFUNDED",
+    );
+    const grossRevenue = paidOrders.reduce(
+      (sum, order) => sum + order.totalFinal,
+      0,
+    );
+    const totalDiscount = paidOrders.reduce(
+      (sum, order) => sum + order.totalDiscount,
+      0,
+    );
+    const commission = paidOrders.reduce(
+      (sum, order) => sum + order.commissionAmount,
+      0,
+    );
     const vendorPayout = paidOrders.reduce(
       (sum, order) => sum + order.vendorPayoutAmount,
-      0
+      0,
     );
     return {
       paidCount: paidOrders.length,
@@ -1269,15 +1451,23 @@ const VendorAnalyticsDashboard = () => {
 
   const bookingMetrics = useMemo(() => {
     const total = filteredBookings.length;
-    const confirmed = filteredBookings.filter((b) => b.status === "CONFIRMED").length;
-    const cancelled = filteredBookings.filter((b) => b.status === "CANCELLED").length;
-    const completed = filteredBookings.filter((b) => b.status === "COMPLETED").length;
-    const refundRequested = filteredBookings.filter(
-      (b) => b.status === "REFUND_REQUESTED"
+    const confirmed = filteredBookings.filter(
+      (b) => b.status === "CONFIRMED",
     ).length;
-    const refundCompleted = filteredBookings.filter((b) => b.status === "REFUNDED").length;
+    const cancelled = filteredBookings.filter(
+      (b) => b.status === "CANCELLED",
+    ).length;
+    const completed = filteredBookings.filter(
+      (b) => b.status === "COMPLETED",
+    ).length;
+    const refundRequested = filteredBookings.filter(
+      (b) => b.status === "REFUND_REQUESTED",
+    ).length;
+    const refundCompleted = filteredBookings.filter(
+      (b) => b.status === "REFUNDED",
+    ).length;
     const activeBookings = filteredBookings.filter(
-      (b) => b.status !== "CANCELLED"
+      (b) => b.status !== "CANCELLED",
     ).length;
     return {
       total,
@@ -1296,7 +1486,9 @@ const VendorAnalyticsDashboard = () => {
       total === 0
         ? 0
         : Math.round(
-            (filteredReviews.reduce((sum, review) => sum + review.rating, 0) / total) * 10
+            (filteredReviews.reduce((sum, review) => sum + review.rating, 0) /
+              total) *
+              10,
           ) / 10;
     const verifiedCount = filteredReviews.filter((r) => r.verified).length;
     const fiveStar = filteredReviews.filter((r) => r.rating === 5).length;
@@ -1313,14 +1505,16 @@ const VendorAnalyticsDashboard = () => {
         {
           leads: (acc, item) => ("status" in item ? acc + 1 : acc),
           orders: (acc, item) =>
-            "status" in item && (item as Order).status === "PAID" ? acc + 1 : acc,
+            "status" in item && (item as Order).status === "PAID"
+              ? acc + 1
+              : acc,
           bookings: (acc, item) =>
             "status" in item && (item as ServiceBooking).status !== "CANCELLED"
               ? acc + 1
               : acc,
-        }
+        },
       ),
-    [filteredBookings, filteredLeads, filteredOrders, range]
+    [filteredBookings, filteredLeads, filteredOrders, range],
   );
 
   const leadsChart = useMemo(
@@ -1329,40 +1523,58 @@ const VendorAnalyticsDashboard = () => {
         leads: (acc) => acc + 1,
         converted: (acc, lead) => (lead.status === "CONVERTED" ? acc + 1 : acc),
       }),
-    [filteredLeads, range]
+    [filteredLeads, range],
   );
 
   const ordersRevenueChart = useMemo(
     () =>
-      bucketize(filteredPaidOrders, range, (order) => new Date(order.createdAt), {
-        revenue: (acc, order) => acc + order.totalFinal,
-      }),
-    [filteredPaidOrders, range]
+      bucketize(
+        filteredPaidOrders,
+        range,
+        (order) => new Date(order.createdAt),
+        {
+          revenue: (acc, order) => acc + order.totalFinal,
+        },
+      ),
+    [filteredPaidOrders, range],
   );
 
   const ordersSplitChart = useMemo(
     () =>
-      bucketize(filteredPaidOrders, range, (order) => new Date(order.createdAt), {
-        commission: (acc, order) => acc + order.commissionAmount,
-        payout: (acc, order) => acc + order.vendorPayoutAmount,
-      }),
-    [filteredPaidOrders, range]
+      bucketize(
+        filteredPaidOrders,
+        range,
+        (order) => new Date(order.createdAt),
+        {
+          commission: (acc, order) => acc + order.commissionAmount,
+          payout: (acc, order) => acc + order.vendorPayoutAmount,
+        },
+      ),
+    [filteredPaidOrders, range],
   );
 
   const bookingsChart = useMemo(
     () =>
-      bucketize(filteredBookings, range, (booking) => new Date(booking.createdAt), {
-        bookings: (acc) => acc + 1,
-      }),
-    [filteredBookings, range]
+      bucketize(
+        filteredBookings,
+        range,
+        (booking) => new Date(booking.createdAt),
+        {
+          bookings: (acc) => acc + 1,
+        },
+      ),
+    [filteredBookings, range],
   );
 
   const topServicesByBookings = useMemo(() => {
-    const counts = filteredBookings.reduce<Record<string, number>>((acc, booking) => {
-      if (booking.status === "CANCELLED") return acc;
-      acc[booking.serviceTitle] = (acc[booking.serviceTitle] ?? 0) + 1;
-      return acc;
-    }, {});
+    const counts = filteredBookings.reduce<Record<string, number>>(
+      (acc, booking) => {
+        if (booking.status === "CANCELLED") return acc;
+        acc[booking.serviceTitle] = (acc[booking.serviceTitle] ?? 0) + 1;
+        return acc;
+      },
+      {},
+    );
     return Object.entries(counts)
       .map(([serviceTitle, count]) => ({ serviceTitle, count }))
       .sort((a, b) => b.count - a.count)
@@ -1380,12 +1592,16 @@ const VendorAnalyticsDashboard = () => {
         bucket: `${rating} star`,
         bucketStart: rating,
         count: buckets[rating],
-    }));
+      }));
   }, [filteredReviews]);
 
   const profileScore = useMemo(() => {
     const checks = [
-      { label: "Business name", score: 10, passed: !!vendorProfile.businessName },
+      {
+        label: "Business name",
+        score: 10,
+        passed: !!vendorProfile.businessName,
+      },
       { label: "Description", score: 10, passed: !!vendorProfile.description },
       {
         label: "Contact details",
@@ -1418,10 +1634,24 @@ const VendorAnalyticsDashboard = () => {
       .reduce((sum, check) => sum + check.score, 0);
 
     const score = Math.min(achieved, 100);
-    const missing = checks.filter((check) => !check.passed).map((check) => check.label);
+    const missing = checks
+      .filter((check) => !check.passed)
+      .map((check) => check.label);
 
     return { score, missing };
-  }, [offeringSlots.length, reviewsSeed.length, serviceMedia.length, serviceOfferings.length, services, vendorProfile.businessName, vendorProfile.cityId, vendorProfile.contactEmail, vendorProfile.contactPhone, vendorProfile.description, vendorProfile.kycStatus]);
+  }, [
+    offeringSlots.length,
+    reviewsSeed.length,
+    serviceMedia.length,
+    serviceOfferings.length,
+    services,
+    vendorProfile.businessName,
+    vendorProfile.cityId,
+    vendorProfile.contactEmail,
+    vendorProfile.contactPhone,
+    vendorProfile.description,
+    vendorProfile.kycStatus,
+  ]);
 
   const latestLeadsColumns: TableColumn<VendorLead>[] = [
     {
@@ -1437,7 +1667,9 @@ const VendorAnalyticsDashboard = () => {
     {
       key: "service",
       header: "Service",
-      render: (lead) => <span className="text-sm font-semibold">{lead.serviceTitle}</span>,
+      render: (lead) => (
+        <span className="text-sm font-semibold">{lead.serviceTitle}</span>
+      ),
     },
     {
       key: "status",
@@ -1450,10 +1682,10 @@ const VendorAnalyticsDashboard = () => {
               lead.status === "CONVERTED"
                 ? "success"
                 : lead.status === "CONTACTED"
-                ? "warning"
-                : lead.status === "LOST"
-                ? "danger"
-                : "info"
+                  ? "warning"
+                  : lead.status === "LOST"
+                    ? "danger"
+                    : "info"
             }
             size="sm"
           />
@@ -1464,7 +1696,9 @@ const VendorAnalyticsDashboard = () => {
               const previousStatus = lead.status;
 
               setLeads((prev) =>
-                prev.map((item) => (item.id === lead.id ? { ...item, status: nextStatus } : item))
+                prev.map((item) =>
+                  item.id === lead.id ? { ...item, status: nextStatus } : item,
+                ),
               );
 
               void updateVendorLeadStatus({ id: lead.id, status: nextStatus })
@@ -1472,18 +1706,22 @@ const VendorAnalyticsDashboard = () => {
                 .catch(() => {
                   setLeads((prev) =>
                     prev.map((item) =>
-                      item.id === lead.id ? { ...item, status: previousStatus } : item
-                    )
+                      item.id === lead.id
+                        ? { ...item, status: previousStatus }
+                        : item,
+                    ),
                   );
                 });
             }}
             className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700"
           >
-            {(["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]).map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
+            {(["NEW", "CONTACTED", "CONVERTED", "LOST"] as LeadStatus[]).map(
+              (status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ),
+            )}
           </select>
         </div>
       ),
@@ -1532,163 +1770,10 @@ const VendorAnalyticsDashboard = () => {
     },
   ];
 
-  const latestOrdersColumns: TableColumn<Order>[] = [
-    {
-      key: "id",
-      header: "Order",
-      render: (order) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">{order.id}</p>
-          <p className="text-xs text-slate-500">User {order.userId}</p>
-        </div>
-      ),
-    },
-    {
-      key: "totalFinal",
-      header: "Total",
-      render: (order) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">
-            {currencyFormatter(order.totalFinal, currency)}
-          </p>
-          <p className="text-[11px] text-slate-500">
-            Discount: {currencyFormatter(order.totalDiscount, currency)}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "split",
-      header: "Split",
-      render: (order) => (
-        <div className="text-sm text-slate-800">
-          <p>Commission: {currencyFormatter(order.commissionAmount, currency)}</p>
-          <p className="text-xs text-slate-500">
-            Vendor payout: {currencyFormatter(order.vendorPayoutAmount, currency)}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (order) => (
-        <StatusPill
-          status={order.status}
-          tone={order.status === "PAID" ? "success" : order.status === "REFUNDED" ? "warning" : "neutral"}
-          size="sm"
-        />
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Created",
-      render: (order) => (
-        <span className="text-sm text-slate-700">
-          {new Date(order.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-          })}
-        </span>
-      ),
-    },
-  ];
-
-  const latestReviewsColumns: TableColumn<Review>[] = [
-    {
-      key: "service",
-      header: "Service",
-      render: (review) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">{review.serviceTitle}</p>
-          <p className="text-xs text-slate-500">
-            {review.verified ? "Verified reviewer" : "Unverified"}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "rating",
-      header: "Rating",
-      render: (review) => (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-          <HiOutlineStar className="h-4 w-4" />
-          {review.rating.toFixed(1)}
-        </span>
-      ),
-    },
-    {
-      key: "comment",
-      header: "Comment",
-      render: (review) => (
-        <p className="max-w-xs truncate text-sm text-slate-800">{review.comment}</p>
-      ),
-    },
-    {
-      key: "created",
-      header: "Date",
-      render: (review) => (
-        <span className="text-sm text-slate-700">
-          {new Date(review.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-          })}
-        </span>
-      ),
-    },
-  ];
-
-  const latestBookingsColumns: TableColumn<ServiceBooking>[] = [
-    {
-      key: "service",
-      header: "Service",
-      render: (booking) => (
-        <div className="space-y-0.5">
-          <p className="font-semibold text-slate-900">{booking.serviceTitle}</p>
-          <p className="text-xs text-slate-500">
-            Slot:{" "}
-            {new Date(booking.startTime).toLocaleString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (booking) => (
-        <StatusPill
-          status={booking.status}
-          tone={
-            booking.status === "CONFIRMED" || booking.status === "COMPLETED"
-              ? "success"
-              : booking.status === "CANCELLED"
-              ? "danger"
-              : booking.status === "REFUND_REQUESTED" || booking.status === "REFUNDED"
-              ? "warning"
-              : "info"
-          }
-          size="sm"
-        />
-      ),
-    },
-    {
-      key: "created",
-      header: "Created",
-      render: (booking) => (
-        <span className="text-sm text-slate-700">
-          {new Date(booking.createdAt).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-          })}
-        </span>
-      ),
-    },
-  ];
+  const formatShortOrderId = (orderId: string) =>
+    orderId.length > 14
+      ? `${orderId.slice(0, 8)}...${orderId.slice(-6)}`
+      : orderId;
 
   const overviewKpis = [
     {
@@ -1736,50 +1821,231 @@ const VendorAnalyticsDashboard = () => {
   ];
 
   const renderOverviewTab = () => (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-[28px] font-bold tracking-tight text-slate-900">
+            Vendor Analytics
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            {vendorProfile.businessName} • {vendorProfile.city},{" "}
+            {vendorProfile.state}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <DateRangeSelector value={range} onChange={setRange} />
+        </div>
+      </div>
+
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-900 text-white shadow-sm">
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">
+                Store
+              </span>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-slate-900">
+                {vendorProfile.businessName}
+              </p>
+              <p className="flex items-center gap-1 text-sm font-semibold text-slate-500">
+                <HiOutlineMapPin className="h-4 w-4" />
+                {vendorProfile.city}, {vendorProfile.state}
+                <span className="mx-1">•</span>
+                {rangeLabel}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        {overviewKpis.map((kpi) => (
-          <StatsCard key={kpi.title} {...kpi} />
-        ))}
+        {overviewKpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div
+              key={kpi.title}
+              className="min-h-[154px] rounded-[24px] border border-slate-100 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)]"
+            >
+              <div className="flex h-full flex-col justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    {kpi.title}
+                  </p>
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-100 bg-slate-50 text-slate-500">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[30px] font-bold leading-none tracking-tight text-slate-900">
+                    {kpi.value}
+                  </p>
+                  <p className="text-xs text-slate-500">{kpi.subtitle}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <AnalyticsBarChart
-        title="Interactions Overview"
-        subtitle="Leads vs paid orders vs bookings"
-        data={overviewChart}
-        series={[
-          { key: "leads", label: "Leads", color: "#2563EB" },
-          { key: "orders", label: "Paid Orders", color: "#22C55E" },
-          { key: "bookings", label: "Bookings", color: "#A855F7" },
-        ]}
-      />
+      <div className="grid gap-5 lg:grid-cols-[1.45fr_0.95fr]">
+        <AnalyticsBarChart
+          title="Interactions Overview"
+          subtitle="Customer journey lifecycle metrics over the last 30 days"
+          data={overviewChart}
+          series={[
+            { key: "leads", label: "Leads", color: "#2563EB" },
+            { key: "orders", label: "Orders", color: "#8B5CF6" },
+            { key: "bookings", label: "Bookings", color: "#14B8A6" },
+          ]}
+          height={320}
+        />
+        <div className="grid gap-5">
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-slate-900">Latest Leads</h3>
+              <button
+                type="button"
+                className="text-sm font-semibold text-[#3554e0]"
+              >
+                View All
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {filteredLeads.slice(0, 3).map((lead) => (
+                <div key={lead.id} className="flex items-start gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500">
+                    <HiOutlineUsers className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-900">
+                      {lead.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {lead.serviceTitle}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {new Date(lead.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DataTableCard
-          title="Latest Leads"
-          subtitle="Most recent enquiries"
-          rows={filteredLeads.slice(0, 5)}
-          columns={latestLeadsColumns}
-          emptyLabel="No leads in this range."
-        />
-        <DataTableCard
-          title="Latest Orders"
-          subtitle="Paid and refunded"
-          rows={filteredPaidAndRefundedOrders.slice(0, 5)}
-          columns={latestOrdersColumns}
-          emptyLabel="No orders in this range."
-        />
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-slate-900">
+                Latest Orders
+              </h3>
+              <button
+                type="button"
+                className="text-sm font-semibold text-[#3554e0]"
+              >
+                View All
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {filteredPaidAndRefundedOrders.slice(0, 3).map((order) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">
+                      {order.id}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {currencyFormatter(order.totalFinal, currency)} • Card
+                      Payment
+                    </p>
+                  </div>
+                  <StatusPill
+                    status={order.status}
+                    tone={
+                      order.status === "PAID"
+                        ? "success"
+                        : order.status === "REFUNDED"
+                          ? "warning"
+                          : "neutral"
+                    }
+                    size="sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-slate-900">
+                Latest Reviews
+              </h3>
+              <button
+                type="button"
+                className="text-sm font-semibold text-[#3554e0]"
+              >
+                View All
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              {filteredReviews.slice(0, 3).map((review) => (
+                <div
+                  key={`${review.id}-${review.createdAt}`}
+                  className="rounded-2xl bg-slate-50 p-4"
+                >
+                  {(() => {
+                    const reviewerName =
+                      [
+                        review.user?.nickName,
+                        review.user?.firstName,
+                        review.user?.lastName,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim() || "Verified customer";
+                    return (
+                      <>
+                        <div className="flex items-center gap-1 text-amber-400">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <HiOutlineStar
+                              key={idx}
+                              className={cn(
+                                "h-4 w-4",
+                                idx < Math.round(review.rating)
+                                  ? "text-amber-400"
+                                  : "text-slate-300",
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-2 text-sm font-semibold text-slate-900">
+                          {reviewerName}
+                        </p>
+                        <p className="mt-1 text-sm italic leading-6 text-slate-700">
+                          "{review.comment}"
+                        </p>
+                        <p className="mt-2 text-xs font-semibold text-slate-500">
+                          -{" "}
+                          {review.verified
+                            ? review.user?.firstName
+                            : "Customer"}
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-      <DataTableCard
-        title="Latest Reviews"
-        subtitle="Reputation signals"
-        rows={filteredReviews.slice(0, 5)}
-        columns={latestReviewsColumns}
-        emptyLabel="No reviews in this range."
-      />
-      </div>
-    
-      );
+    </div>
+  );
 
   const renderLeadsTab = () => (
     <div className="space-y-4">
@@ -1887,7 +2153,12 @@ const VendorAnalyticsDashboard = () => {
           subtitle="Sum of totalFinal (PAID)"
           data={ordersRevenueChart}
           series={[
-            { key: "revenue", label: "Gross Revenue", color: "#2563EB", valueType: "currency" },
+            {
+              key: "revenue",
+              label: "Gross Revenue",
+              color: "#2563EB",
+              valueType: "currency",
+            },
           ]}
           currency={currency}
         />
@@ -1896,19 +2167,114 @@ const VendorAnalyticsDashboard = () => {
           subtitle="Net amount after platform commission (PAID orders)"
           data={ordersSplitChart}
           series={[
-            { key: "payout", label: "Vendor Payout", color: "#0EA5E9", valueType: "currency" },
+            {
+              key: "payout",
+              label: "Vendor Payout",
+              color: "#0EA5E9",
+              valueType: "currency",
+            },
           ]}
           currency={currency}
         />
       </div>
 
-      <DataTableCard
-        title="Latest Paid Orders"
-        subtitle="Order splits"
-        rows={filteredPaidOrders.slice(0, 8)}
-        columns={latestOrdersColumns}
-        emptyLabel="No orders in this range."
-      />
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Latest Paid Orders
+            </h3>
+            <p className="text-sm text-slate-500">
+              Real-time update of your merchant transactions
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700"
+            >
+              Export CSV
+            </button>
+            <button
+              type="button"
+              className="rounded-xl bg-[#4F7DFF]  px-5 py-2.5 text-sm font-semibold text-white shadow-sm"
+            >
+              View All Orders
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-y-3 text-sm">
+            <thead>
+              <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-500">
+                <th className="px-4 py-3 font-semibold">Order ID</th>
+                <th className="px-4 py-3 font-semibold">Created Date</th>
+                <th className="px-4 py-3 font-semibold">Total</th>
+                <th className="px-4 py-3 font-semibold">Commission</th>
+                <th className="px-4 py-3 font-semibold">Vendor Payout</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPaidOrders.slice(0, 8).map((order) => (
+                <tr key={order.id} className="rounded-2xl bg-slate-50/70">
+                  <td className="rounded-l-2xl px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-slate-400 shadow-sm">
+                        <HiOutlineWallet className="h-4 w-4" />
+                      </span>
+                      <p className="font-semibold text-slate-900">
+                        {formatShortOrderId(order.id)}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-slate-700">
+                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-slate-900">
+                      {currencyFormatter(order.totalFinal, currency)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-rose-500">
+                      {currencyFormatter(order.commissionAmount, currency)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-semibold text-[#3554e0]">
+                      {currencyFormatter(order.vendorPayoutAmount, currency)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <StatusPill
+                      status={order.status}
+                      tone="success"
+                      size="sm"
+                    />
+                  </td>
+                  <td className="rounded-r-2xl px-4 py-4">
+                    <button
+                      type="button"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-white text-[#3554e0] shadow-sm"
+                      aria-label={`View order ${order.id}`}
+                    >
+                      <HiOutlineEye className="h-5 w-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 
@@ -1966,35 +2332,169 @@ const VendorAnalyticsDashboard = () => {
           data={bookingsChart}
           series={[{ key: "bookings", label: "Bookings", color: "#2563EB" }]}
         />
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <SectionHeader title="Top services by bookings" />
-          <div className="mt-3 space-y-2">
+        <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">Top Services</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Most booked services in the selected range
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-5">
             {topServicesByBookings.length ? (
-              topServicesByBookings.map((item) => (
-                <div
-                  key={item.serviceTitle}
-                  className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
-                >
-                  <p className="text-sm font-semibold text-slate-900">{item.serviceTitle}</p>
-                  <span className="text-xs font-semibold text-slate-600">
-                    {item.count} bookings
-                  </span>
-                </div>
-              ))
+              topServicesByBookings.map((item, index) => {
+                const maxCount = topServicesByBookings[0]?.count || 1;
+                const width = Math.max(
+                  18,
+                  Math.round((item.count / maxCount) * 100),
+                );
+                const colors = [
+                  "#3554e0",
+                  "#6f63ee",
+                  "#0ea5e9",
+                  "#14b8a6",
+                  "#f59e0b",
+                ];
+                const barColor = colors[index % colors.length];
+
+                return (
+                  <div key={item.serviceTitle} className="space-y-2">
+                    <div className="flex items-end justify-between gap-3">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.serviceTitle}
+                      </p>
+                      <p className="text-sm font-semibold text-slate-500">
+                        <span className="text-[#3554e0]">{item.count}</span>{" "}
+                        <span className="text-slate-400">units</span>
+                      </p>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-slate-100">
+                      <div
+                        className="h-2.5 rounded-full"
+                        style={{
+                          width: `${width}%`,
+                          backgroundColor: barColor,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
             ) : (
-              <p className="text-sm text-slate-500">No bookings in this range.</p>
+              <p className="text-sm text-slate-500">
+                No bookings in this range.
+              </p>
             )}
           </div>
+
+          <button
+            type="button"
+            className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#3554e0]"
+          >
+            View Detailed Category Insights
+            <span aria-hidden>→</span>
+          </button>
         </div>
       </div>
 
-      <DataTableCard
-        title="Latest Bookings"
-        subtitle="Recent service schedules"
-        rows={filteredBookings.slice(0, 8)}
-        columns={latestBookingsColumns}
-        emptyLabel="No bookings in this range."
-      />
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Latest Bookings
+            </h3>
+            <p className="text-sm text-slate-500">
+              Recent transaction activity across all storefronts
+            </p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-y-3 text-sm">
+            <thead>
+              <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-500">
+                <th className="px-2 py-3 font-semibold">Service</th>
+                <th className="px-2 py-3 font-semibold">Reference</th>
+                <th className="px-2 py-3 font-semibold">Created</th>
+                <th className="px-2 py-3 font-semibold">Amount</th>
+                <th className="px-2 py-3 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredBookings.slice(0, 4).map((booking) => {
+                const bookingAmount =
+                  booking.status === "CONFIRMED"
+                    ? 124
+                    : booking.status === "PENDING"
+                      ? 85
+                      : booking.status === "CANCELLED"
+                        ? 210.5
+                        : booking.status === "COMPLETED"
+                          ? 42
+                          : booking.status === "REFUND_REQUESTED"
+                            ? 65
+                            : 95;
+
+                const statusTone =
+                  booking.status === "CONFIRMED" ||
+                  booking.status === "COMPLETED"
+                    ? "success"
+                    : booking.status === "CANCELLED"
+                      ? "danger"
+                      : booking.status === "REFUND_REQUESTED" ||
+                          booking.status === "REFUNDED"
+                        ? "warning"
+                        : "info";
+
+                return (
+                  <tr key={booking.id} className="rounded-2xl bg-slate-50/70">
+                    <td className="rounded-l-2xl px-2 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#3554e0] shadow-sm">
+                          <HiOutlineCalendarDays className="h-5 w-5" />
+                        </span>
+                        <p className="font-semibold text-slate-900">
+                          {booking.serviceTitle}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <span className="font-semibold text-slate-700">
+                        {booking.id}
+                      </span>
+                    </td>
+                    <td className="px-2 py-4">
+                      <span className="font-semibold text-slate-700">
+                        {new Date(booking.createdAt).toLocaleString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-2 py-4">
+                      <span className="font-semibold text-slate-900">
+                        ${bookingAmount.toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="rounded-r-2xl px-2 py-4">
+                      <StatusPill
+                        status={booking.status}
+                        tone={statusTone}
+                        size="sm"
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 
@@ -2048,20 +2548,130 @@ const VendorAnalyticsDashboard = () => {
         <AnalyticsBarChart
           title="Reviews Over Time"
           subtitle="Volume across the selected period"
-          data={bucketize(filteredReviews, range, (review) => new Date(review.createdAt), {
-            reviews: (acc) => acc + 1,
-          })}
+          data={bucketize(
+            filteredReviews,
+            range,
+            (review) => new Date(review.createdAt),
+            {
+              reviews: (acc) => acc + 1,
+            },
+          )}
           series={[{ key: "reviews", label: "Reviews", color: "#22C55E" }]}
         />
       </div>
 
-      <DataTableCard
-        title="Latest Reviews"
-        subtitle="Newest feedback first"
-        rows={filteredReviews.slice(0, 10)}
-        columns={latestReviewsColumns}
-        emptyLabel="No reviews in this range."
-      />
+      <div className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.18)]">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Recent Feedbacks
+            </h3>
+            <p className="text-sm text-slate-500">
+              Real-time monitoring of client experiences
+            </p>
+          </div>
+          <button
+            type="button"
+            className="text-sm font-semibold text-[#3554e0]"
+          >
+            View All
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-y-3 text-sm">
+            <thead>
+              <tr className="text-left text-[12px] uppercase tracking-[0.12em] text-slate-500">
+                <th className="px-2 py-3 font-semibold">Service Name</th>
+                <th className="px-2 py-3 font-semibold">Rating</th>
+                <th className="px-2 py-3 font-semibold">Comment</th>
+                <th className="px-2 py-3 font-semibold">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReviews.slice(0, 6).map((review) => {
+                const reviewerName =
+                  [
+                    review.user?.nickName,
+                    review.user?.firstName,
+                    review.user?.lastName,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .trim() || "Verified customer";
+
+                const dateLabel = new Date(review.createdAt).toLocaleDateString(
+                  "en-IN",
+                  {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  },
+                );
+
+                const timeLabel = new Date(review.createdAt).toLocaleTimeString(
+                  "en-IN",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  },
+                );
+
+                return (
+                  <tr
+                    key={`${review.id}-${review.createdAt}`}
+                    className="rounded-2xl bg-slate-50/70"
+                  >
+                    <td className="rounded-l-2xl px-2 py-4">
+                      <div className="flex items-start gap-3">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#3554e0] shadow-sm">
+                          <HiOutlineStar className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {review.serviceTitle}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {reviewerName}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <div className="flex items-center gap-0.5 text-amber-400">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <HiOutlineStar
+                            key={idx}
+                            className={cn(
+                              "h-4 w-4",
+                              idx < Math.round(review.rating)
+                                ? "text-amber-400"
+                                : "text-slate-300",
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-2 py-4">
+                      <p className="max-w-sm truncate text-sm text-slate-700">
+                        "{review.comment}"
+                      </p>
+                    </td>
+                    <td className="rounded-r-2xl px-2 py-4">
+                      <div className="font-semibold text-slate-700">
+                        <p>{dateLabel}</p>
+                        <p className="text-xs font-medium text-slate-400">
+                          {timeLabel}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 
@@ -2072,30 +2682,35 @@ const VendorAnalyticsDashboard = () => {
         tone === "success" && "bg-emerald-50 text-emerald-700",
         tone === "warning" && "bg-amber-50 text-amber-700",
         tone === "danger" && "bg-rose-50 text-rose-700",
-        tone === "info" && "bg-blue-50 text-blue-700"
+        tone === "info" && "bg-blue-50 text-blue-700",
       );
 
-    const statusBadges: { label: string; tone: "success" | "warning" | "danger" | "info" }[] = [
+    const statusBadges: {
+      label: string;
+      tone: "success" | "warning" | "danger" | "info";
+    }[] = [
       {
         label: vendorProfile.status.replace("_", " "),
         tone:
           vendorProfile.status === "APPROVED"
             ? "success"
             : vendorProfile.status === "SUSPENDED"
-            ? "danger"
-            : "warning",
+              ? "danger"
+              : "warning",
       },
       {
         label:
           vendorProfile.kycStatus === "VERIFIED"
             ? "KYC verified"
             : vendorProfile.kycStatus === "PENDING"
-            ? "KYC pending"
-            : "KYC not submitted",
+              ? "KYC pending"
+              : "KYC not submitted",
         tone: vendorProfile.kycStatus === "VERIFIED" ? "success" : "warning",
       },
       {
-        label: vendorProfile.payoutsEnabled ? "Payouts enabled" : "Payouts blocked",
+        label: vendorProfile.payoutsEnabled
+          ? "Payouts enabled"
+          : "Payouts blocked",
         tone: vendorProfile.payoutsEnabled ? "success" : "warning",
       },
       {
@@ -2124,7 +2739,9 @@ const VendorAnalyticsDashboard = () => {
 
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-2">
-                  <p className="text-2xl font-bold text-slate-900">{vendorProfile.businessName}</p>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {vendorProfile.businessName}
+                  </p>
                   <p className="text-sm text-slate-600 leading-relaxed">
                     {vendorProfile.description ??
                       "Add a short description to help customers know you better."}
@@ -2133,7 +2750,9 @@ const VendorAnalyticsDashboard = () => {
                     <span className="inline-flex items-center gap-1">
                       <HiOutlineMapPin className="h-4 w-4" />
                       {vendorProfile.city}, {vendorProfile.state}
-                      {vendorProfile.country ? ` | ${vendorProfile.country}` : ""}
+                      {vendorProfile.country
+                        ? ` | ${vendorProfile.country}`
+                        : ""}
                     </span>
                     {vendorProfile.contactPhone ? (
                       <span className="inline-flex items-center gap-1">
@@ -2158,16 +2777,21 @@ const VendorAnalyticsDashboard = () => {
                     /vendors/{vendorProfile.slug ?? "not-set"}
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    {vendorProfile.isIndexable ? "Indexable in search" : "Hidden from search"}
+                    {vendorProfile.isIndexable
+                      ? "Indexable in search"
+                      : "Hidden from search"}
                   </p>
                   {vendorProfile.approvedAt ? (
                     <p className="text-[11px] text-slate-500">
                       Since{" "}
-                      {new Date(vendorProfile.approvedAt).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {new Date(vendorProfile.approvedAt).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        },
+                      )}
                     </p>
                   ) : null}
                 </div>
@@ -2193,8 +2817,8 @@ const VendorAnalyticsDashboard = () => {
                     {profileScore.score >= 80
                       ? "Good"
                       : profileScore.score >= 50
-                      ? "Okay"
-                      : "Needs work"}
+                        ? "Okay"
+                        : "Needs work"}
                   </span>
                 </div>
                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-200">
@@ -2204,7 +2828,8 @@ const VendorAnalyticsDashboard = () => {
                   />
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  Complete the checklist to unlock more visibility and better lead quality.
+                  Complete the checklist to unlock more visibility and better
+                  lead quality.
                 </p>
               </div>
             </div>
@@ -2251,12 +2876,36 @@ const VendorAnalyticsDashboard = () => {
             <SectionHeader title="Lifecycle & metadata" />
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { label: "Created at", value: vendorProfile.createdAt, asDate: true },
-                { label: "Updated at", value: vendorProfile.updatedAt, asDate: true },
-                { label: "Stripe onboarded", value: vendorProfile.stripeOnboardedAt, asDate: true },
-                { label: "Approved at", value: vendorProfile.approvedAt, asDate: true },
-                { label: "Suspended at", value: vendorProfile.suspendedAt, asDate: true, fallback: "Never" },
-                { label: "City (relation)", value: vendorProfile.cityRelation?.name ?? "Not linked" },
+                {
+                  label: "Created at",
+                  value: vendorProfile.createdAt,
+                  asDate: true,
+                },
+                {
+                  label: "Updated at",
+                  value: vendorProfile.updatedAt,
+                  asDate: true,
+                },
+                {
+                  label: "Stripe onboarded",
+                  value: vendorProfile.stripeOnboardedAt,
+                  asDate: true,
+                },
+                {
+                  label: "Approved at",
+                  value: vendorProfile.approvedAt,
+                  asDate: true,
+                },
+                {
+                  label: "Suspended at",
+                  value: vendorProfile.suspendedAt,
+                  asDate: true,
+                  fallback: "Never",
+                },
+                {
+                  label: "City (relation)",
+                  value: vendorProfile.cityRelation?.name ?? "Not linked",
+                },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -2272,7 +2921,7 @@ const VendorAnalyticsDashboard = () => {
                           month: "short",
                           year: "numeric",
                         })
-                      : item.value ?? item.fallback ?? "Not set"}
+                      : (item.value ?? item.fallback ?? "Not set")}
                   </p>
                 </div>
               ))}
@@ -2283,10 +2932,19 @@ const VendorAnalyticsDashboard = () => {
             <SectionHeader title="Business identity" />
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { label: "Organization number", value: vendorProfile.organizationNumber ?? "Not provided" },
-                { label: "VAT number", value: vendorProfile.vatNumber ?? "Not provided" },
+                {
+                  label: "Organization number",
+                  value: vendorProfile.organizationNumber ?? "Not provided",
+                },
+                {
+                  label: "VAT number",
+                  value: vendorProfile.vatNumber ?? "Not provided",
+                },
                 { label: "Country", value: vendorProfile.country ?? "SE" },
-                { label: "Status", value: vendorProfile.status.replace("_", " ") },
+                {
+                  label: "Status",
+                  value: vendorProfile.status.replace("_", " "),
+                },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -2295,7 +2953,9 @@ const VendorAnalyticsDashboard = () => {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                     {item.label}
                   </p>
-                  <p className="text-sm font-semibold text-slate-900">{item.value}</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {item.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -2312,8 +2972,8 @@ const VendorAnalyticsDashboard = () => {
                   {vendorProfile.kycStatus === "VERIFIED"
                     ? "Verified"
                     : vendorProfile.kycStatus === "PENDING"
-                    ? "Pending review"
-                    : "Not submitted"}
+                      ? "Pending review"
+                      : "Not submitted"}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -2353,7 +3013,8 @@ const VendorAnalyticsDashboard = () => {
                   Contacts
                 </p>
                 <p className="text-sm font-semibold text-slate-900">
-                  {vendorProfile.contactPhone ?? "No phone"} / {vendorProfile.contactEmail ?? "No email"}
+                  {vendorProfile.contactPhone ?? "No phone"} /{" "}
+                  {vendorProfile.contactEmail ?? "No email"}
                 </p>
               </div>
               <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
@@ -2401,7 +3062,7 @@ const VendorAnalyticsDashboard = () => {
                             "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                             item.type === "VIDEO"
                               ? "bg-purple-50 text-purple-700"
-                              : "bg-cyan-50 text-cyan-700"
+                              : "bg-cyan-50 text-cyan-700",
                           )}
                         >
                           {item.type}
@@ -2411,15 +3072,19 @@ const VendorAnalyticsDashboard = () => {
                             "rounded-full px-2 py-0.5 text-[11px] font-semibold",
                             item.status === "ACTIVE"
                               ? "bg-emerald-50 text-emerald-700"
-                              : "bg-slate-100 text-slate-700"
+                              : "bg-slate-100 text-slate-700",
                           )}
                         >
                           {item.status}
                         </span>
                       </span>
-                      <span className="text-[11px] text-slate-500">#{item.sortOrder}</span>
+                      <span className="text-[11px] text-slate-500">
+                        #{item.sortOrder}
+                      </span>
                     </div>
-                    <p className="text-sm font-semibold text-slate-900">{item.title ?? "Untitled"}</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {item.title ?? "Untitled"}
+                    </p>
                     <p className="text-xs text-slate-500">
                       {item.description ?? "No description provided."}
                     </p>
@@ -2450,84 +3115,118 @@ const VendorAnalyticsDashboard = () => {
                       )}
                     </div>
                     {item.thumbnailKey ? (
-                      <p className="text-[11px] text-slate-500">Thumb: {item.thumbnailKey}</p>
+                      <p className="text-[11px] text-slate-500">
+                        Thumb: {item.thumbnailKey}
+                      </p>
                     ) : null}
                   </div>
                 ))
             ) : (
-              <p className="text-sm text-slate-500">No gallery items added yet.</p>
+              <p className="text-sm text-slate-500">
+                No gallery items added yet.
+              </p>
             )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <SectionHeader title="Profile completeness checklist" />
-          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-            {[
+        <div className="rounded-[24px] border border-slate-200 bg-white p-4">
+          {(() => {
+            const checklistItems = [
               {
                 label: "Add description",
+                description: "Company bio and overview",
                 passed: !!vendorProfile.description,
                 to: "/vendor/profile",
               },
               {
                 label: "Add contact details",
+                description: "Email or phone number",
                 passed: !!vendorProfile.contactEmail || !!vendorProfile.contactPhone,
                 to: "/vendor/profile",
               },
               {
                 label: "Upload media",
+                description: "Gallery and cover images",
                 passed: serviceMedia.length >= 3,
                 to: "/vendor/media",
               },
               {
                 label: "Create offerings",
+                description: "At least one active service",
                 passed: serviceOfferings.length > 0,
                 to: "/vendor/services",
               },
               {
                 label: "Add slots",
+                description: "Availability for bookings",
                 passed: offeringSlots.length > 0,
                 to: "/vendor/services",
               },
               {
                 label: "Get 5 reviews",
+                description: "Early social proof",
                 passed: reviewsSeed.length >= 5,
                 to: "/vendor/reviews",
               },
               {
                 label: "Submit KYC",
+                description: "Identity verification approved",
                 passed: vendorProfile.kycStatus === "VERIFIED",
                 to: "/vendor/kyc",
               },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "grid h-6 w-6 place-items-center rounded-full text-white",
-                      item.passed ? "bg-emerald-500" : "bg-slate-300"
-                    )}
-                  >
-                    {item.passed ? (
-                      <HiOutlineCheckCircle className="h-4 w-4" />
-                    ) : (
-                      <span className="text-xs font-bold text-slate-700">!</span>
-                    )}
-                  </span>
-                  <span className="text-sm font-semibold text-slate-800">{item.label}</span>
+            ];
+            const doneCount = checklistItems.filter((item) => item.passed).length;
+
+            return (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-[18px] font-black tracking-tight text-slate-950">
+                    Checklist
+                  </p>
+                  <p className="text-sm font-semibold text-slate-500">
+                    {doneCount}/{checklistItems.length} Done
+                  </p>
                 </div>
-                <a
-                  href={item.to}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-500"
-                >
-                  Fix
-                </a>
-              </div>
-            ))}
-          </div>
+                <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {checklistItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between rounded-[12px] border border-slate-100 bg-slate-50 px-3 py-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={cn(
+                            "grid h-6 w-6 place-items-center rounded-full text-white",
+                            item.passed ? "bg-emerald-500" : "bg-slate-300",
+                          )}
+                        >
+                          {item.passed ? (
+                            <HiOutlineCheckCircle className="h-4 w-4" />
+                          ) : (
+                            <span className="text-xs font-bold text-slate-700">!</span>
+                          )}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-800">
+                            {item.label}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                      <a
+                        href={item.to}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+                      >
+                        Fix
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
     );
@@ -2597,7 +3296,10 @@ const VendorAnalyticsDashboard = () => {
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, idx) => (
-          <div key={idx} className="rounded-lg border border-slate-100 bg-slate-50 p-3 space-y-2">
+          <div
+            key={idx}
+            className="rounded-lg border border-slate-100 bg-slate-50 p-3 space-y-2"
+          >
             <div className="flex items-center justify-between">
               <Skeleton className="h-4 w-16 rounded-full" />
               <Skeleton className="h-4 w-14 rounded-full" />
@@ -2619,7 +3321,10 @@ const VendorAnalyticsDashboard = () => {
         <Skeleton className="h-3 w-16" />
       </div>
       <div className="space-y-3">
-        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+        <div
+          className="grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
           {Array.from({ length: cols }).map((_, idx) => (
             <Skeleton key={idx} className="h-3 w-full rounded-sm" />
           ))}
@@ -2685,7 +3390,10 @@ const VendorAnalyticsDashboard = () => {
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, idx) => (
-                <div key={idx} className="rounded-lg border border-slate-100 bg-slate-50 p-3 space-y-2">
+                <div
+                  key={idx}
+                  className="rounded-lg border border-slate-100 bg-slate-50 p-3 space-y-2"
+                >
                   <div className="flex items-center justify-between">
                     <Skeleton className="h-3 w-16" />
                     <Skeleton className="h-3 w-10 rounded-full" />
@@ -2802,29 +3510,10 @@ const VendorAnalyticsDashboard = () => {
 
   return (
     <DashboardContainer className="space-y-4 lg:space-y-5">
-      <TitleBreadCrumbs title="Vendor Analytics" breadCrumbTitle="Vendor / Analytics" />
-
       {loading ? (
         skeletonHeader()
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="space-y-0.5">
-              <p className="text-xl font-bold text-slate-900">{vendorProfile.businessName}</p>
-              <p className="flex items-center gap-1 text-sm font-semibold text-slate-600">
-                <HiOutlineMapPin className="h-4 w-4" />
-                {vendorProfile.city}, {vendorProfile.state}
-              </p>
-              <p className="text-xs font-semibold text-slate-500">{rangeLabel}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <DateRangeSelector value={range} onChange={setRange} />
-              <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                <HiOutlineCalendarDays className="h-4 w-4" />
-                Date buckets adjust by range
-              </div>
-            </div>
-          </div>
           <div className="flex items-center gap-4 border-b border-slate-200">
             {tabs.map((tab) => (
               <TabButton

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { IconHome } from "@tabler/icons-react";
-import { HiChevronRight } from "react-icons/hi2";
+import { HiChevronRight } from "react-icons/hi2"; 
 import { cn } from "@/lib/utils";
 
 type TitleBreadCrumbsProps = {

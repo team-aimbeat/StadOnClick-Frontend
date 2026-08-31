@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarClock, Users } from "lucide-react";
+import { CalendarClock, Clock3, DollarSign, UserCheck, Users } from "lucide-react";
 import toast from "react-hot-toast";
-import {
-  HiOutlineCheckCircle,
-  HiOutlineClock,
-  HiOutlineCurrencyDollar,
-} from "react-icons/hi2";
+import type { LucideIcon } from "lucide-react";
 
 import type {
   ColumnConfig,
@@ -45,6 +41,82 @@ const money = new Intl.NumberFormat("en-SE", {
   currency: "SEK",
   maximumFractionDigits: 0,
 });
+
+const compactNumber = new Intl.NumberFormat("en-SE", {
+  maximumFractionDigits: 0,
+});
+
+type AffiliateMetricTone = "blue" | "green" | "amber" | "purple";
+
+type AffiliateMetricCardProps = {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: LucideIcon;
+  tone: AffiliateMetricTone;
+  badge?: string;
+};
+
+const affiliateMetricStyles: Record<
+  AffiliateMetricTone,
+  { icon: string; badge: string; badgeText: string }
+> = {
+  blue: {
+    icon: "bg-[#eef5ff] text-[#3554e0]",
+    badge: "bg-emerald-50",
+    badgeText: "text-emerald-600",
+  },
+  green: {
+    icon: "bg-[#eef9f2] text-emerald-600",
+    badge: "bg-emerald-50",
+    badgeText: "text-emerald-600",
+  },
+  amber: {
+    icon: "bg-[#fff4e6] text-amber-600",
+    badge: "bg-amber-50",
+    badgeText: "text-amber-600",
+  },
+  purple: {
+    icon: "bg-[#f0eeff] text-[#5a57e8]",
+    badge: "bg-emerald-50",
+    badgeText: "text-emerald-600",
+  },
+};
+
+const AffiliateMetricCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  tone,
+  badge,
+}: AffiliateMetricCardProps) => {
+  const styles = affiliateMetricStyles[tone];
+  const formattedValue = typeof value === "number" ? compactNumber.format(value) : value;
+
+  return (
+    <div className="min-h-[154px] rounded-[18px] border border-slate-100 bg-white p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${styles.icon}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        {badge ? (
+          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] ${styles.badge} ${styles.badgeText}`}>
+            {badge}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-4 space-y-1.5">
+        <p className="text-sm font-medium text-slate-500">{title}</p>
+        <p className="text-[30px] font-semibold tracking-[-0.06em] text-slate-950">
+          {formattedValue}
+        </p>
+        <p className="text-xs font-medium text-slate-500">{subtitle}</p>
+      </div>
+    </div>
+  );
+};
 
 const statusTone: Record<
   AffiliateRow["status"],
@@ -371,36 +443,43 @@ export default function AffiliatesPage() {
       title="Affiliates"
       breadCrumbTitle="Admin / Affiliates"
       description="Review affiliate users, track referral performance, and manage account status."
-      stats={[
-        {
-          title: "Total Users",
-          value: totals.users,
-          subtitle: "Registered affiliates",
-          icon: Users,
-          accentColor: "purple",
-        },
-        {
-          title: "Active",
-          value: totals.active,
-          subtitle: "Currently earning",
-          icon: HiOutlineCheckCircle,
-          accentColor: "green",
-        },
-        {
-          title: "Inactive",
-          value: totals.inactive,
-          subtitle: "Needs follow-up",
-          icon: HiOutlineClock,
-          accentColor: "yellow",
-        },
-        {
-          title: "Total Earnings",
-          value: money.format(totals.earnings),
-          subtitle: "Across all affiliates",
-          icon: HiOutlineCurrencyDollar,
-          accentColor: "blue",
-        },
-      ]}
+      stats={[]}
+      headerSlot={
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <AffiliateMetricCard
+            title="Total Users"
+            value={totals.users}
+            subtitle="Registered affiliates"
+            icon={Users}
+            tone="purple"
+            badge=""
+          />
+          <AffiliateMetricCard
+            title="Active"
+            value={totals.active}
+            subtitle="Currently earning"
+            icon={UserCheck}
+            tone="green"
+            badge=""
+          />
+          <AffiliateMetricCard
+            title="Inactive"
+            value={totals.inactive}
+            subtitle="Needs follow-up"
+            icon={Clock3}
+            tone="amber"
+            badge=""
+          />
+          <AffiliateMetricCard
+            title="Total Earnings"
+            value={money.format(totals.earnings)}
+            subtitle="Across all affiliates"
+            icon={DollarSign}
+            tone="blue"
+            badge=""
+          />
+        </div>
+      }
       summary={{
         left: summaryLeft,
         right: `Selected affiliates: ${selectedRows.length}`,

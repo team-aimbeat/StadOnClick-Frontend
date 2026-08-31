@@ -4,6 +4,9 @@ export type ServiceDetail = {
   compareAtPrice?: string
   subtitle?: string
   duration?: string
+  discountPercent?: number
+  dealEndTime?: string
+  isDealActive?: boolean
 }
 
 export type Service = {

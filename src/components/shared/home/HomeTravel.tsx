@@ -1,147 +1,62 @@
-import spa from "@/assets/Images/travel1.svg";
-import buffet from "@/assets/Images/travel2.svg";
-import party from "@/assets/Images/travel3.svg";
-import yoga from "@/assets/Images/travel4.svg";
-import salon from "@/assets/Images/travel5.svg";
-import event from "@/assets/Images/travel6.svg";
-import travelMain from "@/assets/Images/travel.jpg";
-import bowling from "@/assets/Images/bowling.svg";
-import kidsEvent from "@/assets/Images/event.jpg";
-import partyIcon from "@/assets/Images/party.svg";
-import learn from "@/assets/Images/learn.jpg";
-import football from "@/assets/Images/football.jpg";
-import document from "@/assets/Images/document.png";
 import { useNavigate } from "react-router-dom";
+
+import spa from "@/assets/Images/travel1.svg";
+import estate from "@/assets/Images/travel2.svg";
+import marina from "@/assets/Images/travel3.svg";
+import gastronomy from "@/assets/Images/travel4.svg";
+import events from "@/assets/Images/travel5.svg";
+import security from "@/assets/Images/travel6.svg";
 import ImageWithSkeleton from "@/components/shared/ImageWithSkeleton";
 
-const mindItems = [
-  { name: "Cab Services", image: spa, slug: "cab-services" },
-  {
-    name: "Ferry, Bus & Train Information",
-    image: buffet,
-    slug: "ferry-bus-train-information",
-  },
-  { name: "Courier Services", image: party, slug: "courier-services" },
-  {
-    name: "Tourist Buses & Boat Tours",
-    image: yoga,
-    slug: "tourist-buses-boat-tours",
-  },
-  {
-    name: "Tourist Activities & Attractions",
-    image: salon,
-    slug: "tourist-activities-attractions",
-  },
-  { name: "Museums & Exhibitions", image: event, slug: "museums-exhibitions" },
-  {
-    name: "Places to Visit Near the City",
-    image: travelMain,
-    slug: "places-to-visit-near-city",
-  },
-];
-
-const kidsFamilyItems = [
-  { name: "Kids Events", image: kidsEvent, slug: "kids-events" },
-  {
-    name: "Kids Play Areas & Activities",
-    image: bowling,
-    slug: "kids-play-areas-activities",
-  },
-  {
-    name: "Educational & Hobby Classes",
-    image: learn,
-    slug: "educational-hobby-classes",
-  },
-  {
-    name: "Birthday Parties & Decorations",
-    image: partyIcon,
-    slug: "birthday-parties-decorations",
-  },
-  {
-    name: "Sports Academies & Coaching",
-    image: football,
-    slug: "sports-academies-coaching",
-  },
-  {
-    name: "Workshops & Short Courses",
-    image: document,
-    slug: "workshops-short-courses",
-  },
+const domainItems = [
+  { name: "Wellness", image: spa, slug: "wellness" },
+  { name: "Estates", image: estate, slug: "estates" },
+  { name: "Marine", image: marina, slug: "marine" },
+  { name: "Gastronomy", image: gastronomy, slug: "gastronomy" },
+  { name: "Events", image: events, slug: "events" },
+  { name: "Security", image: security, slug: "security" },
 ];
 
 export default function HomeTravel() {
   const navigate = useNavigate();
 
   return (
-    <section className="">
-      <div className="mx-auto max-w-full px-2 sm:px-4 mb-10">
-        <h3 className="text-[32px] font-semibold text-black sm:text-2xl tracking-wide">
-          Popular in travel
-        </h3>
+    <section className="relative w-screen -mx-[calc((100vw-100%)/2)] py-10 sm:py-14">
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full rounded-[2.25rem] border border-white/70 bg-gradient-to-br from-indigo-50 via-white to-violet-50 px-4 py-10 sm:px-8 lg:px-10">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">
+              Explore by Domain
+            </p>
+            <h3 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+              Explore by Domain
+            </h3>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
+              Seamlessly navigate the world of high-end utility and leisure
+              through our specialized service categories.
+            </p>
+          </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-6 sm:grid-cols-7">
-          {mindItems.map((item) => (
-            <button
-              key={item.slug}
-              type="button"
-              onClick={() => navigate(`/place/${item.slug}`)}
-              className="group text-center"
-            >
-              {/* Circle with WHITE BORDER */}
-              <div
-                className="mx-auto flex h-36.75 w-36.75 items-center justify-center
-                           rounded-full 
-                           shadow-md transition-transform duration-300
-                           group-hover:scale-105"
-              >
-                <ImageWithSkeleton
-                  src={item.image}
-                  alt={item.name}
-                  containerClassName="h-full w-full rounded-full"
-                  skeletonClassName="rounded-full"
-                  className="h-full w-full rounded-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
-
-              <p className="mt-3 text-[17px] font-semibold text-black">
-                {item.name}
-              </p>
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-12">
-          <h3 className="text-[32px] font-semibold text-black sm:text-2xl tracking-wide">
-            Popular for Kids &amp; Family
-          </h3>
-          <div className="mt-6 grid grid-cols-3 gap-6 sm:grid-cols-6">
-            {kidsFamilyItems.map((item) => (
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 lg:gap-5">
+            {domainItems.map((item) => (
               <button
                 key={item.slug}
                 type="button"
                 onClick={() => navigate(`/place/${item.slug}`)}
-                className="group text-center"
+                className="group flex flex-col items-center rounded-[1.5rem] bg-white px-4 py-6 text-center border border-slate-100 transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_48px_-28px_rgba(15,23,42,0.3)]"
               >
-                <div
-                  className="mx-auto flex h-[147px] w-[147px] items-center justify-center
-                           rounded-full 
-                           shadow-md transition-transform duration-300
-                           group-hover:scale-105"
-                >
+                <div className="flex h-30 w-30 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition duration-300 group-hover:bg-blue-200">
                   <ImageWithSkeleton
                     src={item.image}
                     alt={item.name}
-                    containerClassName="h-full w-full rounded-full"
-                    skeletonClassName="rounded-full"
-                    className="h-full w-full rounded-full object-cover"
+                    containerClassName="h-28 w-28"
+                    className="h-full w-full object-contain"
                     loading="lazy"
                     decoding="async"
                   />
                 </div>
 
-                <p className="mt-3 text-[17px] font-semibold text-black">
+                <p className="mt-4 text-xl font-semibold text-slate-900">
                   {item.name}
                 </p>
               </button>

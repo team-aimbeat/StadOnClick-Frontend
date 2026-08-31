@@ -80,7 +80,47 @@ const StepHeader = ({
         <p className="text-sm text-slate-600">{subtitle}</p>
       </div>
     </div>
-    {icon && <div className="text-blue-500">{icon}</div>}
+  {icon && <div className="text-blue-500">{icon}</div>}
+</div>
+);
+
+const FlowStep = ({
+  step,
+  title,
+  active,
+  completed,
+}: {
+  step: number;
+  title: string;
+  active?: boolean;
+  completed?: boolean;
+}) => (
+  <div className="flex min-w-0 flex-1 flex-col items-center">
+    <div
+      className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-black transition-all ${
+        completed
+          ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+          : active
+            ? "border-2 border-blue-600 bg-white text-blue-600"
+            : "bg-slate-100 text-slate-400"
+      }`}
+    >
+      {completed ? <HiOutlineCheck className="h-4 w-4" /> : step}
+    </div>
+    <p
+      className={`mt-2 text-[10px] font-bold uppercase tracking-[0.22em] ${
+        active || completed ? "text-blue-600" : "text-slate-400"
+      }`}
+    >
+      {title}
+    </p>
+  </div>
+);
+
+const InfoPill = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+    <p className="mt-2 text-sm font-semibold text-slate-900">{value}</p>
   </div>
 );
 
@@ -366,6 +406,7 @@ const VendorPromote = () => {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [serviceSearch, setServiceSearch] = useState("");
+  const [wizardStep, setWizardStep] = useState(1);
 
   const {
     data: servicesByMaster = [],
@@ -405,6 +446,11 @@ const VendorPromote = () => {
     () => filteredServices.find((svc) => svc.id === selectedServiceId) ?? null,
     [filteredServices, selectedServiceId]
   );
+  const selectedPlan = useMemo(
+    () => plans.find((plan) => plan.id === selectedPlanId) ?? null,
+    [plans, selectedPlanId],
+  );
+  const currentStep = wizardStep;
   const parseError = (error: unknown) =>
     normalizeApiError(error, "Unable to complete the request.").toastMessage;
 
@@ -446,174 +492,448 @@ const VendorPromote = () => {
   };
 
   return (
-    <DashboardContainer className="space-y-6 pb-12">
-      <TitleBreadCrumbs title="Promote services" breadCrumbTitle="Vendor / Promote" />
-
+    <DashboardContainer className="space-y-8 pb-12">
       {(plansError || servicesError || sponsorshipsError || masterError) && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {parseError(plansError || servicesError || sponsorshipsError || masterError)}
         </div>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[2fr,1fr]">
-        <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5">
-          <StepHeader
-            step={1}
-            title="Select Service"
-            subtitle="Choose which service you want to promote"
-            icon={<HiOutlineLightningBolt className="h-6 w-6 text-amber-500" />}
-          />
-          {isMastersLoading || isMastersFetching ? (
-            <Skeleton className="h-10 w-full rounded-lg" />
-          ) : masterCategories.length ? (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-800">Select master service</label>
-              <Select
-                value={selectedMasterId ?? undefined}
-                onValueChange={(value) => {
-                  setSelectedMasterId(value);
-                  setSelectedServiceId(null);
-                  setSelectedPlanId(null);
-                  setServiceSearch("");
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a master service" />
-                </SelectTrigger>
-                <SelectContent>
-                  {masterCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-slate-600">
-                Pick a master service first, then choose a child service to boost.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-              No master services configured. Showing all your services instead.
-            </div>
-          )}
+      <div className="space-y-3">
+        <TitleBreadCrumbs
+          title="Promote Services"
+          breadCrumbTitle="Vendor / Promote"
+          subtitle="Overview and key insights"
+          className="w-full"
+        />
+      </div>
 
-          {isMastersLoading || isMastersFetching ? (
-            <Skeleton className="h-10 w-full rounded-lg" />
-          ) : (
-            <>
-              {requireMaster && !selectedMasterId && (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                  Pick a master service to narrow down your boostable services.
+      <div className="space-y-5">
+        <div className="mx-auto flex w-full max-w-4xl items-start gap-4 px-1">
+          <FlowStep step={1} title="Select Service" active={currentStep === 1} completed={currentStep > 1} />
+          <div className="mt-4 h-[2px] flex-1 rounded-full bg-slate-200">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all"
+              style={{ width: currentStep >= 2 ? "100%" : "0%" }}
+            />
+          </div>
+          <FlowStep step={2} title="Choose Plan" active={currentStep === 2} completed={currentStep > 2} />
+          <div className="mt-4 h-[2px] flex-1 rounded-full bg-slate-200">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all"
+              style={{ width: currentStep >= 3 ? "100%" : "0%" }}
+            />
+          </div>
+          <FlowStep step={3} title="Payment" active={currentStep === 3} completed={false} />
+        </div>
+
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            Promote Your Service
+          </h1>
+          <p className="mx-auto mt-3 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
+            Boost visibility and attract more customers by highlighting your top-performing services.
+          </p>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-4xl">
+        {wizardStep === 1 && (
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <StepHeader
+              step={1}
+              title="Select Service"
+              subtitle="Choose which service you want to promote"
+              icon={<HiOutlineLightningBolt className="h-6 w-6 text-amber-500" />}
+            />
+
+            <div className="mt-6 space-y-5">
+              {isMastersLoading || isMastersFetching ? (
+                <Skeleton className="h-10 w-full rounded-lg" />
+              ) : masterCategories.length ? (
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    Master service category
+                  </label>
+                  <Select
+                    value={selectedMasterId ?? undefined}
+                    onValueChange={(value) => {
+                      setSelectedMasterId(value);
+                      setSelectedServiceId(null);
+                      setSelectedPlanId(null);
+                      setServiceSearch("");
+                      setWizardStep(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-slate-50 text-slate-700">
+                      <SelectValue placeholder="Choose a master service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {masterCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  No master services configured. Showing all your services instead.
                 </div>
               )}
+
+              {requireMaster && !selectedMasterId && (
+                <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                  Pick a master service first, then choose a child service to boost.
+                </div>
+              )}
+
               <ServiceSelect
                 services={filteredServices}
                 selectedServiceId={selectedServiceId}
                 onChange={(id) => {
                   setSelectedServiceId(id);
                   setSelectedPlanId(null);
+                  setWizardStep(1);
                 }}
                 loading={servicesLoading}
                 search={serviceSearch}
                 onSearchChange={setServiceSearch}
               />
-            </>
-          )}
 
-          {selectedService && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-              <p className="font-semibold text-slate-900">{selectedService.title}</p>
-                <p className="text-sm text-slate-600">
-                  Category: {selectedService.category?.name ?? "Unknown"} - Status:{" "}
-                  {selectedService.status ?? "LIVE"}
-                </p>
+              {selectedService && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <p className="text-sm font-black text-slate-950">{selectedService.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Category: {selectedService.category?.name ?? "Food & Leisure"} - Status:{" "}
+                    {selectedService.status ?? "LIVE"}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="border-t border-slate-100 pt-6 space-y-4">
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                type="button"
+                className="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950"
+                onClick={() => setWizardStep(1)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedServiceId) setWizardStep(2);
+                }}
+                disabled={!selectedServiceId}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                Proceed to Plans
+              </button>
+            </div>
+          </div>
+        )}
+
+        {wizardStep === 2 && (
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <StepHeader
               step={2}
               title="Choose Sponsorship Plan"
               subtitle="Higher priority gives better visibility and more impressions"
+              icon={<HiOutlineSparkles className="h-6 w-6 text-blue-500" />}
             />
 
-            {isPlansLoading || isPlansFetching ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <Skeleton key={i} className="h-32 w-full rounded-2xl" />
-                ))}
-              </div>
-            ) : plans.length === 0 ? (
-              <EmptyState
-                title="No sponsorship plans yet"
-                subtitle="Ask an admin to create a plan or check back later."
-              />
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {plans.map((plan) => (
-                  <PremiumPlanCard
-                    key={plan.id}
-                    plan={plan}
-                    selected={plan.id === selectedPlanId}
-                    onSelect={(p) => setSelectedPlanId(p.id)}
-                    highlight={plan.priorityScore >= 5 ? "Most Popular" : undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+            <div className="mt-6">
+              {isPlansLoading || isPlansFetching ? (
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+                  ))}
+                </div>
+              ) : plans.length === 0 ? (
+                <EmptyState
+                  title="No sponsorship plans yet"
+                  subtitle="Ask an admin to create a plan or check back later."
+                />
+              ) : (
+                <div className="grid gap-4 xl:grid-cols-3">
+                  {plans.map((plan, index) => {
+                    const selected = plan.id === selectedPlanId;
+                    const isFeatured = plan.priorityScore >= 5 || index === 1;
+                    return (
+                      <div
+                        key={plan.id}
+                        className={`relative rounded-[2rem] border p-5 shadow-sm transition-all ${
+                          selected
+                            ? "border-blue-500 bg-white ring-2 ring-blue-200"
+                            : "border-slate-200 bg-slate-50/60"
+                        } ${isFeatured ? "xl:-mt-4 xl:mb-4" : ""}`}
+                      >
+                        {isFeatured && (
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white">
+                            Priority
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPlanId(plan.id);
+                            setWizardStep(3);
+                          }}
+                          className="flex h-full w-full flex-col text-left"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-600">Plan</p>
+                              <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950">
+                                {plan.name}
+                              </h3>
+                            </div>
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                              {plan.priorityScore}
+                            </span>
+                          </div>
 
-          <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-blue-50 px-5 py-4">
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-semibold text-slate-900">Ready to purchase?</p>
-              <p className="text-sm text-slate-600">
-                Secure checkout via Stripe. Activation happens after payment confirmation (webhook).
-              </p>
+                          <div className="mt-4 flex items-baseline gap-1">
+                            <span className="text-sm font-semibold text-slate-500">
+                              {(plan.currency || "SEK").toUpperCase()}
+                            </span>
+                            <span className="text-4xl font-black tracking-tight text-blue-600">
+                              {Number(plan.price ?? 0).toLocaleString()}
+                            </span>
+                            <span className="text-sm font-semibold text-slate-500">/ boost</span>
+                          </div>
+
+                          <div className="mt-5 grid grid-cols-2 gap-3">
+                            <InfoPill label="Duration" value={`${plan.durationDays} days`} />
+                            <InfoPill
+                              label="Impressions"
+                              value={plan.impressionCap ? plan.impressionCap.toLocaleString() : "Unlimited"}
+                            />
+                          </div>
+
+                          <ul className="mt-5 space-y-2 text-sm text-slate-700">
+                            <li className="flex items-center gap-2">
+                              <HiOutlineCheck className="h-4 w-4 text-blue-600" />
+                              Higher search ranking
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <HiOutlineCheck className="h-4 w-4 text-blue-600" />
+                              Sponsored badge visibility
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <HiOutlineCheck className="h-4 w-4 text-blue-600" />
+                              {plan.impressionCap ? `${plan.impressionCap.toLocaleString()} impression cap` : "Unlimited impressions"}
+                            </li>
+                          </ul>
+
+                          <div
+                            className={`mt-6 inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
+                              selected
+                                ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                                : "bg-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {selected ? "Selected" : "Select Plan"}
+                          </div>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-            <div className="mt-3 flex items-center justify-end">
+
+            <div className="mt-6 flex items-center justify-between">
               <button
                 type="button"
-                onClick={handleCheckout}
-                disabled={isCreating || isConfirming || !selectedPlanId || !selectedServiceId}
-                className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-md transition ${
-                  isCreating || isConfirming || !selectedPlanId || !selectedServiceId
-                    ? "cursor-not-allowed bg-slate-200 text-slate-500"
-                    : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg"
-                }`}
+                className="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950"
+                onClick={() => setWizardStep(1)}
               >
-                {(isCreating || isConfirming) && <HiOutlineArrowPath className="h-4 w-4 animate-spin" />}
-                Start checkout
+                Back to Service
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedPlanId) setWizardStep(3);
+                }}
+                disabled={!selectedPlanId}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                Continue to Payment
               </button>
             </div>
           </div>
+        )}
 
-          {clientSecret && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              Client secret generated. Pass it to Stripe Elements to present the payment sheet:
-              <pre className="mt-2 overflow-x-auto rounded-md bg-white px-3 py-2 text-xs text-slate-800">
-                {clientSecret}
-              </pre>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        {wizardStep === 3 && (
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <StepHeader
               step={3}
-              title="Monitor Performance"
-              subtitle="Track impressions, clicks and conversions"
-              icon={<HiOutlineSparkles className="h-6 w-6 text-blue-500" />}
+              title="Finalize Promotion"
+              subtitle="Review your selection and proceed to secure payment"
+              icon={<HiOutlineCheckCircle className="h-6 w-6 text-blue-500" />}
             />
-            <div className="mt-4">
-              <ActiveSponsorships
-                items={sponsorships}
-                loading={isSponsorshipsLoading || isSponsorshipsFetching}
-              />
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+              <div className="space-y-4">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg font-black tracking-tight text-slate-950">Order Summary</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPlanId(null);
+                        setWizardStep(2);
+                      }}
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    >
+                      Change Plan
+                    </button>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                          <HiOutlineLightningBolt className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {selectedPlan?.name ?? "Select a plan"}
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            {selectedPlan ? "Standard visibility boost for local listings" : "Choose a plan to continue"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-black text-slate-950">
+                          {selectedPlan ? `${selectedPlan.currency || "SEK"} ${Number(selectedPlan.price ?? 0).toLocaleString()}` : "SEK 0"}
+                        </p>
+                        <p className="text-xs text-slate-500">One-time payment</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">Subtotal</span>
+                      <span className="font-semibold text-slate-900">
+                        {selectedPlan ? `${selectedPlan.currency || "SEK"} ${Math.round(Number(selectedPlan.price ?? 0) * 0.8).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "SEK 0.00"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">VAT (25%)</span>
+                      <span className="font-semibold text-slate-900">
+                        {selectedPlan ? `${selectedPlan.currency || "SEK"} ${Math.round(Number(selectedPlan.price ?? 0) * 0.2).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "SEK 0.00"}
+                      </span>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-slate-900">Total Amount</span>
+                        <span className="text-2xl font-black tracking-tight text-blue-600">
+                          {selectedPlan ? `${selectedPlan.currency || "SEK"} ${Number(selectedPlan.price ?? 0).toLocaleString()}` : "SEK 0"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-lg font-black tracking-tight text-slate-950">Payment Security</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Secure checkout via Stripe. Activation happens after payment confirmation.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCheckout}
+                    disabled={isCreating || isConfirming || !selectedPlanId || !selectedServiceId}
+                    className={`mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-semibold transition-all ${
+                      isCreating || isConfirming || !selectedPlanId || !selectedServiceId
+                        ? "cursor-not-allowed bg-slate-200 text-slate-500"
+                        : "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700"
+                    }`}
+                  >
+                    {(isCreating || isConfirming) && <HiOutlineArrowPath className="h-4 w-4 animate-spin" />}
+                    Start checkout
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
+                  <p className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">
+                    Performance Tracking
+                  </p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Track impressions, clicks and conversions in real-time once your campaign starts.
+                  </p>
+                  <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                    {sponsorships.length ? `${sponsorships.length} active boosts` : "No active boosts"}
+                  </div>
+                </div>
+
+                <div className="rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-lg">
+                  <p className="text-sm font-black uppercase tracking-[0.2em] text-blue-200">
+                    Premium Analytics
+                  </p>
+                  <p className="mt-2 text-sm text-slate-300">
+                    Included in all active promotion plans.
+                  </p>
+                  <div className="mt-5 rounded-2xl bg-white/5 px-4 py-5 text-center">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Safe Preview</p>
+                    <p className="mt-2 text-lg font-black">No active boosts</p>
+                    <p className="mt-1 text-xs text-slate-400">Status will update after checkout</p>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.75rem] bg-blue-600 p-5 text-white shadow-lg shadow-blue-200">
+                  <p className="text-sm font-black uppercase tracking-[0.2em] text-blue-100">
+                    Expert Tip
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-blue-50">
+                    Vendors using the top plan often see a faster click-through rate lift within the first 48 hours.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {clientSecret && (
+              <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                Client secret generated. Pass it to Stripe Elements to present the payment sheet:
+                <pre className="mt-2 overflow-x-auto rounded-md bg-white px-3 py-2 text-xs text-slate-800">
+                  {clientSecret}
+                </pre>
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                type="button"
+                className="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950"
+                onClick={() => setWizardStep(2)}
+              >
+                ← Back to Plans
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMasterId(null);
+                  setSelectedServiceId(null);
+                  setSelectedPlanId(null);
+                  setServiceSearch("");
+                  setClientSecret(null);
+                  setWizardStep(1);
+                }}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
+              >
+                Start Over
+              </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </DashboardContainer>
   );

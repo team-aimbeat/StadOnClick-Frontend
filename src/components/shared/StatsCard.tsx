@@ -40,27 +40,27 @@ export default function StatsCard({
   showTrendIcon = true,
 }: StatCardProps) {
   const gradientMap: Record<AccentColor, string> = {
-    blue: "from-[#EAF4FF] to-[#FEFFFF]",
-    cyan: "from-[#EAFBFF] to-[#FEFFFF]",
-    green: "from-[#E9F7EF] to-[#FEFFFF]",
-    red: "from-[#FFEDEF] to-[#FEFFFF]",
-    yellow: "from-[#FFF8E6] to-[#FEFFFF]",
-    purple: "from-[#F4EDFF] to-[#FEFFFF]",
+    blue: "from-[#eaf2ff] to-[#eef4ff] text-[#3554e0]",
+    cyan: "from-[#eaf8ff] to-[#eefcff] text-[#0f7ed2]",
+    green: "from-[#eaf8ef] to-[#f0fff5] text-[#1fb56a]",
+    red: "from-[#fff0f0] to-[#fff7f7] text-[#e25353]",
+    yellow: "from-[#fff7e6] to-[#fffdf0] text-[#e0a100]",
+    purple: "from-[#f2efff] to-[#f7f5ff] text-[#6f63ee]",
   };
 
   const iconBgMap: Record<AccentColor, string> = {
-    blue: "bg-sky-500 text-white",
-    cyan: "bg-cyan-500 text-white",
-    green: "bg-emerald-500 text-white",
-    red: "bg-rose-500 text-white",
-    yellow: "bg-amber-500 text-white",
-    purple: "bg-purple-500 text-white",
+    blue: "bg-[#eaf2ff] text-[#3554e0]",
+    cyan: "bg-[#eaf8ff] text-[#0f7ed2]",
+    green: "bg-[#eaf8ef] text-[#1fb56a]",
+    red: "bg-[#fff0f0] text-[#e25353]",
+    yellow: "bg-[#fff7e6] text-[#e0a100]",
+    purple: "bg-[#f2efff] text-[#6f63ee]",
   };
 
   const trendBadgeClass: Record<Trend, string> = {
-    up: "text-emerald-600",
-    down: "text-rose-600",
-    neutral: "text-slate-500",
+    up: "bg-emerald-50 text-emerald-600",
+    down: "bg-rose-50 text-rose-600",
+    neutral: "bg-slate-100 text-slate-500",
   };
 
   const trendIcon: Record<Trend, JSX.Element> = {
@@ -96,41 +96,36 @@ export default function StatsCard({
         className
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1 leading-tight">
-          <p className="text-base font-semibold text-slate-800">{title}</p>
-          <p className="text-3xl font-semibold text-slate-900">
-            {displayValue}
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+            {title}
           </p>
+          <p className="text-[28px] font-bold text-slate-900">{displayValue}</p>
         </div>
         {Icon && (
-          <div
-            className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-white shadow-none",
-              iconBgMap[accentColor]
-            )}
-          >
-            <Icon className="h-6 w-6" aria-hidden />
+          <div className={cn("rounded-xl p-2", iconBgMap[accentColor])}>
+            <Icon className="h-5 w-5" />
           </div>
         )}
       </div>
 
-      {(formattedChange || subtitle) && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-600">
-          {formattedChange && (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 text-sm font-medium",
-                trendBadgeClass[trend]
-              )}
-            >
-              {showTrendIcon && trendIcon[trend]}
-              <span>{formattedChange}</span>
-            </span>
-          )}
-          {subtitle && <span>{subtitle}</span>}
-        </div>
-      )}
+      <div className="mt-auto flex items-center justify-between pt-4">
+        {formattedChange ? (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
+              trendBadgeClass[trend]
+            )}
+          >
+            {showTrendIcon && trendIcon[trend]}
+            <span>{formattedChange}</span>
+          </span>
+        ) : (
+          <span />
+        )}
+        {subtitle ? <p className="text-xs font-medium text-slate-500">{subtitle}</p> : null}
+      </div>
     </div>
   );
 }

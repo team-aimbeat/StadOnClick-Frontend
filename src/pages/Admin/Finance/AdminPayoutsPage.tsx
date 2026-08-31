@@ -15,16 +15,70 @@ import {
   HiOutlineArrowPath,
   HiOutlineClock,
   HiOutlineBanknotes,
-  HiOutlineArrowTrendingUp
+  HiOutlineArrowTrendingUp,
+  HiOutlineExclamationTriangle,
+  HiOutlineArrowTopRightOnSquare,
+  HiOutlineCalendarDays,
 } from "react-icons/hi2";
 import { DataTable } from "@/components/shared/DataTable";
 import dayjs from "dayjs";
 import AdminPayoutsSkeleton from "@/components/skeletons/AdminPayoutsSkeleton";
 
+const parseCalendarRange = (value: string): { fromDate?: string; toDate?: string } => {
+  const [fromText, toText] = value.split(" - ").map((segment) => segment.trim());
+  const parsedFrom = dayjs(fromText, "YYYY/MM/DD");
+  const parsedTo = dayjs(toText, "YYYY/MM/DD");
+
+  return {
+    fromDate: parsedFrom.isValid() ? parsedFrom.format("YYYY-MM-DD") : undefined,
+    toDate: parsedTo.isValid() ? parsedTo.format("YYYY-MM-DD") : undefined,
+  };
+};
+
+const currencyFormatter = (currency: string, value: number) =>
+  `${currency} ${Number(value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+const statusButtonClass = (active: boolean) =>
+  active
+    ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900";
+
+const payoutStatusBadgeClass = (status?: string) => {
+  const normalized = String(status ?? "").toUpperCase();
+  if (normalized === "PAID") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (normalized === "REJECTED") return "border-rose-200 bg-rose-50 text-rose-700";
+  return "border-amber-200 bg-amber-50 text-amber-700";
+};
+
+const summaryCardStyles = [
+  {
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#111827] text-white",
+    accent: "text-slate-950",
+  },
+  {
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#0891b2] text-white",
+    accent: "text-slate-950",
+  },
+  {
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#059669] text-white",
+    accent: "text-emerald-600",
+  },
+  {
+    shell: "border-slate-200 bg-white",
+    iconWrap: "bg-[#f59e0b] text-slate-950",
+    accent: "text-amber-600",
+  },
+];
+
 const AdminPayoutsPage = () => {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [limit] = useState(20);
+  const [dateRangeLabel, setDateRangeLabel] = useState("");
+  const [dateRangeQuery, setDateRangeQuery] = useState<{ fromDate?: string; toDate?: string }>({});
 
   const [reviewingPayout, setReviewingPayout] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -34,7 +88,16 @@ const AdminPayoutsPage = () => {
   const { data: response, isLoading: isPayoutsLoading, refetch } = useGetPayoutsQuery({ 
     page, 
     limit, 
-    status: statusFilter === "ALL" ? undefined : statusFilter 
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+    fromDate: dateRangeQuery.fromDate,
+    toDate: dateRangeQuery.toDate,
+  });
+  const { data: pendingPayoutsResponse, isLoading: isPendingPayoutsLoading } = useGetPayoutsQuery({
+    page: 1,
+    limit: 100,
+    status: "PENDING",
+    fromDate: dateRangeQuery.fromDate,
+    toDate: dateRangeQuery.toDate,
   });
 
   useEffect(() => {
@@ -85,9 +148,11 @@ const AdminPayoutsPage = () => {
   const stats = statsResponse?.data;
   const payouts = response?.data?.data || [];
   const meta = response?.data?.meta;
+  const pendingPayoutMeta = pendingPayoutsResponse?.data?.meta;
   const platformBalance = platformStripeBalanceResponse?.data?.balances?.find(
     (entry: any) => entry.currency.toLowerCase() === "sek",
   );
+  const pendingPayoutRequestCount = pendingPayoutMeta?.total ?? 0;
 
   const requestedAmount = Number(reviewingPayout?.amount || 0);
   const availableAmount = Number(platformBalance?.available || 0);
@@ -119,6 +184,10 @@ const AdminPayoutsPage = () => {
       ledgerType: "Charge",
       ledgerDescription: payout.vendor?.businessName || payout.vendor?.contactEmail || "Vendor settlement",
       ledgerReference: fallbackLabel,
+      ledgerComment:
+        payout.rejectionReason?.trim() ||
+        payout.reviewNote?.trim() ||
+        (payout.status === "PAID" ? "Approved and settled" : payout.status === "PENDING" ? "Awaiting review" : "—"),
       ledgerMeta:
         payout.vendor?.contactEmail ||
         payout.vendor?.businessName ||
@@ -131,6 +200,10 @@ const AdminPayoutsPage = () => {
           : "—",
     };
   });
+
+  const highlightedPendingPayouts = ledgerRows
+    .filter((payout: any) => payout.status === "PENDING")
+    .slice(0, 3);
 
   const formatLedgerAmount = (value: number, options?: { sign?: boolean; negative?: boolean }) => {
     const sign = options?.sign && value > 0 ? "+" : "";
@@ -146,33 +219,87 @@ const AdminPayoutsPage = () => {
     window.open(dashboardLink, "_blank", "noopener,noreferrer");
   };
 
-  if (isStatsLoading || isPlatformStripeBalanceLoading || (isPayoutsLoading && !response)) {
+  const clearDateRange = () => {
+    setDateRangeLabel("");
+    setDateRangeQuery({});
+    setPage(1);
+  };
+
+  const handleDateRangeSelect = (range: string) => {
+    if (!range) {
+      clearDateRange();
+      return;
+    }
+
+    setDateRangeLabel(range);
+    setDateRangeQuery(parseCalendarRange(range));
+    setPage(1);
+  };
+
+  if (
+    isStatsLoading ||
+    isPlatformStripeBalanceLoading ||
+    isPendingPayoutsLoading ||
+    (isPayoutsLoading && !response)
+  ) {
     return <AdminPayoutsSkeleton />;
   }
 
   return (
-    <DashboardContainer className="space-y-8 pb-12">
-      <div className="space-y-4">
+    <DashboardContainer
+      className="space-y-8 pb-12"
+      style={{ fontFamily: "var(--font-primary)" }}
+    >
+      <div className="space-y-5">
         <TitleBreadCrumbs title="Payout Review" breadCrumbTitle="Finance / Payouts" className="w-full" />
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            onClick={handleOpenAvailability}
-            className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
-          >
-            Check availability
-          </button>
-          <button 
-            onClick={() => refetch()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-medium text-slate-600 hover:text-slate-900 transition-all active:scale-95 shrink-0"
-          >
-            <HiOutlineArrowPath className={`w-3.5 h-3.5 ${isPayoutsLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(148,163,184,0.12),_transparent_34%),linear-gradient(135deg,#ffffff_0%,#f8fafc_55%,#eff6ff_100%)] p-6 shadow-sm">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+            <div className="max-w-3xl space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 backdrop-blur">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                Payout operations desk
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-semibold tracking-tight text-slate-950">
+                  Review, approve, or reject vendor settlement requests.
+                </h2>
+                <p className="max-w-2xl text-sm leading-6 text-slate-600">
+                  Monitor platform liquidity, keep pending payout risk visible, and move payout decisions
+                  through a cleaner approval workflow.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <HeaderMetric label="Pending queue" value={String(pendingPayoutRequestCount)} tone="amber" />
+                <HeaderMetric
+                  label="Available balance"
+                  value={currencyFormatter("SEK", platformBalance?.available ?? 0)}
+                  tone={isPlatformBalanceHealthy ? "emerald" : "rose"}
+                />
+                <HeaderMetric label="Selected filter" value={dateRangeLabel || "All dates"} tone="slate" />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleOpenAvailability}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-950"
+              >
+                <HiOutlineArrowTopRightOnSquare className="h-4 w-4" />
+                Open Stripe balance
+              </button>
+              <button
+                onClick={() => refetch()}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-900 bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+              >
+                <HiOutlineArrowPath className={`h-4 w-4 ${isPayoutsLoading ? "animate-spin" : ""}`} />
+                Refresh payouts
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { 
             label: "Outstanding Amount", 
@@ -194,101 +321,197 @@ const AdminPayoutsPage = () => {
             icon: <HiOutlineArrowTrendingUp className="w-4 h-4" />, 
             sub: "Platform commission earned",
             color: "text-emerald-600"
+          },
+          {
+            label: "Pending Requests",
+            value: pendingPayoutRequestCount,
+            icon: <HiOutlineBanknotes className="w-4 h-4" />,
+            sub: `${stats?.currency ?? "SEK"} ${(stats?.pendingLiability ?? 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })} awaiting review`,
+            color: "text-amber-600",
+            isCount: true,
           }
         ].map((item, i) => (
-          <div key={i} className="finance-card rounded-lg border border-slate-100 p-6 bg-white">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.label}</span>
-              <div className="text-slate-300">{item.icon}</div>
+          <div
+            key={i}
+            className={`relative min-h-[164px] overflow-hidden rounded-[28px] border p-5 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.25)] ${summaryCardStyles[i].shell}`}
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                {item.label}
+              </span>
+              <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl ${summaryCardStyles[i].iconWrap}`}>
+                {item.icon}
+              </div>
             </div>
-            <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="text-xs font-bold text-slate-300">{stats?.currency}</span>
-              <p className={`text-3xl font-black tracking-tighter text-mono-finance ${item.color}`}>
-                {item.value?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {item.isCount ? (
+              <p className={`mb-2 text-[34px] font-black tracking-[-0.06em] ${summaryCardStyles[i].accent}`}>
+                {Number(item.value ?? 0).toLocaleString()}
               </p>
-            </div>
-            <p className="text-[10px] text-slate-400 font-medium">{item.sub}</p>
+            ) : (
+              <div className="mb-2 flex items-baseline gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">SEK</span>
+                <p className={`text-[34px] font-black tracking-[-0.06em] ${summaryCardStyles[i].accent}`}>
+                  {Number(item.value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            )}
+            <p className="text-xs leading-5 text-slate-500">{item.sub}</p>
           </div>
         ))}
       </div>
 
-      <div className="finance-card relative overflow-hidden rounded-lg border border-slate-200 bg-white p-6">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
-              Platform Stripe (SEK)
-            </span>
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-2">
-              <HiOutlineBanknotes className="w-4 h-4 text-slate-600" />
+      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+        <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(15,23,42,0.03),transparent)]" />
+          <div className="relative z-10">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Platform Stripe balance
+                </p>
+                <h3 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                  {currencyFormatter("SEK", platformBalance?.available ?? 0)}
+                </h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  Balance available to cover vendor payout approvals and outgoing transfer cycles.
+                </p>
+              </div>
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                <HiOutlineBanknotes className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <BalanceTile label="Available" value={currencyFormatter("SEK", platformBalance?.available ?? 0)} />
+              <BalanceTile label="Incoming" value={currencyFormatter("SEK", platformBalance?.incoming ?? 0)} />
+              <BalanceTile label="Pending" value={currencyFormatter("SEK", platformBalance?.pending ?? 0)} />
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <span
+                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                  isPlatformBalanceHealthy
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-rose-200 bg-rose-50 text-rose-700"
+                }`}
+              >
+                {isPlatformBalanceHealthy ? "Sufficient liquidity" : "Liquidity warning"}
+              </span>
+              {!hasPlatformBalance && (
+                <span className="text-xs text-slate-500">Live balance fetch failed.</span>
+              )}
             </div>
           </div>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Available for transfer</p>
-          <p className="mt-1 text-4xl font-black tracking-tight text-slate-900">
-            SEK {(platformBalance?.available ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </p>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
-            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-slate-500">Incoming</p>
-              <p className="text-base text-slate-900 font-bold mt-1 leading-tight">
-                SEK {platformBalance?.incoming?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}
+        </div>
+
+        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Review queue
               </p>
+              <h3 className="mt-2 text-xl font-semibold text-slate-950">Priority payout requests</h3>
             </div>
-            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-slate-500">Pending</p>
-              <p className="text-base text-slate-900 font-bold mt-1 leading-tight">
-                SEK {platformBalance?.pending?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <span
-              className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] ${
-                isPlatformBalanceHealthy
-                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                  : 'bg-rose-50 border border-rose-200 text-rose-700'
-              }`}
-            >
-              {isPlatformBalanceHealthy ? 'Sufficient liquidity' : 'Liquidity warning'}
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-600">
+              {highlightedPendingPayouts.length} shown
             </span>
-            {!hasPlatformBalance && (
-              <span className="text-[10px] text-slate-500">Live balance fetch failed.</span>
+          </div>
+          <div className="mt-5 space-y-3">
+            {highlightedPendingPayouts.length ? (
+              highlightedPendingPayouts.map((payout: any) => (
+                <div key={payout.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-slate-900">{payout.ledgerDescription}</p>
+                      <p className="text-xs text-slate-500">{payout.ledgerMeta}</p>
+                    </div>
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${payoutStatusBadgeClass(
+                        payout.status,
+                      )}`}
+                    >
+                      {payout.status}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex items-end justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Amount</p>
+                      <p className="mt-1 text-lg font-semibold text-slate-950">
+                        {currencyFormatter(payout.currency ?? "SEK", Number(payout.amount ?? 0))}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setReviewingPayout(payout)}
+                      className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                    >
+                      Review request
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                No pending payout requests in the current filter window.
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-1">
-        <div className="flex gap-8">
-          {['ALL', 'PENDING', 'PAID', 'REJECTED'].map((status) => (
-            <button
-              key={status}
-              onClick={() => { setStatusFilter(status); setPage(1); }}
-              className={`relative pb-3 text-[11px] font-black uppercase tracking-widest transition-all ${
-                statusFilter === status 
-                  ? 'text-slate-900' 
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              {status}
-              {statusFilter === status && (
-                <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-slate-900 rounded-full" />
-              )}
-            </button>
-          ))}
+      <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Review filters</p>
+            <h3 className="mt-2 text-xl font-semibold text-slate-950">Settlement ledger</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Filter by payout state and date range before opening the review modal.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {["ALL", "PENDING", "PAID", "REJECTED"].map((status) => (
+              <button
+                key={status}
+                onClick={() => {
+                  setStatusFilter(status);
+                  setPage(1);
+                }}
+                className={`rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition ${statusButtonClass(
+                  statusFilter === status,
+                )}`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Showing {payouts.length} entries
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+            <HiOutlineCalendarDays className="h-4 w-4" />
+            {dateRangeLabel || "All dates"}
+          </div>
+          {dateRangeLabel && (
+            <button
+              type="button"
+              onClick={clearDateRange}
+              className="text-sm font-medium text-slate-600 underline-offset-2 transition hover:text-slate-900 hover:underline"
+            >
+              Clear range
+            </button>
+          )}
+          <div className="ml-auto text-xs font-medium text-slate-500">
+            Showing {payouts.length} entries
+          </div>
         </div>
       </div>
 
         <DataTable
+          key={`${statusFilter}-${dateRangeLabel || "all-dates"}`}
           title="Settlement Ledger"
           breadCrumbTitle="Finance / Payouts"
           data={ledgerRows}
-        loading={isPayoutsLoading}
-        columns={[
+          loading={isPayoutsLoading}
+          onDateRangeSelect={handleDateRangeSelect}
+          columns={[
           {
             key: "ledgerAmount",
             title: "Amount",
@@ -344,7 +567,12 @@ const AdminPayoutsPage = () => {
             key: "createdAt",
             title: "Created",
             render: (_: any, payout: any) => (
-              <p className="text-sm font-semibold text-slate-700">{payout.createdLabel}</p>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-800">{payout.createdLabel}</p>
+                <p className="text-[11px] text-slate-500">
+                  {payout.createdAt ? dayjs(payout.createdAt).format("HH:mm") : "-"}
+                </p>
+              </div>
             ),
           },
           {
@@ -355,6 +583,25 @@ const AdminPayoutsPage = () => {
             ),
           },
           {
+            key: "ledgerComment",
+            title: "Comments",
+            render: (value: string, payout: any) => {
+              const isRejected = payout.status === "REJECTED";
+              const isPaid = payout.status === "PAID";
+
+              return (
+                <p
+                  className={`text-sm font-medium ${
+                    isRejected ? "text-rose-600" : isPaid ? "text-emerald-700" : "text-slate-600"
+                  }`}
+                  title={value}
+                >
+                  {value || "—"}
+                </p>
+              );
+            },
+          },
+          {
             key: "actions",
             title: "Action",
             align: "right",
@@ -363,7 +610,7 @@ const AdminPayoutsPage = () => {
               <div className="w-full flex items-center justify-end gap-2">
                 <button
                   onClick={() => handleOpenAvailability()}
-                  className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+                  className="rounded-2xl border border-slate-200 px-4 py-2 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-50"
                   title="Open Stripe dashboard to see fund availability"
                 >
                   Check availability
@@ -371,7 +618,7 @@ const AdminPayoutsPage = () => {
                 {payout.status === 'PENDING' && (
                   <button
                     onClick={() => setReviewingPayout(payout)}
-                    className="px-4 py-2 rounded-lg bg-emerald-700 text-[11px] font-semibold text-white hover:bg-emerald-800 transition-all active:scale-95"
+                    className="rounded-2xl bg-slate-900 px-4 py-2 text-[11px] font-semibold text-white transition hover:bg-slate-800"
                   >
                     Review
                   </button>
@@ -384,56 +631,67 @@ const AdminPayoutsPage = () => {
                 )}
                 {payout.status === 'REJECTED' && (
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="text-[11px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-1.5">
                       <HiOutlineXCircle className="w-4 h-4" />
                       Rejected
                     </span>
-                    {payout.rejectionReason && (
-                      <p className="text-[9px] text-rose-400 mt-0.5 max-w-[120px] truncate italic" title={payout.rejectionReason}>
-                        {payout.rejectionReason}
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
             ),
           },
         ]}
-        controlledPagination={{
-          page: page,
-          pageSize: limit,
-          totalPages: meta?.totalPages || 1,
-          totalRecords: meta?.total || 0,
-        }}
-        onPaginationChange={({ page: newPage }) => setPage(newPage)}
-        selectable={false}
-        showSerialNumber={false}
-        className="border border-slate-100 rounded-lg overflow-hidden shadow-none"
-        noRecordText="No historical transfer events registered"
-      />
+          controlledPagination={{
+            page: page,
+            pageSize: limit,
+            totalPages: meta?.totalPages || 1,
+            totalRecords: meta?.total || 0,
+          }}
+          onPaginationChange={({ page: newPage }) => setPage(newPage)}
+          selectable={false}
+          showSerialNumber={false}
+          className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
+          noRecordText="No historical transfer events registered"
+        />
 
       {/* Adjudication Modal */}
       {reviewingPayout && (
         <div
-          className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/25 backdrop-blur-[2px] transition-opacity duration-250 ease-out ${
+          className={`fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm transition-opacity duration-250 ease-out ${
             isReviewModalOpening ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
           <div
-            className={`w-full max-w-lg bg-primary-white rounded-[2rem] p-7 shadow-2xl border border-slate-100 transition-all duration-250 ease-out ${
+            className={`w-full max-w-2xl rounded-[2rem] border border-slate-200 bg-white p-7 shadow-2xl transition-all duration-250 ease-out ${
               isReviewModalOpening ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-1'
             }`}
           >
-            <h3 className="text-2xl font-black text-primary-black tracking-tighter">Settlement Adjudication</h3>
-            <p className="text-sm text-slate-500 font-medium mt-2 mb-6 leading-relaxed">
-              Authorize or decline the fund transfer protocol for <span className="font-semibold text-primary-black">{reviewingPayout.vendor?.businessName}</span>.
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Settlement review
+                </p>
+                <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                  {reviewingPayout.vendor?.businessName}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Approve this payout if platform liquidity is sufficient and reject it only with a clear reason.
+                </p>
+              </div>
+              <span
+                className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] ${payoutStatusBadgeClass(
+                  reviewingPayout.status,
+                )}`}
+              >
+                {reviewingPayout.status}
+              </span>
+            </div>
             
-            <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 mb-7 space-y-4">
+            <div className="mt-6 rounded-[24px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_56%,#eef2ff_100%)] p-6 space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Amount</span>
-                <p className="text-4xl font-black text-primary-black text-mono-finance tracking-tight">
-                  <span className="text-sm text-slate-300 mr-1.5">{reviewingPayout.currency}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Payout amount</span>
+                <p className="text-4xl font-black text-slate-950 text-mono-finance tracking-tight">
+                  <span className="mr-1.5 text-sm text-slate-300">{reviewingPayout.currency}</span>
                   {parseFloat(reviewingPayout.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -465,11 +723,31 @@ const AdminPayoutsPage = () => {
                 />
               </div>
 
+              <div
+                className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${
+                  isPayoutBlocked
+                    ? "border-rose-200 bg-rose-50 text-rose-700"
+                    : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                <HiOutlineExclamationTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-semibold">
+                    {isPayoutBlocked ? "Approval blocked by liquidity" : "Funds available for approval"}
+                  </p>
+                  <p className="mt-1 text-xs">
+                    Available {currencyFormatter("SEK", platformBalance?.available ?? 0)} | Pending{" "}
+                    {currencyFormatter("SEK", platformBalance?.pending ?? 0)} | Incoming{" "}
+                    {currencyFormatter("SEK", platformBalance?.incoming ?? 0)}
+                  </p>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => handleApprovePayout(reviewingPayout.id)}
                   disabled={isApproving || isRejecting || isPayoutBlocked}
-                  className="w-full rounded-[1.2rem]  bg-secondary-blue py-4 text-[11px] font-extrabold text-primary-white uppercase tracking-[0.14em] hover:bg-secondary-blue/95 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-slate-900 py-4 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isApproving ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
                     <>
@@ -481,7 +759,7 @@ const AdminPayoutsPage = () => {
                 <button
                   onClick={handleRejectPayout}
                   disabled={isApproving || isRejecting || !rejectionReason.trim()}
-                  className="w-full rounded-[1.2rem] border-2 border-primary-red bg-primary-red py-4 text-[11px] font-extrabold text-primary-white uppercase tracking-[0.14em] hover:bg-primary-red/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] border border-rose-200 bg-rose-50 py-4 text-[11px] font-extrabold uppercase tracking-[0.14em] text-rose-700 transition-all hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isRejecting ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
                     <>
@@ -495,9 +773,9 @@ const AdminPayoutsPage = () => {
                     setReviewingPayout(null);
                     setRejectionReason("");
                   }}
-                  className="w-full rounded-[1.2rem] border-2 border-slate-900/10 bg-slate-950/0 py-4 text-[11px] font-extrabold text-slate-700 uppercase tracking-[0.14em] hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95"
+                  className="w-full rounded-[1.2rem] border border-slate-200 bg-white py-4 text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-95"
                 >
-                  Cancel
+                  Close review
                 </button>
               </div>
               <div className="mt-4 text-[10px] rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-slate-500">
@@ -526,5 +804,46 @@ const AdminPayoutsPage = () => {
     </DashboardContainer>
   );
 };
+
+function HeaderMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "amber" | "emerald" | "rose" | "slate";
+}) {
+  const toneClass =
+    tone === "amber"
+      ? "border-amber-200 bg-amber-50 text-amber-700"
+      : tone === "emerald"
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+        : tone === "rose"
+          ? "border-rose-200 bg-rose-50 text-rose-700"
+          : "border-slate-200 bg-white text-slate-700";
+
+  return (
+    <div className={`rounded-2xl border px-4 py-3 ${toneClass}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-80">{label}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function BalanceTile({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-slate-950">{value}</p>
+    </div>
+  );
+}
 
 export default AdminPayoutsPage;

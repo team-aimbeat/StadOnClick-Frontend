@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BarChart3,
   CalendarRange,
+  CalendarDays as HiCalendarDays,
   CalendarIcon,
   Clock3,
   DollarSign,
@@ -9,20 +10,22 @@ import {
   ImageOff,
   Layers3,
   ArrowUpRight,
-  Package,
   ReceiptText,
   TrendingDown,
   TrendingUp,
   Users,
 } from "lucide-react";
 import { HiOutlinePencilSquare, HiOutlinePlus } from "react-icons/hi2";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   Area,
   AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -34,6 +37,7 @@ import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -51,6 +55,7 @@ import {
   type VendorServiceEntity,
 } from "@/services/vendorServicesApi";
 import { useGetVendorBookingFeedQuery, type VendorBookingFeedItem } from "@/services/bookingsApi";
+import { useGetVendorOrdersQuery } from "@/services/ordersApi";
 
 import well from "@/assets/Images/well.jpg";
 import wellSm from "@/assets/Images/optimized/well-sm.jpg";
@@ -67,6 +72,16 @@ const fallbackOverviewVisual = (label: string): Visual => ({
   alt: `${label} visual`,
   srcSet: `${wellSm} 480w, ${well} 1200w`,
 });
+
+const getInitials = (value: string) =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "GB";
+
+const donutColors = ["#1D4ED8", "#F59E0B", "#F87171", "#A855F7"];
 
 const isRenderableImageUrl = (value?: string | null) => {
   if (!value) return false;
@@ -165,6 +180,7 @@ export function VendorServiceOverview({
     },
   );
   const { data: vendorBookingsResponse, isFetching: isBookingsFetching } = useGetVendorBookingFeedQuery();
+  const { data: vendorOrdersResponse, isFetching: isOrdersFetching } = useGetVendorOrdersQuery();
 
   useEffect(() => {
     if (requestAddOfferingOpen) {
@@ -471,6 +487,34 @@ export function VendorServiceOverview({
         booking.vendorServiceId === service.id || booking.vendorService?.id === service.id,
     );
   }, [service.id, vendorBookingsResponse?.bookings]);
+  const orderOfferingLookup = useMemo(() => {
+    const lookup = new Map<string, string>();
+    const orders = vendorOrdersResponse?.data ?? [];
+
+    for (const order of orders) {
+      const serviceItems = (order.items ?? []).filter(
+        (item) => item.offering?.serviceId === service.id || item.offering?.serviceTitle === service.title,
+      );
+
+      if (!serviceItems.length) continue;
+
+      const label =
+        serviceItems
+          .slice()
+          .sort((a, b) => (b.quantity ?? 0) - (a.quantity ?? 0))[0]?.offering?.name ??
+        serviceItems[0]?.offering?.serviceTitle ??
+        service.title;
+
+      lookup.set(order.id, label);
+      for (const item of serviceItems) {
+        if (item.orderNumber) {
+          lookup.set(item.orderNumber, label);
+        }
+      }
+    }
+
+    return lookup;
+  }, [service.id, service.title, vendorOrdersResponse?.data]);
   const bookingAnalytics = useMemo(() => {
     const hasDateBounds = Boolean(dateFrom && dateTo);
     const start = hasDateBounds ? new Date(`${dateFrom}T00:00:00`) : null;
@@ -496,13 +540,20 @@ export function VendorServiceOverview({
     const previousBookings = serviceBookings.filter((booking) =>
       inRange(booking, previousStart, previousEnd),
     );
+    const revenueStatuses = new Set(["CONFIRMED"]);
     const successfulStatuses = new Set(["CONFIRMED", "COMPLETED", "PAID"]);
+    const currentRevenueBookings = currentBookings.filter((booking) =>
+      revenueStatuses.has(String(booking.status).toUpperCase()),
+    );
+    const previousRevenueBookings = previousBookings.filter((booking) =>
+      revenueStatuses.has(String(booking.status).toUpperCase()),
+    );
 
-    const totalRevenue = currentBookings.reduce(
+    const totalRevenue = currentRevenueBookings.reduce(
       (sum, booking) => sum + toAmount(booking.orderItem?.priceFinal),
       0,
     );
-    const previousRevenue = previousBookings.reduce(
+    const previousRevenue = previousRevenueBookings.reduce(
       (sum, booking) => sum + toAmount(booking.orderItem?.priceFinal),
       0,
     );
@@ -519,7 +570,7 @@ export function VendorServiceOverview({
       previousBookingsCount > 0 ? (successfulPrevious / previousBookingsCount) * 100 : 0;
 
     const dateBuckets = new Map<string, { totalSales: number; totalBookings: number }>();
-    for (const booking of currentBookings) {
+    for (const booking of currentRevenueBookings) {
       const dateKey = toDateKey(booking.createdAt);
       const existing = dateBuckets.get(dateKey) ?? { totalSales: 0, totalBookings: 0 };
       existing.totalSales += toAmount(booking.orderItem?.priceFinal);
@@ -560,7 +611,9 @@ export function VendorServiceOverview({
       const name = bookingOffering?.name ?? booking.vendorService?.title ?? service.title;
       const entry = offeringMap.get(key) ?? { id: key, name, booked: 0, revenue: 0 };
       entry.booked += 1;
-      entry.revenue += toAmount(booking.orderItem?.priceFinal);
+      if (revenueStatuses.has(String(booking.status).toUpperCase())) {
+        entry.revenue += toAmount(booking.orderItem?.priceFinal);
+      }
       offeringMap.set(key, entry);
     }
     const previousOfferingMap = new Map<string, number>();
@@ -610,6 +663,8 @@ export function VendorServiceOverview({
             .join(" ")
             .trim() || booking.user?.email || "Guest",
         offeringName:
+          (booking.orderItem?.orderId ? orderOfferingLookup.get(booking.orderItem.orderId) : undefined) ??
+          (booking.orderItem?.orderNumber ? orderOfferingLookup.get(booking.orderItem.orderNumber) : undefined) ??
           (booking.slotId ? selectedOfferingBySlotId.get(booking.slotId)?.name : undefined) ??
           booking.vendorService?.title ??
           service.title,
@@ -642,8 +697,43 @@ export function VendorServiceOverview({
     service.title,
     service.id,
     serviceBookings,
+    orderOfferingLookup,
   ]);
-  const isOverviewLoading = isFetching || isBookingsFetching;
+  const isOverviewLoading = isFetching || isBookingsFetching || isOrdersFetching;
+  const offeringMix = useMemo(() => {
+    const counts = new Map<string, { name: string; count: number }>();
+    const orders = vendorOrdersResponse?.data ?? [];
+
+    for (const order of orders) {
+      for (const item of order.items ?? []) {
+        if (item.offering?.serviceId !== service.id && item.offering?.serviceTitle !== service.title) {
+          continue;
+        }
+
+        const name = item.offering?.name ?? item.offering?.serviceTitle ?? service.title;
+        const count = Math.max(1, Number(item.quantity ?? 0));
+        const current = counts.get(name) ?? { name, count: 0 };
+        current.count += count;
+        counts.set(name, current);
+      }
+    }
+
+    const topOfferings = Array.from(counts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 4);
+    const totalBooked = topOfferings.reduce((sum, item) => sum + item.count, 0);
+
+    const rows = topOfferings.map((item, index) => ({
+      name: item.name,
+      value: item.count,
+      pct: totalBooked > 0 ? Math.round((item.count / totalBooked) * 100) : 0,
+      color: donutColors[index % donutColors.length],
+    }));
+
+    return rows;
+  }, [service.id, service.title, vendorOrdersResponse?.data]);
+  const topPurchasedOffering = offeringMix[0]?.name ?? bookingAnalytics.bestPerformingOffering;
+  const donutSegments = offeringMix.slice(0, 3);
 
   return (
     <DashboardContainer className="space-y-6 bg-[#F7F9FC] pb-16">
@@ -654,50 +744,171 @@ export function VendorServiceOverview({
         subtitle="Read-only performance insights for this service."
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-              <img src={primaryImage} alt={service.title} className="h-full w-full object-cover" />
-            </div>
-            <div className="min-w-0 space-y-2">
-              <h1 className="truncate text-2xl font-semibold text-slate-900">{service.title}</h1>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                  {service.category?.name ?? "Category"}
+      <section className="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
+        <div className="rounded-[28px] border border-indigo-100/60 bg-white p-4 sm:p-5">
+          <div className="rounded-[22px] bg-[#F8F9FF] px-4 py-5 sm:px-6 sm:py-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 max-w-3xl space-y-4">
+                <span className="inline-flex rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-500">
+                  Service Profile
                 </span>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone}`}>
-                  {service.status}
-                </span>
+                <div className="space-y-3">
+                  <h1 className="truncate text-[34px] font-black tracking-tight text-slate-900 sm:text-[40px]">
+                    {service.title}
+                  </h1>
+                  <p className="max-w-2xl text-[16px] leading-7 text-slate-600">
+                    Global service performance overview and transactional tracking
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                <InlineStat label="Total Revenue" value={formatMoney(bookingAnalytics.totalRevenue)} />
-                <InlineStat
-                  label="Total Bookings"
-                  value={compactNumber.format(bookingAnalytics.totalBookings)}
-                />
-                <InlineStat
-                  label="Active Offerings"
-                  value={String(analytics.selectedOfferings.length)}
-                />
-                <InlineStat
-                  label="Slot Utilization"
-                  value={`${analytics.slotUtilizationPct.toFixed(1)}%`}
-                />
+
+              <div className="flex shrink-0 flex-col items-start gap-1 text-left lg:items-end">
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-500">
+                  Total Revenue
+                </p>
+                <p className="text-[16px] font-semibold uppercase tracking-[0.2em] text-blue-500">
+                  SEK
+                </p>
+                <p className="text-[34px] font-black leading-none tracking-tight text-blue-600">
+                  {formatMoney(bookingAnalytics.totalRevenue)}
+                </p>
               </div>
             </div>
+
+            <div className="mt-7 border-t border-slate-200/70 pt-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-3 rounded-[18px] px-2 py-3">
+                  <div className="grid h-12 w-12 place-items-center rounded-full bg-indigo-100 text-blue-600">
+                    <HiCalendarDays className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-[28px] font-black leading-none text-slate-900">
+                      {compactNumber.format(bookingAnalytics.totalBookings)}
+                    </p>
+                    <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                      Bookings
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 rounded-[18px] px-2 py-3">
+                  <div className="grid h-12 w-12 place-items-center rounded-full bg-sky-100 text-sky-600">
+                    <Layers3 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-[28px] font-black leading-none text-slate-900">
+                      {analytics.selectedOfferings.length}
+                    </p>
+                    <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                      Offerings
+                    </p>
+                  </div>
+                  
+                </div>
+              </div>
+              
+            </div>
+            
+          </div>
+          
+      <div className="flex flex-wrap items-center gap-3 mt-10 ml-150">
+        <Button type="button" onClick={onEditService} className="gap-2">
+          <HiOutlinePencilSquare className="h-4 w-4" />
+          Edit Service
+        </Button>
+        <Button type="button" variant="outline" onClick={() => setAddOfferingOpen(true)} className="gap-2">
+          <HiOutlinePlus className="h-4 w-4" />
+          Add Offering
+        </Button>
+      </div>
+
+        </div>
+
+        <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-blue-500">
+                Most Bought
+              </p>
+              <h3 className="mt-1 text-[18px] font-semibold tracking-tight text-slate-900">
+                Top Offering
+              </h3>
+            </div>
+            <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
+              by bookings
+            </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" onClick={onEditService} className="gap-2">
-              <HiOutlinePencilSquare className="h-4 w-4" />
-              Edit Service
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setAddOfferingOpen(true)} className="gap-2">
-              <HiOutlinePlus className="h-4 w-4" />
-              Add Offering
-            </Button>
-          </div>
+          {donutSegments.length ? (
+            <div className="space-y-4">
+              <div className="relative mx-auto flex h-[260px] max-w-[320px] items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={donutSegments}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={72}
+                      outerRadius={106}
+                      paddingAngle={3}
+                      stroke="transparent"
+                    >
+                      {donutSegments.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number | string | undefined, name: string | undefined) => [
+                        `${Number(value ?? 0)} bookings`,
+                        name,
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                {donutSegments.map((segment, index) => {
+                  const bubbleClass =
+                    index === 0
+                      ? "top-1 left-1/2 -translate-x-1/2"
+                      : index === 1
+                        ? "left-2 top-1/2 -translate-y-1/2"
+                        : "right-2 bottom-6";
+
+                  return (
+                    <div
+                      key={segment.name}
+                      className={cn(
+                        "absolute grid h-12 w-12 place-items-center rounded-full bg-white text-[13px] font-bold text-indigo-600 shadow-[0_10px_25px_rgba(15,23,42,0.12)]",
+                        bubbleClass
+                      )}
+                    >
+                      {segment.pct}%
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="grid gap-2">
+                {donutSegments.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between rounded-[16px] bg-slate-50 px-3 py-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="truncate text-sm font-medium text-slate-700">{item.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900">{item.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Layers3 className="h-5 w-5" />}
+              title="No purchased offerings yet"
+              description="Once customers buy offerings, the mix chart will show the real distribution here."
+              actionLabel="Add Offering"
+              onAction={() => setAddOfferingOpen(true)}
+            />
+          )}
         </div>
       </section>
 
@@ -805,32 +1016,79 @@ export function VendorServiceOverview({
           )}
         </div>
 
-        <div className="xl:col-span-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900">Performance Insights</h3>
-          <p className="mb-4 text-sm text-slate-500">Key outcomes from this service</p>
-          <div className="space-y-3">
-            <InsightTile
-              icon={<Flame className="h-4 w-4 text-amber-600" />}
-              label="Most Active Day"
-              value={`${bookingAnalytics.mostActiveDay.day} (${bookingAnalytics.mostActiveDay.value})`}
-            />
-            <InsightTile
-              icon={<Package className="h-4 w-4 text-blue-600" />}
-              label="Best Performing Offering"
-              value={bookingAnalytics.bestPerformingOffering}
-            />
-            <InsightTile
-              icon={<Clock3 className="h-4 w-4 text-emerald-600" />}
-              label="Peak Booking Time"
-              value={bookingAnalytics.peakBookingTime}
-            />
+        <div className="xl:col-span-3 rounded-[28px] border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-5">
+          <div className="mb-4">
+            <h3 className="text-[18px] font-semibold tracking-tight text-slate-900">
+              Performance Insights
+            </h3>
+            <p className="text-sm text-slate-500">Key outcomes from this service</p>
+          </div>
+
+          <div className="overflow-hidden rounded-[24px] border border-slate-100 bg-white">
+            <div className="divide-y divide-slate-100">
+              <InsightTile
+                icon={<CalendarRange className="h-4 w-4 text-indigo-600" />}
+                label="Most Active Day"
+                value={bookingAnalytics.mostActiveDay.day}
+                description={`Highest user engagement and booking requests recorded (${bookingAnalytics.mostActiveDay.value} bookings).`}
+                accentClass="bg-indigo-50"
+                progress={Math.min(bookingAnalytics.mostActiveDay.value * 12, 100)}
+              />
+              <InsightTile
+                icon={<Flame className="h-4 w-4 text-violet-600" />}
+                label="Top Offering"
+                value={topPurchasedOffering}
+                description="Contributing the most booking activity in this period."
+                accentClass="bg-violet-50"
+              />
+              <InsightTile
+                icon={<Clock3 className="h-4 w-4 text-sky-600" />}
+                label="Peak Time"
+                value={bookingAnalytics.peakBookingTime}
+                description="Optimal window for customer response and booking management."
+                accentClass="bg-sky-50"
+              />
+            </div>
           </div>
         </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Date-wise Bookings</h2>
-        <p className="mb-4 text-sm text-slate-500">Bookings count by date</p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Date-wise Bookings</h2>
+            <p className="text-sm text-slate-500">Bookings count by date</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={rangePreset} onValueChange={(value) => setRangePreset(value as RangePreset)}>
+              <SelectTrigger className="h-9 w-[140px] rounded-xl border-slate-200 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="7d">7 Days</SelectItem>
+                <SelectItem value="30d">30 Days</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {rangePreset === "custom" && (
+          <div className="mb-4 grid gap-2 md:grid-cols-2">
+            <DatePickerField
+              value={dateFrom}
+              onChange={setDateFrom}
+              placeholder="Start date"
+            />
+            <DatePickerField
+              value={dateTo}
+              onChange={setDateTo}
+              placeholder="End date"
+            />
+          </div>
+        )}
+
         {isOverviewLoading ? (
           <Skeleton className="h-[280px] w-full rounded-xl" />
         ) : bookingAnalytics.dateSeries.length ? (
@@ -900,59 +1158,78 @@ export function VendorServiceOverview({
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Recent Transactions</h3>
-              <p className="text-sm text-slate-500">Latest booking-level activity</p>
+              <h3 className="text-[18px] font-semibold tracking-tight text-slate-900">
+                Recent Transactions
+              </h3>
             </div>
-            <Button type="button" variant="ghost" onClick={() => onEditOfferings()} className="gap-1 text-slate-500 hover:text-slate-800">
-              View all
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onEditOfferings()}
+              className="gap-1 font-semibold text-indigo-500 hover:bg-transparent hover:text-indigo-600"
+            >
+              View All
               <ArrowUpRight className="h-4 w-4" />
             </Button>
           </div>
+
           {isOverviewLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-12 w-full rounded-xl" />
-              <Skeleton className="h-12 w-full rounded-xl" />
-              <Skeleton className="h-12 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-[20px]" />
+              <Skeleton className="h-20 w-full rounded-[20px]" />
             </div>
           ) : bookingAnalytics.recentTransactions.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-[0.08em] text-slate-500">
-                    <th className="px-2 py-2">Booking ID</th>
-                    <th className="px-2 py-2">Customer</th>
-                    <th className="px-2 py-2">Amount</th>
-                    <th className="px-2 py-2">Status</th>
-                    <th className="px-2 py-2">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookingAnalytics.recentTransactions.map((item) => (
-                    <tr key={item.id} className="border-b border-slate-50 text-slate-700">
-                      <td className="px-2 py-2 text-xs font-medium text-slate-900">{item.id.slice(0, 8)}</td>
-                      <td className="px-2 py-2">{item.customer}</td>
-                      <td className="px-2 py-2">{formatMoney(item.amount)}</td>
-                      <td className="px-2 py-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                          String(item.status).toUpperCase().includes("PAID") ||
-                          String(item.status).toUpperCase().includes("CONFIRMED") ||
-                          String(item.status).toUpperCase().includes("COMPLETED")
-                            ? "bg-emerald-50 text-emerald-700"
-                            : String(item.status).toUpperCase().includes("PENDING")
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-slate-100 text-slate-700"
-                        }`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-xs text-slate-500">{new Date(item.slotTime).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              {bookingAnalytics.recentTransactions.slice(0, 2).map((item) => {
+                const initials = getInitials(item.customer);
+                const subtitle = `${item.offeringName} - ${formatDistanceToNow(new Date(item.slotTime), { addSuffix: true })}`;
+                const statusText = String(item.status).toUpperCase();
+                const isPositive =
+                  statusText.includes("PAID") ||
+                  statusText.includes("CONFIRMED") ||
+                  statusText.includes("COMPLETED");
+                const isPending = statusText.includes("PENDING");
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-4 rounded-[20px] bg-slate-50 px-4 py-4"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-slate-200 text-sm font-semibold text-slate-500">
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-[15px] font-semibold text-slate-900">
+                          {item.customer}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">{subtitle}</p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p className="text-[15px] font-semibold text-slate-900">
+                        {formatMoney(item.amount)}
+                      </p>
+                      <p
+                        className={cn(
+                          "text-[11px] font-bold uppercase tracking-[0.16em]",
+                          isPositive
+                            ? "text-emerald-500"
+                            : isPending
+                              ? "text-amber-500"
+                              : "text-slate-500"
+                        )}
+                      >
+                        {isPositive ? "Completed" : isPending ? "Pending" : item.status}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <EmptyState
@@ -1048,39 +1325,50 @@ function DatePickerField({
   );
 }
 
-function InlineStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div>
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-sm font-semibold text-slate-900">{value}</p>
-    </div>
-  );
-}
-
 function InsightTile({
   label,
   value,
+  description,
   icon,
+  accentClass,
+  progress,
 }: {
   label: string;
   value: string;
+  description: string;
   icon: ReactNode;
+  accentClass: string;
+  progress?: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-      <div className="flex items-center gap-2">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500">
+    <div className="rounded-[24px] bg-white px-4 py-4 ">
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+            accentClass
+          )}
+        >
           {icon}
         </span>
-        <p className="text-xs font-medium text-slate-600">{label}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-500">
+            {label}
+          </p>
+          <p className="mt-2 text-[18px] font-semibold leading-tight text-slate-900">
+            {value}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+          {typeof progress === "number" && (
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-indigo-500"
+                style={{ width: `${Math.max(0, Math.min(progress, 100))}%` }}
+              />
+            </div>
+          )}
+        </div>
       </div>
-      <p className="max-w-[60%] truncate text-sm font-semibold text-slate-900">{value}</p>
     </div>
   );
 }

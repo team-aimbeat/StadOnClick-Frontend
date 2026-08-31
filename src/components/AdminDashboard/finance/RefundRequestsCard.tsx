@@ -4,6 +4,7 @@ import {
   AdminTableCell,
   AdminTableRow,
 } from "@/components/AdminDashboard/table/AdminTable";
+import { HiOutlineChatBubbleLeftEllipsis } from "react-icons/hi2";
 
 const refundRequests = [
   {
@@ -29,7 +30,7 @@ const RefundRequestsCard = ({ items = refundRequests }: RefundRequestsCardProps)
   const hasItems = items.length > 0;
 
   return (
-    <AdminCardShell title="Refund Requests" subtitle="Finance queue">
+    <AdminCardShell title="Refund Requests">
       <AdminTable
         className="mt-4 flex-1"
         columns={[
@@ -42,7 +43,7 @@ const RefundRequestsCard = ({ items = refundRequests }: RefundRequestsCardProps)
             align: "right",
           },
         ]}
-      >
+        >
         {hasItems ? (
           items.map((request) => (
             <AdminTableRow key={request.bookingId}>
@@ -68,8 +69,14 @@ const RefundRequestsCard = ({ items = refundRequests }: RefundRequestsCardProps)
             </AdminTableRow>
           ))
         ) : (
-          <div className="px-5 py-10 text-center text-sm text-slate-500">
-            No records found
+          <div className="flex min-h-[220px] flex-1 flex-col items-center justify-center px-5 py-10 text-center text-sm text-slate-500">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              <HiOutlineChatBubbleLeftEllipsis className="h-6 w-6 opacity-40" />
+            </div>
+            <p className="mt-4 text-base font-semibold text-slate-700">No records found</p>
+            <p className="mt-1 max-w-52 text-xs leading-5 text-slate-500">
+              There are currently no active refund requests to process.
+            </p>
           </div>
         )}
       </AdminTable>

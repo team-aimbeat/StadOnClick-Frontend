@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
@@ -83,6 +84,33 @@ const VendorHelp = () => {
                 )}
               </button>
             ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 lg:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">User Manual</p>
+            <p className="text-sm font-semibold text-slate-900">StadonClick Vendor Guide (PDF)</p>
+            <p className="text-xs text-slate-600">
+              Open the full manual or download a copy for quick reference.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <NavLink
+              to="/vendor/help/user-manual"
+              className="inline-flex items-center rounded-lg bg-[#4F7DFF] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3c63d1]"
+            >
+              View in portal
+            </NavLink>
+            <a
+              href="/user-manual.pdf"
+              download
+              className="inline-flex items-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Download PDF
+            </a>
           </div>
         </div>
       </div>

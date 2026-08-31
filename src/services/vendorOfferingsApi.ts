@@ -28,6 +28,11 @@ export type VendorOffering = {
   usesSlots: boolean;
   basePrice: number;
   salePrice: number;
+  discountPercent?: number | null;
+  dealStartTime?: string | null;
+  dealEndTime?: string | null;
+  isDealActive?: boolean;
+  effectivePrice?: number;
   currency: string;
   maxQuantity: number | null;
   remainingQuantity: number | null;
@@ -47,6 +52,8 @@ export interface CreateOfferingPayload {
   bookingUrl?: string | null;
   basePrice: number;
   salePrice: number;
+  dealDurationHours?: number | null;
+  dealEndTime?: string | null;
   maxQuantity?: number | null;
   remainingQuantity?: number | null;
 }
@@ -68,6 +75,10 @@ const toVendorOffering = (offering: RawVendorOffering): VendorOffering => ({
   ...offering,
   basePrice: Number(offering.basePrice),
   salePrice: Number(offering.salePrice),
+  discountPercent:
+    offering.discountPercent == null ? null : Number(offering.discountPercent),
+  effectivePrice:
+    offering.effectivePrice == null ? undefined : Number(offering.effectivePrice),
   maxQuantity: offering.maxQuantity ?? null,
   remainingQuantity: offering.remainingQuantity ?? offering.maxQuantity ?? null,
 });

@@ -1,18 +1,20 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { IconType } from "react-icons";
+import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/app/hooks";
 import {
   DashboardCol,
   DashboardContainer,
   DashboardGrid,
   DashboardSection,
 } from "@/components/dashboard";
-import StatsCard from "@/components/shared/StatsCard";
 import ChartCard from "@/components/AdminDashboard/ChartCard";
 import GmvCard from "@/components/AdminDashboard/GmvChartCard";
 import RecentActivities from "@/components/AdminDashboard/RecentActivities";
 import CustomerAcquisitionCard from "@/components/AdminDashboard/CustomerAcquisitionCard";
 import VendorsOverview from "@/components/AdminDashboard/VendorsOverview";
 import AIAlertInsights from "@/components/AdminDashboard/AIAlertInsights";
+import ApprovalQueueCard from "@/components/AdminDashboard/ApprovalQueueCard";
 import PendingPayoutsCard from "@/components/AdminDashboard/finance/PendingPayoutsCard";
 import RefundRequestsCard from "@/components/AdminDashboard/finance/RefundRequestsCard";
 import KycPendingCard from "@/components/AdminDashboard/compliance/KycPendingCard";
@@ -25,38 +27,30 @@ import { HiOutlineArrowTrendingUp } from "react-icons/hi2";
 
 import LeadSourceDistributionCard from "@/components/AdminDashboard/LeadSourceDistributionCard";
 import {
-  HiOutlineChartBar,
   HiOutlineBuildingStorefront,
   HiOutlineHeart,
   HiOutlineTicket,
   HiOutlineShoppingCart,
   HiMiniCake,
   HiOutlineShoppingBag,
-  HiOutlineUser,
+  HiOutlineBanknotes,
   HiOutlineUserGroup,
 } from "react-icons/hi2";
 import {
-  useGetPlatformStatsQuery,
   useGetPayoutsQuery,
+  useGetPlatformCityAnalyticsQuery,
+  useGetPlatformStatsQuery,
 } from "@/features/admin/finance/api/adminFinanceApi";
 import { useListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
 import {
   useListAllVendorsQuery,
   useListVendorApplicationsQuery,
 } from "@/features/admin/vendors/api/vendorsApi";
+import type { Vendor } from "@/features/admin/vendors/types/vendor.types";
 import { useGetAllVendorKycDocumentsQuery } from "@/services/adminKycApi";
 
-type SnapshotMetric = {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  percentage?: number;
-  trend?: "up" | "down" | "neutral";
-  icon: IconType;
-  accentColor?: "blue" | "green" | "red" | "yellow" | "purple" | "cyan";
-};
-
 const formatDateOnly = (date: Date) => date.toISOString().slice(0, 10);
+const CONFIRMED_BOOKING_STATUSES = new Set(["CONFIRMED"]);
 
 const toNumberSafe = (value: unknown) => {
   if (typeof value === "number") return value;
@@ -109,6 +103,9 @@ const monthKey = (dateValue: string | Date) => {
   return `${date.getFullYear()}-${date.getMonth()}`;
 };
 
+const isConfirmedBooking = (booking: { status?: string | null }) =>
+  CONFIRMED_BOOKING_STATUSES.has(String(booking.status ?? "").toUpperCase());
+
 const categoryIconFor = (name: string) => {
   const normalized = name.toLowerCase();
   if (normalized.includes("wellness") || normalized.includes("spa") || normalized.includes("fitness")) {
@@ -122,6 +119,215 @@ const categoryIconFor = (name: string) => {
   return HiOutlineBuildingStorefront;
 };
 
+const getInitials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "V";
+
+const formatAdminDisplayName = (
+  user?: { displayName?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null } | null,
+) => {
+  const displayName = user?.displayName?.trim();
+  if (displayName) return displayName;
+
+  const firstName = user?.firstName?.trim();
+  const lastName = user?.lastName?.trim();
+
+  if (firstName && lastName) {
+    return `${firstName} ${lastName.charAt(0).toUpperCase()}.`;
+  }
+
+  if (firstName) return firstName;
+  if (user?.email) return user.email.split("@")[0];
+  return "Admin";
+};
+
+const AdminWelcomeBanner = () => {
+  const user = useAppSelector((state) => state.auth.user);
+  const displayName = useMemo(() => formatAdminDisplayName(user), [user]);
+  const now = useMemo(() => new Date(), []);
+
+  const dayNumber = now.getDate();
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "long",
+  }).format(now);
+
+  return (
+    <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 px-5 py-4  sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="min-w-0">
+        <p className=" truncate text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-[-0.06em] text-slate-950">
+          Welcome Back, {displayName}. <span aria-hidden="true">👋</span>
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3 self-start sm:self-auto">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full border text-white bg-[#4F7DFF] text-[1.1rem] font-bold tracking-[-0.04em]  ">
+          {dayNumber}
+        </div>
+        <p className=" font-serif max-w-[110px] c text-sm leading-tight text-slate-900 sm:max-w-none">
+          {dateLabel}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+type SnapshotMiniAvatar = {
+  label: string;
+  imageUrl?: string | null;
+};
+
+type SnapshotCardProps = {
+  title: string;
+  value: string;
+  subtitle?: string;
+  tone?: "light" | "solid";
+  icon: IconType;
+  watermarkIcon?: IconType;
+  trendLabel?: string;
+  trendTone?: "green" | "red" | "slate";
+  watermark?: string;
+  progress?: number;
+  engagement?: string;
+  avatars?: SnapshotMiniAvatar[]; 
+  footerLabel?: string;
+  footerValue?: string;
+};
+
+const SnapshotCard = ({
+  title,
+  value,
+  subtitle,
+  tone = "light",
+  icon: Icon,
+  watermarkIcon: WatermarkIcon,
+  trendLabel,
+  trendTone = "green",
+  watermark,
+  progress,
+  engagement,
+  avatars,
+  footerLabel,
+  footerValue,
+}: SnapshotCardProps) => {
+  const trendClass =
+    trendTone === "red"
+      ? "bg-rose-50 text-rose-600"
+      : trendTone === "slate"
+        ? "bg-slate-100 text-slate-500"
+        : "bg-emerald-50 text-emerald-600";
+
+  if (tone === "solid") {
+    return (
+      <div className="relative flex h-full min-h-[212px] flex-col overflow-hidden rounded-[26px] bg-[#4F7DFF] p-5 text-white">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/70">
+              {title}
+            </p>
+            <p className="mt-2 text-4xl font-black tracking-[-0.06em]">{value}</p>
+          </div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/14 text-white/90">
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+
+        <div className="mt-6 h-px bg-white/15" />
+
+        <div className="mt-5 space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/65">
+            {footerLabel}
+          </p>
+          <p className="text-2xl font-black tracking-[-0.05em]">{footerValue}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-full min-h-[164px] overflow-hidden rounded-[26px] border border-slate-100 bg-white p-5 shadow-[0_16px_50px_-44px_rgba(15,23,42,0.22)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#eef3ff] text-[#3554e0]">
+              <Icon className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+              {title}
+            </p>
+            <p className="mt-1 text-[32px] font-black tracking-[-0.06em] text-slate-950">
+              {value}
+              {subtitle ? <span className="ml-1 text-sm font-semibold text-[#3554e0]">{subtitle}</span> : null}
+            </p>
+          </div>
+        </div>
+
+        {trendLabel ? (
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold",
+              trendClass,
+            )}
+          >
+            {trendLabel}
+          </span>
+        ) : null}
+      </div>
+
+      {WatermarkIcon ? (
+        <div className="pointer-events-none absolute -bottom-6 right-[-4px] select-none opacity-10">
+          <WatermarkIcon className="h-[140px] w-[140px] text-[#3554e0]" />
+        </div>
+      ) : null}
+      {watermark ? (
+        <div className="pointer-events-none absolute -bottom-8 right-[-8px] select-none text-[110px] leading-none text-[#4F7DFF]">
+          {watermark}
+        </div>
+      ) : null}
+      {progress !== undefined ? (
+        <div className="mt-6">
+          <div className="h-1.5 rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-[#3554e0]"
+              style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {avatars || engagement ? (
+        <div className="mt-5 flex items-end justify-between">
+          <div className="flex -space-x-2">
+            {(avatars ?? []).slice(0, 3).map((avatar) => (
+              <div
+                key={avatar.label}
+                className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-slate-200 text-[10px] font-semibold text-slate-600"
+                title={avatar.label}
+              >
+                {avatar.imageUrl ? (
+                  <img src={avatar.imageUrl} alt={avatar.label} className="h-full w-full object-cover" />
+                ) : (
+                  getInitials(avatar.label)
+                )}
+              </div>
+            ))}
+            {avatars && avatars.length > 3 ? (
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-50 text-[10px] font-semibold text-slate-500">
+                +{avatars.length - 3}
+              </div>
+            ) : null}
+          </div>
+          {engagement ? <p className="text-xs font-semibold text-emerald-600">{engagement}</p> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const AdminDashboard: React.FC = () => {
   const today = useMemo(() => new Date(), []);
   const todayStr = formatDateOnly(today);
@@ -129,6 +335,8 @@ const AdminDashboard: React.FC = () => {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = formatDateOnly(yesterday);
 
+  const { data: vendorApplicationsResponse, isLoading: vendorAppsLoading } =
+    useListVendorApplicationsQuery({ page: 1, limit: 10, sortBy: "submittedAt", sortOrder: "desc" });
   const { data: platformStatsResponse, isLoading: platformStatsLoading } = useGetPlatformStatsQuery();
   const { data: vendorsResponse, isLoading: vendorsLoading } = useListAllVendorsQuery({
     page: 1,
@@ -136,8 +344,6 @@ const AdminDashboard: React.FC = () => {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
-  const { data: vendorApplicationsResponse, isLoading: vendorAppsLoading } =
-    useListVendorApplicationsQuery({ page: 1, limit: 10, sortBy: "submittedAt", sortOrder: "desc" });
   const { data: allBookingsResponse, isLoading: allBookingsLoading } = useListAdminBookingsQuery({
     page: 1,
     limit: 100,
@@ -169,13 +375,44 @@ const AdminDashboard: React.FC = () => {
     limit: 5,
     status: "PENDING",
   });
+  const [selectedCityPeriod, setSelectedCityPeriod] = useState<"today" | "weekly" | "monthly">(
+    "today",
+  );
+  const { data: cityAnalyticsResponse, isLoading: cityAnalyticsLoading } =
+    useGetPlatformCityAnalyticsQuery({
+      period: selectedCityPeriod,
+      limit: 5,
+    });
   const { data: kycDocs = [], isLoading: kycLoading } = useGetAllVendorKycDocumentsQuery();
 
-  const allBookings = allBookingsResponse?.data ?? [];
-  const todayBookings = todayBookingsResponse?.data ?? [];
-  const yesterdayBookings = yesterdayBookingsResponse?.data ?? [];
-  const vendors = (vendorsResponse?.data ?? []) as Array<Record<string, unknown>>;
-  const platformStats = platformStatsResponse?.data;
+  const allBookings = useMemo(
+    () => (allBookingsResponse?.data ?? []).filter(isConfirmedBooking),
+    [allBookingsResponse?.data],
+  );
+  const todayBookings = useMemo(
+    () => (todayBookingsResponse?.data ?? []).filter(isConfirmedBooking),
+    [todayBookingsResponse?.data],
+  );
+  const yesterdayBookings = useMemo(
+    () => (yesterdayBookingsResponse?.data ?? []).filter(isConfirmedBooking),
+    [yesterdayBookingsResponse?.data],
+  );
+
+  const bookingTrendYearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, index) => currentYear - index);
+  }, []);
+
+  const [selectedBookingTrendYear, setSelectedBookingTrendYear] = useState<string>(
+    String(new Date().getFullYear()),
+  );
+
+  useEffect(() => {
+    if (!bookingTrendYearOptions.length) return;
+    if (!bookingTrendYearOptions.includes(Number(selectedBookingTrendYear))) {
+      setSelectedBookingTrendYear(String(bookingTrendYearOptions[0]));
+    }
+  }, [bookingTrendYearOptions, selectedBookingTrendYear]);
 
   const todayRevenue = useMemo(
     () =>
@@ -197,81 +434,38 @@ const AdminDashboard: React.FC = () => {
     [yesterdayBookings],
   );
 
-  const todayBookingsCount = todayBookingsResponse?.meta?.total ?? todayBookings.length;
-  const yesterdayBookingsCount = yesterdayBookingsResponse?.meta?.total ?? yesterdayBookings.length;
-
+  const vendors = (vendorsResponse?.data ?? []) as Vendor[];
+  const platformStats = platformStatsResponse?.data;
+  const platformCurrency = platformStats?.currency ?? "SEK";
+  const todayBookingsCount = todayBookings.length;
   const activeVendorsCount = useMemo(
     () => vendors.filter((vendor) => String(vendor.status ?? "").toUpperCase() === "ACTIVE").length,
     [vendors],
   );
-
+  const activeVendorAvatars = useMemo(
+    () =>
+      vendors
+        .filter((vendor) => String(vendor.status ?? "").toUpperCase() === "ACTIVE")
+        .slice(0, 3)
+        .map((vendor) => ({
+          label: vendor.businessName ?? "Vendor",
+          imageUrl: vendor.user?.profileImageUrl ?? undefined,
+        })),
+    [vendors],
+  );
+  const activeVendorCoverage = vendors.length > 0 ? (activeVendorsCount / vendors.length) * 100 : 0;
   const newUsersToday = useMemo(() => {
     const uniqueIds = new Set(todayBookings.map((booking) => booking.user?.id).filter(Boolean));
     return uniqueIds.size;
   }, [todayBookings]);
-
   const conversionRate = activeVendorsCount > 0 ? (todayBookingsCount / activeVendorsCount) * 100 : 0;
-  const conversionYesterday = activeVendorsCount > 0 ? (yesterdayBookingsCount / activeVendorsCount) * 100 : 0;
-
   const revenueTrend = trendFromValues(platformStats?.totalRevenue ?? todayRevenue, yesterdayRevenue);
-  const bookingsTrend = trendFromValues(todayBookingsCount, yesterdayBookingsCount);
-  const usersTrend = trendFromValues(newUsersToday, Math.max(0, newUsersToday - 1));
-  const conversionTrend = trendFromValues(conversionRate, conversionYesterday);
   const gmvTrend = trendFromValues(todayRevenue, yesterdayRevenue);
   const gmvTrendDirection = gmvTrend.trend === "neutral" ? undefined : gmvTrend.trend;
 
-  const platformSnapshotMetrics: SnapshotMetric[] = [
-    {
-      title: "Total Revenue (MTD)",
-      value: platformStats?.totalRevenue ?? 0,
-      percentage: revenueTrend.percentage,
-      trend: revenueTrend.trend,
-      icon: HiOutlineChartBar,
-      accentColor: "blue",
-      subtitle: "vs yesterday",
-    },
-    {
-      title: "Total Bookings (Today)",
-      value: todayBookingsCount,
-      percentage: bookingsTrend.percentage,
-      trend: bookingsTrend.trend,
-      icon: HiOutlineShoppingBag,
-      accentColor: "purple",
-      subtitle: "today",
-    },
-    {
-      title: "Active Vendors",
-      value: activeVendorsCount,
-      percentage: 0,
-      trend: "neutral",
-      icon: HiOutlineUserGroup,
-      accentColor: "green",
-      subtitle: "currently active",
-    },
-    {
-      title: "New Users (Today)",
-      value: newUsersToday,
-      percentage: usersTrend.percentage,
-      trend: usersTrend.trend,
-      icon: HiOutlineUser,
-      accentColor: "red",
-      subtitle: "via bookings",
-    },
-    {
-      title: "Conversion Rate (Today)",
-      value: `${conversionRate.toFixed(1)}%`,
-      percentage: conversionTrend.percentage,
-      trend: conversionTrend.trend,
-      icon: HiOutlineArrowTrendingUp,
-      accentColor: "cyan",
-      subtitle: "bookings per active vendor",
-    },
-  ];
-
   const bookingsChartData = useMemo(() => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const now = new Date();
-    const year = now.getFullYear();
+    const year = Number(selectedBookingTrendYear) || new Date().getFullYear();
     const currentYearSeries = new Array<number>(12).fill(0);
     const previousYearSeries = new Array<number>(12).fill(0);
 
@@ -290,7 +484,7 @@ const AdminDashboard: React.FC = () => {
       value1: Math.round(currentYearSeries[index]),
       value2: Math.round(previousYearSeries[index]),
     }));
-  }, [allBookings]);
+  }, [allBookings, selectedBookingTrendYear]);
 
   const gmvChartData = useMemo(() => {
     const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -324,6 +518,7 @@ const AdminDashboard: React.FC = () => {
       return {
         id: booking.orderItem?.orderNumber ?? booking.id,
         name: name || "Customer",
+        email: booking.user?.email,
         category: booking.vendorService?.category?.name ?? booking.vendorService?.title ?? "Service",
         status: toStatusLabel(booking.status),
         price: formatCurrencyCompact(quantity * unit),
@@ -351,28 +546,10 @@ const AdminDashboard: React.FC = () => {
       }));
   }, [allBookings]);
 
-  const topRegions = useMemo(() => {
-    const counts = new Map<string, number>();
-    let total = 0;
-
-    for (const booking of allBookings) {
-      const region = booking.vendorProfile?.city?.name ?? booking.vendorProfile?.country ?? "Unknown";
-      const normalized = String(region).trim();
-      if (!normalized) continue;
-      counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
-      total += 1;
-    }
-
-    if (!total) return [];
-
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => ({
-        name,
-        percent: Number(((count / total) * 100).toFixed(2)),
-      }));
-  }, [allBookings]);
+  const topRegions = useMemo(
+    () => cityAnalyticsResponse?.data?.data ?? [],
+    [cityAnalyticsResponse?.data?.data],
+  );
 
   const pendingPayoutItems = useMemo(() => {
     const rows = payoutsResponse?.data?.data ?? [];
@@ -432,7 +609,8 @@ const AdminDashboard: React.FC = () => {
     payoutsLoading ||
     refundsLoading ||
     kycLoading ||
-    vendorAppsLoading;
+    vendorAppsLoading ||
+    cityAnalyticsLoading;
 
   if (loading) return <AdminDashboardSkeleton />;
 
@@ -444,64 +622,118 @@ const AdminDashboard: React.FC = () => {
           breadCrumbTitle="Admin / Dashboard"
         />
 
+        <AdminWelcomeBanner />
+
         <DashboardSection>
-          <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {platformSnapshotMetrics.map((metric) => (
-              <DashboardCol key={metric.title} span={1}>
-                <StatsCard
-                  title={metric.title}
-                  value={metric.value}
-                  percentage={metric.percentage}
-                  trend={metric.trend}
-                  icon={metric.icon}
-                  accentColor={metric.accentColor}
-                  subtitle={metric.subtitle}
-                />
-              </DashboardCol>
-            ))}
+          <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <DashboardCol span={1}>
+              <SnapshotCard
+                title="Total Revenue (MTD)"
+                value={Math.round(platformStats?.totalRevenue ?? 0).toLocaleString()}
+                subtitle={platformCurrency}
+                icon={HiOutlineBanknotes}
+                trendLabel={`${
+                  revenueTrend.trend === "up"
+                    ? "+"
+                    : revenueTrend.trend === "down"
+                      ? "-"
+                      : ""
+                }${revenueTrend.percentage}%`}
+                trendTone={revenueTrend.trend === "down" ? "red" : revenueTrend.trend === "neutral" ? "slate" : "green"}
+                watermark={platformCurrency}
+              />
+            </DashboardCol>
+            <DashboardCol span={1}>
+              <SnapshotCard
+                title="Bookings Today"
+                value={todayBookingsCount.toLocaleString()}
+                subtitle="units"
+                icon={HiOutlineShoppingBag}
+                watermarkIcon={HiOutlineShoppingBag}
+                progress={Math.min(100, Math.max(16, todayBookingsCount * 12))}
+              />
+            </DashboardCol>
+            <DashboardCol span={1}>
+              <SnapshotCard
+                title="Active Vendors"
+                value={activeVendorsCount.toLocaleString()}
+                icon={HiOutlineUserGroup}
+                watermarkIcon={HiOutlineUserGroup}
+                avatars={activeVendorAvatars}
+                engagement={`${activeVendorCoverage.toFixed(1)}% Engagement`}
+              />
+            </DashboardCol>
+            <DashboardCol span={1}>
+              <SnapshotCard
+                title="Conversion Rate"
+                value={`${conversionRate.toFixed(1)}%`}
+                tone="solid"
+                icon={HiOutlineArrowTrendingUp}
+                footerLabel="New Users Today"
+                footerValue={newUsersToday.toLocaleString()}
+              />
+            </DashboardCol>
           </DashboardGrid>
         </DashboardSection>
 
         <DashboardSection>
-          <DashboardGrid>
-            <DashboardCol span={6}>
+          <DashboardGrid columns="grid-cols-12">
+            <DashboardCol span={7} className="h-full">
               <ChartCard
+                title="Bookings Trend"
+                subtitle="Annual booking volume across all categories"
                 data={bookingsChartData}
                 height={260}
                 primaryColor="#2563EB"
                 secondaryColor="#F97316"
-                primaryLabel={`Current Year (${new Date().getFullYear()})`}
-                secondaryLabel={`Last Year (${new Date().getFullYear() - 1})`}
+                primaryLabel={`Selected Year (${selectedBookingTrendYear})`}
+                secondaryLabel={`Last Year (${Number(selectedBookingTrendYear) - 1})`}
                 growthText="vs last year"
                 showLegend
-                showPeriodSelect={false}
+                showPeriodSelect
+                activePeriod={selectedBookingTrendYear}
+                periodOptions={bookingTrendYearOptions.map(String)}
+                onPeriodChange={setSelectedBookingTrendYear}
                 className="h-full"
                 animate={false}
               />
             </DashboardCol>
-            <DashboardCol span={3}>
-              <LeadPlanSubscribersCard />
+            <DashboardCol span={3} className="h-full">
+              <div className="flex h-full flex-col gap-6">
+                <LeadSourceDistributionCard />
+
+              </div>
+              
             </DashboardCol>
-            <DashboardCol span={3}>
-              <LeadSourceDistributionCard />
-            </DashboardCol>
-            <DashboardCol span={6}>
-              <Mapcity regions={topRegions} />
-            </DashboardCol>
-            <DashboardCol span={6}>
-              <VendorsOverview categories={vendorOverviewCategories} />
+            <DashboardCol span={2} className="h-full">
+              <div className="flex h-full flex-col">
+                <LeadPlanSubscribersCard />
+              </div>
+              
             </DashboardCol>
           </DashboardGrid>
         </DashboardSection>
 
         <DashboardSection>
           <DashboardGrid>
-            <DashboardCol span={12}>
+            <DashboardCol span={4}>
+              <Mapcity
+                regions={topRegions}
+                period={selectedCityPeriod}
+                onPeriodChange={setSelectedCityPeriod}
+                isLoading={cityAnalyticsLoading}
+              />
+            </DashboardCol>
+             <DashboardCol span={6}>
               <RecentActivities
                 title="Recent activity"
                 activities={recentActivitiesData}
               />
             </DashboardCol>
+            <DashboardCol span={2}>
+              <VendorsOverview categories={vendorOverviewCategories} />
+            </DashboardCol>
+           
           </DashboardGrid>
         </DashboardSection>
 
@@ -526,9 +758,12 @@ const AdminDashboard: React.FC = () => {
         </DashboardSection>
 
         <DashboardSection>
-          <DashboardGrid>
-            <DashboardCol span={12}>
+          <DashboardGrid columns="grid-cols-12">
+            <DashboardCol span={8} className="h-full">
               <AIAlertInsights />
+            </DashboardCol>
+            <DashboardCol span={4} className="h-full">
+              <ApprovalQueueCard />
             </DashboardCol>
           </DashboardGrid>
         </DashboardSection>

@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import bannerImage from "@/assets/Images/bgsalon.jpg"
+import bannerImage from "@/assets/Images/banner.avif"
 import { ChevronDown } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAppSelector } from "@/app/hooks"
+import {
+  hasActivePaidPlan,
+  useGetMyPlanQuery,
+} from "@/features/userSubscriptions/api/userSubscriptionsApi"
 import { slugifyServiceTitle } from "@/utils/slugify"
 import { Service } from "./types"
 import ServicesSidebar from "./ServicesSidebar"
@@ -22,19 +27,23 @@ const DEFAULT_RATING_FILTER = 4.5
 
 const formatMoney = (amount: number, currency: string) => {
   try {
-    const locale =
-      currency === "SEK" ? "sv-SE" : currency === "INR" ? "en-IN" : undefined
-    return new Intl.NumberFormat(locale, {
+    return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
       style: "currency",
       currency,
+      currencyDisplay: currency === "SEK" ? "code" : "symbol",
       maximumFractionDigits: 0,
-    }).format(amount)
+    })
+      .format(amount)
+      .replace(/\u00A0/g, " ")
   } catch {
     return `${currency} ${amount}`
   }
 }
 
-const toServiceCardModel = (service: MarketplaceService): Service => {
+const toServiceCardModel = (
+  service: MarketplaceService,
+  canAccessHotDeals: boolean,
+): Service => {
   const images = service.mediaUrls?.length
     ? service.mediaUrls
     : service.thumbnailUrl
@@ -45,11 +54,17 @@ const toServiceCardModel = (service: MarketplaceService): Service => {
     title: offering.name,
     subtitle: offering.description ?? undefined,
     duration: offering.durationLabel ?? undefined,
-    price: formatMoney(offering.salePrice ?? offering.basePrice, offering.currency ?? "INR"),
+    price: formatMoney(
+      canAccessHotDeals ? offering.salePrice ?? offering.basePrice : offering.basePrice,
+      offering.currency ?? "INR",
+    ),
     compareAtPrice:
-      offering.basePrice > offering.salePrice
+      canAccessHotDeals && offering.basePrice > offering.salePrice
         ? formatMoney(offering.basePrice, offering.currency ?? "INR")
         : undefined,
+    discountPercent: canAccessHotDeals ? offering.discountPercent : undefined,
+    dealEndTime: canAccessHotDeals ? offering.dealEndTime ?? undefined : undefined,
+    isDealActive: canAccessHotDeals ? offering.isDealActive : false,
   }))
 
   const fallbackPrice =
@@ -88,16 +103,16 @@ export type ServicesExplorerProps = {
 }
 
 const defaultStats = [
-  { label: "24 stylists online now", color: "bg-emerald-400" },
-  { label: "98% booked for this week", color: "bg-sky-400" },
-  { label: "Avg. response under 10 min", color: "bg-amber-400" },
+  { label: "24 stylists online now", color: "bg-[#60A5FA]" },
+  { label: "98% booked for this week", color: "bg-[#60A5FA]" },
+  { label: "Avg. response under 10 min", color: "bg-[#60A5FA]" },
 ]
 
 function MarketplaceCardSkeleton({ index }: { index: number }) {
   return (
     <div
       key={`marketplace-skeleton-${index}`}
-      className="flex h-155 w-81.25 flex-col overflow-hidden rounded-lg bg-white shadow-md"
+      className="flex h-155 w-81.25 flex-col overflow-hidden rounded-[24px] border border-[#DCE6F5] bg-[#FFFFFF] shadow-[0_18px_32px_-28px_rgba(15,42,68,0.08)]"
     >
       <Skeleton className="h-50 w-full rounded-none" />
       <div className="flex flex-1 flex-col gap-3 p-5">
@@ -115,7 +130,7 @@ function MarketplaceCardSkeleton({ index }: { index: number }) {
 
         <div className="flex-1 space-y-3">
           {Array.from({ length: 3 }).map((_, detailIndex) => (
-            <div key={`marketplace-skeleton-detail-${index}-${detailIndex}`} className="h-17 rounded-sm bg-[#F6F6F6] px-4 py-3">
+            <div key={`marketplace-skeleton-detail-${index}-${detailIndex}`} className="h-17 rounded-[16px] bg-[#EAF1FF] px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-5 w-16" />
@@ -143,6 +158,9 @@ export default function ServicesExplorer({
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [enquiryService, setEnquiryService] = useState<Service | null>(null)
+  const authUser = useAppSelector((state) => state.auth.user)
+  const { data: myPlanRes } = useGetMyPlanQuery(undefined, { skip: !authUser })
+  const canAccessHotDeals = hasActivePaidPlan(myPlanRes?.data)
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>([])
@@ -269,10 +287,10 @@ export default function ServicesExplorer({
 
   const activeServices = useMemo(() => {
     if (providedServices) return providedServices
-    const mapped = marketplaceRows.map(toServiceCardModel)
+    const mapped = marketplaceRows.map((row) => toServiceCardModel(row, canAccessHotDeals))
     if (mapped.length) return mapped
     return []
-  }, [marketplaceRows, providedServices])
+  }, [canAccessHotDeals, marketplaceRows, providedServices])
 
 
   const categoryCounts = useMemo(() => {
@@ -392,7 +410,7 @@ export default function ServicesExplorer({
   }
 
   return (
-    <section className="min-h-screen bg-[#F9F9F9] py-8">
+    <section className="min-h-screen bg-[#F3F7FF] py-8 text-[#0F2A44]">
       <div className="mx-auto flex items-start max-w-370 gap-8 px-6 lg:px-8">
         <ServicesSidebar
           categories={sidebarCategories}
@@ -412,37 +430,43 @@ export default function ServicesExplorer({
 
         <div className="flex-1 space-y-6">
           <header
-            className="space-y-4 rounded-lg px-6 py-15 text-white shadow-lg min-h-25"
+            className="relative overflow-hidden  border border-[#DCE6F5] px-6 py-6 text-white shadow-[0_20px_40px_-32px_rgba(15,42,68,0.14)]"
             style={{
               backgroundImage: `url(${headerBanner})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
-            <div className="flex items-end justify-between">
-              <div>
-                <h1 className="text-[28px] font-bold text-black">{headerTitle}</h1>
-              </div>
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-300"
-              >
-                Sort: Popular
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-[16px] text-black">{effectiveHeaderDescription}</p>
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.82)_0%,rgba(0,0,0,0.58)_42%,rgba(0,0,0,0.26)_100%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_10%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.28))]" />
 
-            <div className="flex flex-wrap gap-4 text-sm text-black">
-              {statRows.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex items-center gap-2 rounded-2xl bg-white/40 px-4 py-2"
-                >
-                  <span className={`h-2 w-2 rounded-full ${stat.color}`} />
-                  {stat.label}
+            <div className="relative flex max-w-2xl flex-col gap-5">
+              <div className="space-y-4">
+                <span className="inline-flex rounded-full border border-white/10 bg-[#60A5FA]/88 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#0F2A44]">
+                  Limited Offer
+                </span>
+                <div className="space-y-2">
+                  <h1 className="max-w-xl text-[32px] font-bold leading-tight text-white sm:text-[36px]">
+                    {headerTitle}
+                  </h1>
+                  <p className="max-w-xl text-[14px] leading-6 text-white/75 sm:text-[15px]">
+                    Book premium home services with verified experts.
+                  </p>
                 </div>
-              ))}
+              
+              </div>
+
+              <div className="flex flex-wrap gap-3 text-sm text-white/85">
+                {statRows.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2 backdrop-blur-sm"
+                  >
+                    <span className={`h-2 w-2 rounded-full ${stat.color}`} />
+                    {stat.label}
+                  </div>
+                ))}
+              </div>
             </div>
           </header>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -454,6 +478,7 @@ export default function ServicesExplorer({
                   <ServiceCard
                     key={service.id}
                     service={service}
+                    canAccessHotDeals={canAccessHotDeals}
                     onViewDetails={(item) => navigate(`/service/${item.slug}`)}
                     onEnquiry={(item) => setEnquiryService(item)}
                   />

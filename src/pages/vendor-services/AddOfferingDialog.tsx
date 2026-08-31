@@ -19,12 +19,16 @@ import {
   useCreateOfferingMutation,
 } from "@/services/vendorOfferingsApi";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
+import { DEAL_DURATION_OPTIONS, calculateDiscountPercent } from "@/utils/deals";
 
 type AddOfferingFormValues = {
   name: string;
   description: string;
   basePrice: number;
   salePrice: number;
+  dealMode: "duration" | "endTime";
+  dealDurationHours?: number | null;
+  dealEndTime?: string;
   maxQuantity?: number | null;
 };
 
@@ -57,12 +61,17 @@ export function AddOfferingDialog({
       description: "",
       basePrice: 0,
       salePrice: 0,
+      dealMode: "duration",
+      dealDurationHours: Number(DEAL_DURATION_OPTIONS[0].value),
+      dealEndTime: "",
       maxQuantity: null,
     },
   });
 
   const basePrice = watch("basePrice");
   const salePrice = watch("salePrice");
+  const dealMode = watch("dealMode");
+  const discountPercent = calculateDiscountPercent(basePrice, salePrice);
 
   useEffect(() => {
     if (!open) {
@@ -84,6 +93,14 @@ export function AddOfferingDialog({
         description: (values.description ?? "").trim(),
         basePrice: Number(values.basePrice),
         salePrice: Number(values.salePrice),
+        dealDurationHours:
+          values.dealMode === "duration"
+            ? Number(values.dealDurationHours)
+            : undefined,
+        dealEndTime:
+          values.dealMode === "endTime" && values.dealEndTime
+            ? new Date(values.dealEndTime).toISOString()
+            : undefined,
         maxQuantity:
           values.maxQuantity == null || Number.isNaN(Number(values.maxQuantity))
             ? null
@@ -92,6 +109,21 @@ export function AddOfferingDialog({
 
       if (!payload.name) {
         toast.error("Offering name is required.");
+        return;
+      }
+
+      if (payload.salePrice >= payload.basePrice) {
+        toast.error("Sale price must be less than base price.");
+        return;
+      }
+
+      if (values.dealMode === "duration" && !payload.dealDurationHours) {
+        toast.error("Select a deal duration.");
+        return;
+      }
+
+      if (values.dealMode === "endTime" && !payload.dealEndTime) {
+        toast.error("Select a custom deal end time.");
         return;
       }
 
@@ -173,6 +205,60 @@ export function AddOfferingDialog({
               {errors.salePrice?.message ? (
                 <p className="text-xs text-rose-600">{errors.salePrice.message}</p>
               ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-orange-200 bg-orange-50/70 p-4">
+            <p className="text-sm font-semibold text-slate-900">Limited Time Deal</p>
+            <p className="mt-1 text-xs text-slate-600">
+              Set how long the discounted sale price should stay active.
+            </p>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="offering-deal-mode">Deal mode</Label>
+                <select
+                  id="offering-deal-mode"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  {...register("dealMode")}
+                >
+                  <option value="duration">Choose duration</option>
+                  <option value="endTime">Custom end time</option>
+                </select>
+              </div>
+
+              {dealMode === "duration" ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor="offering-deal-duration">Deal duration</Label>
+                  <select
+                    id="offering-deal-duration"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    {...register("dealDurationHours", {
+                      setValueAs: (value) =>
+                        value === "" || value == null ? null : Number(value),
+                    })}
+                  >
+                    {DEAL_DURATION_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="offering-deal-end-time">Deal end time</Label>
+                  <Input
+                    id="offering-deal-end-time"
+                    type="datetime-local"
+                    {...register("dealEndTime")}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-orange-600">
+              Discount Preview: {discountPercent > 0 ? `🔥 ${discountPercent}% OFF` : "Set a lower sale price"}
             </div>
           </div>
 

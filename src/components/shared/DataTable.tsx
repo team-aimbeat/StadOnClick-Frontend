@@ -565,6 +565,7 @@ export interface DataTableProps {
     showDefaultDateControl?: boolean;
     showFilterButton?: boolean;
     onFilterClick?: () => void;
+    showHeaderTitle?: boolean;
 }
 
 export const DataTable: React.FC<DataTableProps> = ({
@@ -605,6 +606,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     showDefaultDateControl = true,
     showFilterButton = false,
     onFilterClick = NOOP,
+    showHeaderTitle = true,
 }) => {
     const effectiveTitle = title || 'Data Table';
     const resolvedSearchPlaceholder = searchPlaceholder || 'Search...';
@@ -1028,7 +1030,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex-1">
-                        {effectiveTitle && (
+                        {showHeaderTitle && effectiveTitle && (
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900">{effectiveTitle}</h2>
                                 {breadCrumbTitle && <span className="text-sm text-gray-500 block mt-1">{breadCrumbTitle}</span>}

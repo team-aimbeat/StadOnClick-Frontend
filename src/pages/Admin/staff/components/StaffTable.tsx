@@ -4,7 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { StaffRole, StaffStatus, StaffUser } from "@/features/admin/staff/adminStaff.types";
+import type { StaffRole, StaffStatus, StaffUser, StaffUserRole } from "@/features/admin/staff/adminStaff.types";
 import { EllipsisVertical, ShieldCheck } from "lucide-react";
 
 type StaffTableProps = {
@@ -23,12 +23,14 @@ const statusTone: Record<StaffStatus, string> = {
   DISABLED: "bg-rose-50 text-rose-700 border-rose-200",
 };
 
-const roleLabel: Record<StaffRole, string> = {
+const roleLabel: Record<StaffUserRole, string> = {
+  ADMIN: "Admin",
   SUPPORT_ADMIN: "Support Admin",
   MODERATOR: "Moderator",
 };
 
-const roleTone: Record<StaffRole, string> = {
+const roleTone: Record<StaffUserRole, string> = {
+  ADMIN: "bg-amber-50 text-amber-700 border-amber-200",
   SUPPORT_ADMIN: "bg-sky-50 text-sky-700 border-sky-200",
   MODERATOR: "bg-indigo-50 text-indigo-700 border-indigo-200",
 };
@@ -129,6 +131,7 @@ export function StaffTable({
               rows.map((staff) => {
                 const isStatusLoading = statusUpdatingId === staff.id;
                 const isRoleLoading = roleUpdatingId === staff.id;
+                const isAdminAccount = staff.roles.includes("ADMIN");
 
                 return (
                   <tr key={staff.id} className="hover:bg-slate-50/60">
@@ -169,7 +172,7 @@ export function StaffTable({
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={staff.status === "ACTIVE"}
-                            disabled={isStatusLoading}
+                            disabled={isStatusLoading || isAdminAccount}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 onEnable(staff);
@@ -206,7 +209,7 @@ export function StaffTable({
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuLabel>Quick actions</DropdownMenuLabel>
                             <DropdownMenuItem
-                              disabled={isStatusLoading}
+                              disabled={isStatusLoading || isAdminAccount}
                               onClick={() =>
                                 staff.status === "ACTIVE"
                                   ? onRequestDisable(staff)
@@ -217,17 +220,22 @@ export function StaffTable({
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              disabled={isRoleLoading}
+                              disabled={isRoleLoading || isAdminAccount}
                               onClick={() => onChangeRole(staff, "SUPPORT_ADMIN")}
                             >
-                              Set role → Support Admin
+                              Set role to Support Admin
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              disabled={isRoleLoading}
+                              disabled={isRoleLoading || isAdminAccount}
                               onClick={() => onChangeRole(staff, "MODERATOR")}
                             >
-                              Set role → Moderator
+                              Set role to Moderator
                             </DropdownMenuItem>
+                            {isAdminAccount && (
+                              <DropdownMenuItem disabled className="text-xs text-slate-500">
+                                Admin accounts cannot be modified here
+                              </DropdownMenuItem>
+                            )}
                             {isRoleLoading && (
                               <DropdownMenuItem disabled className="text-xs text-slate-500">
                                 Updating...

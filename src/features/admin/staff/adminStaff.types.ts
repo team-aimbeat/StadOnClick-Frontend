@@ -1,4 +1,5 @@
 export type StaffRole = "SUPPORT_ADMIN" | "MODERATOR";
+export type StaffUserRole = StaffRole | "ADMIN";
 
 export type StaffStatus = "ACTIVE" | "DISABLED";
 
@@ -8,8 +9,9 @@ export type StaffUser = {
   firstName: string;
   lastName?: string | null;
   status: StaffStatus;
-  roles: StaffRole[];
+  roles: StaffUserRole[];
   createdAt: string;
+  lastLoginAt?: string | null;
 };
 
 export type StaffListResponse = {

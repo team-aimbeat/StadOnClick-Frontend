@@ -15,9 +15,11 @@ import {
   HiShieldCheck,
   HiBanknotes,
   HiChevronDown,
+  HiBookOpen,
   HiInboxStack,
   HiChatBubbleLeftRight,
   HiBell,
+  HiDocumentText,
   HiTag,
 } from "react-icons/hi2";
 import PerfectScrollbar from "react-perfect-scrollbar";
@@ -25,6 +27,7 @@ import { Activity, Users } from "lucide-react";
 
 import { RootState } from "@/app/store";
 import { useListAdminBookingsQuery } from "@/features/admin/bookings/api/adminBookingsApi";
+import { useGetAllVendorKycDocumentsQuery } from "@/services/adminKycApi";
 import { toggleSidebar } from "@/features/Layout/themeConfigSlice";
 import { cn } from "@/lib/utils";
 import type { IconType } from "react-icons";
@@ -111,6 +114,9 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
       ? { page: 1, limit: 1, statuses: "REFUND_REQUESTED" }
       : skipToken
   );
+  const { data: vendorKycDocuments } = useGetAllVendorKycDocumentsQuery(
+    isAdmin && !isSupportOnly && !isModeratorOnly ? undefined : skipToken
+  );
 
   const bookingNavBadges = useMemo(
     () => ({
@@ -127,6 +133,14 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
     ]
   );
 
+  const pendingKycCount = useMemo(
+    () =>
+      (vendorKycDocuments ?? []).filter(
+        (doc) => String(doc.status ?? "").toUpperCase() === "PENDING"
+      ).length,
+    [vendorKycDocuments]
+  );
+
   const navItems: NavItem[] = useMemo(() => {
     if (isSupportOnly) {
       return [
@@ -134,19 +148,19 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
           id: "support-dashboard",
           label: t("Support Dashboard"),
           icon: HiChartBar,
-          to: withBase("support/dashboard"),
+          to: withBase("support-dashboard"),
         },
         {
           id: "support-inbox",
           label: t("Support Inbox"),
           icon: HiInboxStack,
-          to: withBase("support/inbox"),
+          to: withBase("support-inbox"),
         },
         {
           id: "support-chat",
           label: t("Support Chat"),
           icon: HiChatBubbleLeftRight,
-          to: withBase("chat"),
+          to: withBase("support-chat"),
         },
         {
           id: "system-health",
@@ -231,13 +245,20 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         id: "bookings",
         label: t("Bookings"),
         icon: HiClipboardDocumentCheck,
-        badge: bookingNavBadges.all,
+        badge: bookingNavBadges.upcoming,
         children: [
           { label: t("All Bookings"), to: withBase("bookings"), badge: bookingNavBadges.all },
           { label: t("Upcoming"), to: withBase("bookings/upcoming"), badge: bookingNavBadges.upcoming },
           { label: t("Completed"), to: withBase("bookings/completed"), badge: bookingNavBadges.completed },
           { label: t("Refunds"), to: withBase("bookings/refunds"), badge: bookingNavBadges.refunds },
+          { label: t("Booking Logs"), to: withBase("booking-logs") },
         ],
+      },
+      {
+        id: "orders",
+        label: t("Orders"),
+        icon: HiDocumentText,
+        to: withBase("orders"),
       },
     
       ...(isModerator
@@ -266,8 +287,13 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         id: "compliance",
         label: t("Compliance"),
         icon: HiShieldCheck,
+        badge: String(pendingKycCount),
         children: [
-          { label: t("KYC Review Queue"), to: withBase("compliance/kyc") },
+          {
+            label: t("KYC Review Queue"),
+            to: withBase("compliance/kyc"),
+            badge: String(pendingKycCount),
+          },
           { label: t("KYC Audit Logs"), to: withBase("compliance/kyc/audit") },
         ],
       },
@@ -278,6 +304,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         children: [
           { label: t("Lead Plans"), to: withBase("leads/plans") },
           { label: t("Coupons"), to: withBase("coupons") },
+          { label: t("Subscription Plans"), to: withBase("subscription-plans") },
           { label: t("Vendor Subscriptions"), to: withBase("leads/subscriptions") },
           { label: t("Sponsorship Plans"), to: withBase("finance/sponsorship-plans") },
         ],
@@ -313,25 +340,32 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         children: [
           { label: t("Payout Requests (Disabled)"), to: withBase("finance/payouts") },
           { label: t("Platform Wallet"), to: withBase("finance/platform-wallet") },
+          { label: t("Payment Logs"), to: withBase("finance/payment-logs") },
         ],
+      },
+      {
+        id: "help",
+        label: t("Help & User Manual"),
+        icon: HiBookOpen,
+        to: withBase("help/user-manual"),
       },
         {
         id: "support-inbox",
         label: t("Support Inbox"),
         icon: HiInboxStack,
-        to: withBase("support/inbox"),
+        to: withBase("support-inbox"),
       },
       {
         id: "support-dashboard",
         label: t("Support Dashboard"),
         icon: HiChartBar,
-        to: withBase("support/dashboard"),
+        to: withBase("support-dashboard"),
       },
       {
         id: "support-chat",
         label: t("Support Chat"),
         icon: HiChatBubbleLeftRight,
-        to: withBase("chat"),
+        to: withBase("support-chat"),
       },
       {
         id: "catalog",
@@ -347,6 +381,8 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
         label: t("System"),
         icon: HiCog6Tooth,
         children: [
+          { label: t("Reports"), to: withBase("reports") },
+          { label: t("Account Settings"), to: withBase("account-settings") },
           { label: t("Platform Settings"), to: withBase("settings") },
           { label: t("API Docs"), to: withBase("system/docs") },
           { label: t("Admin Activity"), to: withBase("system/audit") },
@@ -431,6 +467,7 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
               const active = isItemActive(item);
               const isOpen = !!openMenus[item.id];
               const displayActive = active || isOpen;
+              const isComplianceBadge = item.id === "compliance";
 
               return (
                 <li key={item.id} className="relative">
@@ -461,7 +498,11 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                               <span
                                 className={cn(
                                   "rounded-full px-2 py-0.5 text-[10px] font-bold",
-                                  displayActive
+                                  isComplianceBadge
+                                    ? displayActive
+                                      ? "bg-emerald-500/20 text-white"
+                                      : "bg-emerald-50 text-emerald-600"
+                                    : displayActive
                                     ? "bg-white/20 text-white"
                                     : "bg-slate-100 text-slate-600"
                                 )}
@@ -525,8 +566,14 @@ const Sidebar = ({ basePath = "/admin" }: SidebarProps) => {
                                         <span
                                           className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold"
                                           style={{
-                                            backgroundColor: hexToRgba(accentColor, 0.14),
-                                            color: accentColor,
+                                            backgroundColor:
+                                              child.to === withBase("compliance/kyc")
+                                                ? hexToRgba("#059669", 0.14)
+                                                : hexToRgba(accentColor, 0.14),
+                                            color:
+                                              child.to === withBase("compliance/kyc")
+                                                ? "#059669"
+                                                : accentColor,
                                           }}
                                         >
                                           {child.badge}

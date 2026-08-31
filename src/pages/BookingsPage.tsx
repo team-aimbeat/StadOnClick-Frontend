@@ -1,19 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { Eye, Phone, CalendarClock } from "lucide-react";
+import { CalendarClock, Download, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   HiOutlineCheckCircle,
   HiOutlineClock,
   HiOutlineExclamationTriangle,
   HiOutlineSparkles,
+  HiOutlineCalendarDays,
 } from "react-icons/hi2";
 
 import { ColumnConfig, DataTableSortStatus, FilterConfig, RowData } from "@/components/shared/DataTable";
-import { ActionConfig } from "@/types/Table/action";
 import { useAppDispatch } from "@/app/hooks";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
-import { ListingPage } from "@/components/shared/ListingPage";
+import { DashboardContainer } from "@/components/dashboard";
+import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
+import { DataTable } from "@/components/shared/DataTable";
+import { cn } from "@/lib/utils";
 import {
   useGetBookingsQuery,
   useUpdateBookingStatusMutation,
@@ -24,6 +27,46 @@ type BookingsPageProps = {
   titleOverride?: string;
   breadcrumbOverride?: string;
 };
+
+type BookingStatCardProps = {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: typeof HiOutlineCalendarDays;
+  accent: "blue" | "green" | "amber" | "purple";
+};
+
+const bookingAccentClass: Record<BookingStatCardProps["accent"], string> = {
+  blue: "bg-blue-50 text-blue-600",
+  green: "bg-emerald-50 text-emerald-600",
+  amber: "bg-amber-50 text-amber-600",
+  purple: "bg-violet-50 text-violet-600",
+};
+
+const BookingStatCard = ({ title, value, subtitle, icon: Icon, accent }: BookingStatCardProps) => (
+  <div className="rounded-[24px] border border-slate-100 bg-white p-4">
+    <div className="flex items-start justify-between gap-3">
+      <div className="space-y-3">
+        <span
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+            bookingAccentClass[accent]
+          )}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          {subtitle}
+        </span>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          {title}
+        </p>
+        <p className="text-[28px] font-bold tracking-tight text-slate-900">{value}</p>
+      </div>
+      <div className={cn("grid h-10 w-10 place-items-center rounded-full", bookingAccentClass[accent])}>
+        <Icon className="h-5 w-5" />
+      </div>
+    </div>
+  </div>
+);
 
 export type BookingRow = RowData & {
   bookingId: string;
@@ -41,6 +84,7 @@ export type BookingRow = RowData & {
   city: string;
   channel: string;
   amount: number;
+  year: string;
   contact?: string;
 };
 
@@ -102,7 +146,6 @@ export default function BookingsPage({
     columnAccessor: "startTime",
     direction: "desc",
   });
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
   const [bookingRows, setBookingRows] = useState<BookingRow[]>([]);
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
@@ -175,10 +218,26 @@ export default function BookingsPage({
     return { confirmed, pending, refunded, refundRequested, completed, gross };
   }, [bookingRows]);
 
+  const bookingYearOptions = useMemo(() => {
+    const years = Array.from(
+      new Set(
+        bookingRows
+          .map((booking) => new Date(booking.startTime).getFullYear())
+          .filter((year) => Number.isFinite(year))
+          .map((year) => String(year))
+      )
+    ).sort((a, b) => Number(b) - Number(a));
+
+    return [
+      { label: "All", value: "all" },
+      ...years.map((year) => ({ label: year, value: year })),
+    ];
+  }, [bookingRows]);
+
   const columns = useMemo<ColumnConfig[]>(() => [
     {
       key: "id",
-      title: "Order ID",
+      title: "Reference",
       sortable: true,
       render: (value: string) => <span className="font-semibold text-slate-900">{value}</span>,
     },
@@ -195,9 +254,14 @@ export default function BookingsPage({
     },
     {
       key: "service",
-      title: "Service",
+      title: "Service Name",
       sortable: true,
-      render: (value: string) => <span className="text-sm text-slate-800">{value}</span>,
+      render: (value: string, row: BookingRow) => (
+        <div className="space-y-0.5">
+          <p className="font-semibold text-slate-900">{value}</p>
+          <p className="text-xs text-slate-500">#{row.id}</p>
+        </div>
+      ),
     },
     {
       key: "status",
@@ -219,15 +283,11 @@ export default function BookingsPage({
       key: "channel",
       title: "Channel",
       sortable: true,
-      render: (value: string) => (
-        <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-          {value}
-        </span>
-      ),
+      render: (value: string) => <span className="text-sm text-slate-700">{value}</span>,
     },
     {
       key: "amount",
-      title: "Value",
+      title: "Value (KR)",
       sortable: true,
       render: (value: number) => <span className="font-semibold text-slate-900">{currency.format(value)}</span>,
     },
@@ -300,6 +360,129 @@ export default function BookingsPage({
     },
   ], [statusUpdatingId, updateBookingStatus]);
 
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((part) => part.trim()[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+
+  const renderBookingRow = (row: BookingRow, index: number) => {
+    const tone = statusTone[row.status];
+    const customerInitials = getInitials(row.customer || "BK");
+
+    return (
+      <tr key={row.bookingId} className="rounded-2xl bg-slate-50/70">
+        <td className="rounded-l-2xl px-2 py-4">
+          <span className="font-semibold text-slate-700">{String(index + 1).padStart(2, "0")}</span>
+        </td>
+        <td className="px-2 py-4">
+          <span className="font-semibold text-[#3554e0]">#{row.id}</span>
+        </td>
+        <td className="px-2 py-4">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+              {customerInitials}
+            </span>
+            <div>
+              <p className="font-semibold text-slate-900">{row.customer}</p>
+              <p className="text-xs text-slate-500">{row.city}</p>
+            </div>
+          </div>
+        </td>
+        <td className="px-2 py-4">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-[#3554e0] shadow-sm">
+              <CalendarClock className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold text-slate-900">{row.service}</p>
+              <p className="text-xs text-slate-500">{row.city}</p>
+            </div>
+          </div>
+        </td>
+        <td className="px-2 py-4">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}
+          >
+            <span className="h-2 w-2 rounded-full bg-current" />
+            {tone.label}
+          </span>
+        </td>
+        <td className="px-2 py-4">
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+            {row.channel}
+          </span>
+        </td>
+        <td className="px-2 py-4">
+          <span className="font-semibold text-slate-900">{currency.format(row.amount)}</span>
+        </td>
+        <td className="px-2 py-4">
+          <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+            <CalendarClock className="h-4 w-4 text-slate-500" />
+            {new Date(row.startTime).toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </div>
+        </td>
+        <td className="rounded-r-2xl px-2 py-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void updateBookingStatus(row.bookingId, "CONFIRMED")}
+              disabled={
+                row.status === "CONFIRMED" ||
+                row.status === "COMPLETED" ||
+                row.status === "REFUNDED" ||
+                statusUpdatingId === row.bookingId
+              }
+              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm disabled:opacity-50"
+            >
+              Confirm
+            </button>
+            <button
+              type="button"
+              onClick={() => void updateBookingStatus(row.bookingId, "CANCELLED")}
+              disabled={
+                row.status === "CANCELLED" ||
+                row.status === "REFUNDED" ||
+                statusUpdatingId === row.bookingId
+              }
+              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void updateBookingStatus(row.bookingId, "COMPLETED")}
+              disabled={
+                row.status === "COMPLETED" ||
+                row.status === "REFUNDED" ||
+                statusUpdatingId === row.bookingId
+              }
+              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm disabled:opacity-50"
+            >
+              Mark completed
+            </button>
+          </div>
+          <div className="mt-2 flex flex-col items-start gap-1">
+            <NavLink
+              to={`/vendor/bookings/${row.bookingId}`}
+              className="text-sm font-semibold text-[#3554e0] hover:text-[#2843b8]"
+            >
+              Details
+            </NavLink>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
   const filters = useMemo<FilterConfig[]>(() => [
     {
       key: "status",
@@ -326,7 +509,12 @@ export default function BookingsPage({
         { label: "WhatsApp", value: "whatsapp" },
       ],
     },
-  ], []);
+    {
+      key: "year",
+      label: "Year",
+      options: bookingYearOptions,
+    },
+  ], [bookingYearOptions]);
 
   const sortOptions = useMemo(
     () => [
@@ -337,82 +525,70 @@ export default function BookingsPage({
     []
   );
 
-  const actions = useMemo<ActionConfig<BookingRow>[]>(
-    () => [
-      {
-        title: "View",
-        icon: Eye,
-        onClick: (row) => console.log("View booking", row.id),
-      },
-      {
-        title: "Call",
-        icon: Phone,
-        onClick: (row) => console.log("Call", row.contact ?? "N/A"),
-      },
-    ],
-    []
-  );
-
   return (
-    <ListingPage
-      title={listingTitle}
-      breadCrumbTitle={breadcrumb}
-      description="Monitor confirmed slots, unblock pending jobs, and resolve refunds faster."
-      stats={[
-        {
-          title: "Confirmed",
-          value: totals.confirmed,
-          subtitle: "Scheduled and ready",
-          icon: HiOutlineCheckCircle,
-          accentColor: "blue",
-        },
-        {
-          title: isRefundView ? "Refunded" : "Pending",
-          value: isRefundView ? totals.refunded : totals.pending,
-          subtitle: isRefundView ? "Completed refunds" : "Awaiting action",
-          icon: HiOutlineClock,
-          accentColor: isRefundView ? "purple" : "yellow",
-        },
-        {
-          title: "Refund Requests",
-          value: totals.refundRequested,
-          subtitle: "Needs triage",
-          icon: HiOutlineExclamationTriangle,
-          accentColor: "red",
-        },
-        {
-          title: "Completed",
-          value: totals.completed,
-          subtitle: "Closed in view",
-          icon: HiOutlineSparkles,
-          accentColor: "green",
-        },
-      ]}
-      summary={{
-        left: dateRangeLabel ? `Range: ${dateRangeLabel}` : "Use the quick date selector in the table header.",
-        right: `Selected bookings: ${selectedRows.length}${backendStatusMessage ? ` | ${backendStatusMessage}` : ""}`,
-      }}
-      tableProps={{
-        title: "Bookings",
-        breadCrumbTitle: "Operations / Bookings Table",
-        data: bookingRows,
-        columns,
-        filters,
-        sortOptions,
-        searchable: true,
-        showSerialNumber: true,
-        initialHiddenColumns: [],
-        defaultActiveFilters: defaultFilters,
-        rowsPerPageOptions: [5, 8, 15],
-        defaultRowsPerPage: 8,
-        defaultSortColumn: "startTime",
-        sortStatus,
-        onSort: setSortStatus,
-        actions,
-        onRowSelect: (ids) => setSelectedRows(ids),
-        onDateRangeSelect: (range) => setDateRangeLabel(range),
-        className: "border border-slate-200",
-      }}
-    />
+    <DashboardContainer className="space-y-6 pb-10">
+      <TitleBreadCrumbs
+        title={listingTitle}
+        breadCrumbTitle={breadcrumb}
+        subtitle="Monitor and manage your service schedules"
+      />
+
+     
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <BookingStatCard
+          title="Total Bookings"
+          value={bookingRows.length}
+          subtitle="+12% vs last month"
+          icon={HiOutlineCalendarDays}
+          accent="blue"
+        />
+        <BookingStatCard
+          title="Confirmed"
+          value={totals.confirmed}
+          subtitle="66% of total"
+          icon={HiOutlineCheckCircle}
+          accent="green"
+        />
+        <BookingStatCard
+          title="Pending Action"
+          value={totals.pending + totals.refundRequested}
+          subtitle="Requires action"
+          icon={HiOutlineClock}
+          accent="amber"
+        />
+        <BookingStatCard
+          title="Completed"
+          value={totals.completed}
+          subtitle="31% of total"
+          icon={HiOutlineSparkles}
+          accent="purple"
+        />
+      </div>
+
+      <DataTable
+        title={listingTitle}
+        breadCrumbTitle={breadcrumb}
+        data={bookingRows}
+        columns={columns}
+        filters={filters}
+        sortOptions={sortOptions}
+        searchable
+        searchPlaceholder="Search order ID or customer..."
+        showSerialNumber
+        selectable={false}
+        initialHiddenColumns={[]}
+        defaultActiveFilters={defaultFilters}
+        rowsPerPageOptions={[5, 8, 15]}
+        defaultRowsPerPage={8}
+        defaultSortColumn="startTime"
+        sortStatus={sortStatus}
+        onSort={setSortStatus}
+        onDateRangeSelect={(range) => setDateRangeLabel(range)}
+        className="border border-slate-200"
+        showHeaderTitle={false}
+        customRowRenderer={(row, index) => renderBookingRow(row as BookingRow, index)}
+      />
+    </DashboardContainer>
   );
 }

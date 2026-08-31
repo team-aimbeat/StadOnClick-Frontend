@@ -90,20 +90,29 @@ export default function FooterSectionsStudio() {
   };
 
   return (
-    <div className="space-y-6">
-      <TitleBreadCrumbs title="Footer Sections Studio" breadCrumbTitle="Admin / Layout Studio / Footer Sections" />
+    <div className="space-y-6 bg-[#F5F7FB] p-4 sm:p-6 lg:p-8">
+      <TitleBreadCrumbs title="Footer & Brand Studio" breadCrumbTitle="Admin / Layout Studio / Footer Sections" />
 
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Brand & Social</h2>
-            <p className="text-xs text-slate-500">App promo copy, footer identity, and social profiles.</p>
-          </div>
-          <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-            {socialFilled}/{footer.socialLinks.length} social links filled
-          </p>
-        </div>
-        <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 md:grid-cols-2">
+      <div className="grid items-start gap-6 xl:grid-cols-[0.88fr_1.12fr] 2xl:grid-cols-[0.84fr_1.16fr]">
+        <div className="space-y-6">
+          <section className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#4F7DF0]">
+                  Brand & Social
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+                  Brand & Social
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                  Manage the footer identity, app promo copy, and social profiles.
+                </p>
+              </div>
+              <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                {socialFilled}/{footer.socialLinks.length} social links filled
+              </p>
+            </div>
+        <div className="grid gap-3 rounded-[22px] border border-slate-200 bg-slate-50 p-3 md:grid-cols-2">
           <label className="space-y-1">
             <span className="text-xs font-medium text-slate-600">QR Label</span>
             <input
@@ -215,21 +224,28 @@ export default function FooterSectionsStudio() {
             </div>
           ))}
         </div>
-      </section>
+          </section>
 
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Links & Legal</h2>
-            <p className="text-xs text-slate-500">Navigation columns, quick links, and legal footer links.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-700">
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Nav links: {navLinksCount}</span>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Quick: {quickCount}</span>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Legal: {legalCount}</span>
-          </div>
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
+          <section className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#4F7DF0]">
+                  Navigation Columns
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+                  Navigation Columns
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                  Organize the footer link groups, quick links, and legal items.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-700">
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Nav links: {navLinksCount}</span>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Quick: {quickCount}</span>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">Legal: {legalCount}</span>
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
           {footer.columns.map((column, colIndex) => (
             <div key={`column-${colIndex}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Column {colIndex + 1}</p>
@@ -440,7 +456,9 @@ export default function FooterSectionsStudio() {
         </div>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      </div>
+
+      <section className="sticky top-6 space-y-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Live Preview</h2>
@@ -451,8 +469,8 @@ export default function FooterSectionsStudio() {
           </span>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="grid gap-8 border-b border-slate-200 px-5 py-6 lg:grid-cols-[1.6fr,1fr]">
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="grid gap-8 border-b border-slate-200 px-5 py-6 lg:grid-cols-[1.45fr,1fr]">
             <div className="space-y-4">
               <div className="flex items-start gap-4">
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-slate-50 text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
@@ -544,13 +562,13 @@ export default function FooterSectionsStudio() {
           </div>
         </div>
       </section>
-
       <section className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-md backdrop-blur">
         <p className="text-xs text-slate-500">Changes apply to the live website footer after saving.</p>
         <Button onClick={save} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save footer changes"}
         </Button>
       </section>
+    </div>
     </div>
   );
 }

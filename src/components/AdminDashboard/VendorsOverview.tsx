@@ -42,28 +42,35 @@ const VendorCategoryItem = ({ category }: { category: VendorCategory }) => {
   const { color, Icon: TrendIcon } = trendConfig[trend];
 
   return (
-  <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
-  <div className="flex items-start justify-between">
-    <div>
-      <p className="text-sm font-medium text-slate-700">{name}</p>
-      <div className="mt-2">
-        <div className="text-3xl font-semibold text-slate-900">{count}</div>
-        <div className="text-xs text-slate-500">Vendors</div>
+    <div className="rounded-2xl bg-white/10 px-4 py-3 text-white/95 shadow-[0_10px_24px_-18px_rgba(0,0,0,0.45)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{name}</p>
+          <div className="mt-1 flex items-end gap-2">
+            <div className="text-xl font-semibold leading-none">{count}</div>
+            <div className="pb-[1px] text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
+              vendors
+            </div>
+          </div>
+        </div>
+
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white/90">
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+
+      <div className="mt-3 h-1.5 rounded-full bg-white/15">
+        <div
+          className="h-full rounded-full bg-white"
+          style={{ width: `${Math.max(12, Math.min(100, (count / 380) * 100))}%` }}
+        />
+      </div>
+
+      <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${color}`}>
+        <TrendIcon className="h-3.5 w-3.5" />
+        <span>{delta} vs last month</span>
       </div>
     </div>
-
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700">
-      <Icon className="h-5 w-5" />
-    </div>
-  </div>
-
-  <div className={`mt-3 flex items-center gap-1 text-xs font-medium ${color}`}>
-    <TrendIcon className="h-3.5 w-3.5" />
-    <span>{delta} vs last month</span>
-  </div>
-</div>
-
-
   );
 };
 
@@ -74,21 +81,30 @@ type VendorsOverviewProps = {
 
 const VendorsOverview = ({ categories = defaultVendorCategories }: VendorsOverviewProps) => {
   const totalVendors = categories.reduce((sum, item) => sum + item.count, 0);
+  const topCategories = [...categories].sort((a, b) => b.count - a.count).slice(0, 2);
+  const topCategory = topCategories[0];
+  const secondCategory = topCategories[1];
 
   return (
-    <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5">
-      <div className="mb-4 flex items-start justify-between">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-[#4F7DFF] p-5 text-white ">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900">Vendors Overview</h3>
-          <p className="text-xs text-slate-500">Distribution by category</p>
+          <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/70">
+            Top Selling
+          </div>
+          <h3 className="mt-1 text-xl font-semibold leading-tight text-white">
+            Top Selling Vendor Services
+          </h3>
+      
         </div>
-        <span className="text-xs font-semibold text-slate-600">Total vendors: {totalVendors}</span>
+        <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+          {totalVendors.toLocaleString()} total
+        </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {categories.map((category) => (
-          <VendorCategoryItem key={category.name} category={category} />
-        ))}
+      <div className="mt-auto space-y-3">
+        {topCategory ? <VendorCategoryItem category={topCategory} /> : null}
+        {secondCategory ? <VendorCategoryItem category={secondCategory} /> : null}
       </div>
     </div>
   );

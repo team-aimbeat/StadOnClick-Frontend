@@ -31,6 +31,21 @@ const HeaderSkeleton = () => {
   );
 };
 
+const WelcomeBannerSkeleton = () => {
+  return (
+    <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-[#f2efe8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <Skeleton className={`h-10 w-full max-w-[520px] ${shimmer}`} />
+      <div className="flex items-center gap-3 self-start sm:self-auto">
+        <Skeleton className={`h-14 w-14 rounded-full ${shimmer}`} />
+        <div className="space-y-2">
+          <Skeleton className={`h-4 w-24 ${shimmer}`} />
+          <Skeleton className={`h-3 w-20 ${shimmer}`} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const LeadPlanSubscribersSkeleton = () => {
   return (
     <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5">
@@ -164,6 +179,7 @@ const AdminDashboardSkeleton = () => {
     <div className="min-h-screen pb-12 text-slate-900">
       <DashboardContainer className="space-y-6">
         <HeaderSkeleton />
+        <WelcomeBannerSkeleton />
 
         <DashboardSection>
           <DashboardGrid columns="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">

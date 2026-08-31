@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { CalendarClock, Star } from "lucide-react";
+import { Banknote, Ban, ClipboardList, Eye, PencilLine, Users2 } from "lucide-react";
 import toast from "react-hot-toast";
-import {
-  HiOutlineCheckCircle,
-  HiOutlineClock,
-  HiOutlineExclamationTriangle,
-  HiOutlineSparkles,
-} from "react-icons/hi2";
+import type { LucideIcon } from "lucide-react";
 
 import type {
   ColumnConfig,
@@ -22,7 +17,6 @@ import { ListingPage } from "@/components/shared/ListingPage";
 
 import {
   useListAllVendorsQuery,
-  useUpdateVendorStatusMutation,
 } from "@/features/admin/vendors/api/vendorsApi";
 import { useRequestVendorLoginLinkMutation } from "@/features/auth/api/authApi";
 
@@ -60,6 +54,96 @@ const money = new Intl.NumberFormat("en-SE", {
   currency: "SEK",
   maximumFractionDigits: 0,
 });
+
+const compactNumber = new Intl.NumberFormat("en-SE", {
+  maximumFractionDigits: 0,
+});
+
+type VendorMetricTone = "green" | "amber" | "slate" | "blue";
+
+type VendorMetricCardProps = {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: LucideIcon;
+  tone: VendorMetricTone;
+  badge?: string;
+  badgePlacement?: "inline" | "top-right";
+};
+
+const vendorMetricStyles: Record<
+  VendorMetricTone,
+  {
+    card: string;
+    icon: string;
+    badge: string;
+  }
+> = {
+  green: {
+    card: "border-slate-100 bg-white",
+    icon: "bg-[#eef3ff] text-[#3554e0]",
+    badge: "bg-emerald-50 text-emerald-600",
+  },
+  amber: {
+    card: "border-slate-100 bg-white",
+    icon: "bg-[#fff3f1] text-[#e25353]",
+    badge: "bg-[#f7e0de] text-[#d84c48]",
+  },
+  slate: {
+    card: "border-slate-100 bg-white",
+    icon: "bg-slate-100 text-slate-500",
+    badge: "bg-slate-100 text-slate-500",
+  },
+  blue: {
+    card: "border-slate-100 bg-white",
+    icon: "bg-[#eef0ff] text-[#5a57e8]",
+    badge: "bg-slate-100 text-slate-500",
+  },
+};
+
+const VendorMetricCard = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  tone,
+  badge,
+  badgePlacement = "top-right",
+}: VendorMetricCardProps) => {
+  const styles = vendorMetricStyles[tone];
+  const displayValue = typeof value === "number" ? compactNumber.format(value) : value;
+
+  return (
+    <div className="min-h-[176px] rounded-[24px] border border-slate-100 bg-white p-5 ">
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${styles.icon}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        {badge && badgePlacement === "top-right" ? (
+          <span className={`inline-flex min-h-8 items-center rounded-md px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${styles.badge}`}>
+            {badge}
+          </span>
+        ) : null}
+      </div>
+
+      {badge && badgePlacement === "inline" ? (
+        <div className="mt-1">
+          <span className={`inline-flex min-h-8 items-center rounded-md px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${styles.badge}`}>
+            {badge}
+          </span>
+        </div>
+      ) : null}
+
+      <div className="mt-5 space-y-2">
+        <p className="text-[15px] font-semibold tracking-[-0.02em] text-slate-600">{title}</p>
+        <p className="text-[34px] font-semibold leading-none tracking-[-0.07em] text-slate-950">
+          {displayValue}
+        </p>
+        <p className="text-xs font-medium text-slate-500">{subtitle}</p>
+      </div>
+    </div>
+  );
+};
 
 const vendorStatusTone: Record<
   VendorRow["status"],
@@ -151,9 +235,7 @@ export default function VendorsPage({
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [dateRangeLabel, setDateRangeLabel] = useState<string>("");
-  const [updatingVendorId, setUpdatingVendorId] = useState<string | null>(null);
   const [requestingLinkVendorId, setRequestingLinkVendorId] = useState<string | null>(null);
-  const [updateVendorStatus] = useUpdateVendorStatusMutation();
   const [requestVendorLoginLink] = useRequestVendorLoginLinkMutation();
 
   const defaultFilters = useMemo(
@@ -213,21 +295,6 @@ export default function VendorsPage({
 
     return { active, pending, suspended, rejected, grossRevenue };
   }, [vendorRows]);
-
-  const handleVendorStatusChange = useCallback(
-    async (vendorId: string, status: VendorRow["status"]) => {
-      try {
-        setUpdatingVendorId(vendorId);
-        await updateVendorStatus({ id: vendorId, status }).unwrap();
-        toast.success(`Vendor status updated to ${status.replace("_", " ")}`);
-      } catch (error: any) {
-        toast.error(error?.data?.message || "Failed to update vendor status");
-      } finally {
-        setUpdatingVendorId(null);
-      }
-    },
-    [updateVendorStatus],
-  );
 
   const handleOpenVendorDashboard = useCallback(
     async (vendorId: string, email?: string) => {
@@ -347,97 +414,59 @@ export default function VendorsPage({
  
       {
         key: "visitorCount",
-        title: "Visitors",
+        title: "Visitors (7D)",
         sortable: true,
-        render: (value: any) => (
-          <span className="font-semibold text-slate-900">{Number(value ?? 0)}</span>
-        ),
-      },
-      {
-        key: "totalRevenue",
-        title: "Revenue",
-        sortable: true,
-        render: (value: any) => (
-          <span className="font-semibold text-slate-900">
-            {money.format(Number(value ?? 0))}
-          </span>
-        ),
-      },
-      {
-        key: "ratingAvg",
-        title: "Rating",
-        sortable: true,
-        render: (_: any, row: RowData) => {
-          const r = row as VendorRow;
+        render: (value: any) => {
+          const visitors = Number(value ?? 0);
 
           return (
-            <div className="flex items-center gap-1 text-sm font-semibold text-slate-800">
-              <Star className="h-4 w-4 text-slate-500" />
-              {r.ratingCount > 0 ? r.ratingAvg.toFixed(1) : "-"}
-              <span className="text-xs font-medium text-slate-500">({r.ratingCount})</span>
+            <div className="space-y-1">
+              <span className="block font-semibold text-slate-900">{compactNumber.format(visitors)}</span>
+              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full rounded-full bg-[#3554e0]"
+                  style={{ width: `${Math.min(100, Math.max(18, visitors / 45))}%` }}
+                />
+              </div>
             </div>
           );
         },
       },
       {
-        key: "createdAt",
-        title: "Created",
+        key: "totalRevenue",
+        title: "Revenue",
         sortable: true,
-        render: (value: any) => (
-          <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
-            <CalendarClock className="h-4 w-4 text-slate-500" />
-            {value
-              ? new Date(String(value)).toLocaleString("en-SE", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "-"}
-          </div>
-        ),
+        render: (value: any) => {
+          const revenue = Number(value ?? 0);
+
+          return (
+            <div className="space-y-1">
+              <span className="block font-semibold text-slate-900">{compactNumber.format(revenue)}</span>
+              <span className="block text-xs font-medium text-slate-500">kr</span>
+            </div>
+          );
+        },
       },
       {
         key: "actions",
         title: "Actions",
         render: (_: any, row: RowData) => {
           const r = row as VendorRow;
-          const isUpdating = updatingVendorId === r.id;
           const isRequestingLink = requestingLinkVendorId === r.id;
 
           return (
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
-              <select
-                value={r.status}
-                disabled={isUpdating}
-                onChange={(event) =>
-                  handleVendorStatusChange(
-                    r.id,
-                    event.target.value as VendorRow["status"],
-                  )
-                }
-                className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700"
-              >
-                <option value="PENDING_REVIEW">PENDING_REVIEW</option>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="SUSPENDED">SUSPENDED</option>
-                <option value="REJECTED">REJECTED</option>
-              </select>
-
-              <NavLink
-                to={`/admin/vendors/${r.id}/profile`}
-                className="text-blue-600 hover:text-blue-500"
-              >
-                Profile
-              </NavLink>
+            <div className="flex items-center gap-2">
+        
 
               {r.loginEmail ? (
                 <button
                   type="button"
                   onClick={() => handleOpenVendorDashboard(r.id, r.loginEmail)}
                   disabled={isRequestingLink}
-                  className="text-emerald-700 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-label="Open vendor dashboard"
                 >
-                  {isRequestingLink ? "Opening..." : "Vendor Dashboard"}
+                  <PencilLine className="h-4 w-4" />
                 </button>
               ) : null}
             </div>
@@ -445,7 +474,7 @@ export default function VendorsPage({
         },
       },
     ],
-    [handleOpenVendorDashboard, handleVendorStatusChange, requestingLinkVendorId, updatingVendorId],
+    [handleOpenVendorDashboard, requestingLinkVendorId],
   );
 
   const filters = useMemo<FilterConfig[]>(
@@ -504,54 +533,80 @@ export default function VendorsPage({
     return "Use the quick date selector in the table header.";
   }, [isLoading, isError, isFetching, dateRangeLabel]);
 
+  const metricCards = useMemo(
+    () => [
+      {
+        title: "Active Vendors",
+        value: totals.active,
+        subtitle: "Live on marketplace",
+        icon: Users2,
+        tone: "green" as const,
+        badge: "+12%",
+        badgePlacement: "top-right" as const,
+      },
+      {
+        title: "Pending Approval",
+        value: totals.pending,
+        subtitle: "Awaiting review",
+        icon: ClipboardList,
+        tone: "amber" as const,
+        badge: "Attention Required",
+        badgePlacement: "inline" as const,
+      },
+      {
+        title: "Suspended",
+        value: totals.suspended,
+        subtitle: "Requires attention",
+        icon: Ban,
+        tone: "slate" as const,
+      },
+      {
+        title: "Total Revenue",
+        value: `${compactNumber.format(Math.round(totals.grossRevenue))} kr`,
+        subtitle: "Gross vendor revenue",
+        icon: Banknote,
+        tone: "blue" as const,
+        badge: "MTD",
+        badgePlacement: "top-right" as const,
+      },
+    ],
+    [totals.active, totals.grossRevenue, totals.pending, totals.suspended],
+  );
+
   return (
     <ListingPage
       title={listingTitle}
       breadCrumbTitle={breadcrumb}
       description="Review vendors, track KYC status, and monitor revenue performance."
-      stats={[
-        {
-          title: "Active",
-          value: totals.active,
-          subtitle: "Live on marketplace",
-          icon: HiOutlineCheckCircle,
-          accentColor: "green",
-        },
-        {
-          title: "Pending",
-          value: totals.pending,
-          subtitle: "Awaiting approval",
-          icon: HiOutlineClock,
-          accentColor: "yellow",
-        },
-        {
-          title: "Suspended",
-          value: totals.suspended,
-          subtitle: "Requires attention",
-          icon: HiOutlineExclamationTriangle,
-          accentColor: "red",
-        },
-        {
-          title: "Revenue",
-          value: money.format(totals.grossRevenue),
-          subtitle: "Gross vendor revenue",
-          icon: HiOutlineSparkles,
-          accentColor: "blue",
-        },
-      ]}
-      summary={{
-        left: summaryLeft,
-        right: `Selected vendors: ${selectedRows.length}`,
-      }}
+      stats={[]}
+      headerSlot={
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {metricCards.map((card) => (
+            <VendorMetricCard key={card.title} {...card} />
+          ))}
+        </div>
+      }
+      summarySlot={
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+          <span className="font-semibold text-slate-700">{summaryLeft}</span>
+          <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+            Selected vendors: {selectedRows.length}
+          </span>
+        </div>
+      }
       tableProps={{
         title: "Vendors",
-        breadCrumbTitle: "Admin / Vendors Table",
+        breadCrumbTitle: "Manage and review your partner ecosystem.",
         data: vendorRows,
         columns,
         filters,
         sortOptions,
         searchable: true,
-        showSerialNumber: true,
+        variant: "vendor",
+        showSerialNumber: false,
+        selectable: false,
+        showDefaultDateControl: false,
+        showFilterButton: false,
         initialHiddenColumns: [],
         defaultActiveFilters: defaultFilters,
         rowsPerPageOptions: [5, 8, 15],
@@ -561,7 +616,7 @@ export default function VendorsPage({
         onSort: setSortStatus,
         onRowSelect: (ids) => setSelectedRows(ids),
         onDateRangeSelect: (range) => setDateRangeLabel(range),
-        className: "border border-slate-200",
+        className: "border border-slate-200 rounded-[24px] shadow-[0_16px_40px_-28px_rgba(15,23,42,0.35)]",
       }}
     />
   );

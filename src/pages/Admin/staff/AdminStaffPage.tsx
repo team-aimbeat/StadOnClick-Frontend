@@ -14,6 +14,7 @@ import type {
   StaffRole,
   StaffStatus,
   StaffUser,
+  StaffUserRole,
 } from "@/features/admin/staff/adminStaff.types";
 import { normalizeApiError } from "@/shared/utils/normalizeApiError";
 
@@ -167,7 +168,7 @@ export default function AdminStaffPage() {
     id: string;
     name: string;
     email: string;
-    roles: StaffRole[];
+    roles: StaffUserRole[];
     status: StaffStatus;
     createdAt: string;
     raw: StaffUser;
@@ -207,16 +208,30 @@ export default function AdminStaffPage() {
         title: "Roles",
         render: (_value, row) => {
           const r = row as StaffRow;
+          const roleMeta: Record<StaffUserRole, { label: string; className: string }> = {
+            ADMIN: {
+              label: "Admin",
+              className: "bg-amber-50 text-amber-700 border-amber-200",
+            },
+            SUPPORT_ADMIN: {
+              label: "Support Admin",
+              className: "bg-sky-50 text-sky-700 border-sky-200",
+            },
+            MODERATOR: {
+              label: "Moderator",
+              className: "bg-indigo-50 text-indigo-700 border-indigo-200",
+            },
+          };
           return (
             <div className="flex flex-wrap gap-2">
               {r.roles.map((role) => (
                 <Badge
                   key={role}
                   variant="outline"
-                  className={`border ${role === "SUPPORT_ADMIN" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-indigo-50 text-indigo-700 border-indigo-200"}`}
+                  className={`border ${roleMeta[role].className}`}
                 >
                   <ShieldCheck className="h-3 w-3" />
-                  {role === "SUPPORT_ADMIN" ? "Support Admin" : "Moderator"}
+                  {roleMeta[role].label}
                 </Badge>
               ))}
             </div>
@@ -278,6 +293,7 @@ export default function AdminStaffPage() {
           const r = row as StaffRow;
           const isRoleLoading = roleUpdatingId === r.id;
           const isStatusLoading = statusUpdatingId === r.id;
+          const isAdminAccount = r.roles.includes("ADMIN");
           return (
             <div className="flex justify-end">
               <DropdownMenu>
@@ -294,7 +310,7 @@ export default function AdminStaffPage() {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Quick actions</DropdownMenuLabel>
                   <DropdownMenuItem
-                    disabled={isStatusLoading}
+                    disabled={isStatusLoading || isAdminAccount}
                     onClick={() =>
                       r.status === "ACTIVE" ? handleRequestDisable(r.raw) : handleEnable(r.raw)
                     }
@@ -303,17 +319,22 @@ export default function AdminStaffPage() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    disabled={isRoleLoading}
+                    disabled={isRoleLoading || isAdminAccount}
                     onClick={() => handleRoleChange(r.raw, "SUPPORT_ADMIN")}
                   >
-                    Set role → Support Admin
+                    Set role to Support Admin
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    disabled={isRoleLoading}
+                    disabled={isRoleLoading || isAdminAccount}
                     onClick={() => handleRoleChange(r.raw, "MODERATOR")}
                   >
-                    Set role → Moderator
+                    Set role to Moderator
                   </DropdownMenuItem>
+                  {isAdminAccount ? (
+                    <DropdownMenuItem disabled className="text-xs text-slate-500">
+                      Admin accounts cannot be modified here
+                    </DropdownMenuItem>
+                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

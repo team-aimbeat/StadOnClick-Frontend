@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { Clock3, ReceiptText, UserCheck, Users2 } from "lucide-react";
 import type { ColumnConfig, DataTableSortStatus, FilterConfig, RowData } from "@/components/shared/DataTable";
 import { ListingPage } from "@/components/shared/ListingPage";
+import PortalStatCard from "@/components/shared/PortalStatCard";
 import { useListVendorSubscriptionsQuery } from "@/features/adminLeads/api/adminLeadPlans.api";
 
 type SubscriptionTableRow = RowData & {
@@ -88,10 +90,10 @@ export default function VendorSubscriptionsPage() {
     const expired = rows.filter((row) => row.status === "EXPIRED").length;
     const totalLeadsPerDay = rows.reduce((sum, row) => sum + row.leadsPerDay, 0);
     return [
-      { title: "Total Subscriptions", value: total, subtitle: "All vendors", accentColor: "cyan" as const },
-      { title: "Active", value: active, subtitle: "Currently running", accentColor: "green" as const },
-      { title: "Expired", value: expired, subtitle: "Need renewal", accentColor: "yellow" as const },
-      { title: "Leads / Day", value: totalLeadsPerDay, subtitle: "Across active plans", accentColor: "purple" as const },
+      { title: "Total Subscriptions", value: total, subtitle: "All vendors", icon: Users2, tone: "blue" as const },
+      { title: "Active", value: active, subtitle: "Currently running", icon: UserCheck, tone: "green" as const },
+      { title: "Expired", value: expired, subtitle: "Need renewal", icon: Clock3, tone: "amber" as const },
+      { title: "Leads / Day", value: totalLeadsPerDay, subtitle: "Across active plans", icon: ReceiptText, tone: "purple" as const },
     ];
   }, [rows]);
 
@@ -177,12 +179,26 @@ export default function VendorSubscriptionsPage() {
   );
 
   return (
-    <ListingPage
-      title="Vendor Subscriptions"
-      breadCrumbTitle="Admin / Leads & Monetization / Vendor Subscriptions"
-      description="List of vendors who purchased lead subscription plans."
-      stats={stats}
-      summary={{
+      <ListingPage
+        title="Vendor Subscriptions"
+        breadCrumbTitle="Admin / Leads & Monetization / Vendor Subscriptions"
+        description="List of vendors who purchased lead subscription plans."
+        stats={[]}
+        statsSlot={
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {stats.map((stat) => (
+              <PortalStatCard
+                key={stat.title}
+                title={stat.title}
+                value={stat.value}
+                subtitle={stat.subtitle}
+                icon={stat.icon}
+                tone={stat.tone}
+              />
+            ))}
+          </div>
+        }
+        summary={{
         left: "Track plan adoption and renewal status.",
         right: `Showing ${rows.length} subscriptions${isLoading || isFetching ? " | syncing..." : ""}`,
       }}

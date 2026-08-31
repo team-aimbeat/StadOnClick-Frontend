@@ -1,18 +1,16 @@
-import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Star } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Heart, MapPin, Star } from "lucide-react"
+import { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { Service } from "./types"
 import { useAppSelector } from "@/app/hooks"
+import { Service } from "./types"
 import { useGetServiceOfferingsQuery } from "@/services/vendorOfferingsApi"
-import { useGetVendorServicesQuery } from "@/services/vendorServicesApi"
-import {
-  useAddWishlistItemMutation,
-  useGetWishlistQuery,
-  useRemoveWishlistItemMutation,
-} from "@/services/wishlistApi"
+import { useGetServiceReviewsQuery } from "@/services/serviceReviewsApi"
+import { useAddWishlistItemMutation, useGetWishlistQuery, useRemoveWishlistItemMutation } from "@/services/wishlistApi"
+import { getEffectivePrice } from "@/utils/deals"
 
 type ServiceCardProps = {
   service: Service
+  canAccessHotDeals?: boolean
   onViewDetails: (service: Service) => void
   onEnquiry: (service: Service) => void
 }
@@ -24,169 +22,145 @@ export default function ServiceCard({
 }: ServiceCardProps) {
   const navigate = useNavigate()
   const user = useAppSelector((state) => state.auth.user)
-  const { data: wishlistItems = [] } = useGetWishlistQuery(undefined, {
-    skip: !user,
-  })
+  const { data: wishlistItems = [] } = useGetWishlistQuery(undefined, { skip: !user })
   const [addWishlistItem] = useAddWishlistItemMutation()
   const [removeWishlistItem] = useRemoveWishlistItemMutation()
   const { data: fetchedOfferings = [] } = useGetServiceOfferingsQuery(service.id)
-  const { data: vendorServices = [] } = useGetVendorServicesQuery(service.vendorId ?? "", {
-    skip: !service.vendorId,
-  })
+  const { data: fetchedReviews = [] } = useGetServiceReviewsQuery(service.id)
+
   const wishlisted = wishlistItems.some(
     (item) => item.serviceId === service.id || item.id === service.id,
   )
 
-  const liveOfferingDetails = useMemo(() => {
-    if (!fetchedOfferings.length) return []
-    return fetchedOfferings.slice(0, 3).map((offering) => ({
-      title: offering.name,
-      subtitle: offering.description ?? undefined,
-      duration: undefined,
-      price: new Intl.NumberFormat("sv-SE", {
-        style: "currency",
-        currency: offering.currency || "SEK",
-        maximumFractionDigits: 0,
-      }).format(Number(offering.salePrice ?? offering.basePrice ?? 0)),
-    }))
-  }, [fetchedOfferings])
-
-  const vendorServiceDetails = useMemo(() => {
-    const current = vendorServices.find((item) => item.id === service.id)
-    const offerings = current?.offerings ?? []
-    return offerings.slice(0, 3).map((offering) => ({
-      title: offering.name,
-      subtitle: offering.description ?? undefined,
-      duration: undefined,
-      price: new Intl.NumberFormat("sv-SE", {
-        style: "currency",
-        currency: offering.currency || "SEK",
-        maximumFractionDigits: 0,
-      }).format(Number(offering.salePrice ?? offering.basePrice ?? 0)),
-    }))
-  }, [service.id, vendorServices])
-
-  const displayRating = useMemo(() => {
-    const current = vendorServices.find((item) => item.id === service.id)
-    const ratings = (current?.reviews ?? [])
+  const image = service.images?.[0] ?? service.image
+  const primaryDetail = service.details[0]
+  const rating = useMemo(() => {
+    const liveRatings = fetchedReviews
       .map((review) => Number(review.rating))
-      .filter((rating) => Number.isFinite(rating) && rating > 0)
+      .filter((value) => Number.isFinite(value) && value > 0)
 
-    if (ratings.length > 0) {
-      const total = ratings.reduce((sum, rating) => sum + rating, 0)
-      return total / ratings.length
+    if (liveRatings.length > 0) {
+      const total = liveRatings.reduce((sum, value) => sum + value, 0)
+      return total / liveRatings.length
     }
 
-    const fallbackRating = Number(service.rating ?? 0)
-    return Number.isFinite(fallbackRating) ? fallbackRating : 0
-  }, [service.id, service.rating, vendorServices])
+    const fallback = Number(service.rating ?? 0)
+    return Number.isFinite(fallback) ? fallback : 0
+  }, [fetchedReviews, service.rating])
+  const reviewCount = fetchedReviews.length > 0 ? fetchedReviews.length : Number(service.reviews ?? 0)
 
-  const detailsToRender = useMemo(() => {
-    const merged = [...liveOfferingDetails, ...vendorServiceDetails, ...service.details]
-      .filter((item) => {
-        const title = (item.title ?? "").trim().toLowerCase()
-        const price = (item.price ?? "").trim().toLowerCase()
-        return !(title === "salon" && price === "price on request")
+  const priceLabel = useMemo(() => {
+    const liveOfferings = fetchedOfferings
+      .map((offering) => {
+        const basePrice = Number(offering.basePrice ?? 0)
+        const salePrice = Number(offering.salePrice ?? 0)
+        const amount = Number(
+          getEffectivePrice({
+            basePrice,
+            salePrice,
+            dealStartTime: offering.dealStartTime ?? null,
+            dealEndTime: offering.dealEndTime ?? null,
+            effectivePrice: offering.effectivePrice == null ? undefined : Number(offering.effectivePrice),
+            isDealActive: offering.isDealActive,
+          }),
+        )
+
+        return {
+          amount,
+          currency: offering.currency ?? "SEK",
+        }
       })
-      .filter((item, index, arr) => {
-        const key = `${item.title}|${item.price}`.toLowerCase()
-        return arr.findIndex((candidate) =>
-          `${candidate.title}|${candidate.price}`.toLowerCase() === key,
-        ) === index
-      })
+      .filter((entry) => Number.isFinite(entry.amount) && entry.amount > 0)
 
-    if (merged.length > 0) return merged.slice(0, 3)
-    return service.details
-  }, [liveOfferingDetails, service.details, vendorServiceDetails])
+    if (liveOfferings.length > 0) {
+      const lowestLiveOffering = liveOfferings.reduce((current, entry) =>
+        entry.amount < current.amount ? entry : current,
+      )
 
-  const images = useMemo(() => {
-    const list =
-      service.images && service.images.length > 0 ? service.images : [service.image]
-    return list.filter(Boolean)
-  }, [service.image, service.images])
-  const imagesKey = useMemo(() => images.join("|"), [images])
-
-  const loopImages = useMemo(() => {
-    if (images.length <= 1) return images
-    return [images[images.length - 1]!, ...images, images[0]!]
-  }, [images])
-
-  const [activeImageIndex, setActiveImageIndex] = useState(images.length > 1 ? 1 : 0)
-  const [transitionEnabled, setTransitionEnabled] = useState(true)
-  const isAnimatingRef = useRef(false)
-  const snapRafRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    setTransitionEnabled(false)
-    setActiveImageIndex(images.length > 1 ? 1 : 0)
-    if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
-    snapRafRef.current = window.requestAnimationFrame(() => {
-      setTransitionEnabled(true)
-      isAnimatingRef.current = false
-    })
-
-    return () => {
-      if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
-      snapRafRef.current = null
-    }
-  }, [imagesKey])
-
-  const showPrev = () => {
-    if (images.length <= 1) return
-    if (isAnimatingRef.current) return
-    isAnimatingRef.current = true
-    setActiveImageIndex((prev) => prev - 1)
-  }
-
-  const showNext = () => {
-    if (images.length <= 1) return
-    if (isAnimatingRef.current) return
-    isAnimatingRef.current = true
-    setActiveImageIndex((prev) => prev + 1)
-  }
-
-  const handleCarouselTransitionEnd = () => {
-    if (images.length <= 1) return
-
-    // [cloneLast, ...realImages, cloneFirst]
-    if (activeImageIndex === 0) {
-      setTransitionEnabled(false)
-      setActiveImageIndex(images.length)
-      if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
-      snapRafRef.current = window.requestAnimationFrame(() => {
-        setTransitionEnabled(true)
-        isAnimatingRef.current = false
-      })
-      return
+      return new Intl.NumberFormat(
+        lowestLiveOffering.currency === "INR" ? "en-IN" : "en-US",
+        {
+          style: "currency",
+          currency: lowestLiveOffering.currency,
+          currencyDisplay: lowestLiveOffering.currency === "SEK" ? "code" : "symbol",
+          maximumFractionDigits: 0,
+        },
+      )
+        .format(lowestLiveOffering.amount)
+        .replace(/\u00A0/g, " ")
     }
 
-    if (activeImageIndex === images.length + 1) {
-      setTransitionEnabled(false)
-      setActiveImageIndex(1)
-      if (snapRafRef.current != null) window.cancelAnimationFrame(snapRafRef.current)
-      snapRafRef.current = window.requestAnimationFrame(() => {
-        setTransitionEnabled(true)
-        isAnimatingRef.current = false
+    const prices = service.details
+      .map((detail) => detail.price?.trim() ?? "")
+      .filter(Boolean)
+
+    if (!prices.length) return "Price on request"
+
+    const parsedPrices = prices
+      .map((price) => {
+        const normalized = price.replace(/\s+/g, " ")
+        const currency = normalized.includes("kr") || normalized.includes("SEK")
+          ? "SEK"
+          : normalized.includes("₹") || normalized.includes("INR")
+            ? "INR"
+            : null
+        const numericMatch = normalized.replace(/[^\d.,]/g, "").match(/\d[\d.,]*/)
+        const amount = numericMatch ? Number(numericMatch[0].replace(/,/g, "")) : Number.NaN
+
+        return { price: normalized, currency, amount }
       })
-      return
+      .filter((entry) => Number.isFinite(entry.amount))
+
+    if (!parsedPrices.length) return prices[0]!
+
+    const lowest = parsedPrices.reduce((current, entry) =>
+      entry.amount < current.amount ? entry : current,
+    )
+
+    if (lowest.currency === "SEK") {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "SEK",
+        currencyDisplay: "code",
+        maximumFractionDigits: 0,
+      })
+        .format(lowest.amount)
+        .replace(/\u00A0/g, " ")
     }
 
-    isAnimatingRef.current = false
-  }
+    if (lowest.currency === "INR") {
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      }).format(lowest.amount)
+    }
+
+    return lowest.price
+  }, [fetchedOfferings, service.details])
 
   return (
-    <article className="flex min-h-155 flex-col overflow-hidden rounded-lg bg-white transition shadow-md w-81.25">
-      <div className="relative h-50">
+    <article className="group flex min-h-full flex-col overflow-hidden  border border-[#DCE6F5] bg-[#FFFFFF] transition hover:-translate-y-0.5">
+      <div className="relative h-55 overflow-hidden">
+        <img
+          src={image}
+          alt={service.title}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/22 via-transparent to-transparent" />
+        <span className="absolute left-4 top-4 rounded-full border border-[#DCE6F5] bg-[#FFFFFF] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0F2A44] ">
+          {service.categoryName || "Service"}
+        </span>
         <button
           type="button"
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className={`absolute right-4 top-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border bg-white/95 shadow-sm transition ${
+          className={`absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 shadow-[0_10px_24px_-16px_rgba(15,42,68,0.18)] backdrop-blur-sm transition ${
             wishlisted
-              ? "border-rose-200 text-rose-500"
-              : "border-slate-200 text-slate-500 hover:border-rose-200 hover:text-rose-500"
+              ? "text-rose-500"
+              : "text-black hover:text-[#0F2A44]"
           }`}
           onClick={async () => {
-            if (!user) {
+            if (!user) {  
               navigate("/sign-in")
               return
             }
@@ -199,104 +173,66 @@ export default function ServiceCard({
         >
           <Heart className={`h-4.5 w-4.5 ${wishlisted ? "fill-current" : ""}`} />
         </button>
-        <div
-          className={`flex h-full w-full transform-gpu will-change-transform ${transitionEnabled ? "transition-transform duration-500 ease-out" : ""}`}
-          style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
-          onTransitionEnd={handleCarouselTransitionEnd}
-        >
-          {loopImages.map((src, index) => (
-            <div key={`${index}-${src}`} className="h-full w-full shrink-0">
-              <img src={src} alt={service.title} className="h-full w-full object-cover" />
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          aria-label="Previous image"
-          disabled={images.length <= 1}
-          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10 transition-transform hover:bg-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-40"
-          onClick={showPrev}
-        >
-        
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          aria-label="Next image"
-          disabled={images.length <= 1}
-          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-600 shadow-lg shadow-slate-900/10 transition-transform hover:bg-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-40"
-          onClick={showNext}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
       </div>
-      <div className="flex flex-1 flex-col gap-3 p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-[15px] font-bold text-slate-900">{service.title}</h3>
-              <div className="mt-1 text-sm font-semibold text-blue-600">
-                {service.categoryName}
-              </div>
-              <div className="mt-1 flex items-center gap-2 text-[14px] text-slate-500 font-medium">
-                <MapPin className="h-5 w-5 text-black font-semibold" />
-                {service.location}
-              </div>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500">
-                     <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
-                {displayRating.toFixed(1)}
-            </span>
+
+      <div className="flex flex-1 flex-col border-t border-[#DCE6F5] p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 text-[22px] font-semibold leading-tight text-[#0F2A44]">
+              {service.title}
+            </h3>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5 text-[13px]">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Star
+                key={`rating-star-${service.id}-${index}`}
+                className={`h-3.5 w-3.5 ${
+                  index < Math.round(rating)
+                    ? "fill-[#60A5FA] text-[#60A5FA]"
+                    : "fill-[#DCE6F5] text-[#DCE6F5]"
+                }`}
+              />
+            ))}
+            <span className="ml-1 font-semibold text-[#0F2A44]">{rating.toFixed(1)}</span>
+            <span className="text-[#5F7390]">({reviewCount.toLocaleString()})</span>
           </div>
         </div>
 
-        <div className="space-y-3 flex-1">
-          {detailsToRender.length > 0 ? detailsToRender.map((detail, index) => (
-            <div
-              key={`${service.id}-detail-${index}`}
-              className="w-70.75 rounded-sm bg-[#F6F6F6] px-4 py-3 h-17 transform-gpu transition-transform duration-200 hover:scale-[1.01]"
-            >
-
-              <div className="mt-0.5 flex items-baseline justify-between gap-3">
-                <p className="min-w-0 text-sm font-black leading-snug text-slate-900">
-                  {detail.title}
-                </p>
-                <span className="shrink-0 text-[18px] font-black text-slate-900">
-                  {detail.price}
-                </span>
-              </div>
-
-              {detail.duration ? (
-                <div className="mt-1 flex items-center gap-2 text-xs font-medium text-slate-500">
-                  <Clock className="h-4 w-4" />
-                  <span>{detail.duration}</span>
-                </div>
-              ) : null}
-            </div>
-          )) : (
-            <div className="rounded-sm bg-[#F6F6F6] px-4 py-3 text-sm text-slate-600">
-              Offerings are not available for this service yet.
-            </div>
-          )}
+        <div className="mt-3 flex items-center gap-2 text-[13px] text-[#5F7390]">
+          <MapPin className="h-4 w-4 shrink-0 text-[#0F2A44]" />
+          <span className="truncate">{service.location}</span>
         </div>
 
-        <div className="mt-auto flex gap-2 pt-1">
+        <div className="mt-5 space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5F7390]">
+            Starts from
+          </p>
+          <div className="flex items-end gap-2">
+            <span className="text-[20px] font-bold text-[#2563EB]">
+              {priceLabel}
+            </span>
+            {primaryDetail?.duration ? (
+              <span className="pb-0.5 text-xs font-medium text-[#5F7390]">
+                / {primaryDetail.duration}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-auto grid grid-cols-2 gap-3 pt-5">
           <button
             type="button"
             onClick={() => onViewDetails(service)}
-            className="flex-1 min-w-0 rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-600 whitespace-nowrap"
+            className="w-full bg-[#4b76d5] px-4 py-3 text-sm font-semibold text-[#F3F7FF] transition hover:bg-[#3B82F6] active:bg-[#1D4ED8]"
           >
-            View all services
+            View Details
           </button>
           <button
             type="button"
-            className="flex-1 min-w-0 rounded-lg border border-blue-500 px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 whitespace-nowrap"
             onClick={() => onEnquiry(service)}
+            className="w-full border border-[#DCE6F5] bg-[#FFFFFF] px-4 py-3 text-sm font-semibold text-[#0F2A44] transition hover:bg-[#EAF1FF]"
           >
-            <div className="flex items-center justify-center gap-2">
-              Send Enquiry
-              <ChevronRight size={16} />
-            </div>
+            Send Enquiry
           </button>
         </div>
       </div>

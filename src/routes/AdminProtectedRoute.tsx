@@ -44,9 +44,9 @@ export default function AdminProtectedRoute({ children }: PropsWithChildren) {
 
   if (isSupportOnly) {
     const allowedPrefixes = [
-      "/admin/support/inbox",
-      "/admin/support/dashboard",
-      "/admin/chat",
+      "/admin/support-inbox",
+      "/admin/support-dashboard",
+      "/admin/support-chat",
       "/admin/system/health",
     ];
     const canAccess = allowedPrefixes.some((prefix) => location.pathname.startsWith(prefix));

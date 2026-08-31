@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 
 import { useAppDispatch } from "@/app/hooks";
 import { DashboardContainer } from "@/components/dashboard";
+import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { setPageTitle } from "@/features/Layout/themeConfigSlice";
 import {
@@ -115,14 +116,14 @@ const VendorLeadSubscriptionPage = () => {
     <div className="relative min-h-screen ">
       {backgroundTexture}
       <DashboardContainer className="relative z-10 max-w-7xl pb-16">
-        <header className="flex flex-col items-center space-y-3 pt-10 pb-8 text-center">
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-            Choose your plan
-          </h1>
-          <p className="text-base text-slate-600 md:text-lg">
-            Unlock endless possibilities
-          </p>
-        </header>
+        <div className="space-y-3 pt-4">
+          <TitleBreadCrumbs
+            title="Choose your plan"
+            breadCrumbTitle="Leads / Subscription"
+            subtitle="Unlock endless possibilities"
+            className="w-full"
+          />
+        </div>
 
         <SubscriptionStatusBanner
           status={subscriptionStatus}

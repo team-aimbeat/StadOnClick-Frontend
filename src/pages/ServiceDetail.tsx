@@ -1,12 +1,19 @@
-import {
+﻿import {
+  ArrowRight,
   BadgeCheck,
+  CarFront,
   Check,
   ChevronLeft,
   Eye,
   Heart,
+  Lock,
   MapPinIcon,
+  Snowflake,
   Share2,
   Star,
+  TicketPercent,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
@@ -46,13 +53,19 @@ import { useGetPublicVendorCouponsQuery } from "@/services/vendoiCouponsApi";
 import { useCreateCheckoutSessionMutation } from "@/services/checkoutApi";
 import { useCreateAffiliateServiceLinkMutation } from "@/features/affiliate/api/affiliateApi";
 import { useGetMyReferralSummaryQuery } from "@/features/referrals/api/referralApi";
+import {
+  hasActivePaidPlan,
+  useGetMyPlanQuery,
+} from "@/features/userSubscriptions/api/userSubscriptionsApi";
 import { Button } from "@/components/ui/button";
+import { DealTimer } from "@/components/marketplace/DealTimer";
 import { ServiceGallery } from "@/components/shared/ServiceGallery";
 import { Badge } from "@/components/ui/badge";
 import { LocationMap } from "@/components/marketplace/Map/LocationMap";
 import toast from "react-hot-toast";
 import { slugifyServiceTitle, slugToSearchQuery } from "@/utils/slugify";
 import { clearStoredCart, setStoredCart } from "@/utils/cartStorage";
+import { calculateDiscountPercent, getEffectivePrice } from "@/utils/deals";
 
 const formatSlotLabel = (start: string, end?: string | null) => {
   const formatTime = (value: string) => {
@@ -147,6 +160,35 @@ const resolveReviewerImageUrl = (review: {
   return `${apiBaseUrl}/${candidate.replace(/^\/+/, "")}`;
 };
 
+const formatRelativeReviewTime = (dateValue?: string | null) => {
+  if (!dateValue) return "";
+  const reviewDate = new Date(dateValue);
+  if (Number.isNaN(reviewDate.getTime())) return "";
+
+  const diffMs = reviewDate.getTime() - Date.now();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  if (Math.abs(diffDays) >= 1) {
+    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+      diffDays,
+      "day",
+    );
+  }
+
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  if (Math.abs(diffHours) >= 1) {
+    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+      diffHours,
+      "hour",
+    );
+  }
+
+  const diffMinutes = Math.round(diffMs / (1000 * 60));
+  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+    diffMinutes,
+    "minute",
+  );
+};
+
 type CartItem = {
   offering: VendorOffering;
   quantity: number;
@@ -180,6 +222,8 @@ export default function ServiceDetail() {
   }>();
   const authUser = useAppSelector((state) => state.auth.user);
   const userId = authUser?.id;
+  const { data: myPlanRes } = useGetMyPlanQuery(undefined, { skip: !authUser });
+  const canAccessHotDeals = hasActivePaidPlan(myPlanRes?.data);
   const isAffiliate = (authUser?.roles ?? []).includes("AFFILIATE");
   const { data: myReferralSummary } = useGetMyReferralSummaryQuery(undefined, {
     skip: !userId,
@@ -198,9 +242,6 @@ export default function ServiceDetail() {
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
-  const [activeTab, setActiveTab] = useState<"services" | "description">(
-    "services",
-  );
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     () => new Date(),
   );
@@ -299,8 +340,8 @@ export default function ServiceDetail() {
   );
   const totalVisitors = vendorVisitStatsResponse?.data?.totalVisitors ?? 0;
   const todayVisitors = vendorVisitStatsResponse?.data?.todayVisitors ?? 0;
-  const serviceCity = matchedMarketplaceService?.cityName ?? "—";
-  const rules = matchedMarketplaceService?.offeringsPreview ?? "—";
+  const serviceCity = matchedMarketplaceService?.cityName ?? "â€”";
+  const rules = matchedMarketplaceService?.offeringsPreview ?? "â€”";
   console.log(rules);
 
   useEffect(() => {
@@ -428,11 +469,12 @@ export default function ServiceDetail() {
   };
 
   const cartSubtotal = cartItems.reduce(
-    (sum, item) => sum + item.offering.salePrice * item.quantity,
+    (sum, item) => sum + getEffectivePrice(item.offering) * item.quantity,
     0,
   );
+  const serviceFee = 0;
   const cartDiscount = couponDiscount;
-  const cartTotal = Math.max(cartSubtotal - cartDiscount, 0);
+  const cartTotal = Math.max(cartSubtotal + serviceFee - cartDiscount, 0);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -446,8 +488,8 @@ export default function ServiceDetail() {
         title: item.offering.name,
         description: item.offering.description ?? "Premium experience",
         quantity: item.quantity,
-        unitPrice: item.offering.salePrice,
-        totalPrice: item.offering.salePrice * item.quantity,
+        unitPrice: getEffectivePrice(item.offering),
+        totalPrice: getEffectivePrice(item.offering) * item.quantity,
       })),
     );
   }, [cartItems]);
@@ -608,7 +650,7 @@ export default function ServiceDetail() {
       setPromoCode("");
       resetCoupon();
 
-      toast.success("Redirecting you to Stripe checkout…");
+      toast.success("Redirecting you to Stripe checkoutâ€¦");
       const redirectUrl = response.data?.sessionUrl;
       if (redirectUrl && typeof window !== "undefined") {
         window.location.assign(redirectUrl);
@@ -678,6 +720,20 @@ export default function ServiceDetail() {
       usesSlots: false,
       basePrice: Number(offering.basePrice ?? 0),
       salePrice: Number(offering.salePrice ?? 0),
+      discountPercent:
+        offering.discountPercent == null ? null : Number(offering.discountPercent),
+      dealStartTime: offering.dealStartTime ?? null,
+      dealEndTime: offering.dealEndTime ?? null,
+      isDealActive: Boolean(offering.isDealActive),
+      effectivePrice:
+        offering.effectivePrice == null
+          ? getEffectivePrice({
+              basePrice: Number(offering.basePrice ?? 0),
+              salePrice: Number(offering.salePrice ?? 0),
+              dealStartTime: offering.dealStartTime ?? null,
+              dealEndTime: offering.dealEndTime ?? null,
+            })
+          : Number(offering.effectivePrice),
       currency: offering.currency ?? "SEK",
       maxQuantity: offering.maxQuantity ?? null,
       remainingQuantity: offering.remainingQuantity ?? null,
@@ -687,6 +743,23 @@ export default function ServiceDetail() {
   }, [currentServiceId, service?.offerings]);
   const effectiveOfferings =
     (offerings?.length ?? 0) > 0 ? offerings ?? [] : serviceOfferingsFallback;
+  const visibleOfferings = useMemo(
+    () =>
+      effectiveOfferings.map((offering) =>
+        !canAccessHotDeals && offering.isDealActive
+          ? {
+              ...offering,
+              salePrice: offering.basePrice,
+              discountPercent: null,
+              dealEndTime: null,
+              dealStartTime: null,
+              isDealActive: false,
+              effectivePrice: Number(offering.basePrice ?? 0),
+            }
+          : offering,
+      ),
+    [canAccessHotDeals, effectiveOfferings],
+  );
   const { data: vendorCoupons = [] } = useGetPublicVendorCouponsQuery(
     vendorId ?? "",
     { skip: !vendorId },
@@ -697,20 +770,21 @@ export default function ServiceDetail() {
       skip: !currentServiceId,
     });
 
+  const averageReviewRating = useMemo(() => {
+    const list = reviews ?? [];
+    if (list.length === 0) return 0;
+    return list.reduce((acc, review) => acc + review.rating, 0) / list.length;
+  }, [reviews]);
+
   const starBreakdown = useMemo(() => {
     const list = reviews ?? [];
     const total = list.length;
-    if (total === 0) {
-      return [5, 4, 3, 2, 1].map((rating) => ({
-        label: `${rating} ⭐`,
-        percent: 0,
-      }));
-    }
     return [5, 4, 3, 2, 1].map((rating) => {
       const count = list.filter((review) => review.rating === rating).length;
-      const percent = Math.round((count / total) * 100);
+      const percent = total > 0 ? Math.round((count / total) * 100) : 0;
       return {
-        label: `${rating} ⭐`,
+        rating,
+        count,
         percent,
       };
     });
@@ -718,7 +792,7 @@ export default function ServiceDetail() {
 
   const descriptionRules = useMemo(() => {
     const seen = new Map<string, { label: string; value?: string | null }>();
-    for (const offering of effectiveOfferings ?? []) {
+    for (const offering of visibleOfferings ?? []) {
       for (const rule of offering.rules ?? []) {
         const key = `${rule.ruleType}:${rule.value ?? ""}`;
         if (!seen.has(key)) {
@@ -730,12 +804,24 @@ export default function ServiceDetail() {
       }
     }
     return Array.from(seen.values());
-  }, [effectiveOfferings]);
+  }, [visibleOfferings]);
   const marketplaceOfferingsPreview =
-    matchedMarketplaceService?.offeringsPreview ?? [];
+    (matchedMarketplaceService?.offeringsPreview ?? []).map((offering) =>
+      !canAccessHotDeals && offering.isDealActive
+        ? {
+            ...offering,
+            salePrice: offering.basePrice,
+            discountPercent: 0,
+            dealEndTime: null,
+            dealStartTime: null,
+            isDealActive: false,
+            effectivePrice: Number(offering.basePrice ?? 0),
+          }
+        : offering,
+    );
   const hasLiveOfferings = (effectiveOfferings?.length ?? 0) > 0;
   const packagesCount = hasLiveOfferings
-    ? effectiveOfferings?.length ?? 0
+    ? visibleOfferings?.length ?? 0
     : marketplaceOfferingsPreview.length;
 
   const handleSubmitReview = async () => {
@@ -779,18 +865,18 @@ export default function ServiceDetail() {
   if (!service) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F1F3F7] px-4">
-        <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
+      <div className="w-full max-w-xl rounded-3xl border border-[#DCE6F5] bg-white p-8 text-center shadow-sm">
+          <h2 className="text-3xl font-semibold tracking-tight text-[#0F2A44]">
             Sign in to view services
           </h2>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-[#5F7390]">
             We need to know who you are before showing your bookings and
             purchases.
           </p>
           <Button
             type="button"
             onClick={() => navigate("/sign-in")}
-            className="mt-6 h-11 w-full rounded-full bg-blue-600 text-base font-semibold text-white hover:bg-blue-700"
+            className="mt-6 h-11 w-full rounded-full bg-[#DBEAFE] text-base font-semibold text-[#0F2A44] hover:bg-[#BFDBFE]"
           >
             Go to sign in
           </Button>
@@ -806,27 +892,23 @@ export default function ServiceDetail() {
     menuMedia
       ?.filter((m) => m.type === "IMAGE")
       .map((m) => m.signedUrl) || [];
-  const tabs: { id: "services" | "description"; label: string }[] = [
-    { id: "services", label: "Services" },
-    { id: "description", label: "Description" },
-  ];
   const serviceDescription =
     service.description ||
-    "Our team curates a premium experience for every guest—scroll through the service options to choose what fits your visit.";
+    "Our team curates a premium experience for every guest - scroll through the service options to choose what fits your visit.";
 
   const statusStyles: Record<string, string> = {
-    DRAFT: "bg-yellow-100 text-yellow-700",
-    PAUSED: "bg-red-100 text-red-700",
-    LIVE: "bg-green-100 text-green-700",
+    DRAFT: "bg-[#EAF1FF] text-[#2563EB]",
+    PAUSED: "bg-[#EAF1FF] text-[#5F7390]",
+    LIVE: "bg-[#EAF1FF] text-[#1D4ED8]",
   };
 
   return (
-    <section className="min-h-screen bg-[#F4F6FA] py-10 text-slate-700 ">
+    <section className="min-h-screen bg-[#F3F7FF] py-10 text-[#0F2A44] ">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 ">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#5F7390] transition hover:text-[#0F2A44]"
         >
           <ChevronLeft className="h-4 w-4 mt-4" />
           Back to services
@@ -836,16 +918,18 @@ export default function ServiceDetail() {
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <h1 className="text-3xl font-semibold text-slate-900">
+                  <h1 className="text-3xl font-semibold text-[#0F2A44]">
                     {service.title}
                   </h1>
-                  <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-black">
+                   <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#0F2A44]">
                     <div className="flex">
                       <MapPinIcon className="h-5 w-5 " />
                       <div className="ml-2 font-semibold">{serviceCity}</div>
                     </div>
-                    <div className="flex items-center gap-1 rounded-full px-3 py-1 font-bold ">
-                      <Star className="h-4 w-4 fill-[#F4D62F] text-[#F4D62F] " />
+                    <div className="inline-flex items-center gap-1.5  px-2.5 py-1 text-xs font-bold text-[#D4AF37]">
+                      <span className="inline-flex h-4.5 w-4.5 items-center justify-center  bg-[#FEF3C7] text-[#F5A623]">
+                        <Star className="h-4 w-4 fill-current text-current" />
+                      </span>
                       {reviews && reviews.length > 0
                         ? (
                             reviews.reduce((acc, r) => acc + r.rating, 0) /
@@ -853,22 +937,22 @@ export default function ServiceDetail() {
                           ).toFixed(1)
                         : "0.0"}
                     </div>
-                    <span className="text-xs text-black">
+                    <span className="text-xs text-[#5F7390]">
                       ({reviews?.length || 0}+ verified guest reviews)
                     </span>
-                    <span className="inline-flex ml-5  items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-extrabold tracking-wide text-blue-700 shadow-sm">
+                    <span className="inline-flex ml-4 items-center gap-1.5 rounded-full border border-[#DCE6F5] bg-white px-3 py-1 text-xs font-extrabold tracking-wide text-[#2563EB] shadow-sm">
                       <Eye className="h-3.5 w-3.5" />
                       {totalVisitors} visitors
                     </span>
-                   <span className="inline-flex items-center rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">
-                       {todayVisitors} today
-                    </span>
-                  </div>
+                    <span className="inline-flex items-center rounded-full bg-[#4b76d5] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-sm">
+                        {todayVisitors} today
+                     </span>
+                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                       {myReferralSummary?.referralCode ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1">
-                      <span className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">
+                     <div className="inline-flex items-center gap-2 rounded-full border border-[#DCE6F5] bg-[#EAF1FF] px-2.5 py-1">
+                       <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#2563EB]">
                         {myReferralSummary.referralCode}
                       </span>
                       <button
@@ -879,7 +963,7 @@ export default function ServiceDetail() {
                           );
                           toast.success("Referral code copied");
                         }}
-                        className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-emerald-700"
+                         className="rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0F2A44] hover:bg-[#BFDBFE]"
                       >
                         Copy
                       </button>
@@ -887,13 +971,13 @@ export default function ServiceDetail() {
                   ) : null}   
                   <button
                     type="button"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE6F5] bg-white text-[#5F7390] shadow-sm transition hover:border-[#2563EB] hover:text-[#2563EB]"
                   >
                     <Share2 className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE6F5] bg-white text-[#5F7390] shadow-sm transition hover:border-[#2563EB] hover:text-[#2563EB]"
                   >
                     <Heart className="h-4 w-4" />
                   </button>
@@ -903,11 +987,31 @@ export default function ServiceDetail() {
               <ServiceGallery
                 galleryImages={galleryImages}
                 serviceName={service.title}
+                categoryLabel={
+                  matchedMarketplaceService?.categoryName ??
+                  service.category?.name ??
+                  "Service"
+                }
+                ratingLabel={
+                  reviews && reviews.length > 0
+                    ? (
+                        reviews.reduce((acc, r) => acc + r.rating, 0) /
+                        reviews.length
+                      ).toFixed(1)
+                    : "0.0"
+                }
+                reviewText={`Over ${(reviews?.length || 0).toLocaleString()} verified reviews`}
+                ctaLabel="Reserve Your Spot"
+                onCtaClick={() =>
+                  document
+                    .getElementById("service-offerings")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
               />
-              <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#5F7390]">
                 {service.status && (
                   <span
-                    className={`rounded-full border border-slate-200 px-3 py-1 text-sm font-semibold ${statusStyles[service.status] ?? "border-slate-200 text-slate-700"}`}
+                    className={`rounded-full border border-[#DCE6F5] px-3 py-1 text-sm font-semibold ${statusStyles[service.status] ?? "border-[#DCE6F5] text-[#5F7390]"}`}
                   >
                     {service.status}
                   </span>
@@ -915,9 +1019,9 @@ export default function ServiceDetail() {
               </div>
 
               {isAffiliate && (
-                <div className="w-full max-w-[520px] rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <div className="w-full max-w-[520px] rounded-2xl border border-[#DCE6F5] bg-[#EAF1FF] p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-blue-900">
+                    <p className="text-sm font-semibold text-[#0F2A44]">
                       Affiliate link for this service
                     </p>
                     <Button
@@ -946,12 +1050,12 @@ export default function ServiceDetail() {
 
                   {affiliateLinkRes?.data?.url ? (
                     <div className="mt-3 space-y-2">
-                      <p className="text-xs text-blue-800">Referral code</p>
-                      <p className="text-sm font-semibold text-blue-900">
+                      <p className="text-xs text-[#5F7390]">Referral code</p>
+                      <p className="text-sm font-semibold text-[#0F2A44]">
                         {affiliateLinkRes.data.code}
                       </p>
-                      <p className="text-xs text-blue-800">Shareable link</p>
-                      <div className="rounded-lg border border-blue-200 bg-white p-2 text-xs font-mono break-all text-slate-700">
+                      <p className="text-xs text-[#5F7390]">Shareable link</p>
+                      <div className="rounded-lg border border-[#DCE6F5] bg-white p-2 text-xs font-mono break-all text-[#0F2A44]">
                         {affiliateLinkRes.data.url}
                       </div>
                       <Button
@@ -997,233 +1101,284 @@ export default function ServiceDetail() {
         </div>
 
         <div className="grid gap-6 grid-cols-5">
-          <div className="col-span-3 min-w-0">
-            <div className="space-y-5 rounded-3xl bg-white p-8 ">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">
-                    Services
+            <div id="service-offerings" className="col-span-3 min-w-0 space-y-6">
+              <div className="rounded-[30px] border border-[#DCE6F5] bg-white p-7">
+                <div className="max-w-3xl">
+ 
+                  <h2 className="mt-3 text-[28px] font-semibold leading-tight text-[#0F2A44]">
+                    About {service.title}
                   </h2>
-                  <p className="text-sm text-slate-500">
-                    Choose a ritual that suits your mood
+                  <p className="mt-4 text-[15px] font-medium leading-8 text-[#5F7390]">
+                    {serviceDescription}
                   </p>
                 </div>
-                <span className="text-sm font-semibold text-slate-500">
-                  {packagesCount} packages
-                </span>
+
+                {descriptionRules.length > 0 ? (
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    {descriptionRules.map((rule, index) => {
+                      const tones = [
+                        "bg-[#EAF1FF] text-[#2563EB]",
+                        "bg-[#F3F7FF] text-[#1D4ED8]",
+                        "bg-[#EAF1FF] text-[#60A5FA]",
+                        "bg-[#FFFFFF] text-[#2563EB]",
+                      ];
+                      const tone = tones[index % tones.length];
+
+                      return (
+                        <span
+                          key={`${rule.label}-${rule.value}`}
+                          className={`inline-flex rounded-xl px-4 py-2 text-[13px] font-semibold ${tone}`}
+                        >
+                          {rule.label}
+                          {rule.value ? `: ${rule.value}` : ""}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
-              <div className="mt-4 flex gap-3">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                      activeTab === tab.id
-                        ? "border-blue-500 bg-blue-50 text-blue-600"
-                        : "border-slate-200 bg-slate-100 text-slate-500"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-5">
-                {activeTab === "services" ? (
-                  <div className="space-y-4">
-                    {hasLiveOfferings ? (
-                      effectiveOfferings?.map((offering) => {
-                        const isMovieBookingOffering = isMovieBookingService;
-                        const slotCount = offering.slots?.length ?? 0;
-                        const requiresSlot = offering.usesSlots || slotCount > 0;
-                        const outOfStock =
-                          !requiresSlot &&
-                          offering.remainingQuantity !== null &&
-                          offering.remainingQuantity <= 0;
-                        const missingBookingUrl =
-                          isMovieBookingOffering && !offering.bookingUrl?.trim();
-                        const buttonLabel = isMovieBookingOffering
-                          ? missingBookingUrl
-                            ? "Booking unavailable"
-                            : "Book now"
-                          : requiresSlot
-                            ? slotCount > 0
-                              ? "Book"
-                              : "Slots unavailable"
-                            : outOfStock
-                              ? "Out of stock"
-                              : "Add to cart";
-                        const isSlotUnavailable =
-                          missingBookingUrl ||
-                          ((requiresSlot && slotCount === 0) || outOfStock);
-                        const maxQty = offering.maxQuantity ?? null;
-                        const remainingQty =
-                          offering.remainingQuantity ?? offering.maxQuantity ?? null;
-                        const hasInventory =
-                          maxQty !== null &&
-                          Number.isFinite(maxQty) &&
-                          remainingQty !== null &&
-                          Number.isFinite(remainingQty);
-                        const remainingPercent = hasInventory
-                          ? Math.max(
-                              0,
-                              Math.min(100, (Number(remainingQty) / Number(maxQty)) * 100),
-                            )
-                          : null;
-                        const inventoryBarClass = outOfStock
-                          ? "bg-rose-500"
-                          : hasInventory &&
-                              Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
-                            ? "bg-amber-500"
-                            : "bg-emerald-500";
-                        return (
-                          <div
-                            key={offering.id}
-                            className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
-                          >
-                            <div>
-                              <p className="text-base font-semibold text-slate-900">
-                                {offering.name}
-                              </p>
-                              <p className="text-xs font-semibold text-slate-400">
-                                Created : {new Date(offering.createdAt).toLocaleString()}
-                              </p>
-                              <p className="text-xs font-semibold text-slate-400">
-                                Qty: {offering.maxQuantity || "N/A"}
-                              </p>
-                              <p className="text-xs font-semibold text-slate-400">
-                                Remaining: {offering.remainingQuantity ?? "N/A"}
-                              </p>
-                              {hasInventory && remainingPercent !== null ? (
-                                <div className="mt-2 max-w-[220px]">
-                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                                    <div
-                                      className={`h-full rounded-full ${inventoryBarClass}`}
-                                      style={{ width: `${remainingPercent}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              ) : null}
-                            </div>
-                            <div className="flex flex-col items-end gap-3">
-                              <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xl font-bold text-slate-900">
-                                ${offering.salePrice}
-                              </span>
-                              <button
-                                className={`min-w-[30px]  rounded-lg border bg-white border-blue-200 px-4 py-2 text-sm font-semibold text-blue-400 ${
-                                  isSlotUnavailable
-                                    ? "bg-slate-300 cursor-not-allowed opacity-60"
-                                    : "bg-blue-500 hover:bg-white hover:text-blue-800 hover:border-blue-600  "
-                                }`}
-                                disabled={isSlotUnavailable}
-                                onClick={() => handleBookClick(offering)}
-                              >
-                                {buttonLabel}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : marketplaceOfferingsPreview.length > 0 ? (
-                      marketplaceOfferingsPreview.map((offering) => (
+
+              <div className="space-y-5 rounded-3xl border border-[#DCE6F5] bg-white p-8 ">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-[#0F2A44]">
+                      Services
+                    </h2>
+                    <p className="text-sm text-[#5F7390]">
+                      Choose a ritual that suits your mood
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold text-[#5F7390]">
+                    {packagesCount} packages
+                  </span>
+                </div>
+                <div className="mt-5 space-y-4">
+                  {hasLiveOfferings ? (
+                    visibleOfferings?.map((offering) => {
+                      const displayPrice = getEffectivePrice(offering);
+                      const activeDiscountPercent =
+                        Number(offering.discountPercent ?? 0) ||
+                        calculateDiscountPercent(offering.basePrice, offering.salePrice);
+                      const isMovieBookingOffering = isMovieBookingService;
+                      const slotCount = offering.slots?.length ?? 0;
+                      const requiresSlot = offering.usesSlots || slotCount > 0;
+                      const outOfStock =
+                        !requiresSlot &&
+                        offering.remainingQuantity !== null &&
+                        offering.remainingQuantity <= 0;
+                      const missingBookingUrl =
+                        isMovieBookingOffering && !offering.bookingUrl?.trim();
+                      const isSlotUnavailable =
+                        missingBookingUrl ||
+                        ((requiresSlot && slotCount === 0) || outOfStock);
+                      const maxQty = offering.maxQuantity ?? null;
+                      const remainingQty =
+                        offering.remainingQuantity ?? offering.maxQuantity ?? null;
+                      const hasInventory =
+                        maxQty !== null &&
+                        Number.isFinite(maxQty) &&
+                        remainingQty !== null &&
+                        Number.isFinite(remainingQty);
+                      const remainingPercent = hasInventory
+                        ? Math.max(
+                            0,
+                            Math.min(100, (Number(remainingQty) / Number(maxQty)) * 100),
+                          )
+                        : null;
+                      const inventoryBarClass = outOfStock
+                        ? "bg-rose-500"
+                        : hasInventory &&
+                            Number(remainingQty) <= Math.max(1, Math.ceil(Number(maxQty) * 0.25))
+                          ? "bg-[#60A5FA]"
+                          : "bg-[#DBEAFE]";
+                      return (
                         <div
                           key={offering.id}
-                          className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                          className="space-y-4 rounded-[26px] border border-[#DCE6F5] bg-white p-5 "
                         >
-                          <div>
-                            <p className="text-base font-semibold text-slate-900">
-                              {offering.name}
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <span
+                                className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
+                                  isSlotUnavailable
+                                    ? "bg-[#EAF1FF] text-[#5F7390]"
+                                    : "bg-[#EAF1FF] text-[#4b76d5]"
+                                }`}
+                              >
+                                {isSlotUnavailable ? "Limited" : "Available now"}
+                              </span>
+                              <p className="mt-4 text-[22px] font-semibold leading-tight text-[#0F2A44]">
+                                {offering.name}
+                              </p>
+                              <div className="mt-2 flex items-center gap-2 text-xs text-[#5F7390]">
+                                <MapPinIcon className="h-3.5 w-3.5" />
+                                <span>{serviceCity}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[28px] font-bold leading-none text-[#4b76d5]">
+                                {formatCurrency(displayPrice)}
+                              </p>
+                              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
+                                {offering.usesSlots || (offering.slots?.length ?? 0) > 0
+                                  ? "PER SLOT"
+                                  : offering.maxQuantity
+                                    ? "PER UNIT"
+                                    : "PER BOOKING"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <p className="text-sm text-[#5F7390]">
+                              {offering.description ??
+                                "Exclusive access with a streamlined booking experience and flexible scheduling."}
                             </p>
-                            {offering.description ? (
-                              <p className="text-xs text-slate-500">
-                                {offering.description}
-                              </p>
+                            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-[#5F7390]">
+                              <span>Created {new Date(offering.createdAt).toLocaleDateString()}</span>
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f8] px-3 py-1 text-[#4b76d5]">
+                                <Users className="h-3.5 w-3.5" />
+                                Up to {offering.maxQuantity || "N/A"}
+                              </span>
+                              <span>Remaining {offering.remainingQuantity ?? "N/A"}</span>
+                            </div>
+                            {hasInventory && remainingPercent !== null ? (
+                              <div className="max-w-[220px]">
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EAF1FF]">
+                                  <div
+                                    className={`h-full rounded-full ${inventoryBarClass}`}
+                                    style={{ width: `${remainingPercent}%` }}
+                                  />
+                                </div>
+                              </div>
                             ) : null}
-                            {offering.durationLabel ? (
-                              <p className="text-xs font-semibold text-slate-400">
-                                Duration: {offering.durationLabel}
-                              </p>
+                            {offering.isDealActive ? (
+                              <div className="flex flex-wrap items-center gap-3 text-xs">
+                                <p className="font-semibold text-[#5F7390] line-through">
+                                  {formatCurrency(offering.basePrice)}
+                                </p>
+                                <p className="font-black text-[#2563EB]">
+                                  {activeDiscountPercent}% OFF
+                                </p>
+                                <DealTimer
+                                  endTime={offering.dealEndTime}
+                                  className="font-semibold text-[#5F7390]"
+                                />
+                              </div>
                             ) : null}
                           </div>
-                          <div className="flex flex-col items-end gap-3">
-                            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-bold text-slate-900">
-                              {formatCurrency(
-                                Number(offering.salePrice ?? offering.basePrice ?? 0),
-                              )}
-                            </span>
+
+                          <div className="flex justify-end">
                             <button
-                              className="min-w-[30px] cursor-not-allowed rounded-lg border border-slate-200 bg-slate-300 px-4 py-2 text-sm font-semibold text-slate-500 opacity-80"
-                              disabled
                               type="button"
+                              className={`min-w-[132px] rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                                isSlotUnavailable
+                                  ? "cursor-not-allowed border border-[#DCE6F5] bg-[#EAF1FF] text-[#5F7390]"
+                                  : requiresSlot || isMovieBookingOffering
+                                    ? "bg-[#DBEAFE] text-[#0F2A44] hover:bg-[#BFDBFE] active:bg-[#93C5FD]"
+                                    : "border border-[#DCE6F5] bg-[#4b76d5] text-white"
+                              }`}
+                              disabled={isSlotUnavailable}
+                              onClick={() => handleBookClick(offering)}
                             >
-                              Available soon
+                              {requiresSlot || isMovieBookingOffering ? "Book" : "Add to cart"}
                             </button>
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
-                        No service packages are available yet for this listing.
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-5 min-w-0">
-                    <p className="text-sm text-slate-500 break-words [overflow-wrap:anywhere]">{serviceDescription}
-                    </p>
-                    <p className="text-xs text-slate-400 break-words [overflow-wrap:anywhere]">{`We keep this experience updated—check the services tab to explore current offerings.`}
-                    </p>
-                    {descriptionRules.length > 0 && (
-                      <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-semibold text-slate-900">
-                            Service rules
-                          </p>
-                          <span className="text-xs font-medium text-slate-400">
-                            {descriptionRules.length} total
-                          </span>
-                        </div>
-                        <div className="space-y-1">
-                          {descriptionRules.map((rule) => (
-                            <div
-                              key={`${rule.label}-${rule.value}`}
-                              className="flex flex-wrap items-center gap-1 text-[13px] font-medium text-slate-500"
-                            >
-                              <span className="text-slate-700">
-                                {rule.label}
-                              </span>
-                              {rule.value ? (
-                                <span className="text-slate-400">—</span>
-                              ) : null}
-                              {rule.value ? <span>{rule.value}</span> : null}
+                      );
+                    })
+                  ) : marketplaceOfferingsPreview.length > 0 ? (
+                    marketplaceOfferingsPreview.map((offering) => (
+                      <div
+                        key={offering.id}
+                        className="space-y-4 rounded-[26px] border border-[#DCE6F5] bg-white p-5 shadow-[0_18px_40px_-30px_rgba(15,42,68,0.14)]"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <span className="inline-flex rounded-full bg-[#EAF1FF] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">
+                              Preview
+                            </span>
+                            <p className="mt-4 text-[22px] font-semibold leading-tight text-[#0F2A44]">
+                              {offering.name}
+                            </p>
+                            <div className="mt-2 flex items-center gap-2 text-xs text-[#5F7390]">
+                              <MapPinIcon className="h-3.5 w-3.5" />
+                              <span>{serviceCity}</span>
                             </div>
-                          ))}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[28px] font-bold leading-none text-[#2563EB]">
+                              {formatCurrency(
+                                Number(offering.effectivePrice ?? offering.salePrice ?? offering.basePrice ?? 0),
+                              )}
+                            </p>
+                            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
+                              {offering.durationLabel?.toUpperCase() ?? "PER BOOKING"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm text-[#5F7390]">
+                            {offering.description ??
+                              "Exclusive access with curated service details available at launch."}
+                          </p>
+                          {offering.durationLabel ? (
+                            <p className="text-xs font-medium text-[#5F7390]">
+                              Duration: {offering.durationLabel}
+                            </p>
+                          ) : null}
+                          {offering.isDealActive ? (
+                            <div className="flex flex-wrap items-center gap-3 text-xs">
+                              <p className="font-semibold text-[#5F7390] line-through">
+                                {formatCurrency(Number(offering.basePrice ?? 0))}
+                              </p>
+                              <p className="font-black text-[#2563EB]">
+                                {Number(offering.discountPercent ?? 0)}% OFF
+                              </p>
+                              <DealTimer
+                                endTime={offering.dealEndTime}
+                                className="font-semibold text-[#5F7390]"
+                              />
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            className="min-w-[132px] rounded-xl border border-[#DCE6F5] bg-[#EAF1FF] px-4 py-2.5 text-sm font-semibold text-[#5F7390]"
+                            disabled
+                            type="button"
+                          >
+                            Available soon
+                          </button>
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-[#DCE6F5] bg-[#EAF1FF] p-4 text-sm text-[#5F7390]">
+                      No service packages are available yet for this listing.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
           <div className="col-span-2">
-            <div className="space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="space-y-5 rounded-3xl border border-[#DCE6F5] bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-[#0F2A44]">
                     Your order
                   </h3>
 
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="text-xs text-slate-400">
+                    <span className="text-xs text-[#5F7390]">
                     {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
                   </span>
                 </div>
               </div>
               {cartItems.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#5F7390]">
                   Choose a service from the list to start your booking.
                 </p>
               ) : (
@@ -1234,40 +1389,40 @@ export default function ServiceDetail() {
                       className="flex items-start justify-between gap-4 overflow-hidden"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="max-w-full break-words text-sm font-semibold text-slate-900">
+                        <p className="max-w-full break-words text-sm font-semibold text-[#0F2A44]">
                           {item.offering.name}
                         </p>
-                        <p className="max-w-full overflow-hidden break-all text-xs text-slate-500">
+                        <p className="max-w-full overflow-hidden break-all text-xs text-[#5F7390]">
                           {item.offering.description ?? "Premium experience"}
                         </p>
                         <button
                           type="button"
                           onClick={() => handleRemoveCartItem(item.offering.id)}
-                          className="mt-2 text-xs font-semibold text-blue-600"
+                          className="mt-2 text-xs font-semibold text-[#2563EB]"
                         >
                           Remove
                         </button>
                       </div>
                       <div className="w-[136px] shrink-0 text-right">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {formatCurrency(item.offering.salePrice)} per person
+                        <p className="text-sm font-semibold text-[#0F2A44]">
+                          {formatCurrency(getEffectivePrice(item.offering))} per person
                         </p>
                         <div className="mt-2 flex items-center justify-end gap-2 rounded-full px-2 py-1">
                           <button
                             type="button"
-                            className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                            className="h-7 w-7 rounded-full bg-[#EAF1FF] text-sm font-semibold text-[#0F2A44] shadow-sm"
                             onClick={() =>
                               updateCartQuantity(item.offering.id, -1)
                             }
                           >
-                            −
+                           -
                           </button>
-                          <span className="text-sm font-semibold text-slate-900">
+                          <span className="text-sm font-semibold text-[#0F2A44]">
                             {item.quantity}
                           </span>
                           <button
                             type="button"
-                            className="h-7 w-7 rounded-full bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm"
+                            className="h-7 w-7 rounded-full bg-[#EAF1FF] text-sm font-semibold text-[#0F2A44] shadow-sm"
                             onClick={() =>
                               updateCartQuantity(item.offering.id, 1)
                             }
@@ -1280,32 +1435,84 @@ export default function ServiceDetail() {
                   ))}
                 </div>
               )}
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h4 className="text-sm font-semibold text-slate-900">
-                  Wallet, promo & referral
-                </h4>
-                <p className="text-xs text-slate-500">
-                  Apply promo and user referral codes before checkout.
-                </p>
+              <div className="space-y-5 rounded-[28px] border border-[#DCE6F5] bg-[#EAF1FF] p-5 ">
+                <div className="flex items-center gap-2 text-[#0F2A44]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF1FF] text-[#2563EB]">
+                    <Wallet className="h-4 w-4" />
+                  </div>
+                  <h4 className="text-lg font-semibold">Wallet & Rewards</h4>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
+                    Apply promo code
+                  </p>
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="Enter promo code"
-                    className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+                    placeholder="ENTER CODE"
+                    className="h-11 flex-1 rounded-xl border border-[#DCE6F5] bg-white px-4 text-sm font-semibold uppercase tracking-wide text-[#0F2A44] placeholder:text-[#5F7390] focus:border-[#2563EB] focus:outline-none"
                   />
                   <Button
                     variant={"default"}
                     onClick={handleApplyPromo}
                     disabled={!promoCode.trim() || isApplyingCoupon}
-                    className="min-w-[30px]  rounded-lg border bg-blue-50 border-blue-500 px-4 py-2 text-sm font-semibold text-blue-600 "
+                    className="h-11 rounded-xl bg-[#DBEAFE] px-5 text-sm font-semibold uppercase tracking-wide text-[#0F2A44] hover:bg-[#BFDBFE] active:bg-[#93C5FD]"
                   >
                     {isApplyingCoupon ? "Checking..." : "Apply"}
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
+                    Available coupons
+                  </p>
+                  <div className="space-y-2.5">
+                    {vendorCoupons.slice(0, 2).map((coupon, index) => {
+                      const locked = index === 1;
+
+                      return (
+                        <button
+                          key={coupon.code}
+                          type="button"
+                          disabled={locked}
+                          onClick={() => {
+                            if (locked) return;
+                            setPromoCode(coupon.code);
+                            setCouponError(null);
+                          }}
+                          className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+                            locked
+                              ? "border-[#DCE6F5] bg-white/70 text-[#5F7390]"
+                              : "border-[#DCE6F5] bg-white text-[#0F2A44] hover:border-[#2563EB]"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg ${locked ? "bg-[#EAF1FF] text-[#5F7390]" : "bg-[#EAF1FF] text-[#2563EB]"}`}>
+                              <TicketPercent className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className={`text-sm font-bold ${locked ? "text-[#5F7390]" : "text-[#2563EB]"}`}>
+                                {coupon.code}
+                              </p>
+                              <p className="mt-1 text-xs text-[#5F7390]">
+                                {coupon.title}
+                              </p>
+                            </div>
+                          </div>
+                          {locked ? (
+                            <Lock className="h-4 w-4 shrink-0" />
+                          ) : (
+                            <ArrowRight className="h-4 w-4 shrink-0 text-[#2563EB]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#5F7390]">
                     User referral code
                   </p>
                   <div className="flex items-center gap-2">
@@ -1316,24 +1523,21 @@ export default function ServiceDetail() {
                         setReferralCodeInput(e.target.value);
                         setReferralCodeFeedback(null);
                       }}
-                      placeholder="Enter referral code"
-                      className="flex-1 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none"
+                      placeholder="ENTER REFERRAL CODE"
+                      className="h-11 flex-1 rounded-xl border border-[#DCE6F5] bg-white px-4 text-sm font-semibold uppercase tracking-wide text-[#0F2A44] placeholder:text-[#5F7390] focus:border-[#2563EB] focus:outline-none"
                     />
                     <Button
                       variant={"default"}
                       onClick={handleApplyReferralCode}
                       disabled={!referralCodeInput.trim()}
-                      className="min-w-[30px] rounded-lg border border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+                      className="h-11 rounded-xl border border-[#DCE6F5] bg-[#EAF1FF] px-5 text-sm font-semibold uppercase tracking-wide text-[#2563EB] hover:bg-[#F3F7FF]"
                     >
                       Apply
                     </Button>
                   </div>
                   {appliedReferralCode ? (
-                    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-                      <span>
-                        {referralCodeFeedback ??
-                          `Referral code ${appliedReferralCode} applied`}
-                      </span>
+                    <div className="rounded-2xl bg-[#EAF1FF] px-4 py-3 text-xs font-semibold text-[#2563EB]">
+                      {referralCodeFeedback ?? `Referral code ${appliedReferralCode} applied`}
                       <button
                         type="button"
                         onClick={() => {
@@ -1341,75 +1545,85 @@ export default function ServiceDetail() {
                           setReferralCodeInput("");
                           setReferralCodeFeedback(null);
                         }}
-                        className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                        className="ml-2 underline"
                       >
                         Remove
                       </button>
                     </div>
                   ) : null}
                 </div>
-                {couponError && (
-                  <p className="text-xs font-semibold text-red-600">
-                    {couponError}
-                  </p>
-                )}
-                {appliedCoupon && (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-                    <span>
-                      Coupon {appliedCoupon.code} applied (
-                      {appliedCoupon.discountType === "FLAT"
-                        ? formatCurrency(appliedCoupon.value)
-                        : `${appliedCoupon.value}%`}
-                      )
-                    </span>
+                {couponError ? (
+                  <p className="text-xs font-semibold text-red-600">{couponError}</p>
+                ) : null}
+                {appliedCoupon ? (
+                  <div className="rounded-2xl bg-[#EAF1FF] px-4 py-3 text-xs font-semibold text-[#2563EB]">
+                    Coupon {appliedCoupon.code} applied (
+                    {appliedCoupon.discountType === "FLAT"
+                      ? formatCurrency(appliedCoupon.value)
+                      : `${appliedCoupon.value}%`}
+                    )
                     <button
                       type="button"
                       onClick={() => {
                         resetCoupon();
                         setPromoCode("");
                       }}
-                      className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 underline"
+                      className="ml-2 underline"
                     >
                       Remove
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
 
-              <div className="border-t border-dashed border-slate-200 pt-4">
-                <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Subtotal</span>
-                  <span className="text-slate-900">
-                    {formatCurrency(cartSubtotal)}
+              <div className="space-y-5 rounded-[28px] border border-[#DCE6F5] bg-white p-6 ">
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between text-[#5F7390]">
+                    <span>Subtotal</span>
+                    <span className="font-semibold text-[#0F2A44]">
+                      {formatCurrency(cartSubtotal)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[#5F7390]">
+                    <span>Service Fee</span>
+                    <span className="font-semibold text-[#0F2A44]">
+                      {formatCurrency(serviceFee)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[#4b76d5]">
+                    <span className="font-semibold">Discount (Promo)</span>
+                    <span className="font-semibold">
+                      -{formatCurrency(cartDiscount)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-end justify-between border-t border-[#DCE6F5] pt-4">
+                  <span className="text-[28px] font-semibold text-[#0F2A44]">Total</span>
+                  <span className="text-[34px] font-bold leading-none text-[#2563EB]">
+                    {formatCurrency(cartTotal)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Discount</span>
-                  <span className="text-emerald-600">
-                    −{formatCurrency(cartDiscount)}
+                <Button
+                  onClick={handleCheckoutCart}
+                  className="h-14 w-full rounded-2xl bg-[#DBEAFE] text-base font-semibold text-[#0F2A44] hover:bg-[#BFDBFE] active:bg-[#93C5FD]"
+                  disabled={cartItems.length === 0 || isCreatingSession}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    {isCreatingSession ? "Processing..." : "Confirm booking"}
+                    <Lock className="h-4 w-4" />
                   </span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-base font-semibold text-slate-900">
-                  <span>Total</span>
-                  <span>{formatCurrency(cartTotal)}</span>
-                </div>
+                </Button>
+          
               </div>
-              <Button
-                onClick={handleCheckoutCart}
-                className="w-full"
-                disabled={cartItems.length === 0 || isCreatingSession}
-              >
-                {isCreatingSession ? "Processing..." : "Confirm booking"}
-              </Button>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* ================= LEFT SIDE - LOCATION ================= */}
-          <div className="lg:col-span-3 space-y-5 rounded-3xl bg-white max-w-[800px] max-h-[380px] p-8">
+          <div className="lg:col-span-3 space-y-5 rounded-3xl border border-[#DCE6F5] bg-white max-w-[800px] max-h-[380px] p-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-[#0F2A44]">
                 {service.title}'s Location
               </h2>
 
@@ -1417,7 +1631,7 @@ export default function ServiceDetail() {
                 href={`https://www.google.com/maps?q=${resolvedLatitude},${resolvedLongitude}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-600 hover:underline"
+                className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-[#2563EB] hover:underline"
               >
                 <img src={map} className="h-5 w-5" />
                 <span>Google Maps</span>
@@ -1433,8 +1647,8 @@ export default function ServiceDetail() {
 
           {/* ================= RIGHT SIDE - COUPONS ================= */}
           {vendorCoupons.length > 0 && (
-            <div className="lg:col-span-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h4 className="text-sm font-semibold text-slate-900">Coupons</h4>
+            <div className="lg:col-span-2 space-y-3 rounded-2xl border border-[#DCE6F5] bg-[#EAF1FF] p-4">
+              <h4 className="text-sm font-semibold text-[#0F2A44]">Coupons</h4>
 
               <div className="space-y-3">
                 {vendorCoupons.slice(0, 4).map((coupon, index) => {
@@ -1450,33 +1664,33 @@ export default function ServiceDetail() {
                         <div
                           className={`relative px-3 py-4 text-center ${theme.leftPanel}`}
                         >
-                          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-700">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#0F2A44]">
                             Shopping Coupon
                           </p>
 
-                          <p className="mt-2 text-[30px] font-black leading-none text-slate-900">
+                          <p className="mt-2 text-[30px] font-black leading-none text-[#0F2A44]">
                             {coupon.discountType === "FLAT"
                               ? `${formatCurrency(coupon.discount)}`
                               : `${coupon.discount}%`}
                           </p>
 
-                          <p className="text-[28px] font-black leading-none text-slate-900">
+                          <p className="text-[28px] font-black leading-none text-[#0F2A44]">
                             OFF
                           </p>
 
-                          <div className="mt-3 space-y-1 text-[11px] text-slate-600">
+                          <div className="mt-3 space-y-1 text-[11px] text-[#5F7390]">
                             <p>Min order {formatCurrency(coupon.minOrder)}</p>
                             <p>Max uses {coupon.maxUses}</p>
                           </div>
 
-                          <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                          <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#F3F7FF]" />
                         </div>
 
                         {/* RIGHT PANEL */}
                         <div
                           className={`relative px-4 py-4 text-white ${theme.rightPanel}`}
                         >
-                          <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-slate-50" />
+                          <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#F3F7FF]" />
 
                           <div className="pl-3">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
@@ -1509,7 +1723,7 @@ export default function ServiceDetail() {
                               <Button
                                 type="button"
                                 variant="secondary"
-                                className="h-8 shrink-0 rounded-md border border-white/40 bg-white/20 px-3 text-xs font-semibold text-white hover:bg-white/30"
+                                className="h-8 shrink-0 rounded-md border border-[#DCE6F5] bg-[#DBEAFE]/20 px-3 text-xs font-semibold text-white hover:bg-[#DBEAFE]/30"
                                 onClick={() => {
                                   setPromoCode(coupon.code);
                                   setCouponError(null);
@@ -1531,30 +1745,66 @@ export default function ServiceDetail() {
 
         <div className="max-w-[800px]">
           {/* Highlights & Amenities Section */}
-          <div className="space-y-6 rounded-3xl bg-white p-8">
-            <h2 className="text-2xl font-bold text-slate-900">
-              Highlights & Amenities
-            </h2>
-            <div className="flex flex-wrap gap-4">
-              {["AC Rooms", "Parking Available", "Family Friendly"].map(
-                (amenity) => (
-                  <div
-                    key={amenity}
-                    className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4"
-                  >
-                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <span className="text-[15px] font-medium text-slate-700">
-                      {amenity}
-                    </span>
-                  </div>
-                ),
-              )}
+          <div className="space-y-6 rounded-3xl border border-[#DCE6F5] bg-white p-8">
+            <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-2xl font-bold text-[#0F2A44]">
+                Highlights & Amenities
+              </h2>
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#2563EB]">
+                <span className="h-2 w-2 rounded-full bg-[#60A5FA]" />
+                All Inclusive
+              </span>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {[
+                {
+                  title: "Climate Controlled",
+                  description:
+                    "High-performance AC rooms designed for data-intensive sessions and executive comfort.",
+                  icon: Snowflake,
+                  iconTone: "bg-[#ece9ff] text-[#5b57e6]",
+                },
+                {
+                  title: "Executive Parking",
+                  description:
+                    "Dedicated secure parking area with valet services available for all institutional guests.",
+                  icon: CarFront,
+                  iconTone: "bg-[#efeaff] text-[#6a5bff]",
+                  iconLabel: "P",
+                },
+                {
+                  title: "Family Friendly",
+                  description:
+                    "Professional lounge and waiting areas optimized for companions and private family discussions.",
+                  icon: Users,
+                  iconTone: "bg-[#e9f4ff] text-[#2f7ddf]",
+                },
+              ].map(({ title, description, icon: Icon, iconTone, iconLabel }) => (
+                <div
+                  key={title}
+                  className="rounded-[28px] border border-[#DCE6F5] bg-white p-6 "
+                >
+                  <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconTone}`}>
+                    {iconLabel ? (
+                      <span className="text-[28px] font-bold leading-none">{iconLabel}</span>
+                    ) : (
+                      <Icon className="h-7 w-7" />
+                    )}
+                  </span>
+                  <h3 className="mt-6 text-[18px] font-semibold leading-tight text-[#0F2A44]">
+                    {title}
+                  </h3>
+                  <p className="mt-3 text-[15px] leading-7 text-[#5F7390]">
+                    {description}
+                  </p>
+                </div>
+              ))}
             </div>
 
             {/* Menu Preview Section */}
-            <div className="space-y-4 rounded-3xl bg-white p-8">
-              <h3 className="text-xl font-bold text-slate-900">Menu Preview</h3>
-              <p className="text-sm text-slate-500">
+            <div className="space-y-4 rounded-3xl border border-[#DCE6F5] bg-white p-8">
+              <h3 className="text-xl font-bold text-[#0F2A44]">Menu Preview</h3>
+              <p className="text-sm text-[#5F7390]">
                 View uploaded menu photos from the restaurant
               </p>
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
@@ -1563,7 +1813,7 @@ export default function ServiceDetail() {
                     <button
                       key={`${imageUrl}-${index}`}
                       type="button"
-                      className="min-w-[100px] shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      className="min-w-[100px] shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                       onClick={() => setSelectedMenuImage(imageUrl)}
                     >
                       <img
@@ -1574,7 +1824,7 @@ export default function ServiceDetail() {
                     </button>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-500">No menu images uploaded yet.</p>
+                  <p className="text-sm text-[#5F7390]">No menu images uploaded yet.</p>
                 )}
               </div>
             </div>
@@ -1583,18 +1833,18 @@ export default function ServiceDetail() {
 
         <div className="max-w-[800px]">
           {/* Trust/Feature Banner */}
-          <div className="rounded-3xl bg-white p-8">
+          <div className="rounded-3xl border border-[#DCE6F5] bg-white p-8">
             <div className="grid grid-cols-4 gap-8">
               {[
                 {
-                  icon: <BadgeCheck className="h-6 w-6 text-emerald-500" />,
+                  icon: <BadgeCheck className="h-6 w-6 text-[#34D399]" />,
                   title: "Verified Providers",
                   desc: "Trusted & quality-checked",
                 },
                 {
                   icon: (
                     <svg
-                      className="h-6 w-6 text-blue-500"
+                      className="h-6 w-6 text-[#60A5FA]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1613,7 +1863,7 @@ export default function ServiceDetail() {
                 {
                   icon: (
                     <svg
-                      className="h-6 w-6 text-purple-500"
+                      className="h-6 w-6 text-[#C084FC]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1632,7 +1882,7 @@ export default function ServiceDetail() {
                 {
                   icon: (
                     <svg
-                      className="h-6 w-6 text-orange-500"
+                      className="h-6 w-6 text-[#FB923C]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1656,26 +1906,26 @@ export default function ServiceDetail() {
                   <div className="mb-3 flex h-12 w-12 items-center justify-center">
                     {item.icon}
                   </div>
-                  <h4 className="text-sm font-bold text-slate-900">
+                  <h4 className="text-sm font-bold text-[#0F2A44]">
                     {item.title}
                   </h4>
-                  <p className="text-[12px] text-slate-500">{item.desc}</p>
+                  <p className="text-[12px] text-[#5F7390]">{item.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="space-y-5 rounded-3xl bg-white p-8 ">
+        <div className="space-y-5 rounded-3xl border border-[#DCE6F5] bg-white p-8 ">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Reviews</h2>
-              <p className="text-sm text-slate-500">
+              <h2 className="text-xl font-semibold text-[#0F2A44]">Reviews</h2>
+              <p className="text-sm text-[#5F7390]">
                 Guests recap their experience in the studio lounge and treatment
                 rooms.
               </p>
             </div>
-            <button className="text-sm font-semibold text-blue-600">
+            <button className="text-sm font-semibold text-[#2563EB]">
               View all {reviews?.length || 0} reviews
             </button>
           </div>
@@ -1703,110 +1953,122 @@ export default function ServiceDetail() {
               );
               const showReviewerImage =
                 !!reviewerImageUrl && !failedReviewerImages[review.id];
+              const reviewTimeLabel = formatRelativeReviewTime(review.createdAt);
 
               return (
                 <article
                   key={review.id}
-                  className="space-y-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                  className="rounded-[24px] border border-[#DCE6F5] bg-white p-6 "
                 >
-                  <div className="flex gap-4">
-                    {showReviewerImage ? (
-                      <img
-                        src={reviewerImageUrl}
-                        alt={reviewerName}
-                        className="h-12 w-12 shrink-0 rounded-full object-cover"
-                        onError={() =>
-                          setFailedReviewerImages((prev) => ({
-                            ...prev,
-                            [review.id]: true,
-                          }))
-                        }
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">
-                        {reviewerInitial}
-                      </div>
-                    )}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[15px] font-bold text-slate-900">
-                          {reviewerName}
-                        </p>
-                        <Badge
-                          variant="outline"
-                          className="flex items-center gap-1 border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50"
-                        >
-                          <Check className="h-3 w-3 stroke-[3px]" />
-                          Verified
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className={`h-3 w-3 ${
-                              s <= review.rating
-                                ? "fill-orange-400 text-orange-400"
-                                : "text-slate-200"
-                            }`}
-                          />
-                        ))}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 items-start gap-4">
+                      {showReviewerImage ? (
+                        <img
+                          src={reviewerImageUrl}
+                          alt={reviewerName}
+                          className="h-12 w-12 shrink-0 rounded-full object-cover"
+                          onError={() =>
+                            setFailedReviewerImages((prev) => ({
+                              ...prev,
+                              [review.id]: true,
+                            }))
+                          }
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#EAF1FF] text-lg font-bold text-[#2563EB]">
+                          {reviewerInitial}
+                        </div>
+                      )}
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-[15px] font-bold text-[#0F2A44]">
+                            {reviewerName}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className="flex items-center gap-1 border border-[#DCE6F5] bg-[#EAF1FF] px-2 py-0.5 text-[10px] font-bold text-[#2563EB] hover:bg-[#EAF1FF]"
+                          >
+                            <Check className="h-3 w-3 stroke-[3px]" />
+                            Verified
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`h-5 w-5 ${
+                                s <= review.rating
+                                  ? "fill-[#F5A623] text-[#F5A623]"
+                                  : "fill-[#DCE6F5] text-[#DCE6F5]"
+                              }`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
+                    <div className="shrink-0 text-sm font-medium text-[#5F7390]">
+                      {reviewTimeLabel || new Date(review.createdAt).toLocaleDateString()}
+                    </div>
                   </div>
-                  <p className="text-[15px] leading-relaxed text-slate-600">
+                  <p className="mt-4 text-[15px] leading-8 text-[#5F7390]">
                     {review.comment}
                   </p>
-                  <div className="text-[13px] font-medium text-slate-400">
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </div>
                 </article>
               );
             })}
           </div>
           <div className="grid gap-4 lg:grid-cols-[1.0fr_0.9fr]">
-            <div className="space-y-3 rounded-2xl border border-slate-100 p-5">
-              <p className="text-lg font-semibold text-slate-900">
-                Customer reviews
-              </p>
-              <div className="flex items-center gap-3">
-                <p className="text-4xl font-bold text-slate-900">
-                  {reviews && reviews.length > 0
-                    ? (
-                        reviews.reduce((acc, r) => acc + r.rating, 0) /
-                        reviews.length
-                      ).toFixed(1)
-                    : "0.0"}
-                </p>
-                <div className="flex flex-col text-sm text-slate-500">
-                  <span>Based on {reviews?.length || 0} reviews</span>
-                  <span>Let us know what stood out</span>
+            <div className="rounded-[28px] border border-[#DCE6F5] bg-white p-6 ">
+              <div className="flex items-start justify-between gap-6">
+                <div className="space-y-1">
+                  <p className="text-[46px] font-bold leading-none text-[#4b76d5]">
+                    {averageReviewRating.toFixed(1)}
+                  </p>
+                   <p className="text-sm font-semibold text-[#5F7390]">
+                    Based on {reviews?.length || 0} reviews
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 pt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-5 w-5 ${
+                        star <= Math.round(averageReviewRating)
+                            ? "fill-[#F5A623] text-[#F5A623]"
+                          : "fill-[#DCE6F5] text-[#DCE6F5]"
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
-              <div className="space-y-2">
+
+              <div className="mt-5 h-px w-full bg-[#DCE6F5]" />
+
+              <div className="mt-6 space-y-3">
                 {starBreakdown.map((row) => (
                   <div
-                    key={row.label}
-                    className="flex items-center gap-3 text-xs font-semibold text-slate-500"
+                    key={row.rating}
+                    className="grid grid-cols-[14px_1fr] items-center gap-x-4 gap-y-1"
                   >
-                    <span className="w-12">{row.label}</span>
-                    <div className="flex-1 rounded-full bg-slate-100">
+                    <span className="text-sm font-semibold text-[#0F2A44]">
+                      {row.rating}
+                    </span>
+                    <div className="h-2 rounded-full bg-[#EAF1FF]">
                       <div
-                        className="h-2 rounded-full bg-amber-500"
+                        className="h-2 rounded-full bg-[#F5A623] transition-all"
                         style={{ width: `${row.percent}%` }}
                       />
                     </div>
-                    <span>{row.percent}%</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-8">
+            <div className="space-y-6 rounded-[32px] border border-[#DCE6F5] bg-white p-8">
               <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-900">
+                <h3 className="text-xl font-bold text-[#0F2A44]">
                   Write a Review
                 </h3>
-                <p className="text-sm font-medium text-slate-500">
+                <p className="text-sm font-medium text-[#5F7390]">
                   Your rating
                 </p>
               </div>
@@ -1824,8 +2086,8 @@ export default function ServiceDetail() {
                     <Star
                       className={`h-8 w-8 transition-colors ${
                         star <= (hoverRating || userRating)
-                          ? "fill-orange-400 text-orange-400"
-                          : "text-orange-400"
+                          ? "fill-[#F5A623] text-[#F5A623]"
+                          : "text-[#F5A623]"
                       }`}
                     />
                   </button>
@@ -1836,13 +2098,13 @@ export default function ServiceDetail() {
                 value={userComment}
                 onChange={(evt) => setUserComment(evt.target.value)}
                 placeholder="Tell fellow guests what made your visit special"
-                className="min-h-35 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 focus:border-blue-400 focus:outline-none"
+                className="min-h-35 w-full rounded-2xl border border-[#DCE6F5] bg-white px-4 py-3 text-sm text-[#0F2A44] focus:border-[#4b76d5]focus:outline-none"
               />
 
               <Button
                 onClick={handleSubmitReview}
                 disabled={isSubmitting}
-                className=""
+                className=" font-semibold bg-[#4b76d5]"
               >
                 {isSubmitting ? "Submitting..." : "Submit Review"}
               </Button>
@@ -1862,7 +2124,7 @@ export default function ServiceDetail() {
             className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-xl font-semibold text-white backdrop-blur hover:bg-white/30"
             onClick={() => setSelectedMenuImage(null)}
           >
-            ×
+            Ã—
           </button>
           <img
             src={selectedMenuImage}
@@ -1895,5 +2157,6 @@ export default function ServiceDetail() {
     </section>
   );
 }
+
 
 

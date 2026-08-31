@@ -41,7 +41,10 @@ export const adminFinanceApi = createApi({
       invalidatesTags: ["AdminWallet"],
     }),
 
-    getPayouts: builder.query<{ status: string; data: { data: any[]; meta: any } }, { page?: number; limit?: number; status?: string }>({
+    getPayouts: builder.query<
+      { status: string; data: { data: any[]; meta: any } },
+      { page?: number; limit?: number; status?: string; fromDate?: string; toDate?: string }
+    >({
       query: (params) => ({
         url: "/admin/finance/payouts",
         method: "GET",
@@ -58,7 +61,37 @@ export const adminFinanceApi = createApi({
       providesTags: ["AdminWallet"],
     }),
 
-    getPlatformTransactions: builder.query<{ status: string; data: { data: any[]; meta: any } }, { page?: number; limit?: number }>({
+    getPlatformCityAnalytics: builder.query<
+      {
+        status: string;
+        data: {
+          period: "today" | "weekly" | "monthly";
+          generatedAt: string;
+          data: Array<{
+            name: string;
+            percent: number;
+            users: number;
+            orders: number;
+            revenue: number;
+            activeVendors: number;
+            topCategory: string;
+          }>;
+        };
+      },
+      { period?: "today" | "weekly" | "monthly"; limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/admin/finance/platform-city-analytics",
+        method: "GET",
+        params: params ?? undefined,
+      }),
+      providesTags: ["AdminWallet"],
+    }),
+
+    getPlatformTransactions: builder.query<
+      { status: string; data: { data: any[]; meta: any } },
+      { page?: number; limit?: number; fromDate?: string; toDate?: string }
+    >({
       query: (params) => ({
         url: "/admin/finance/platform-transactions",
         method: "GET",
@@ -100,6 +133,7 @@ export const {
   useRejectPayoutMutation,
   useGetPayoutsQuery,
   useGetPlatformStatsQuery,
+  useGetPlatformCityAnalyticsQuery,
   useGetPlatformTransactionsQuery,
   useGetPlatformStripeBalanceQuery,
   useGetPlatformPayoutArrivalsQuery,

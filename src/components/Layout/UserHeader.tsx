@@ -1,8 +1,10 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
+  ArrowLeftRight,
   Bell,
   Bookmark,
   BriefcaseBusiness,
+  Crown,
   ChevronLeft,
   ChevronRight,
   Heart,
@@ -47,6 +49,9 @@ import {
   useLazyGetServiceCategoriesByMasterQuery,
   type ServiceCategory,
 } from "@/services/serviceCategoriesApi";
+import {
+  useGetMyPlanQuery,
+} from "@/features/userSubscriptions/api/userSubscriptionsApi";
 import { plannedCategories } from "@/data/vendorServiceCategories";
 import {
   CART_UPDATED_EVENT,
@@ -155,6 +160,9 @@ export default function UserHeader() {
     isFetching: isNotificationsFetching,
     error: notificationsError,
   } = useGetNotificationsQuery({ page: 1, limit: 5 }, { skip: !user });
+  const { data: userPlanRes, isFetching: isUserPlanFetching } = useGetMyPlanQuery(undefined, {
+    skip: !user,
+  });
   const { data: unreadResponse } = useGetUnreadCountQuery(undefined, {
     skip: !user,
   });
@@ -702,6 +710,24 @@ export default function UserHeader() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <IconButton
+              icon={<Crown className="h-5 w-5 text-emerald-600" />}
+              label="Subscriptions"
+              badge={
+                user
+                  ? isUserPlanFetching
+                    ? "..."
+                    : userPlanRes?.data?.plan?.planName ?? "None"
+                  : undefined
+              }
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/subscriptions");
+              }}
+              className="border-emerald-200 bg-emerald-50 text-emerald-700"
+            />
+            <IconButton
               icon={<Heart className="h-5 w-5 text-rose-500" />}
               label="Wishlist"
               onClick={() => {
@@ -710,6 +736,17 @@ export default function UserHeader() {
                 setProfileMenuOpen(false);
                 navigate("/wishlist");
               }}
+            />
+            <IconButton
+              icon={<ArrowLeftRight className="h-5 w-5 text-sky-600" />}
+              label="Compare"
+              onClick={() => {
+                setCartMenuOpen(false);
+                setNotificationsMenuOpen(false);
+                setProfileMenuOpen(false);
+                navigate("/compare");
+              }}
+              className="border-sky-200 bg-sky-50 text-sky-700"
             />
             <IconButton
               icon={<ShoppingBag className="h-5 w-5 text-amber-600" />}

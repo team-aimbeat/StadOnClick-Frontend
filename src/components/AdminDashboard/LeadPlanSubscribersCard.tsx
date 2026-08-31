@@ -1,100 +1,91 @@
+import {
+  HiOutlineUsers,
+  HiOutlineTag,
+  HiOutlineRectangleGroup,
+} from "react-icons/hi2";
 import AdminCardShell from "./AdminCardShell";
-import { BarChart, Bar, Tooltip, ResponsiveContainer, XAxis } from "recharts";
-import { useGetLeadPlanSubscribersSummaryQuery } from "@/features/adminLeads/api/adminLeadPlans.api";
-const fallbackWeekly = [
-  { day: "Sun", value: 0 },
-  { day: "Mon", value: 0 },
-  { day: "Tue", value: 0 },
-  { day: "Wed", value: 0 },
-  { day: "Thu", value: 0 },
-  { day: "Fri", value: 0 },
-  { day: "Sat", value: 0 },
-];
+import { cn } from "@/lib/utils";
+import {
+  useGetLeadPlanSubscribersSummaryQuery,
+  useListLeadPlansQuery,
+  useListVendorSubscriptionsQuery,
+} from "@/features/adminLeads/api/adminLeadPlans.api";
+
+const MetricTile = ({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  iconClassName,
+  iconWrapClassName,
+}: {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconClassName: string;
+  iconWrapClassName: string;
+}) => (
+  <div className="flex h-full min-h-[92px] flex-col justify-center gap-1.5 rounded-2xl bg-slate-50 px-3.5 py-3">
+    <div className={`flex h-9 w-9 items-center justify-center rounded-xl shadow-sm ${iconWrapClassName}`}>
+      <Icon className={`h-4 w-4 ${iconClassName}`} />
+    </div>
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{title}</p>
+      <div
+        className={cn(
+          "truncate font-semibold tracking-[-0.04em] text-[#2F5BEA]",
+          typeof value === "number" ? "text-2xl" : "text-sm"
+        )}
+      >
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </div>
+      <p className="text-xs font-medium text-slate-500">{subtitle}</p>
+    </div>
+  </div>
+);
 
 const LeadPlanSubscribersCard = () => {
-  const { data } = useGetLeadPlanSubscribersSummaryQuery();
-  const totalSubscribers = data?.totalSubscribers ?? 0;
-  const dailyAverage = data?.dailyAverage ?? 0;
-  const growthPercent = data?.growthPercent ?? 0;
-  const weeklySubscriptions = data?.weeklySubscriptions?.length
-    ? data.weeklySubscriptions
-    : fallbackWeekly;
-  const mostPopularPlan = data?.mostPopularPlan ?? "N/A";
-  const isPositive = growthPercent >= 0;
-  const trendText = `${isPositive ? "+" : ""}${growthPercent}%`;
+  const { data: summary } = useGetLeadPlanSubscribersSummaryQuery();
+  const { data: subscriptions } = useListVendorSubscriptionsQuery({
+    page: 1,
+    limit: 1,
+    status: "ACTIVE",
+  });
+  const { data: leadPlans } = useListLeadPlansQuery();
+
+  const subscriberCount = subscriptions?.meta?.total ?? summary?.totalSubscribers ?? 0;
+  const leadPlansCount = leadPlans?.length ?? 0;
+  const customerPlanName = summary?.mostPopularPlan ?? "N/A";
+  const dailyAverage = summary?.dailyAverage ?? 0;
 
   return (
-    <AdminCardShell title="Total Vendors Subscribers" subtitle="Lead plans">
-      <div className="flex h-full flex-col gap-6">
-        <div className="space-y-2 flex  justify-between">
-          <div className="text-3xl font-bold text-slate-900">
-            {totalSubscribers.toLocaleString()}
-          </div>
-          <div className="flex items-center gap-3 text-sm font-semibold">
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                isPositive
-                  ? "border border-rose-200 bg-rose-50 text-rose-600"
-                  : "border border-rose-200 bg-rose-50 text-rose-700"
-              }`}
-            >
-              {trendText}
-            </span>
-            <span className="text-slate-700">{dailyAverage} per day</span>
-          </div>
-        </div>
-
-        <div className="flex-1">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={weeklySubscriptions}
-              margin={{ top: 0, right: 4, left: 4, bottom: 0 }}
-              barCategoryGap={12}
-            >
-              <XAxis
-                dataKey="day"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "#94a3b8" }}
-              />
-              <Tooltip
-                cursor={{ fill: "transparent" }}
-                contentStyle={{
-                  borderRadius: 10,
-                  border: "1px solid #e2e8f0",
-                  padding: "8px 10px",
-                  boxShadow: "none",
-                  fontSize: 12,
-                  color: "#0f172a",
-                }}
-                labelStyle={{ color: "#0f172a", fontWeight: 600 }}
-                itemStyle={{ color: "#0f172a" }}
-                formatter={(
-                  value: number | string | (number | string)[] | undefined
-                ): [string, string] => {
-                  const raw = Array.isArray(value) ? value[0] : value;
-                  const numeric = Number(raw ?? 0);
-                  const display = Number.isFinite(numeric)
-                    ? numeric.toLocaleString()
-                    : `${raw ?? 0}`;
-                  return [`Sales: ${display}`, ""];
-                }}
-                labelFormatter={(label) => label}
-              />
-              <Bar
-                dataKey="value"
-                radius={[10, 10, 10, 10]}
-                fill="#d9e5ff"
-                barSize={40}
-                activeBar={{ fill: "#2563eb" }}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="text-sm font-semibold text-slate-700">
-          Most popular: <span className="text-slate-900">{mostPopularPlan}</span>
-        </div>
+    <AdminCardShell title="Vendor Subscribers" className="rounded-2xl">
+      <div className="grid grid-cols-1 gap-2.5">
+        <MetricTile
+          title="Subscribers"
+          value={subscriberCount}
+          subtitle={`${dailyAverage} per day`}
+          icon={HiOutlineUsers}
+          iconClassName="text-[#3554e0]"
+          iconWrapClassName="bg-white text-[#3554e0]"
+        />
+        <MetricTile
+          title="Lead Plans"
+          value={leadPlansCount}
+          subtitle="active plans"
+          icon={HiOutlineTag}
+          iconClassName="text-amber-500"
+          iconWrapClassName="bg-amber-50 text-amber-500"
+        />
+        <MetricTile
+          title="Customer Plan"
+          value={customerPlanName}
+          subtitle="most popular"
+          icon={HiOutlineRectangleGroup}
+          iconClassName="text-emerald-500"
+          iconWrapClassName="bg-emerald-50 text-emerald-500"
+        />
       </div>
     </AdminCardShell>
   );

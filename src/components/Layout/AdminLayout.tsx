@@ -14,7 +14,7 @@ export default function AdminLayout({ basePath = "/admin" }: AdminLayoutProps) {
   const isSidebarCollapsed = !themeConfig.sidebar;
 
   return (
-    <div className="flex min-h-screen bg-[#f1f2f8]">
+    <div className="flex min-h-screen bg-[#F3F7FF] ">
       <Sidebar basePath={basePath} />
 
       <div

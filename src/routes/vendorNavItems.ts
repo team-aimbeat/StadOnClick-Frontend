@@ -10,11 +10,13 @@ import {
   HiOutlineShieldCheck,
   HiOutlineCloud,
   HiOutlineLifebuoy,
+  HiOutlineBookOpen,
   HiOutlineChatBubbleLeftRight,
   HiOutlineBookmarkSquare,
   HiOutlineUserGroup,
   HiOutlineTicket,
   HiOutlineBell,
+  HiOutlineCog6Tooth,
 } from "react-icons/hi2";
 import { IconType } from "react-icons";
 import { LayoutGrid } from "lucide-react";
@@ -47,6 +49,7 @@ export type VendorSidebarMeta = {
   allBookings?: number;
   upcomingBookings?: number;
   completedBookings?: number;
+  cancelledBookings?: number;
   refundRequestBookings?: number;
   pendingBookings?: number;
   kycDocumentsCount?: number;
@@ -63,6 +66,7 @@ export const getVendorNavGroups = ({
   allBookings = 0,
   upcomingBookings = 0,
   completedBookings = 0,
+  cancelledBookings = 0,
   refundRequestBookings = 0,
   pendingBookings = 0,
   kycDocumentsCount = 0,
@@ -98,6 +102,11 @@ export const getVendorNavGroups = ({
         to: "/vendor/profile",
       },
       {
+        label: "Account Settings",
+        icon: HiOutlineCog6Tooth,
+        to: "/vendor/settings",
+      },
+      {
         label: "KYC Documents",
         icon: HiOutlineShieldCheck,
         to: "/vendor/kyc",
@@ -131,6 +140,11 @@ export const getVendorNavGroups = ({
             label: "Completed",
             to: "/vendor/bookings/completed",
             badge: completedBookings > 0 ? `${completedBookings}` : undefined,
+          },
+          {
+            label: "Cancelled",
+            to: "/vendor/bookings/cancelled",
+            badge: cancelledBookings > 0 ? `${cancelledBookings}` : undefined,
           },
           {
             label: "Refund Requests",
@@ -247,6 +261,11 @@ export const getVendorNavGroups = ({
         label: "Help Center",
         icon: HiOutlineLifebuoy,
         to: "/vendor/help",
+      },
+      {
+        label: "User Manual",
+        icon: HiOutlineBookOpen,
+        to: "/vendor/help/user-manual",
       },
     ],
   },

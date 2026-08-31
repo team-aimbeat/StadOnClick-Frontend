@@ -27,8 +27,8 @@ const tags = ["Fine Art", "Sculpture", "Photography", "Museums"]
 
 export default function HomeSightseeing() {
   return (
-    <section className="bg-[#fdf6ee] py-16">
-      <div className="mx-auto max-w-387.5 space-y-12 px-4">
+    <section className="bg-[#fdf6ee] py-16 relative w-screen -mx-[calc((100vw-100%)/2)] py-10 sm:py-14">
+      <div className="mx-auto max-w-387.5 space-y-20 px-4">
         <div className="flex flex-col gap-6 rounded-[32px] bg-white p-6 shadow-2xl md:flex-row md:items-center">
           <div className="space-y-4 md:flex-1">
             <p className="text-sm uppercase tracking-[0.5em] text-amber-500">The exhibition</p>

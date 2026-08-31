@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"
+import { ArrowUpRight } from "lucide-react"
 
 import event from "@/assets/Images/event.jpg"
 import family from "@/assets/Images/family.jpg"
@@ -37,51 +38,51 @@ const fallbackCategories: CategoryCard[] = [
     category: "Health & Wellness",
     image: wellness,
     author: "Top picks",
-    title: "Studios, yoga, and spa escapes",
-    description: "Gym, yoga, meditation, massage and spa services.",
+    title: "Health & Wellness",
+    description: "Rejuvenate your spirit with guided meditation and thermal experiences.",
     location: "Stockholm, SE",
-    price: "From $25",
+    price: "FROM $120",
     slug: "health-wellness",
   },
   {
     category: "Food & Leisure",
     image: food,
     author: "Local favorites",
-    title: "Cafes, restaurants, and hotspots",
-    description: "Eateries, cafes, and weekend markets to explore.",
+    title: "Food & Leisure",
+    description: "Exquisite dining experiences curated by Michelin-star hospitality.",
     location: "Stockholm, SE",
-    price: "From $15",
+    price: "FROM $85",
     slug: "food-leisure",
   },
   {
     category: "Travel & Transportation",
     image: travel,
     author: "On the go",
-    title: "Cab, ferry, bus, and courier",
-    description: "Transportation and logistics around the city.",
+    title: "Travel & Transport",
+    description: "Seamless private aviation and luxury fleet rentals at your service.",
     location: "Stockholm, SE",
-    price: "From $10",
+    price: "FROM $450",
     slug: "travel-transportation",
-  },
-  {
-    category: "Kids & Family",
-    image: family,
-    author: "Family time",
-    title: "Kids events and play activities",
-    description: "Play areas, hobby classes, and birthday parties.",
-    location: "Stockholm, SE",
-    price: "From $12",
-    slug: "kids-family",
   },
   {
     category: "Experiences & Activities",
     image: event,
     author: "Explore",
-    title: "Tours, museums, concerts, and more",
-    description: "City events, attractions, and places to visit.",
+    title: "Experiences",
+    description: "Bucket-list adventures designed for those who seek more.",
     location: "Stockholm, SE",
-    price: "From $8",
+    price: "EXCLUSIVE",
     slug: "experiences-activities",
+  },
+  {
+    category: "Kids & Family",
+    image: family,
+    author: "Family time",
+    title: "Kids & Family",
+    description: "Family-friendly activities, birthdays, and weekend fun.",
+    location: "Stockholm, SE",
+    price: "FROM $60",
+    slug: "kids-family",
   },
 ]
 
@@ -115,21 +116,20 @@ export default function HomeCategories({ content }: HomeCategoriesProps) {
   const headingSuffix = String(content?.headingSuffix ?? "").trim() || fallbackContent.headingSuffix
 
   return (
-    <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
-      <div className="relative z-10 mx-auto max-w-387.5 px-6 py-12">
-      <div className="mb-6">
-  <h2 className="text-start text-[28px] sm:text-3xl lg:text-3xl font-semibold tracking-wide text-gray-900">
-    {headingPrefix} <span className="text-rose-600 font-bold">{headingHighlight}</span> {headingSuffix}
-  </h2>
+    <section className="relative left-1/2 right-1/2 w-screen -ml-[50vw] -mr-[50vw] overflow-hidden">
+      <div className="relative z-10 mx-auto  px-6 py-12">
+        <div className="mb-8">
+          <h2 className="text-start text-[28px] font-semibold tracking-wide text-[#0F2A44] sm:text-3xl lg:text-3xl">
+            {headingPrefix} <span className="font-bold text-[#2563EB]">{headingHighlight}</span> {headingSuffix}
+          </h2>
+          <div className="mt-2 h-[3px] w-20 rounded-full bg-gradient-to-r from-[#2563EB] to-[#60A5FA]" />
+        </div>
 
-  <div className="mt-2 h-[3px] w-20 bg-gradient-to-r from-rose-500 to-orange-400 rounded-full"></div>
-</div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
           {cards.map((card) => (
             <article
               key={card.title}
-            className="group cursor-pointer overflow-hidden rouded-sm border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+              className="group cursor-pointer  overflow-hidden rounded-[34px] border border-slate-200 bg-white p-3 transition hover:-translate-y-1 "
             onClick={() => {
               if (card.slug) {
                 navigate(`/marketplace?category=${card.slug}`)
@@ -138,48 +138,39 @@ export default function HomeCategories({ content }: HomeCategoriesProps) {
               navigate(`/marketplace?category=${card.slug}`)
             }}
             >
-              <div className="relative h-40">
+              <div className="relative overflow-hidden rounded-[28px]">
                 <ImageWithSkeleton
                   src={card.image}
                   alt={card.title}
-                  containerClassName="h-full w-full"
-                  className="h-full w-full object-cover"
+                  containerClassName="h-[220px] w-full"
+                  className="h-[220px] w-full object-cover transition duration-500 group-hover:scale-105"
                   loading="lazy"
                   decoding="async"
                 />
-                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[12px] font-semibold uppercase tracking-wide text-slate-700">
-                  {card.category}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <span className="absolute right-4 top-4 rounded-full bg-[#0F8A63] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-lg">
+                  {card.price}
                 </span>
               </div>
 
-              <div className="p-3">
-                <div className="flex items-center gap-2">
-                  <ImageWithSkeleton
-                    src={card.image}
-                    alt={card.author}
-                    containerClassName="h-6 w-6 rounded-full"
-                    skeletonClassName="rounded-full"
-                    className="h-6 w-6 rounded-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <p className="text-[14px] font-semibold text-slate-700">
-                    {card.author}
-                  </p>
-                </div>
+              <div className="relative px-2 pb-2 pt-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-[18px] font-bold leading-tight text-[#334155]">
+                      {card.title}
+                    </h3>
+                    <p className="mt-2 max-h-10 overflow-hidden text-[13px] leading-5 text-[#6B7280]">
+                      {card.description}
+                    </p>
+                  </div>
 
-                <h3 className="mt-2 text-[16px] font-semibold text-slate-900">
-                  {card.title}
-                </h3>
-                <p className="mt-1 text-[14px] text-slate-500">
-                  {card.description}
-                </p>
-
-                <div className="mt-2 flex items-center gap-2 text-[12px] text-slate-500">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-                    {card.location}
-                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Open ${card.title}`}
+                    className="mt-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF] text-[#2563EB] transition group-hover:bg-[#DBEAFE]"
+                  >
+                    <ArrowUpRight className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
             </article>

@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { HiOutlineExclamationTriangle, HiOutlineArrowDownTray, HiOutlineArrowUpTray, HiOutlineClock, HiOutlineCheckCircle, HiOutlineXCircle } from "react-icons/hi2";
+import {
+  HiOutlineExclamationTriangle,
+  HiOutlineArrowDownTray,
+  HiOutlineClock,
+  HiOutlineCheckCircle,
+  HiOutlineXCircle,
+  HiOutlineFunnel,
+} from "react-icons/hi2";
 
 import { DashboardContainer } from "@/components/dashboard";
 import TitleBreadCrumbs from "@/components/shared/TitleBreadCrumbs";
@@ -13,25 +20,21 @@ import {
 } from "@/features/vendorWallet/api/walletApi";
 import { useGetStripeStatusQuery } from "@/features/vendorStripe/api/vendorStripeApi";
 import { toast } from "react-hot-toast";
-import { DataTable } from "@/components/shared/DataTable";
 import dayjs from "dayjs";
 import VendorPayoutsSkeleton from "@/components/skeletons/VendorPayoutsSkeleton";
+import { cn } from "@/lib/utils";
 
 const VendorPayouts = () => {
   const dispatch = useAppDispatch();
   const [requestAmount, setRequestAmount] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [dateRangeLabel, setDateRangeLabel] = useState("");
-  const [dateRangeQuery, setDateRangeQuery] = useState<{ fromDate?: string; toDate?: string }>({});
 
   const { data: summaryData, isLoading: isSummaryLoading } = useGetWalletSummaryQuery();
   const { data: stripeData, isLoading: isStripeLoading } = useGetStripeStatusQuery();
   const { data: transactionsData, isLoading: isTransactionsLoading } = useGetWalletTransactionsQuery({
     page: 1,
     limit: 50,
-    fromDate: dateRangeQuery.fromDate,
-    toDate: dateRangeQuery.toDate,
   });
   const [requestPayout, { isLoading: isPayoutRequesting }] = useRequestPayoutMutation();
 
@@ -42,6 +45,7 @@ const VendorPayouts = () => {
   const summary = summaryData?.data;
   const stripe = stripeData?.data;
   const payoutHistory = (transactionsData?.data || []).filter(tx => tx.type === 'PAYOUT' || tx.type === 'REFUND');
+
   const readablePayoutRows = payoutHistory.map((tx: any, idx: number) => {
     const sanitizePayoutText = (value: string) => {
       if (!value) return value;
@@ -61,24 +65,41 @@ const VendorPayouts = () => {
       displayDescription: tx.description ? sanitizePayoutText(tx.description) : "Payout adjustment",
     };
   });
+
   const filteredPayoutRows = readablePayoutRows.filter((tx: any) => {
     if (statusFilter === "ALL") return true;
     if (statusFilter === "PAID") return tx.status === "CONFIRMED";
     return tx.status === statusFilter;
   });
-  const handleDateRangeSelect = (range: string) => {
-    const [fromText, toText] = range.split(" - ").map((segment) => segment.trim());
-    const parsedFrom = dayjs(fromText, "YYYY/MM/DD");
-    const parsedTo = dayjs(toText, "YYYY/MM/DD");
-
-    setDateRangeLabel(range);
-    setDateRangeQuery({
-      fromDate: parsedFrom.isValid() ? parsedFrom.format("YYYY-MM-DD") : undefined,
-      toDate: parsedTo.isValid() ? parsedTo.format("YYYY-MM-DD") : undefined,
-    });
-  };
 
   const stripeConnected = stripe?.payoutsEnabled;
+
+  const csvExport = useMemo(() => {
+    const headers = ["Logged Date", "Volume", "State", "Adjudication / Details"];
+    const escapeCell = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
+    const rows = filteredPayoutRows.map((tx: any) => [
+      dayjs(tx.createdAt).format("DD MMM YYYY"),
+      `${summary?.currency ?? "SEK"} ${Number(tx.displayAmount || 0).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+      })}`,
+      tx.status,
+      tx.displayDescription,
+    ]);
+
+    return [headers, ...rows]
+      .map((row) => row.map((cell) => escapeCell(cell)).join(","))
+      .join("\n");
+  }, [filteredPayoutRows, summary?.currency]);
+
+  const handleExportCsv = () => {
+    const blob = new Blob([csvExport], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "settlement-audit-log.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleConfirm = async () => {
     const amount = parseFloat(requestAmount);
@@ -103,183 +124,324 @@ const VendorPayouts = () => {
 
   return (
     <DashboardContainer className="space-y-8 pb-12">
-      <TitleBreadCrumbs title="Settlement Control" breadCrumbTitle="Finance / Payouts" />
-      
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Control Panel */}
-        <div className="finance-card rounded-2xl p-8 space-y-8">
-          <div>
-            <p className="text-sm font-semibold text-slate-500 mb-1">Awaiting Release</p>
-            <p className="text-metric text-4xl tracking-tighter">
-              <span className="text-sm font-medium opacity-30 mr-1.5">{summary?.currency}</span>
-              {summary?.pendingPayoutBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            <p className="text-xs text-slate-500 font-medium mt-2">Held balance awaiting manual release</p>
+      <div className="space-y-3">
+        <TitleBreadCrumbs title="Settlement Control" breadCrumbTitle="Finance / Payouts" />
+        <div className="flex justify-start md:justify-end">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-blue-500">
+            Status: Operational
           </div>
-          
-          <div className="space-y-3">
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl space-y-3">
+ 
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-200"
+            >
+              <HiOutlineArrowDownTray className="h-4 w-4 text-slate-500" />
+              Export Report
+            </button>
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              disabled={!stripeConnected || !summary?.availableBalance}
-              className="w-full rounded-xl bg-slate-950 py-4 text-[10px] font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-slate-800 disabled:opacity-10 active:scale-95 flex items-center justify-center gap-2"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-700"
             >
-              <HiOutlineArrowUpTray className="w-4 h-4" />
-              Request Transfer
+              Manual Release
             </button>
-            <NavLink to="/vendor/wallet" className="flex items-center justify-center gap-2 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors">
-              <HiOutlineArrowDownTray className="w-4 h-4" />
-              View Full Ledger
-            </NavLink>
           </div>
-
-          {!stripeConnected && (
-            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-[10px] font-bold text-amber-700 leading-relaxed">
-              <div className="flex items-center gap-2 mb-2">
-                 <HiOutlineExclamationTriangle className="w-4 h-4" />
-                 Compliance Required
-              </div>
-              Stripe payout infrastructure is not yet active. Complete onboarding to enable transfers.
-              <div className="mt-3">
-                <NavLink to="/vendor/stripe" className="inline-flex items-center gap-1 text-slate-950 font-black hover:underline uppercase tracking-tighter">
-                  Sync Stripe Console &rarr;
-                </NavLink>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Right Action Hub */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="finance-card rounded-2xl p-8">
-            <div className="flex items-center justify-between mb-8">
-               <h3 className="text-sm font-bold text-slate-900">Manual release for held funds</h3>
-               <div className="px-3 py-1 rounded bg-slate-950 text-[10px] font-bold text-white uppercase tracking-wider leading-none">
-                  Manual Entry
-               </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1 group">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-black text-slate-300 group-focus-within:text-slate-950 transition-colors">{summary?.currency}</span>
-                <input
-                  type="number"
-                  value={requestAmount}
-                  placeholder="0.00"
-                  onChange={(event) => setRequestAmount(event.target.value)}
-                  className="w-full finance-input-professional text-3xl text-metric pl-14"
-                />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.05fr_1.4fr]">
+          <div className="finance-card flex min-h-[250px] flex-col rounded-[1.75rem] p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-600">
+                  Liquidity Overview
+                </p>
+                <p className="text-lg font-bold text-slate-900">Awaiting Release</p>
               </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                <HiOutlineClock className="h-5 w-5" />
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-1">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {summary?.currency}
+              </p>
+              <p className="text-[2.4rem] font-black leading-none tracking-tight text-slate-950">
+                {summary?.pendingPayoutBalance?.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </p>
+              <p className="text-sm text-slate-500">
+                Held balance awaiting manual release.
+              </p>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                onClick={() => setModalOpen(true)}
+                disabled={!stripeConnected || !summary?.availableBalance}
+                className="inline-flex h-11 items-center rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                Request Transfer
+              </button>
+              <NavLink
+                to="/vendor/wallet"
+                className="text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
+              >
+                View Full Ledger →
+              </NavLink>
+            </div>
+
+            {!stripeConnected && (
+              <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50/70 p-4 text-[11px] font-medium leading-relaxed text-amber-700">
+                <div className="mb-2 flex items-center gap-2 font-bold">
+                  <HiOutlineExclamationTriangle className="h-4 w-4" />
+                  Compliance Required
+                </div>
+                Stripe payout infrastructure is not yet active. Complete onboarding to enable
+                transfers.
+                <div className="mt-3">
+                  <NavLink
+                    to="/vendor/stripe"
+                    className="inline-flex items-center gap-1 font-black uppercase tracking-tighter text-slate-950 hover:underline"
+                  >
+                    Sync Stripe Console &rarr;
+                  </NavLink>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="finance-card rounded-[1.75rem] p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                  Manual Reconciliation
+                </p>
+                <h3 className="mt-2 text-xl font-black tracking-tight text-slate-950">
+                  Manual Release for Held Funds
+                </h3>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                Protocol System
+              </span>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Current Value
+                </p>
+                <p className="mt-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {summary?.currency}
+                </p>
+                <p className="text-[1.5rem] font-black tracking-tight text-slate-950">
+                  {summary?.lockedBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  Transferable Volume
+                </p>
+                <p className="mt-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {summary?.currency}
+                </p>
+                <p className="text-[1.5rem] font-black tracking-tight text-slate-950">
+                  {summary?.availableBalance?.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-[1.3fr_0.8fr]">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={requestAmount}
+                onChange={(event) => setRequestAmount(event.target.value)}
+                placeholder="Enter manual amount..."
+                className="h-11 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-blue-300 focus:bg-white"
+              />
               <button
                 type="button"
                 disabled={!stripeConnected || !requestAmount}
                 onClick={() => setModalOpen(true)}
-                className="rounded-2xl bg-slate-950 px-10 py-5 text-[11px] font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-slate-800 disabled:opacity-10 active:scale-95 shadow-lg shadow-slate-100"
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-30"
               >
                 Submit Protocol
               </button>
             </div>
-            <p className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center justify-between">
-              <span>Transferable Volume: {summary?.currency} {summary?.availableBalance?.toLocaleString() || "0.00"}</span>
-              <button onClick={() => setRequestAmount(summary?.availableBalance?.toString() || "")} className="text-indigo-600 hover:text-indigo-800 transition-colors">Apply Max</button>
-            </p>
           </div>
+        </div>
 
-          <div className="finance-card rounded-2xl overflow-hidden border-slate-100">
-            <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-700">Settlement Audit Log</span>
-              <span className="text-xs text-slate-500 font-medium">
-                {dateRangeLabel ? `Range: ${dateRangeLabel}` : "Recent 50 Events"}
-              </span>
+        <div className="finance-card rounded-[1.75rem] p-6">
+          <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-[1.15rem] font-black tracking-tight text-slate-950">
+                Settlement Audit Log
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Real-time ledger of all historical and pending financial operations.
+              </p>
             </div>
-            <div className="flex items-center justify-between gap-4 border-b border-slate-100 bg-white px-6 pt-4">
-              <div className="flex gap-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setStatusFilter("ALL")}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
+              >
+                <HiOutlineFunnel className="h-4 w-4 text-slate-500" />
+                Filter by adjudication
+              </button>
+              <div className="flex rounded-full border border-slate-200 bg-slate-50 p-1 text-[11px] font-bold">
                 {["ALL", "PENDING", "PAID", "REJECTED"].map((status) => (
                   <button
                     key={status}
                     type="button"
                     onClick={() => setStatusFilter(status)}
-                    className={`relative pb-3 text-[11px] font-black uppercase tracking-widest transition-all ${
+                    className={cn(
+                      "rounded-full px-3 py-1.5 uppercase tracking-[0.16em] transition-all",
                       statusFilter === status
-                        ? "text-slate-900"
-                        : "text-slate-400 hover:text-slate-600"
-                    }`}
-                  >
-                    {status}
-                    {statusFilter === status && (
-                      <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-900" />
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700",
                     )}
+                  >
+                    {status.toLowerCase()}
                   </button>
                 ))}
               </div>
-              <span className="pb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Showing {filteredPayoutRows.length} entries
-              </span>
             </div>
-            <DataTable
-              title="Settlement Audit Log"
-              breadCrumbTitle="Finance / History"
-              data={filteredPayoutRows}
-              loading={isTransactionsLoading}
-              onDateRangeSelect={handleDateRangeSelect}
-              columns={[
-                {
-                  key: "id",
-                  title: "Reference",
-                  render: (_: any, tx: any) => (
-                    <span className="font-mono text-mono-finance text-[10px] text-slate-400">
-                      {tx.displayReference}
-                    </span>
-                  ),
-                },
-                {
-                  key: "amount",
-                  title: "Volume",
-                  render: (value: any) => (
-                    <div className="font-black text-slate-950 text-mono-finance text-sm tracking-tight text-right pr-12">
-                      {summary?.currency} {Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </div>
-                  ),
-                },
-                {
-                  key: "status",
-                  title: "State",
-                  render: (value: string) => (
-                    <span className={`status-indicator ${
-                      value === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700' : 
-                      value === 'PENDING' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
-                    }`}>
-                      <span className={`w-1 h-1 rounded-full ${
-                         value === "CONFIRMED" ? "bg-emerald-500" : value === "PENDING" ? "bg-amber-500" : "bg-rose-500"
-                      }`} />
-                      {value}
-                    </span>
-                  ),
-                },
-                {
-                  key: "createdAt",
-                  title: "Logged",
-                  render: (value: string) => (
-                    <span className="text-slate-500 font-medium">
-                      {dayjs(value).format('DD MMM')}
-                    </span>
-                  ),
-                },
-                {
-                  key: "description",
-                  title: "Adjudication",
-                  render: (_: any, tx: any) => (
-                    <span className="text-slate-400 font-medium italic truncate max-w-[120px]" title={tx.displayDescription || "System Automated"}>
-                      {tx.displayDescription || "System Automated"}
-                    </span>
-                  ),
-                },
-              ]}
-              selectable={false}
-              showSerialNumber={false}
-              className="finance-card rounded-2xl overflow-hidden border-slate-100"
-              noRecordText="No historical transfer events registered"
-            />
+          </div>
+
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[900px] border-separate border-spacing-0">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Logged Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Volume
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    State
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Adjudication / Details
+                  </th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPayoutRows.length ? (
+                  filteredPayoutRows.map((tx: any) => (
+                    <tr key={tx.id} className="border-t border-slate-100">
+                      <td className="px-4 py-4 align-top">
+                        <div className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
+                          {dayjs(tx.createdAt).format("DD")}
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm font-semibold text-slate-700">
+                            {dayjs(tx.createdAt).format("DD MMM")}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {dayjs(tx.createdAt).format("YYYY")}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <span
+                          className={cn(
+                            "text-sm font-black tracking-tight",
+                            tx.direction === "CREDIT" ? "text-emerald-600" : "text-rose-600",
+                          )}
+                        >
+                          {tx.direction === "CREDIT" ? "+" : "-"}
+                          {summary?.currency} {tx.displayAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em]",
+                            tx.status === "CONFIRMED"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : tx.status === "PENDING"
+                                ? "bg-amber-50 text-amber-700"
+                                : "bg-rose-50 text-rose-700",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-1.5 w-1.5 rounded-full",
+                              tx.status === "CONFIRMED"
+                                ? "bg-emerald-500"
+                                : tx.status === "PENDING"
+                                  ? "bg-amber-500"
+                                  : "bg-rose-500",
+                            )}
+                          />
+                          {tx.status.toLowerCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <div className="max-w-[340px]">
+                          <p className="text-[13px] font-semibold text-slate-950">
+                            {tx.displayDescription}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {tx.displayReference}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 align-top">
+                        <button
+                          type="button"
+                          onClick={() => setModalOpen(true)}
+                          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-all hover:bg-slate-50"
+                        >
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-sm text-slate-500">
+                      No historical transfer events registered
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs font-semibold text-slate-500">
+              Showing {filteredPayoutRows.length} of {readablePayoutRows.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 transition-all hover:bg-slate-50"
+              >
+                <HiOutlineArrowDownTray className="h-4 w-4 text-slate-500" />
+                Export CSV
+              </button>
+            </div>
           </div>
         </div>
       </div>
